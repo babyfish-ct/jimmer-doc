@@ -1,0 +1,153 @@
+---
+sidebar_position: 2
+title: DraftHandler
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+由于`DraftHandler`和[DraftInterceptor](./draft-interceptor)功能基本相同，具备高的相似型，本文不打算完全重复阐述，只讲明它和后者的区别。
+
+## 定义拦截器
+
+拦截器需要实现`org.babyfish.jimmer.sql.DraftHandler`接口。
+
+如果使用Spring托管 *(下文会介绍两种使用拦截器的方式)*，请用`@Component`修饰拦截器实现类，代码代码如下：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Component
+public class BaseEntityDraftHandler 
+implements DraftHandler<BaseEntityDraft, BaseEntity> {
+
+    @Override
+    public void beforeSave(BaseEntityDraft draft, @Nullable BaseEntity original) {
+        if (original == null) {
+            ...omited logic before insert...
+        } else {
+            ...omited logic before update...
+        }
+    }
+
+    @Override
+    public Collection<TypedProp<E, ?>> dependencies() {
+        return Arrays.asList(
+            BaseEntityProps.CREATTED_BY, 
+            BaseEntityProps.MODIFIED_BY
+        );
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Component
+class BaseEntityDraftHandler: DraftHandler<BaseEntityDraft, BaseEntity> {
+
+    override fun beforeSave(draft: BaseEntityDraft, original: BaseEntity?) {
+        if (original == null) {
+            ...omited logic before insert...
+        } else {
+            ...omited logic before update...
+        }
+    }
+
+    override dependencies(): Collection<TypedProp<BaseEntity, *>> =
+        listOf(
+            BaseEntityProps.CREATED_BY, 
+            BaseEntityProps.MODIFIED_BY
+        )
+}
+```
+
+</TabItem>
+</Tabs>
+
+-   `beforeSave`方法：
+
+    其中，`beforeSave`方法在某个对象被保存之前被调用，用户可以对即将保存的数据`draft`做出最后调整。该方法有两个参数
+
+    -   `draft`: 即将被保存的对象，你可以修改它
+
+    -   `original`: 如果非null，则表示数据库中现有的数据，只可读取，不可修改
+
+        -   对于INSERT操作而言，`original`为null
+
+        -   对于UPDATE操作而言，`original`非null
+
+        所以，可以通过`orginal`是否为null判断当前操作是INSERT还是UPDATE。
+
+        `orginal`对象是一个Jimmer动态对象，其哪些些属性就绪可以访问而哪些缺失不可访问，受到另外一个方法`dependencies`的控制。
+
+-   `dependencies`方法：
+
+    当`beforeSave`方法的`original`参数非null时，除了id属性和key属性外，还有那些属性需要被加载？
+
+    > 返回的属性集合无需包含id属性和key属性，因为它们总是被加载。
+
+:::warning
+请不要在`beforeSave`方法中，修改被`draft`对象的`@Id`或`@Key`修饰的属性。
+:::
+
+## 使用方式
+
+### 使用Jimmer Spring Starter
+
+上文中，我们定义的类`BaseEntityDraftHandler`被`@Component`修饰，很明显这是一个Spring托管对象。
+
+:::info
+如果使用Jimmer SpringBoot Starter且保证拦截器被Spring托管，那么Jimmer就会将注册它，无需额外的配置。
+
+否则，必需手动注册
+:::
+
+### 不使用Jimmer Spring Starter
+
+未使用Jimmer SpringBoot时，将拦截器挂接到SqlClinet对象上，即可生效
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Bean
+public JSqlClient sqlClient(
+    List<DraftHandler<?, ?>> handlers,
+    ...省略其他参数...
+) {
+    return JSqlClient
+        .newBuilder()
+        // highlight-next-line
+        .addDraftHanders(handlers)
+        ...省略其他配置...
+        .build();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Bean
+fun sqlClient(
+    handlers: List<DraftHandler<?, ?>>,
+    ...省略其他参数...
+): KSqlClient =
+    newKSqlClient {
+        // highlight-next-line
+        addDraftHanders(handlers)
+        ...省略其他配置...
+    }
+```
+
+</TabItem>
+</Tabs>
+
+:::tip
+虽然在本文仅示范了一个`DraftHandler`，实际项目中可能有很多个。
+
+所以，这里使用集合，让Spring注入所有的`DraftHandler`。
+:::

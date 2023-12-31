@@ -1,10 +1,26 @@
 ---
-sidebar_position: 1
-title: DraftInterceptor
+sidebar_position: 6
+title: 保存前拦截器
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+
+## 基本概念
+
+任何实体对象在被[保存指令](./save-command)保存 *(无论插入还是更新)* 前，都会被拦截器拦截。
+
+在此，用户有一次修改被保存数据的机会，尤其是为某些缺失的属性赋值。
+
+:::tip
+如果使用拦截器为缺失的属性赋值*(这也是推荐用法)*，就和数据库级别的默认值有点类似，但是存在如下差异
+
+-   数据库默认值只能提供业务无关的默认值规则。
+
+-   拦截器可以根据业务上下文相关信息提供默认值，比如，当前用户在权限系统中的身份信息。
+
+    用户可以根据这类业务上下问信息提供和业务紧密结合的默认值，这是数据库级别默认值无法实现的。
+:::
 
 ## 定义被拦截数据格式
 
@@ -65,6 +81,14 @@ interface BaseEntity {
 这里的`@OnDissociate(DissociateAction.SET_NULL)`是为了防止因这两个外键导致相关`User`数据的删除操作被阻止。当相关`User`被删除后，这两个外键自动清空。
 :::
 
+:::tip
+当然，用户可以直接拦截实体类型 *(被@Entity修饰)*，而非抽象类型 *(被@MappedSupperclass)* 修饰。
+
+然而，如果选择拦截抽象类型，那么所有派生实体类型的保存操作都将会被拦截，这可以极大地提高系统的灵活性，尤其是抽象类型支持多继承时。
+
+所以，本文的例子选择拦截抽象类型，而非实体类型。
+:::
+
 ## 定义拦截器
 
 假设有一个叫做`UserService`的服务类，其java方法`getCurrentUserId()`或kotlin属性`currentUserId`返回当前登录用户的id。
@@ -79,7 +103,7 @@ interface BaseEntity {
 ```java
 @Component
 public class BaseEntityDraftInterceptor 
-implements DraftInterceptor<BaseEntityDraft> {
+implements DraftInterceptor<BaseEntity, BaseEntityDraft> {
 
     private final UserService userService;
 
@@ -88,7 +112,7 @@ implements DraftInterceptor<BaseEntityDraft> {
     }
 
     @Override
-    public void beforeSave(BaseEntityDraft draft, boolean isNew) {
+    public void beforeSave(BaseEntityDraft draft, @Nullable BaseEntity original) {
         if (!ImmutableObjects.isLoaded(draft, BaseEntityProps.MODIFIED_TIME)) {
             draft.setModifiedTime(LocalDateTime.now());
         }
@@ -97,7 +121,7 @@ implements DraftInterceptor<BaseEntityDraft> {
                 user.setId(userService.getCurrentUserId());
             });
         }
-        if (isNew) {
+        if (orginal == null) {
             if (!ImmutableObjects.isLoaded(draft, BaseEntityProps.CREATED_TIME)) {
                 draft.setCreatedTime(LocalDateTime.now());
             }
@@ -118,9 +142,9 @@ implements DraftInterceptor<BaseEntityDraft> {
 @Component
 class BaseEntityDraftInterceptor(
     private val userService: UserService
-) : DraftInterceptor<BaseEntityDraft> {
+) : DraftInterceptor<BaseEntity, BaseEntityDraft> {
 
-    override fun beforeSave(draft: BaseEntityDraft, isNew: Boolean) {
+    override fun beforeSave(draft: BaseEntityDraft, original: BaseEntity?) {
         if (!isLoaded(draft, BaseEntity::modifiedTime)) {
             draft.modifiedTime = LocalDateTime.now()
         }
@@ -131,7 +155,7 @@ class BaseEntityDraftInterceptor(
             }
         }
 
-        if (isNew) {
+        if (orginal === null) {
             if (!isLoaded(draft, BaseEntity::createdTime)) {
                 draft.createdTime = LocalDateTime.now()
             }
@@ -149,13 +173,96 @@ class BaseEntityDraftInterceptor(
 </TabItem>
 </Tabs>
 
-其中，`beforeSave`方法在某个对象被保存之前被调用，用户可以对即将保存的数据做出最后调整。
+其中，`beforeSave`方法在某个对象被保存之前被调用，用户可以对即将保存的数据`draft`做出最后调整。该方法有两个参数
 
-如果参数`isNew`为true，则表示稍后操作是insert操作；否则，是update操作。
+-   `draft`: 即将被保存的对象，你可以修改它
+
+-   `original`: 如果非null，则表示数据库中现有的数据，只可读取，不可修改
+
+    -   对于INSERT操作而言，`original`为null
+
+    -   对于UPDATE操作而言，`original`非null
+
+    所以，可以通过`orginal`是否为null判断当前操作是INSERT还是UPDATE。
+
+    `orginal`对象是一个Jimmer动态对象，其哪些些属性就绪可以访问而哪些缺失不可访问，受到另外一个方法`dependencies`的控制。
 
 :::warning
 请不要在`beforeSave`方法中，修改被`@Id`或`@Key`修饰的属性。
 :::
+
+## 控制original参数的格式
+
+上文谈到，如果当前操作为`UPDATE`，`beforeSave`方法的`original`参数非null，表示数据库中的旧值。
+
+`original`是Jimmer动态对象，默认情况下，只有`id`和`key`属性是已加载和可访问的。然而，是否能够控制`orginal`对象的格式让跟多的属性可以被访问呢？
+
+`DraftInterceptor`接口提供了另外一个default方法`dependencies`，返回一个属性集合，以表示除了id属性和key属性外，`orginal`对象还有那些属性需要被加载。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Component
+public class BaseEntityDraftInterceptor 
+implements DraftInterceptor<BaseEntity, BaseEntityDraft> {
+
+    @Override
+    public void beforeSave(
+        BaseEntityDraft draft, 
+        
+        // The format of `original` is controlled by `dependences()`
+        @Nullable BaseEntity original
+    ) {
+        ...implementation is omitted...
+    }
+
+    @Override
+    // highlight-next-line
+    public Collection<TypedProp<BaseEntity, ?>> dependencies() {
+        return Arrays.asList(
+            BaseEntityProps.CREATED_BY, 
+            BaseEntityProps.MODIFIED_BY
+        );
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Component
+class BaseEntityDraftInterceptor(
+    private val userService: UserService
+) : DraftInterceptor<BaseEntity, BaseEntityDraft> {
+
+    override fun beforeSave(
+        draft: BaseEntityDraft, 
+
+        // The format of `original` is controlled by `dependences()`
+        original: BaseEntity?
+    ) {
+        ...implementation is omitted...
+    }
+
+    // highlight-next-line
+    override fun dependencies(): Collection<TypedProp<BaseEntity, *>> = 
+        listOf(
+            BaseEntityProps.CREATED_BY, 
+            BaseEntityProps.MODIFIED_BY
+        )
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::tip
+返回的属性集合无需包含`id`属性和`key`属性，因为它们总是被加载。
+:::
+
+## 应用拦截器
 
 ### 使用Jimmer Spring Starter
 

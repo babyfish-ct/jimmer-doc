@@ -1,10 +1,25 @@
 ---
-sidebar_position: 1
-title: DraftInterceptor
+sidebar_position: 6
+title: Interceptor before save
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+
+## Concept
+
+Any entity object will be intercepted by interceptors before being [saved by save commands](./save-command) (whether inserted or updated). 
+
+At this point, users have an opportunity to modify the data to be saved, especially to assign values to some missing properties.
+
+:::tip If interceptors are used to assign values to missing properties *(which is also the recommended usage)*, it is somewhat similar to default values at the database level, but with the following differences:
+
+-   Database default values can only provide business-irrelevant default value rules.
+
+-   Interceptors can provide default values based on business context-related information, such as the user's identity information in the permission system. 
+
+Users can provide default values that are closely combined with the business based on such business context information, which cannot be achieved by database-level default values.
+:::
 
 ## Define Intercepted Data Format  
 
@@ -66,6 +81,14 @@ All entities that need these fields can derive from this superclass.
 The `@OnDissociate(DissociateAction.SET_NULL)` here is to prevent deletion operations on associated `User` data from being blocked due to these two foreign keys. When associated `User` is deleted, these two foreign keys are automatically cleared.
 :::
 
+:::tip
+Of course, user can directly intercept the entity type *(decorated with @Entity)*, rather than an abstract type *(decorated with @MappedSupperclass)*.  
+
+However, if an abstract type is intercepted, the save operations of all derived entity types will be intercepted, which can greatly improve the flexibility of the system, especially when the abstract type supports multiple inheritance.  
+
+Therefore, the example in this article chooses to intercept the abstract type instead of the entity type.
+:::
+
 ## Define Interceptor  
 
 Assume there is a service class called `UserService` whose Java method `getCurrentUserId()` or Kotlin property `currentUserId` returns the id of the currently logged in user.
@@ -79,7 +102,8 @@ If using Spring management *(two ways of using `DraftHandler` will be introduced
 
 ```java
 @Component
-public class BaseEntityDraftInterceptor implements DraftInterceptor<BaseEntityDraft> {
+public class BaseEntityDraftInterceptor 
+implements DraftInterceptor<BaseEntity, BaseEntityDraft> {
 
     private final UserService userService;
 
@@ -88,7 +112,7 @@ public class BaseEntityDraftInterceptor implements DraftInterceptor<BaseEntityDr
     }
 
     @Override
-    public void beforeSave(BaseEntityDraft draft, boolean isNew) {
+    public void beforeSave(BaseEntityDraft draft, @Nullable BaseEntity original) {
         if (!ImmutableObjects.isLoaded(draft, BaseEntityProps.MODIFIED_TIME)) {
             draft.setModifiedTime(LocalDateTime.now());
         }
@@ -97,7 +121,7 @@ public class BaseEntityDraftInterceptor implements DraftInterceptor<BaseEntityDr
                 user.setId(userService.getCurrentUserId());
             });
         }
-        if (isNew) {
+        if (original == null) {
             if (!ImmutableObjects.isLoaded(draft, BaseEntityProps.CREATED_TIME)) {
                 draft.setCreatedTime(LocalDateTime.now());
             }
@@ -119,9 +143,9 @@ public class BaseEntityDraftInterceptor implements DraftInterceptor<BaseEntityDr
 @Component
 class BaseEntityDraftInterceptor(
     private val userService: UserService  
-) : DraftInterceptor<BaseEntityDraft> {
+) : DraftInterceptor<BaseEntity, BaseEntityDraft> {
 
-    override fun beforeSave(draft: BaseEntityDraft, isNew: Boolean) {
+    override fun beforeSave(draft: BaseEntityDraft, original: BaseEntity?) {
         if (!isLoaded(draft, BaseEntity::modifiedTime)) {
             draft.modifiedTime = LocalDateTime.now()
         }
@@ -132,7 +156,7 @@ class BaseEntityDraftInterceptor(
             }
         }
 
-        if (isNew) {
+        if (original === null) {
             if (!isLoaded(draft, BaseEntity::createdTime)) {
                 draft.createdTime = LocalDateTime.now()
             }
@@ -157,6 +181,78 @@ If the `isNew` parameter is true, it means the subsequent operation is an insert
 :::warning
 Please do not modify properties decorated with `@Id` or `@Key` in the `beforeSave` method.
 :::
+
+Here is the English translation, keeping the original code block indentations:
+
+## Controlling the format of the original parameter  
+
+It was mentioned above that if the current operation is `UPDATE`, the `original` parameter of the `beforeSave` method is non-null, representing the old value in the database.  
+
+`original` is a Jimmer dynamic object. By default, only the `id` and `key` properties are loaded and accessible. However, can we control the format of the `orginal` object to allow more properties to be accessed?
+
+The `DraftInterceptor` interface provides another default method `dependencies()` which returns a collection of properties to indicate that in addition to the id property and key property, which other properties of the `orginal` object need to be loaded.  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">  
+
+```java   
+@Component
+public class BaseEntityDraftInterceptor 
+implements DraftInterceptor<BaseEntity, BaseEntityDraft> {
+
+    @Override
+    public void beforeSave(
+        BaseEntityDraft draft, 
+        // The format of `original` is controlled by `dependences()`
+        @Nullable BaseEntity original  
+    ) {
+        ...implementation is omitted...
+    }
+
+    @Override 
+    // highlight-next-line
+    public Collection<TypedProp<BaseEntity, ?>> dependencies() {
+        return Arrays.asList(
+            BaseEntityProps.CREATED_BY, 
+            BaseEntityProps.MODIFIED_BY  
+        );
+    }
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin 
+@Component
+class BaseEntityDraftInterceptor(
+    private val userService: UserService    
+) : DraftInterceptor<BaseEntity, BaseEntityDraft> {
+
+    override fun beforeSave(
+        draft: BaseEntityDraft,
+        // The format of `original` is controlled by `dependences()`  
+        original: BaseEntity?
+    ) {
+        ...implementation is omitted...
+    }
+
+    // highlight-next-line 
+    override fun dependencies(): Collection<TypedProp<BaseEntity, *>> = listOf(
+        BaseEntityProps.CREATED_BY,  
+        BaseEntityProps.MODIFIED_BY
+    ) 
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::tip   
+The returned property collection does not need to contain the `id` property and `key` property, because they are always loaded.
+:::
+
+## Apply interceptor
 
 ### Using Jimmer Spring Starter
 

@@ -682,15 +682,15 @@ class BookStoreAvgPriceResolver(
 <TabItem value="java" label="Java">
 
 ```java
-BookStoreTable table = BookStoreTable.$;
+BookStoreTable table = Tables.BOOK_STORE_TABLE;
 List<BookStore> stores = sqlClient
     .createQuery(table)
     .select(
         table.fetch(
-            BookStoreFetcher.$
+            Fetchers.BOOK_STORE_FETCHER
                 .allScalarFields()
                 .books( ❶
-                    BookFetcher.$
+                    Fetchers.BOOK_FETCHER
                         .allScalarFields()
                 )
                 .avgPrice() ❷
@@ -1220,7 +1220,7 @@ println(stores)
 
     ```java
     sqlClient.save(
-        BookDraft.$.produce(draft -> {
+        Objects.createBook(draft -> {
             draft.setId(6L);
             draft.setTenant("a");
         })

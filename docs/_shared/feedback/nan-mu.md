@@ -142,7 +142,7 @@ Note: The following are only examples, not a complete setup from scratch. For co
 Requirement 1: Only query User's `name`, `age` and `gender`
 ```java
 // In real cases it should be returned from dao query, here for convenience manually create an object
-User user = UserDraft.$.produce(draft -> draft.setName("Zhang San").setAge(20).setGender(Gender.MAN));
+User user = Objects.createUser(draft -> draft.setName("Zhang San").setAge(20).setGender(Gender.MAN));
 ```
 The json returned to the front end is: 
 ```json
@@ -156,7 +156,7 @@ The json returned to the front end is:
 Requirement 2: Query all `User` lists, remove `password` property
 ```java 
 // In real cases it should be returned from dao query, here for convenience manually create an object
-User user = UserDraft.$.produce(draft -> draft.setId(1).setName("Zhang San").setAge(20).setGender(Gender.MAN).setCreateTime(LocalDateTime.now()).setUpdateTime(LocalDateTime.now()));
+User user = Objects.createUser(draft -> draft.setId(1).setName("Zhang San").setAge(20).setGender(Gender.MAN).setCreateTime(LocalDateTime.now()).setUpdateTime(LocalDateTime.now()));
 ```
 The json returned to the front end is:
 ```json
@@ -185,7 +185,7 @@ Take the two requirements above as examples, the dao layer code is as follows:
 // Once again feel that not having to write corresponding `VO` for different property combinations is really cool!
 // These two methods both return User, not specific UserVo1, UserVo2  
 public User findUserById(int id){
-    UserTable user = UserTable.$;
+    UserTable user = Tables.USER_TABLE;
     // select id, name, age, gender from user where id = :id
     return sqlClient.createQuery(user)
             .where(user.id().eq(id))
@@ -194,7 +194,7 @@ public User findUserById(int id){
 }
 
 public User findUserWithoutPassword(int id){
-    UserTable user = UserTable.$;
+    UserTable user = Tables.USER_TABLE;
     // select id, name, age, gender, create_time, update_time from user where id = :id 
     return sqlClient.createQuery(user)
             .where(user.id().eq(id))

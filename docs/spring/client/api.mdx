@@ -200,21 +200,21 @@ findComplexBook(
 }
 
 private static final Fetcher<Book> SIMPLE_FETCHER = ❺
-    BookFetcher.$
+    Fetchers.BOOK_FETCHER
         .allScalarFields()
         .tenant(false); 
 
 private static final Fetcher<Book> COMPLEX_FETCHER = ❻
-    BookFetcher.$
+    Fetchers.BOOK_FETCHER
         .allScalarFields()
         .tenant(false)
         .store(
-            BookStoreFetcher.$
+            Fetchers.BOOK_STORE_FETCHER
                 .allScalarFields()
                 .avgPrice()
         )
         .authors(
-            AuthorFetcher.$
+            Fetchers.AUTHOR_FETCHER
                 .allScalarFields()
         );
 ```
@@ -731,12 +731,12 @@ public class ActiveAutorInfo {
     private List<@FetchBy("STORE_FETCHER") BookStore> stores;
 
     private static final Fetcher<Author> AUTHOR_FETCHER =  
-        AuthorFetcher.$
+        Fetchers.AUTHOR_FETCHER
             .firstName()
             .lastName();
 
     private static final Fetcher<BookStore> STORE_FETCHER =
-        AuthorFetcher.$.name(); 
+        Fetchers.AUTHOR_FETCHER.name(); 
 }
 ```
 

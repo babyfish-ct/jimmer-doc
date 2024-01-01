@@ -22,7 +22,7 @@ Jimmer中，所有表连接的隐式的，由任意数量关联属性连接而�
 ```java
 public List<Book> findBooksByStoreCityName(@Nullable String storeCityName) {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     return sqlClient
         .createQuery(table)

@@ -98,7 +98,7 @@ data class BookSpecification(
         JSpecification<?, BookTable> specification ❶
     ) {
         
-        BookTable table = BookTable.$;
+        BookTable table = Tables.BOOK_TABLE;
         
         return sqlClient
             .createQuery(table)

@@ -35,7 +35,7 @@ In this SQL, we only query a part of columns. The corresponding Jimmer code is:
 <TabItem value="java" label="Java">
 
 ```java 
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 List<Tuple3<Long, String, Integer>> tuples = sqlClient
     .createQuery(book) 
     .where(table.edition().eq(3))
@@ -138,7 +138,7 @@ Here we use the second approach:
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 List<BookDTO> bookDTOs = sqlClient
     .createQuery(book)
     .where(table.edition().eq(3))
@@ -235,13 +235,13 @@ The Annotation processor will automatically generate a Fetcher class for each en
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
     List<Book> books = sqlClient.createQuery(table)
             .where(table.edition().eq(3))
             .select(
                 // highlight-next-line
                 table.fetch(
-                    BookFetcher.$
+                    Fetchers.BOOK_FETCHER
                         // id is implicit, mandatory
                         .name()
                         .edition()
@@ -297,13 +297,13 @@ The Annotation processor will automatically generate a Fetcher class for each en
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
     List<Book> books = sqlClient.createQuery(table)
             .where(table.edition().eq(3))
             .select(
                 // highlight-next-line
                 table.fetch(
-                    BookFetcher.$
+                    Fetchers.BOOK_FETCHER
                         .name()
                         .price()
                 )
@@ -355,16 +355,16 @@ The Annotation processor will automatically generate a Fetcher class for each en
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
     List<Book> books = sqlClient.createQuery(table)
             .where(table.edition().eq(3))
             .select(
                 table.fetch(
-                    BookFetcher.$
+                    Fetchers.BOOK_FETCHER
                         .name()
                         // highlight-next-line
                         .authors(
-                            AuthorFetcher.$
+                            Fetchers.AUTHOR_FETCHER
                                 .firstName()
                         )
                 )

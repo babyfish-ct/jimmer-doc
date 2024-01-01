@@ -67,8 +67,8 @@ Jimmer会自动优化`count-query`，让其从原data-query中复制尽可能少
 <TabItem value="java" label="Java">
 
 ```java title=""
-BookTable book = BookTable.$;
-AuthorTableEx author = AuthorTableEx.$;
+BookTable book = Tables.BOOK_TABLE;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 ConfigurableRootQuery<BookTable, Book> query = sqlClient
     .createQuery(book)
@@ -141,8 +141,8 @@ where tb_1_.PRICE between ? and ?
 <TabItem value="java" label="Java">
 
 ```java title=""
-BookTable book = BookTable.$;
-AuthorTableEx author = AuthorTableEx.$;
+BookTable book = Tables.BOOK_TABLE;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 ConfigurableRootQuery<BookTable, Book> query = sqlClient
     .createQuery(book)

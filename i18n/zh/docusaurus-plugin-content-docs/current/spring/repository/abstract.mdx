@@ -943,16 +943,16 @@ Page<Book> page = bookRepository
             SortUtils.toSort("name, edition desc")
         ),
         // highlight-next-line
-        BookFetcher.$
+        Fetchers.BOOK_FETCHER
             .allScalarFields()
             // highlight-next-line
             .store(
-                BookFetcher.$
+                Fetchers.BOOK_FETCHER
                     .name() // 关联对象仅查询id(隐含+强制)和name
             )
             // highlight-next-line
             .authors(
-                AuthorFetcher.$
+                Fetchers.AUTHOR_FETCHER
                     // 关联对象仅查询id(隐含+强制)、firstName和lastName
                     .firstName().lastName()
             )

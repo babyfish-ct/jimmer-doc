@@ -141,12 +141,12 @@ fun cacheFactory(
 <TabItem value="java" label="Java">
 
 ```java
-BookStoreTable table = BookStoreTable.$;
+BookStoreTable table = Tables.BOOK_STORE_TABLE;
 List<BookStore> stores = sqlClient
     .createQuery(table)
     .select(
         table.fetch(
-            BookStoreFetcher.$
+            Fetchers.BOOK_STORE_FETCHER
                 .allScalarFields()
                 // highlight-next-line
                 .avgPrice()
@@ -487,7 +487,7 @@ override fun getAffectedSourceIds(e: AssociationEvent): Collection<*> {
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
     sqlClient
         .createUpdate(table)
         // Old value: 1L, New value: 2L
@@ -639,7 +639,7 @@ override fun getAffectedSourceIds(e: EntityEvent<*>): Collection<*>? {
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
     sqlClient
         .createUpdate(table)
         .set(table.price(), table.price().plus(BigDecimal.ONE))

@@ -122,17 +122,17 @@ Top-down, fetch two layers:
 <TabItem value="java" label="Java">
 
 ```java
-TreeNodeTable node = TreeNodeTable.$;
+TreeNodeTable node = Tables.TREE_NODE_TABLE;
 
 List<TreeNode> treeNodes = sqlClient
     .createQuery(node)
     .where(node.parentId().isNull())
     .select(
         node.fetch(
-            TreeNodeFetcher.$
+            Fetchers.TREE_NODE_FETCHER
                 .name()
                 .childNodes(
-                    TreeNodeFetcher.$.name(),
+                    Fetchers.TREE_NODE_FETCHER.name(),
                     // highlight-next-line  
                     it -> it.depth(2)
             )
@@ -237,17 +237,17 @@ Top-down, fetch unlimited layers:
 <TabItem value="java" label="Java">
 
 ```java  
-TreeNodeTable node = TreeNodeTable.$;
+TreeNodeTable node = Tables.TREE_NODE_TABLE;
 
 List<TreeNode> treeNodes = sqlClient
     .createQuery(node)
     .where(node.parentId().isNull())
     .select(
         node.fetch(
-            TreeNodeFetcher.$
+            Fetchers.TREE_NODE_FETCHER
                 .name()
                 .childNodes(
-                    TreeNodeFetcher.$.name(), 
+                    Fetchers.TREE_NODE_FETCHER.name(), 
                     // highlight-next-line
                     it -> it.recursive()
                 )
@@ -502,17 +502,17 @@ Top-down, fetch unlimited layers. But for the node named "Clothing", stop recurs
 <TabItem value="java" label="Java">  
 
 ```java
-TreeNodeTable node = TreeNodeTable.$;
+TreeNodeTable node = Tables.TREE_NODE_TABLE;
 
 List<TreeNode> treeNodes = sqlClient
     .createQuery(node)
     .where(node.parentId().isNull())
     .select(
         node.fetch(
-            TreeNodeFetcher.$
+            Fetchers.TREE_NODE_FETCHER
             .name()
             .childNodes(
-                TreeNodeFetcher.$.name(),
+                Fetchers.TREE_NODE_FETCHER.name(),
                 it -> it.recursive(args ->
                     // highlight-next-line
                     !args.getEntity().name().equals("Clothing")

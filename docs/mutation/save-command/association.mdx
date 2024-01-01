@@ -50,7 +50,7 @@ Two examples are shown below:
     <TabItem value="java" label="Java">
 
     ```java 
-    Book book = BookDraft.$.produce(draft -> {
+    Book book = Objects.createBook(draft -> {
         draft.setName("SQL in Action");
         draft.setEdition(1);
         draft.setPrice(new BigDecimal("39.9"));
@@ -132,7 +132,7 @@ Two examples are shown below:
     <TabItem value="java" label="Java">
 
     ```java
-    Book book = BookDraft.$.produce(draft -> {
+    Book book = Objects.createBook(draft -> {
         draft.setName("SQL in Action");
         draft.setEdition(1);
         draft.setPrice(new BigDecimal("39.9"));
@@ -229,7 +229,7 @@ Examples:
 <TabItem value="java" label="Java">
 
 ```java 
-Order order = Order.$.produce(draft -> {
+Order order = Objects.createOrder(draft -> {
     draft.applyCustomer(customer -> customer.setId(1L));
     draft.setProvince("Prenzlauer Berg");
     draft.setCity("Berlin");
@@ -360,7 +360,7 @@ public interface TreeNode {
 <TabItem value="java" label="Java">
 
 ```java 
-TreeNode treeNode = TreeNodeDraft.$.produce(food -> {
+TreeNode treeNode = Objects.createTreeNode(food -> {
     food
         // highlight-next-line
         .setParent(null)

@@ -67,8 +67,8 @@ In summary, to determine whether a table join in the original data-query can be 
 <TabItem value="java" label="Java"> 
 
 ```java
-BookTable book = BookTable.$;
-AuthorTableEx author = AuthorTableEx.$;
+BookTable book = Tables.BOOK_TABLE;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 ConfigurableRootQuery<BookTable, Book> query = sqlClient
     .createQuery(book)
@@ -141,8 +141,8 @@ Here we choose the second approach, left outer join:
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
-AuthorTableEx author = AuthorTableEx.$;
+BookTable book = Tables.BOOK_TABLE;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 ConfigurableRootQuery<BookTable, Book> query = sqlClient
     .createQuery(book)

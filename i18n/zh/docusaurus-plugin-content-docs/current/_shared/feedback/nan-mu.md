@@ -142,7 +142,7 @@ Jimmer采用动态对象的设计，让其具备了复杂的表达能力，还�
 需求1: 只查询`User`的的`name`, `age`, `gender`
 ```java
 // 真实情况应该从dao层查询数据库后返回该对象，这里为了方便就直接先手动创建一个对象了
-User user = UserDraft.$.produce(draft -> draft.setName("张三").setAge(20).setGender(Gender.MAN));
+User user = Objects.createUser(draft -> draft.setName("张三").setAge(20).setGender(Gender.MAN));
 ```
 返回给前端的json为
 ```json
@@ -156,7 +156,7 @@ User user = UserDraft.$.produce(draft -> draft.setName("张三").setAge(20).setG
 需求2: 查询所有`User`列表，去掉`password`属性
 ```java
 // 真实情况应该从dao层查询数据库后返回该对象，这里为了方便就直接先手动创建一个对象了
-User user = UserDraft.$.produce(draft -> draft.setId(1).setName("张三").setAge(20).setGender(Gender.MAN).setCreateTime(LocalDateTime.now()).setUpdateTime(LocalDateTime.now()));
+User user = Objects.createUser(draft -> draft.setId(1).setName("张三").setAge(20).setGender(Gender.MAN).setCreateTime(LocalDateTime.now()).setUpdateTime(LocalDateTime.now()));
 ```
 返回给前端的json为
 ```json
@@ -185,7 +185,7 @@ Jimmer采用与QueryDSL、Jooq类似的提前编译技术，根据实体接口�
 // 再次感慨，不用针对每种不同的属性组合而书写对应的`VO`是真的很爽啊！
 // 这两个方法都返回的User，而不是特定的UserVo1，UserVo2
 public User findUserById(int id){
-    UserTable user = UserTable.$;
+    UserTable user = Tables.USER_TABLE;
     // select id, name, age, gender from user where id = :id
     return sqlClient.createQuery(user)
 					.where(user.id().eq(id))
@@ -194,7 +194,7 @@ public User findUserById(int id){
 }
 
 public User findUserWithoutPassword(int id){
-    UserTable user = UserTable.$;
+    UserTable user = Tables.USER_TABLE;
     // select id, name, age, gender, create_time, update_time from user where id = :id
     return sqlClient.createQuery(user)
 					.where(user.id().eq(id))

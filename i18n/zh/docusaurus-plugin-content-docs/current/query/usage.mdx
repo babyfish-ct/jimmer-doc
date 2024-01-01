@@ -14,7 +14,7 @@ import TabItem from '@theme/TabItem';
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(table) ❶

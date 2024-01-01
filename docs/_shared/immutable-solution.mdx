@@ -71,7 +71,7 @@ interface TreeNode {
 
 ```java 
 // Step 1, build brand new data from scratch
-TreeNode treeNode = TreeNodeDraft.$.produce(root -> {
+TreeNode treeNode = Objects.createTreeNode(root -> {
     root.setName("Root").addIntoChildNodes(food -> {
         food
             .setName("Food")
@@ -92,7 +92,7 @@ TreeNode treeNode = TreeNodeDraft.$.produce(root -> {
 
 // Step 2, the key step!  
 // Based on existing data object, make some "changes" to create new data object
-TreeNode newTreeNode = TreeNodeDraft.$.produce(
+TreeNode newTreeNode = Objects.createTreeNode(
     // highlight-next-line  
     treeNode, // existing data
     root -> {

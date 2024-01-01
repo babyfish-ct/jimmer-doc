@@ -118,17 +118,17 @@ insert into tree_node(
 <TabItem value="java" label="Java">
 
 ```java
-TreeNodeTable node = TreeNodeTable.$;
+TreeNodeTable node = Tables.TREE_NODE_TABLE;
 
 List<TreeNode> treeNodes = sqlClient
     .createQuery(node)
     .where(node.parentId().isNull())
     .select(
         node.fetch(
-            TreeNodeFetcher.$
+            Fetchers.TREE_NODE_FETCHER
                 .name()
                 .childNodes(
-                    TreeNodeFetcher.$.name(),
+                    Fetchers.TREE_NODE_FETCHER.name(),
                     // highlight-next-line
                     it -> it.depth(2)
             )
@@ -232,17 +232,17 @@ val treeNodes = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-TreeNodeTable node = TreeNodeTable.$;
+TreeNodeTable node = Tables.TREE_NODE_TABLE;
 
 List<TreeNode> treeNodes = sqlClient
     .createQuery(node)
     .where(node.parentId().isNull())
     .select(
         node.fetch(
-            TreeNodeFetcher.$
+            Fetchers.TREE_NODE_FETCHER
                 .name()
                 .childNodes(
-                    TreeNodeFetcher.$.name(),
+                    Fetchers.TREE_NODE_FETCHER.name(),
                     // highlight-next-line
                     it -> it.recursive()
                 )
@@ -497,17 +497,17 @@ val treeNodes = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-TreeNodeTable node = TreeNodeTable.$;
+TreeNodeTable node = Tables.TREE_NODE_TABLE;
 
 List<TreeNode> treeNodes = sqlClient
     .createQuery(node)
     .where(node.parentId().isNull())
     .select(
         node.fetch(
-            TreeNodeFetcher.$
+            Fetchers.TREE_NODE_FETCHER
             .name()
             .childNodes(
-                TreeNodeFetcher.$.name(),
+                Fetchers.TREE_NODE_FETCHER.name(),
                 it -> it.recursive(args ->
                     // highlight-next-line
                     !args.getEntity().name().equals("Clothing")

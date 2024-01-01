@@ -57,7 +57,7 @@ interface Book {
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(table)
@@ -101,16 +101,16 @@ where
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTable author = AuthorTable.$;
+AuthorTable author = Tables.AUTHOR_TABLE;
 
 List<Author> authors = sqlClient
     .createQuery(author)
     .select(
         author.fetch(
-            AuthorFetcher.$
+            Fetchers.AUTHOR_FETCHER
                 .allScalarFields()
                 .books(
-                    BookFetcher.$
+                    Fetchers.BOOK_FETCHER
                         .allScalarFields()
                 )
         )
@@ -179,7 +179,7 @@ val authors = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .filters(cfg -> { ❶
@@ -229,7 +229,7 @@ from BOOK tb_1_
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .filters(cfg -> { ❶

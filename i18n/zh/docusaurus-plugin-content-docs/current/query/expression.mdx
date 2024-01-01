@@ -14,7 +14,7 @@ import TabItem from '@theme/TabItem';
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<
     Tuple5<
@@ -141,7 +141,7 @@ where(table.name eq "Java in Action")
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Integer> constants = sqlClient
     .createQuery(book)
@@ -925,7 +925,7 @@ jimmer-sql尽量避免在SQL中直接使用not，但无论如何，最终SQL逻�
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<
     Tuple6<
@@ -991,7 +991,7 @@ Coalesce语句指定一系列表达式，返回第一个非null值。
 <TabItem value="java" label="Java">
 
 ```java
-BookStoreTable store = BookStoreTable.$;
+BookStoreTable store = Tables.BOOK_STORE_TABLE;
 
 List<String> results = sqlClient
     .createQuery(store)
@@ -1072,7 +1072,7 @@ from BOOK_STORE as tb_1_
 <TabItem value="java" label="Java">
 
 ```java
-BookStoreTable store = BookStoreTable.$;
+BookStoreTable store = Tables.BOOK_STORE_TABLE;
 
 List<String> results = sqlClient
     .createQuery(store)
@@ -1121,7 +1121,7 @@ Contact表达式用于字符串拼接。
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTable author = AuthorTable.$;
+AuthorTable author = Tables.AUTHOR_TABLE;
 
 List<String> results = sqlClient
     .createQuery(author)
@@ -1183,7 +1183,7 @@ case表达式分为两种，简单的case和普通的case
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<String> results = sqlClient
     .createQuery(book)
@@ -1239,7 +1239,7 @@ from BOOK as tb_1_
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<String> results = sqlClient
     .createQuery(book)

@@ -55,7 +55,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface BookRepository<Book, Long> extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default Page<Book> findBooks(
         Pageable pageable,
@@ -308,7 +308,7 @@ fun findBooks(
 这些行为的底层逻辑是一样的，仅以Java为例
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 
 ConfigurableRootQuery<Book> query = ❶
     sqlClient
@@ -556,7 +556,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface BookRepository<Book, Long> extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default Page<Book> findBooks(
         Pageable pageable,
@@ -641,14 +641,14 @@ Page<Book> page = bookRepository.findBooks(
         5,
         SortUtils.toSort("name asc, edition desc")
     ),
-    BookFetcher.$
+    Fetchers.BOOK_FETCHER
         .allScalarFields()
         .store(
-            BookStoreFetcher.$
+            Fetchers.BOOK_STORE_FETCHER
                 .allScalarFields()
         )
         .authors(
-            AuthorFetcher.$
+            Fetchers.AUTHOR_FETCHER
                 .allScalarFields()
         ),
     null,

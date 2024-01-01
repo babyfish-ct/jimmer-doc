@@ -1060,7 +1060,7 @@ Thus, we get a flattened DTO type with 6 properties: `id`, `name`, `parentId`, `
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = treeNodeDraft.$.produce(cola -> {
+TreeNode treeNode = Objects.createTreeNode(cola -> {
     cola.setId(4L);
     cola.setName("Coca cola");
     cola.applyParent(drinks -> {

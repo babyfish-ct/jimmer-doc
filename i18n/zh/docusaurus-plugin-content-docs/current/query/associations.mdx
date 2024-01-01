@@ -360,7 +360,7 @@ select(
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 AssociationTable<Book, BookTableEx, Author, AuthorTableEx> association =
     AssociationTable.of(BookTableEx.class, BookTableEx::authors);
 
@@ -453,8 +453,8 @@ where
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
-AuthorTableEx author = AuthorTableEx.$;
+BookTable book = Tables.BOOK_TABLE;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 List<Book> books = sqlClient
     .createQuery(book)

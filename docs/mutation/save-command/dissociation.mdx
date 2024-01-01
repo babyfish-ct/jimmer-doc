@@ -106,7 +106,7 @@ Now update this `Book` object:
 
 ```java 
 sqlClient.update(
-    BookDraft.$.produce(draft -> {
+    Objects.createBook(draft -> {
         draft.setId(3L);
         draft.addIntoAuthors(author -> author.setId(2L));
         draft.addIntoAuthors(author -> author.setId(5L));
@@ -337,7 +337,7 @@ Now, update this `BookStore` object:
 
 ```java
 sqlClient.update(
-    BookStoreDraft.$.produce(draft -> {
+    Objects.createBookStore(draft -> {
         draft.setId(2L);
         draft.addIntoBooks(book -> book.setId(9L));
         draft.addIntoBooks(book -> book.setId(10L)); 

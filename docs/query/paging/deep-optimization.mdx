@@ -60,7 +60,7 @@ To discuss this feature, focusing on the data query instead of the count query i
 
 ```java
 public List<Book> findBooks(int limit, int offset) {
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
     return sqlClient
             .createQuery(table)
             .select(table)

@@ -18,7 +18,7 @@ import { ViewMore } from '@site/src/components/ViewMore';
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 
 // highlight-next-line
 System.out.println("Unsed join: " + table.store());
@@ -83,7 +83,7 @@ from BOOK as tb_1_
             @Nullable String storeName,
             @Nullable String storeWebsite
     ) {
-        BookTable table = BookTable.$;
+        BookTable table = Tables.BOOK_TABLE;
 
         // 先无条件建立JOIN对象，若未被后续代码使用，
         // 则被自动忽略。因此，此举不会导致无用JOIN
@@ -172,7 +172,7 @@ from BOOK as tb_1_
         @Nullable Long dId,
         @Nullable Long eId
     ) {
-        ATable table = ATable.$;
+        ATable table = Tables.A_TABLE;
 
         // 先无条件建立JOIN对象，若未被后续代码使用，
         // 则被自动忽略。因此，此举不会导致无用JOIN
@@ -281,7 +281,7 @@ from BOOK as tb_1_
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable book = BookTable.$;
+    BookTable book = Tables.BOOK_TABLE;
 
     List<Book> books = sqlClient
         .createQuery(book)
@@ -327,7 +327,7 @@ from BOOK as tb_1_
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable book = BookTable.$;
+    BookTable book = Tables.BOOK_TABLE;
 
     List<Book> books = sqlClient
         .createQuery(book)
@@ -409,7 +409,7 @@ from BOOK as tb_1_
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
@@ -459,7 +459,7 @@ where
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
@@ -526,7 +526,7 @@ from BOOK as tb_1_
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable book = BookTable.$;
+    BookTable book = Tables.BOOK_TABLE;
 
     List<Book> books = sqlClient
         .createQuery(book)
@@ -578,7 +578,7 @@ from BOOK as tb_1_
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable book = BookTable.$;
+    BookTable book = Tables.BOOK_TABLE;
 
     List<Book> books = sqlClient
         .createQuery(book)
@@ -672,7 +672,7 @@ from BOOK as tb_1_
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Long> bookIds = sqlClient
     .createQuery(book)
@@ -743,7 +743,7 @@ where tb_3_.FIRST_NAME = ?
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Long> bookIds = sqlClient
     .createQuery(book)

@@ -32,7 +32,7 @@ Let's look at an example:
 <TabItem value="java" label="Java">  
 
 ```java
-Book book = BookDraft.$.produce(draft -> {
+Book book = Objects.createBook(draft -> {
     draft.setId(20L);
     draft.setName("SQL in Action");
     draft.setEdition(1);
@@ -197,7 +197,7 @@ There are two ways to insert an object without an id property:
 <TabItem value="java" label="Java">
 
 ```java 
-Book book = BookDraft.$.produce(draft -> {
+Book book = Objects.createBook(draft -> {
     draft.setName("SQL in Action");
     draft.setEdition(1);
     draft.setPrice(new BigDecimal("39.9"));
@@ -409,7 +409,7 @@ As long as the `id` of an entity serves no purpose other than being a unique ide
     <TabItem value="java" label="Java">
 
     ```java
-    Book book = BookDraft.$.produce(draft -> {
+    Book book = Objects.createBook(draft -> {
         draft.setName("SQL in Action");
         draft.setEdition(1);
         draft.setPrice(new BigDecimal("39.9"));

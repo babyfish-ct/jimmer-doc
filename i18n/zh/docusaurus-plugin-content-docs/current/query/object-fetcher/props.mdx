@@ -15,14 +15,14 @@ import TabItem from '@theme/TabItem';
 
 ```java
 
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
             // highlight-next-line
-            BookFetcher.$.name()
+            Fetchers.BOOK_FETCHER.name()
         )
     )
     .execute();
@@ -93,13 +93,13 @@ id属性被特殊对待，总是会被查询，并不受对象抓取器的控制
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 // highlight-next-line
                 .name()
                 // highlight-next-line
@@ -135,9 +135,9 @@ val books = sqlClient
 对象抓取器是不可变对象，每一次链式调用都会返回一个新的对象抓取器。
 
 即，上述**Java**代码中
--   `BookFetcher.$`
--   `BookFetcher.$.name()`
--   `BookFetcher.$.name().edition()`
+-   `Fetchers.BOOK_FETCHER`
+-   `Fetchers.BOOK_FETCHER.name()`
+-   `Fetchers.BOOK_FETCHER.name().edition()`
 
 是三个不同的对象抓取器，每一个都是不可变的。
 
@@ -180,14 +180,14 @@ where tb_1_.EDITION = ?
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
             // highlight-next-line
-            BookFetcher.$.allScalarFields()
+            Fetchers.BOOK_FETCHER.allScalarFields()
         )
     )
     .execute();
@@ -257,13 +257,13 @@ where tb_1_.EDITION = ?
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
             .allScalarFields()
             // highlight-next-line
             .edition(false)

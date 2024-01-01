@@ -204,7 +204,7 @@ or
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> books = sqlClient
     .createQuery(book) 
     .select(book)
@@ -251,11 +251,11 @@ Not only aggregate roots can be filtered, associated objects can be filtered too
 
 ```java 
 List<Author> authors = sqlClient.getEntities.findAll(
-    AuthorFetcher.$
+    Fetchers.AUTHOR_FETCHER
         .allScalarFields()
         // highlight-next-line
         .books(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
         )
 );
@@ -283,16 +283,16 @@ or
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTable author = AuthorTable.$;
+AuthorTable author = Tables.AUTHOR_TABLE;
 List<Author> authors = sqlClient  
     .createQuery(author)
     .select(
         author.fetch(
-            AuthorFetcher.$
+            Fetchers.AUTHOR_FETCHER
                 .allScalarFields()
                 // highlight-next-line
                 .books(
-                    BookFetcher.$
+                    Fetchers.BOOK_FETCHER
                         .allScalarFields()
                 )
         )

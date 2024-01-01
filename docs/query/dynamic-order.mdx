@@ -16,7 +16,7 @@ First, let's look at how to use static ordering to understand the ordering conce
 ```java
 public List<Book> findBooks() {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     return sqlClient
         .createQuery(table)
@@ -87,7 +87,7 @@ Assume `OrderMode` is an enum with values `NAME` and `PRICE`, `orderByIf` can be
 ```java
 public List<Book> findBooks(OrderMode orderMode) {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     return sqlClient
         .createQuery(table)
@@ -230,7 +230,7 @@ All [dynamic join](./dynamic-join) features are valid for these implicit joins.
 ```java
 public List<Book> findBooks(String sort) {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     return sqlClient
         .createQuery(table)
@@ -292,7 +292,7 @@ We can write the query like this, with `Sort` as parameter instead of string:
 ```java 
 public List<Book> findBooks(Sort sort) {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     return sqlClient
         .createQuery(table)

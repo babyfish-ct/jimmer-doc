@@ -84,14 +84,14 @@ View properties need to be fetched manually. `allScalarFields` and `allTableFiel
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> bookWithIdViews = sqlClient
     .createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
                 // highlight-next-line
                 .storeId()
@@ -397,11 +397,11 @@ For example, the following query gets all course names for the student with id 1
 Student student = sqlClient
     .findNullable(
         1L,
-        StudentFetcher.$
+        Fetchers.STUDENT_FETCHER
             .name()
             // highlight-next-line
             .courses(
-                CourseFetcher.$
+                Fetchers.COURSE_FETCHER
                     .name()
             )
     )

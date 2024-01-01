@@ -354,13 +354,13 @@ public @FetchBy("COMPLEX_FETCHER") BookStore findStoreDetail(
 }
 
 public static final Fetcher<BookStore> COMPLEX_FETCHER =
-    BookStoreFetcher.$ ❶
+    Fetchers.BOOK_STORE_FETCHER ❶
         .allScalarFields()
         .books( ❷
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
                 .authors( ❸
-                    AuthorFetcher.$
+                    Fetchers.AUTHOR_FETCHER
                         .allScalarFields()
                 )
         );

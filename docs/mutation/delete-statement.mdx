@@ -14,7 +14,7 @@ The usage of the delete statement is:
 <TabItem value="java" label="Java">
 
 ```java  
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 int affectedRowCount = sqlClient
     .createDelete(book) 
@@ -55,7 +55,7 @@ The delete statement usage below supports JOIN clauses, as follows:
 <TabItem value="java" label="Java">
 
 ```java 
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 int affectedRowCount = sqlClient
     .createDelete(book)

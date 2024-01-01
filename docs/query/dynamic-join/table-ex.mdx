@@ -385,7 +385,7 @@ So your code looks like:
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(table)
@@ -480,10 +480,10 @@ In the example below, `Author.books` is the same as `Book.authors` discussed abo
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 
 // `author` used in subquery, use TableEx
-AuthorTableEx author = AuthorTableEx.$;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 List<Book> books = sqlClient
     .createQuery(table)
@@ -586,7 +586,7 @@ Therefore, prohibiting collection associations in top-level queries is a soft co
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Long> bookIds = sqlClient
     .createQuery(book)

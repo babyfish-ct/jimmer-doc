@@ -767,7 +767,7 @@ update BOOK set STORE_ID = 2 where ID = 7;
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 sqlClient
         .createUpdate(book)
         .set(book.storeId(), 2L)

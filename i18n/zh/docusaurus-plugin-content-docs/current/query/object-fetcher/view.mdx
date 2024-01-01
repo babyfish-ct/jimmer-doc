@@ -84,14 +84,14 @@ interface Book {
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> bookWithIdViews = sqlClient
     .createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
                 // highlight-next-line
                 .storeId()
@@ -397,11 +397,11 @@ values  (1, 1, 100), (1, 2, 90), (1, 3, 80), (1, 4, 70), (1, 5, 60),
 Student student = sqlClient
     .findNullable(
         1L,
-        StudentFetcher.$
+        Fetchers.STDUENT_FETCHER
             .name()
             // highlight-next-line
             .courses(
-                CourseFetcher.$
+                Fetchers.COURSE_FETCHER
                     .name()
             )
     )

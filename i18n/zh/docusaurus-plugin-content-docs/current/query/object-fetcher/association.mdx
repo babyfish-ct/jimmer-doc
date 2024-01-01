@@ -35,12 +35,12 @@ ORM有两种关联属性：
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
                 // highlight-next-line
                 .store()
@@ -113,13 +113,13 @@ where tb_1_.EDITION = ?
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
-            BookFetcher.$.
+            Fetchers.BOOK_FETCHER.
                 .allScalarFields()
                 // highlight-next-line
                 .authors()
@@ -219,16 +219,16 @@ val books = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
                 // highlight-next-line
                 .store(
-                    BookStoreFetcher.$
+                    Fetchers.BOOK_STORE_FETCHER
                         // highlight-next-line
                         .allScalarFields()
                 )
@@ -317,17 +317,17 @@ val books = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
-            BookFetcher.$.
+            Fetchers.BOOK_FETCHER.
                 .allScalarFields()
                 // highlight-next-line
                 .authors(
-                    AuthorFetcher.$
+                    Fetchers.AUTHOR_FETCHER
                         // highlight-next-line
                         .allScalarFields()
                 )
@@ -451,12 +451,12 @@ val books = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 // highlight-next-line
                 .allTableFields()
         )
@@ -504,7 +504,7 @@ val bookAllTableFields = sqlClient
 ```
 
 :::info
-某些情况下，`select(table.fetch(XxxFetcher.$.allTableFields()))`和`select(table)`等价。此时，可以认为后者是前者的简写方式。
+某些情况下，`select(table.fetch(Fetchers.XXX_FETCHER.allTableFields()))`和`select(table)`等价。此时，可以认为后者是前者的简写方式。
 
 二者等价的前提：关联对象不受<ViewMore buttonText="过滤器"><FilterRef/></ViewMore>影响
 :::
@@ -515,7 +515,7 @@ val bookAllTableFields = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     // highlight-next-line
@@ -553,14 +553,14 @@ val bookAllScalarFields = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-            BookFetcher.$.allScalarFields()
+            Fetchers.BOOK_FETCHER.allScalarFields()
                 // highlight-next-line
-                .authors(AuthorFetcher.$.allScalarFields())
+                .authors(Fetchers.AUTHOR_FETCHER.allScalarFields())
         )
     )
     .execute();
@@ -664,14 +664,14 @@ where tb_2_.BOOK_ID in (?, ?, ?, ?)
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-                BookFetcher.$.allScalarFields()
+                Fetchers.BOOK_FETCHER.allScalarFields()
                 // highlight-next-line
-                .authors(AuthorFetcher.$.allScalarFields(), it -> it.batch(2))
+                .authors(Fetchers.AUTHOR_FETCHER.allScalarFields(), it -> it.batch(2))
         )
     )
     .execute();
@@ -796,16 +796,16 @@ val books = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
             .allScalarFields()
             .authors(
-                AuthorFetcher.$.allScalarFields(),
+                Fetchers.AUTHOR_FETCHER.allScalarFields(),
                 // highlight-next-line
                 it -> it.batch(1).limit(/*limit*/ 10, /*offset*/ 90)
             )
@@ -896,17 +896,17 @@ val books = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Tuple2<Book, Book>> books = sqlClient
     .createQuery(book)
     .select(
         // 第一列
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
             .allScalarFields()
             .authors(
-                AuthorFetcher.$.allScalarFields(),
+                Fetchers.AUTHOR_FETCHER.allScalarFields(),
 
                 // 使用过滤器
                 // highlight-next-line
@@ -918,10 +918,10 @@ List<Tuple2<Book, Book>> books = sqlClient
 
         // 第二列
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
                 .authors(
-                    AuthorFetcher.$.allScalarFields()
+                    Fetchers.AUTHOR_FETCHER.allScalarFields()
                 // 不使用过滤器
                 )
         )

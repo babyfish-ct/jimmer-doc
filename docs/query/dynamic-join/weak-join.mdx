@@ -181,7 +181,7 @@ We have never introduced these before, please refer to [NativeSQL expressions](.
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 
 List<Long> bookIds = sqlClient
     .createQuery(table)

@@ -92,10 +92,10 @@ public class App {
                 3L,
                 
                 ❶
-                BookFetcher.$
+                Fetchers.BOOK_FETCHER
                     .allScalarFields() ❷  
                     .authors( ❸
-                        AuthorFetcher.$
+                        Fetchers.AUTHOR_FETCHER
                             .allScalarFields() ❹
             )
         );
@@ -223,11 +223,11 @@ public class App {
                 "GraphQL in Action",
 
                 ❶
-                BookFetcher.$
+                Fetchers.BOOK_FETCHER
                     .name() ❷
                     .edition() ❸
                     .store( ❹
-                        BookStoreFetcher.$
+                        Fetchers.BOOK_STORE_FETCHER
                             .name() ❺
                 )
             );
@@ -317,7 +317,7 @@ Default methods can be added to the custom repository interface and implemented 
 ```java title="BookRepository.java"
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default List<Book> find(
         @Nullable String name,
@@ -328,7 +328,7 @@ public interface BookRepository extends JRepository<Book, Long> {
         
         @Nullable Fetcher<Book> fetcher
     ) {
-        AuthorTableEx author = AuthorTableEx.$; ❶
+        AuthorTableEx author = TableExes.AUTHOR_TABLE_EX; ❶
 
         return sql()
             .createQuery(table)
@@ -417,7 +417,7 @@ interface BookRepository : KRepository<BookStore, Long> {
 
 -   ❶
 
-    - Java: The subquery is based on the global variable `AuthorTableEx.$` and is aliased as `author` for convenience.
+    - Java: The subquery is based on the global variable `TableExes.AUTHOR_TABLE_EX` and is aliased as `author` for convenience.
 
     - Kotlin: `subQuery` accepts a lambda expression.
 
@@ -549,10 +549,10 @@ public class App {
                 // First column, data structure of Book as aggregate root 
                 // and shape controlled by object fetcher
                 table.fetch(
-                    BookFetcher.$
+                    Fetchers.BOOK_FETCHER
                         .allScalarFields()
                         .authors(
-                            AuthorFetcher.$
+                            Fetchers.AUTHOR_FETCHER
                                 .allScalarFields()
                         )
                 ),

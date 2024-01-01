@@ -47,7 +47,7 @@ There are two cases:
         // highlight-next-line
         .registerModule(new ImmutableModule());
     
-    TreeNode treeNode = TreeNodeDraft.$.produce(
+    TreeNode treeNode = Objects.createTreeNode(
         draft -> draft.setName("Root Node")
     );
 

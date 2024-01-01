@@ -22,7 +22,7 @@ In Jimmer, all table joins are implicit, formed by association paths of arbitrar
 ```java
 public List<Book> findBooksByStoreCityName(@Nullable String storeCityName) {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     return sqlClient
         .createQuery(table)

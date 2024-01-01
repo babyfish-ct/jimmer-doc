@@ -17,7 +17,7 @@ NativeSQL表达式是一个重要的功能，数据库产品总会有特有的�
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTable table = AuthorTable.$;
+AuthorTable table = Tables.AUTHOR_TABLE;
 
 List<Author> authors = sqlClient
     .createQuery(table)

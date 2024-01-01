@@ -262,7 +262,7 @@ public class BookDetailView implements View<Book> {
     public static final ViewMetadata<Book, BookDetailView> METADATA = 
         new ViewMetadata<Book, BookDetailView>(
             // highlight-start
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .name()
                 .edition()
                 .price()
@@ -278,7 +278,7 @@ public class BookDetailView implements View<Book> {
         public static final ViewMetadata<BookStore, TargetOf_store> METADATA = 
             new ViewMetadata<BookStore, TargetOf_store>(
                 // highlight-start
-                BookStoreFetcher.$
+                Fetchers.BOOK_STORE_FETCHER
                     .name()
                     .website()
                     .version(),
@@ -295,7 +295,7 @@ public class BookDetailView implements View<Book> {
         public static final ViewMetadata<Author, TargetOf_authors> METADATA = 
             new ViewMetadata<Author, TargetOf_authors>(
                 // highlight-start
-                AuthorFetcher.$
+                Fetchers.AUTHOR_FETCHER
                     .firstName()
                     .lastName()
                     .gender(),
@@ -401,7 +401,7 @@ data class BookDetailView(
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient 
     .createQuery(table)

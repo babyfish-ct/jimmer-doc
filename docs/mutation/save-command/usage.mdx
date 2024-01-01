@@ -27,7 +27,7 @@ A save command persists an arbitrary shaped data structure to the database, for 
     <TabItem value="java" label="Java">
 
     ```java
-    Book simpleBook = BookDraft.$.product(draft -> {
+    Book simpleBook = Objects.createBook(draft -> {
         draft.setName("SQL in Action");
         dratt.setEdition(1);
         draft.setPrice(new BigDecimal("59.9"));
@@ -56,7 +56,7 @@ A save command persists an arbitrary shaped data structure to the database, for 
     <TabItem value="java" label="Java">
 
     ```java
-    Book complexBook = BookDraft.$.product(draft -> {
+    Book complexBook = Objects.createBook(draft -> {
         draft.setName("SQL in Action");
         dratt.setEdition(1);
         draft.setPrice(new BigDecimal("59.9"));
@@ -251,7 +251,7 @@ Among them:
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = TreeNodeDraft.$.produce(food -> {
+TreeNode treeNode = Objects.createTreeNode(food -> {
     food
         .setParent(null)
         .setName("Food")

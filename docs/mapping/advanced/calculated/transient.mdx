@@ -324,7 +324,7 @@ interface BookStore {
 
 ```java 
 List<BookStore> stores = bookStoreRepository.findAll(
-    BookStoreFetcher.$
+    Fetchers.BOOK_STORE_FETCHER
         .name()
         // highlight-next-line
         .avgPrice()
@@ -406,10 +406,10 @@ To explain why this example needs to add a calculation property `BookStore.newes
 ```java 
 Book store = bookStoreRepository.findNullable(
     1L,  
-    BookStoreFetcher.$
+    Fetchers.BOOK_STORE_FETCHER
         .name()
         .books(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .name()
                 .edition()
         )
@@ -770,15 +770,15 @@ interface BookStore {
 
 ```java
 List<BookStore> stores = bookStoreRepository.findAll(
-    BookStoreFetcher.$
+    Fetchers.BOOK_STORE_FETCHER
         .name()
         .newestBooks( ❶
 
             ❷
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 allScalarFields()
                 .authors(
-                    AuthorFetcher.$
+                    Fetchers.AUTHOR_FETCHER
                         .allScalarFields()
                 )
         )

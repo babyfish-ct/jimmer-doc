@@ -71,19 +71,19 @@ public class BookController {
     }
 
     private static final Fetcher<Book> SIMPLE_FETCHER = ❺
-        BookFetcher.$
+        Fetchers.BOOK_FETCHER
             .name();
 
     private static final Fetcher<Book> COMPLEX_FETCHER = ❻
-        BookFetcher.$
+        Fetchers.BOOK_FETCHER
             .allScalarFields()
             .store(
-                BookStoreFetcher.$
+                Fetchers.BOOK_STORE_FETCHER
                     .allScalarFields()
                     .avgPrice()
             )
             .authors(
-                AuthorFetcher.$
+                Fetchers.AUTHOR_FETCHER
                     .allScalarFields()
             );
 }

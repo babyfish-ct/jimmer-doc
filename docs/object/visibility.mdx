@@ -235,7 +235,7 @@ Let's take `Book.authorIds` and `Book.authors` to demonstrate how object fetcher
 
     ```java 
     Book book = sqlClient.findById(
-        BookFetcher.$
+        Fetchers.BOOK_FETCHER
             .allScalarFields()
             // highlight-next-line
             .authors(), // Associated objects with only id  
@@ -286,7 +286,7 @@ Let's take `Book.authorIds` and `Book.authors` to demonstrate how object fetcher
 
     ```java
     Book book = sqlClient.findById(
-        BookFetcher.$
+        Fetchers.BOOK_FETCHER
             .allScalarFields()
             // highlight-next-line
             .authorIds(), // Associated ids, not objects

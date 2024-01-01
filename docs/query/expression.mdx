@@ -14,7 +14,7 @@ Let's first look at an example *(this query has no real business logic, just for
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<
     Tuple5<
@@ -144,7 +144,7 @@ Constant expressions are highly similar to literal expressions, let's look at an
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Integer> constants = sqlClient
     .createQuery(book)
@@ -934,7 +934,7 @@ Jimmer-sql tries to avoid directly using `NOT` in SQL, but the final logic is eq
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<
     Tuple6<
@@ -1000,7 +1000,7 @@ The Coalesce statement specifies a list of expressions and returns the first non
 <TabItem value="java" label="Java">  
 
 ```java  
-BookStoreTable store = BookStoreTable.$;
+BookStoreTable store = Tables.BOOK_STORE_TABLE;
 
 List<String> results = sqlClient
     .createQuery(store) 
@@ -1082,7 +1082,7 @@ Specifically, if the SQL coalesce function has only two parameters, i.e. `or()` 
 <TabItem value="java" label="Java">  
 
 ```java
-BookStoreTable store = BookStoreTable.$;
+BookStoreTable store = Tables.BOOK_STORE_TABLE;
 
 List<String> results = sqlClient
     .createQuery(store)
@@ -1130,7 +1130,7 @@ This example concatenates `firstName` and `lastName` of authors with a space as 
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTable author = AuthorTable.$;  
+AuthorTable author = Tables.AUTHOR_TABLE;  
 
 List<String> results = sqlClient
     .createQuery(author)
@@ -1192,7 +1192,7 @@ For simple case, an expression is specified at the beginning. Each WHEN branch s
 <TabItem value="java" label="Java">
 
 ```java 
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<String> results = sqlClient
     .createQuery(book)
@@ -1248,7 +1248,7 @@ For searched case, no expression is specified at the beginning. Each WHEN branch
 <TabItem value="java" label="Java">  
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<String> results = sqlClient
     .createQuery(book)

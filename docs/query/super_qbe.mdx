@@ -98,7 +98,7 @@ Accordingly, for the automatically generated `BookSpecification` class, on the o
         JSpecification<?, BookTable> specification ❶
     ) {
         
-        BookTable table = BookTable.$;
+        BookTable table = Tables.BOOK_TABLE;
         
         return sqlClient
             .createQuery(table)

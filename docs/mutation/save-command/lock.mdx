@@ -97,7 +97,7 @@ Characteristics of optimistic lock:
 
     ```java
     BookStore savedData = sqlClient.save(
-            BookStoreDraft.$.produce(draft -> {
+            Objects.createBookStore(draft -> {
                 draft.setName("TURING");
                 draft.addIntoBooks(book -> {
                     book.setName("Introduction to Algorithms");
@@ -201,7 +201,7 @@ Characteristics of optimistic lock:
 
     ```java
     BookStore savedData = sqlClient.save(
-            BookStoreDraft.$.produce(draft -> {
+            Objects.createBookStore(draft -> {
                 draft.setName("TURING");
                 // highlight-next-line
                 draft.setVersion(0);
@@ -283,7 +283,7 @@ Characteristics of optimistic lock:
 
     ```java
     BookStore savedData = sqlClient.save(
-            BookStoreDraft.$.produce(draft -> {
+            Objects.createBookStore(draft -> {
                 draft.setName("TURING");
                 // highlight-next-line
                 draft.setVersion(0);
@@ -403,7 +403,7 @@ In the following examples to demonstrate pessimistic lock, we no longer make tha
 
 ```java
 sqlClient.save(
-        BookStoreDraft.$.produce(draft -> {
+        Objects.createBookStore(draft -> {
             draft.setName("TURING");
             draft.addIntoBooks(book -> {
                 book.setName("Introduction to Algorithms");
@@ -565,7 +565,7 @@ There are two ways to enable pessimistic lock:
     sqlClient
             .getEntities()
             .saveCommand(
-                    BookStoreDraft.$.produce(draft -> {
+                    Objects.createBookStore(draft -> {
                         draft.setName("TURING");
                         draft.addIntoBooks(book -> {
                             book.setName("Introduction to Algorithms");

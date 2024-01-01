@@ -14,8 +14,8 @@ import TabItem from '@theme/TabItem';
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
-AuthorTableEx author = AuthorTableEx.$;
+BookTable book = Tables.BOOK_TABLE;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 List<Book> books = sqlClient
     .createQuery(book)
@@ -82,7 +82,7 @@ where
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> newestBooks = sqlClient
     .createQuery(book)
@@ -158,7 +158,7 @@ where
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> newestBooks = sqlClient
     .createQuery(book)
@@ -227,8 +227,8 @@ where
 <TabItem value="java" label="Java">
 
 ```java
-BookStoreTable store = BookStoreTable.$;
-BookTable book = BookTable.$;
+BookStoreTable store = Tables.BOOK_STORE_TABLE;
+BookTable book = Tables.BOOK_TABLE;
 
 MutableRootQuery<BookStoreTable> query =
     sqlClient.createQuery(store);
@@ -310,8 +310,8 @@ order by (
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
-AuthorTableEx author = AuthorTableEx.$;
+BookTable book = Tables.BOOK_TABLE;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 List<Book> books = sqlClient
     .createQuery(book)
@@ -389,8 +389,8 @@ where tb_1_.ID =
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
-AuthorTableEx author = AuthorTableEx.$;
+BookTable book = Tables.BOOK_TABLE;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 List<Book> books = sqlClient
     .createQuery(book)
@@ -468,8 +468,8 @@ where tb_1_.ID =
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
-AuthorTableEx author = AuthorTableEx.$;
+BookTable book = Tables.BOOK_TABLE;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 List<Book> books = sqlClient
     .createQuery(book)
@@ -556,8 +556,8 @@ where
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
-AuthorTableEx author = AuthorTableEx.$;
+BookTable book = Tables.BOOK_TABLE;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 List<Book> books = sqlClient
     .createQuery(book)

@@ -26,7 +26,7 @@ import { ViewMore } from '@site/src/components/ViewMore';
             @Nullable String storeName,
             @Nullable String storeWebsite
     ) {
-        BookTable table = BookTable.$;
+        BookTable table = Tables.BOOK_TABLE;
 
         return sqlClient
             .createQuery(table)
@@ -171,7 +171,7 @@ import { ViewMore } from '@site/src/components/ViewMore';
         @Nullable Long dId,
         @Nullable Long eId
     ) {
-        ATable table = ATable.$;
+        ATable table = Tables.A_TABLE;
 
         return sqlClient
             .createQuery(table)

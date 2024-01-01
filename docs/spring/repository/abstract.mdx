@@ -957,16 +957,16 @@ Page<Book> page = bookRepository
             SortUtils.toSort("name, edition desc") 
         ),
         // highlight-next-line
-        BookFetcher.$
+        Fetchers.BOOK_FETCHER
             .allScalarFields()
             // highlight-next-line
             .store(
-                BookFetcher.$
+                Fetchers.BOOK_FETCHER
                     .name() // associated object only queries id (implicit+mandatory) and name
             )
             // highlight-next-line 
             .authors(
-                AuthorFetcher.$
+                Fetchers.AUTHOR_FETCHER
                     // associated object only queries id (implicit+mandatory), firstName and lastName
                     .firstName().lastName() 
             )

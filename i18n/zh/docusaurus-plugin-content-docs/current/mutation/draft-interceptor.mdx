@@ -329,7 +329,7 @@ fun sqlClient(
 <TabItem value="java" label="Java">
 
 ```java
-Book book = BookDraft.$.produce(draft -> {
+Book book = Objects.createBook(draft -> {
     draft.setName("SQL in Action");
     draft.setEdition(1);
     draft.setPrice(new BigDecimal("59"));

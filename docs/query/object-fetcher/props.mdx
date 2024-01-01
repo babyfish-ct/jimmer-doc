@@ -15,14 +15,14 @@ Scalar fields refer to all non-associative fields in a database table. Taking fe
 
 ```java
 
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
             // highlight-next-line
-            BookFetcher.$.name()
+            Fetchers.BOOK_FETCHER.name()
         )
     )
     .execute();
@@ -93,13 +93,13 @@ The printed result is (original output is compact, formatted here for readabilit
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 // highlight-next-line
                 .name()
                 // highlight-next-line
@@ -135,9 +135,9 @@ val books = sqlClient
 Object fetchers are immutable objects, each method call returns a new object fetcher. 
 
 In the **Java** code above:
--   `BookFetcher.$`
--   `BookFetcher.$.name()`  
--   `BookFetcher.$.name().edition()`
+-   `Fetchers.BOOK_FETCHER`
+-   `Fetchers.BOOK_FETCHER.name()`  
+-   `Fetchers.BOOK_FETCHER.name().edition()`
 
 are three different object fetchers, each immutable.
 
@@ -180,14 +180,14 @@ In some scenarios, fetching all non-associative fields is a very common operatio
 <TabItem value="java" label="Java">  
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
             // highlight-next-line
-            BookFetcher.$.allScalarFields()
+            Fetchers.BOOK_FETCHER.allScalarFields()
         )
     )
     .execute(); 
@@ -259,13 +259,13 @@ This is when negative properties can be used to exclude unneeded fields.
 <TabItem value="java" label="Java">  
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
             .allScalarFields()
             // highlight-next-line
             .edition(false)

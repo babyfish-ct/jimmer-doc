@@ -47,7 +47,7 @@ jimmer-core定义了一个jackson模块：`org.babyfish.jimmer.jackson.Immutable
         // highlight-next-line
         .registerModule(new ImmutableModule());
 
-    TreeNode treeNode = TreeNodeDraft.$.produce(
+    TreeNode treeNode = Objects.createTreeNode(
         draft -> draft.setName("Root Node")
     );
 

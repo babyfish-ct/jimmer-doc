@@ -37,7 +37,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$; ❶
+    BookTable table = Tables.BOOK_TABLE; ❶
 
     default List<Book> find(@Nullable String name) {
         return sql() ❷
@@ -86,7 +86,7 @@ interface BookRepository : KRepository<BookStore, Long> {
 
 -   ❶
 
-    -   Java: The parent query is based on the table object `BookTable.$`, renamed to `table` for convenience.  
+    -   Java: The parent query is based on the table object `Tables.BOOK`, renamed to `table` for convenience.  
 
         This rename applies to all default methods of the current interface, so declaring it as a static interface variable is appropriate.
 
@@ -220,7 +220,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default List<Book> find(
         @Nullable String name,
@@ -358,7 +358,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default List<Book> find(
         @Nullable String name,
@@ -366,7 +366,7 @@ public interface BookRepository extends JRepository<Book, Long> {
         // highlight-next-line
         @Nullable String authorName
     ) {
-        AuthorTableEx author = AuthorTableEx.$; ❶
+        AuthorTableEx author = TableExes.AUTHOR_TABLE_EX; ❶
 
         return sql()
             .createQuery(table)
@@ -460,9 +460,9 @@ interface BookRepository : KRepository<BookStore, Long> {
 
 -   ❶
 
-    -   Java: The subquery is based on the global variable `AuthorTableEx.$`, alias it to `author` for subsequent convenience.
+    -   Java: The subquery is based on the global variable `TableExes.AUTHOR_TABLE_EX`, alias it to `author` for subsequent convenience.
 
-        Here, the subquery is based on `AuthorTableEx.$` rather than `AuthorTable.$` so that `select(table.books().id())` can compile.
+        Here, the subquery is based on `TableExes.AUTHOR_TABLE_EX` rather than `Tables.AUTHOR_TABLE` so that `select(table.books().id())` can compile.
 
         Please read [query/Pagination Safety](../../query/dynamic-join/table-ex) for more details.
         
@@ -541,7 +541,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default List<Book> find(
         @Nullable String name,
@@ -550,7 +550,7 @@ public interface BookRepository extends JRepository<Book, Long> {
         // highlight-next-line
         @Nullable Sort sort
     ) {
-        AuthorTableEx author = AuthorTableEx.$;
+        AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
         return sql()
             .createQuery(table)
@@ -768,7 +768,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default Page<Book> find( ❶
         @Nullable String name,
@@ -777,7 +777,7 @@ public interface BookRepository extends JRepository<Book, Long> {
         // highlight-next-line  
         Pageable pageable ❷
     ) {
-        AuthorTableEx author = AuthorTableEx.$;
+        AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
         // highlight-next-line
         return pager(pageable).execute( ❸
@@ -1056,7 +1056,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default Page<Book> find(
         @Nullable String name,
@@ -1066,7 +1066,7 @@ public interface BookRepository extends JRepository<Book, Long> {
         // highlight-next-line
         @Nullable Fetcher<Book> fetcher
     ) {
-        AuthorTableEx author = AuthorTableEx.$;
+        AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
         return pager(pageable).execute(
             sql()
@@ -1188,16 +1188,16 @@ Page<Book> page = bookRepository
             SortUtils.toSort("name, edition desc")
         ),
         // highlight-next-line
-        BookFetcher.$
+        Fetchers.BOOK_FETCHER
             .allScalarFields()
             // highlight-next-line
             .store(
-                BookFetcher.$
+                Fetchers.BOOK_FETCHER
                     .name() // associated object only queries id (implicit+mandatory) and name
             )
             // highlight-next-line
             .authors(
-                AuthorFetcher.$
+                Fetchers.AUTHOR_FETCHER
                     // associated object only queries id (implicit+mandatory), firstName and lastName
                     .firstName().lastName()
             )

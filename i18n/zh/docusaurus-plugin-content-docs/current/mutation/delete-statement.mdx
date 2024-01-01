@@ -14,7 +14,7 @@ Delete语句用法如下
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 int affectedRowCount = sqlClient
     .createDelete(book)
@@ -53,7 +53,7 @@ Delete语句用法如下支持JOIN子句，如下
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 int affectedRowCount = sqlClient
     .createDelete(book)

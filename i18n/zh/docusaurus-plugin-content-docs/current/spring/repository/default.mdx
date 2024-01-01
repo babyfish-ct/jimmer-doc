@@ -37,7 +37,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$; ❶
+    BookTable table = Tables.BOOK_TABLE; ❶
 
     default List<Book> find(@Nullable String name) {
         return sql() ❷
@@ -86,7 +86,7 @@ interface BookRepository : KRepository<BookStore, Long> {
 
 -   ❶
 
-    -   Java: 父查询基于表对象`BookTable.$`，为了编程方便，重命名为`table`。
+    -   Java: 父查询基于表对象`Tables.BOOK`，为了编程方便，重命名为`table`。
 
         这个重命名对当前接口所有default方法都有用，将之声明为接口静态变量较为合适。
 
@@ -218,7 +218,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default List<Book> find(
         @Nullable String name,
@@ -354,7 +354,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default List<Book> find(
         @Nullable String name,
@@ -362,7 +362,7 @@ public interface BookRepository extends JRepository<Book, Long> {
         // highlight-next-line
         @Nullable String authorName
     ) {
-        AuthorTableEx author = AuthorTableEx.$; ❶
+        AuthorTableEx author = TableExes.AUTHOR_TABLE_EX; ❶
 
         return sql()
             .createQuery(table)
@@ -456,9 +456,9 @@ interface BookRepository : KRepository<BookStore, Long> {
 
 -   ❶  
 
-    -   Java: 子查询基于全局变量`AuthorTableEx.$`，为了便于后续开发，取一个别名`author`。
+    -   Java: 子查询基于全局变量`TableExes.AUTHOR_TABLE_EX`，为了便于后续开发，取一个别名`author`。
 
-        这里，子查询基于`AuthorTableEx.$`，而非`AuthorTable.$`，是为了`select(table.books.id)`能通过编译。
+        这里，子查询基于`TableExes.AUTHOR_TABLE_EX`，而非`Tables.AUTHOR_TABLE`，是为了`select(table.books.id)`能通过编译。
 
         请阅读[分页安全性](../../query/dynamic-join/table-ex)以了解更多。
 
@@ -537,7 +537,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default List<Book> find(
         @Nullable String name,
@@ -546,7 +546,7 @@ public interface BookRepository extends JRepository<Book, Long> {
         // highlight-next-line
         @Nullable Sort sort
     ) {
-        AuthorTableEx author = AuthorTableEx.$; 
+        AuthorTableEx author = TableExes.AUTHOR_TABLE_EX; 
 
         return sql()
             .createQuery(table)
@@ -763,7 +763,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default Page<Book> find( ❶
         @Nullable String name,
@@ -772,7 +772,7 @@ public interface BookRepository extends JRepository<Book, Long> {
         // highlight-next-line
         Pageable pageable ❷
     ) {
-        AuthorTableEx author = AuthorTableEx.$; 
+        AuthorTableEx author = TableExes.AUTHOR_TABLE_EX; 
 
         // highlight-next-line
         return pager(pageable).execute( ❸
@@ -1051,7 +1051,7 @@ import org.springframework.util.StringUtils;
 
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default Page<Book> find(
         @Nullable String name,
@@ -1061,7 +1061,7 @@ public interface BookRepository extends JRepository<Book, Long> {
         // highlight-next-line
         @Nullable Fetcher<Book> fetcher
     ) {
-        AuthorTableEx author = AuthorTableEx.$; 
+        AuthorTableEx author = TableExes.AUTHOR_TABLE_EX; 
 
         return pager(pageable).execute( 
             sql()
@@ -1183,16 +1183,16 @@ Page<Book> page = bookRepository
             SortUtils.toSort("name, edition desc")
         ),
         // highlight-next-line
-        BookFetcher.$
+        Fetchers.BOOK_FETCHER
             .allScalarFields()
             // highlight-next-line
             .store(
-                BookFetcher.$
+                Fetchers.BOOK_FETCHER
                     .name() // 关联对象仅查询id(隐含+强制)和name
             )
             // highlight-next-line
             .authors(
-                AuthorFetcher.$
+                Fetchers.AUTHOR_FETCHER
                     // 关联对象仅查询id(隐含+强制)、firstName和lastName
                     .firstName().lastName()
             )

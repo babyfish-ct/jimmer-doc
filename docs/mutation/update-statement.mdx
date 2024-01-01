@@ -14,7 +14,7 @@ The usage of the update statement is:
 <TabItem value="java" label="Java"> 
 
 ```java
-AuthorTable author = AuthorTable.$;
+AuthorTable author = Tables.AUTHOR_TABLE;
 
 int affectedRowCount = sqlClient
     .createUpdate(author)
@@ -63,7 +63,7 @@ By default, update statements do not support joins, which will cause exceptions:
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTableEx author = AuthorTableEx.$;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 int affectedRowCount = sqlClient
     .createUpdate(author)
@@ -162,7 +162,7 @@ Then JOIN can be used in update:
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTableEx author = AuthorTableEx.$;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 int affectedRowCount = sqlClient
     .createUpdate(author) 
@@ -281,7 +281,7 @@ Then JOIN can be used in update:
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTableEx author = AuthorTableEx.$;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 int affectedRowCount = sqlClient
     .createUpdate(author)

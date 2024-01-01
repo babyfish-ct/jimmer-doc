@@ -31,7 +31,7 @@ Jimmer实体的动态性，并非动态语言那种放弃拼写检查和类型�
     <TabItem value="java" label="Java">
 
     ```java
-    Book book = BookDraft.$.product(book -> {
+    Book book = Objects.createBook(book -> {
         book.setName("Learning GraphQL");
     });
     ```
@@ -60,7 +60,7 @@ Jimmer实体的动态性，并非动态语言那种放弃拼写检查和类型�
     <TabItem value="java" label="Java">
 
     ```java
-    Book book = BookDraft.$.product(book -> {
+    Book book = Objects.createBook(book -> {
         book.setName("Learning GraphQL");
         book.setEdition(1);
         book.setPrice(new BigDecimal("49.99"));
@@ -97,7 +97,7 @@ Jimmer实体的动态性，并非动态语言那种放弃拼写检查和类型�
     <TabItem value="java" label="Java">
 
     ```java
-    Book book = BookDraft.$.product(book -> {
+    Book book = Objects.createBook(book -> {
         book.setName("Learning GraphQL");
         book.setEdition(1);
         book.setPrice(new BigDecimal("49.99"));
@@ -146,7 +146,7 @@ Jimmer实体的动态性，并非动态语言那种放弃拼写检查和类型�
     <TabItem value="java" label="Java">
 
     ```java
-    Book book = BookDraft.$.product(book -> {
+    Book book = Objects.createBook(book -> {
         book.setName("Learning GraphQL");
         book.setEdition(1);
         book.setPrice(new BigDecimal("49.99"));
@@ -227,7 +227,7 @@ Jimmer实体的动态性，并非动态语言那种放弃拼写检查和类型�
     <TabItem value="java" label="Java">
 
     ```java
-    Book book = BookDraft.$.product(book -> {
+    Book book = Objects.createBook(book -> {
         book.setName("Learning GraphQL");
         book.setEdition(1);
         book.setPrice(new BigDecimal("49.99"));

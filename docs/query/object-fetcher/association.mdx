@@ -36,12 +36,12 @@ When fetching associated objects without any parameters, only the `id` property 
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
                 // highlight-next-line
                 .store()
@@ -115,13 +115,13 @@ The returned value is:
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
-            BookFetcher.$.
+            Fetchers.BOOK_FETCHER.
                 .allScalarFields()
                 // highlight-next-line
                 .authors()
@@ -222,16 +222,16 @@ When fetching associated objects, parameters can be specified to get associated 
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
                 // highlight-next-line
                 .store(
-                    BookStoreFetcher.$
+                    Fetchers.BOOK_STORE_FETCHER
                         // highlight-next-line
                         .allScalarFields()
                 )
@@ -320,17 +320,17 @@ The returned value is:
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
-            BookFetcher.$.
+            Fetchers.BOOK_FETCHER.
                 .allScalarFields()
                 // highlight-next-line
                 .authors(
-                    AuthorFetcher.$
+                    Fetchers.AUTHOR_FETCHER
                         // highlight-next-line
                         .allScalarFields()
                 )
@@ -453,12 +453,12 @@ In some cases, all fields defined in the table are needed. `allTableFields` can 
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 // highlight-next-line
                 .allTableFields()
         )
@@ -506,7 +506,7 @@ The result is:
 ```
 
 :::info
-In some cases, `select(table.fetch(XxxFetcher.$.allTableFields()))` is equivalent to `select(table)`. The latter can be considered as shorthand for the former.
+In some cases, `select(table.fetch(Fetchers.XXX_FETCHER.allTableFields()))` is equivalent to `select(table)`. The latter can be considered as shorthand for the former.
 
 The equivalence holds when associated objects are not affected by <ViewMore buttonText="filters"><FilterRef/></ViewMore>.
 :::
@@ -517,7 +517,7 @@ The simple equivalent shorthand is:
 <TabItem value="java" label="Java">
 
 ```java 
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     // highlight-next-line
@@ -555,14 +555,14 @@ The following example does not configure `batchSize`:
 <TabItem value="java" label="Java">
 
 ```java  
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-                BookFetcher.$.allScalarFields()
+                Fetchers.BOOK_FETCHER.allScalarFields()
                 // highlight-next-line
-                .authors(AuthorFetcher.$.allScalarFields())
+                .authors(Fetchers.AUTHOR_FETCHER.allScalarFields())
         )
     )
     .execute();
@@ -666,14 +666,14 @@ If a batch is too large, it will be split into multiple batches based on `batchS
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 List<Book> list = sqlClient.createQuery(book)
     .where(book.edition().eq(3))
     .select(
         book.fetch(
-                BookFetcher.$.allScalarFields()
+                Fetchers.BOOK_FETCHER.allScalarFields()
                 // highlight-next-line
-                .authors(AuthorFetcher.$.allScalarFields(), it -> it.batch(2))
+                .authors(Fetchers.AUTHOR_FETCHER.allScalarFields(), it -> it.batch(2))
         )
     )
     .execute();
@@ -798,16 +798,16 @@ If association-level pagination is used, `batchSize` must be set to 1, otherwise
 <TabItem value="java" label="Java">
 
 ```java 
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
     .select(
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
             .allScalarFields()
             .authors(
-                AuthorFetcher.$.allScalarFields(),
+                Fetchers.AUTHOR_FETCHER.allScalarFields(),
                 // highlight-next-line
                 it -> it.batch(1).limit(/*limit*/ 10, /*offset*/ 90)
             )
@@ -896,17 +896,17 @@ Here for comparison, the query selects two columns, both are `Book` type.
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Tuple2<Book, Book>> books = sqlClient
     .createQuery(book)
     .select(
         // First column  
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
             .allScalarFields()
             .authors(
-                AuthorFetcher.$.allScalarFields(),
+                Fetchers.AUTHOR_FETCHER.allScalarFields(),
 
                 // Use filter
                 // highlight-next-line
@@ -918,10 +918,10 @@ List<Tuple2<Book, Book>> books = sqlClient
 
         // Second column
         book.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
                 .authors(
-                    AuthorFetcher.$.allScalarFields()
+                    Fetchers.AUTHOR_FETCHER.allScalarFields()
                 // No filter used
                 )
         )

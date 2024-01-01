@@ -14,7 +14,7 @@ Update语句用法如下
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTable author = AuthorTable.$;
+AuthorTable author = Tables.AUTHOR_TABLE;
 
 int affectedRowCount = sqlClient
     .createUpdate(author)
@@ -62,7 +62,7 @@ where tb_1_.FIRST_NAME = ?
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTableEx author = AuthorTableEx.$;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 int affectedRowCount = sqlClient
     .createUpdate(author)
@@ -159,7 +159,7 @@ Table joins for update statement is forbidden by the current dialect, but there 
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTableEx author = AuthorTableEx.$;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 int affectedRowCount = sqlClient
     .createUpdate(author)
@@ -276,7 +276,7 @@ where
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTableEx author = AuthorTableEx.$;
+AuthorTableEx author = TableExes.AUTHOR_TABLE_EX;
 
 int affectedRowCount = sqlClient
     .createUpdate(author)

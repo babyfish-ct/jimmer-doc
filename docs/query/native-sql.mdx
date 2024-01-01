@@ -16,7 +16,7 @@ This example shows how to use regular expression matching in Oracle and HSQLDB:
 <TabItem value="java" label="Java">
 
 ```java
-AuthorTable table = AuthorTable.$;
+AuthorTable table = Tables.AUTHOR_TABLE;
 
 List<Author> authors = sqlClient
     .createQuery(table)

@@ -20,16 +20,16 @@ Before introducing short associations, let's first look at a normal association
 ```java
 Book book = bookRepository.findNullable(
     1L,
-    BookFetcher.$
+    Fetchers.BOOK_FETCHER
         .allScalarFields()
         // highlight-next-line
         .store(
-            BookStoreFetcher.$
+            Fetchers.BOOK_STORE_FETCHER
                 .allScalarFields()
         )
         // highlight-next-line
         .authors(
-            AuthorFetcher.$
+            Fetchers.AUTHOR_FETCHER
                 .firstName()
                 .lastName()
         )
@@ -125,7 +125,7 @@ To allow aggregate roots to be associated with some objects that only have id, w
 ```java 
 Book book = bookRepository.findNullable(
     1L,
-    BookFetcher.$
+    Fetchers.BOOK_FETCHER
         .allScalarFields()
         // highlight-next-line
         .store() // no args means id only  
@@ -347,7 +347,7 @@ IdView properties and original association properties are linked. Setting one ne
 
     ```java 
     // Set view property
-    Book book = BookDraft.$.produce(draft -> {
+    Book book = Objects.createBook(draft -> {
         draft.setStoreId(10L);
         draft.setAuthorIds(Arrays.asList(100L, 101L)); 
     });
@@ -389,7 +389,7 @@ IdView properties and original association properties are linked. Setting one ne
 
     ```java
     // Set original property
-    Book book = BookDraft.$.produce(draft -> {
+    Book book = Objects.createBook(draft -> {
         draft.applyStore(store -> {
             store.setId(10L).storeName("TURING")  
         });
@@ -461,7 +461,7 @@ Except for the impact on [ObjectFetcher](../../../query/object-fetcher) to be ex
 ```java  
 Book book = bookRepository.findNullable(
     1L,
-    BookFetcher.$
+    Fetchers.BOOK_FETCHER
         .allScalarFields()
         // highlight-next-line  
         .storeId()

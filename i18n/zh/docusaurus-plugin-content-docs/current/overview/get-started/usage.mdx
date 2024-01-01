@@ -92,10 +92,10 @@ public class App {
                 3L,
 
                 ❶
-                BookFetcher.$ 
+                Fetchers.BOOK_FETCHER 
                     .allScalarFields() ❷
                     .authors( ❸
-                        AuthorFetcher.$
+                        Fetchers.AUTHOR_FETCHER
                             .allScalarFields() ❹
                     )
             );  
@@ -224,11 +224,11 @@ public class App {
                 "GraphQL in Action",
 
                 ❶
-                BookFetcher.$ 
+                Fetchers.BOOK_FETCHER 
                     .name() ❷
                     .edition() ❸
                     .store( ❹
-                        BookStoreFetcher.$
+                        Fetchers.BOOK_STORE_FETCHER
                             .name() ❺
                     )
             );  
@@ -319,7 +319,7 @@ fun main(args: Array<String>) {
 ```java title="BookRepository.java"
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default List<Book> find(
         @Nullable String name,
@@ -330,7 +330,7 @@ public interface BookRepository extends JRepository<Book, Long> {
         
         @Nullable Fetcher<Book> fetcher 
     ) {
-        AuthorTableEx author = AuthorTableEx.$; ❶
+        AuthorTableEx author = TableExes.AUTHOR_TABLE_EX; ❶
 
         return sql()
             .createQuery(table)
@@ -419,7 +419,7 @@ interface BookRepository : KRepository<BookStore, Long> {
 
 -   ❶  
 
-    -   Java: 子查询基于全局变量`AuthorTableEx.$`，为了便于后续开发，取一个别名`author`。
+    -   Java: 子查询基于全局变量`TableExes.AUTHOR_TABLE_EX`，为了便于后续开发，取一个别名`author`。
 
     -   Kotlin: `subQuery`接受一个lambda表达式。
     
@@ -550,10 +550,10 @@ public class App {
             .select(
                 // 第一列，以Book为聚合根且形状受对象抓取器控制的数据结构
                 table.fetch(
-                    BookFetcher.$
+                    Fetchers.BOOK_FETCHER
                         .allScalarFields()
                         .authors(
-                            AuthorFetcher.$
+                            Fetchers.AUTHOR_FETCHER
                                 .allScalarFields()
                         )
                 ),

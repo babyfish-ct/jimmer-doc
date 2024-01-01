@@ -68,7 +68,7 @@ public Page<Book> findBooks(
     int pageIndex,
     int pageSize    
 ) {
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
     
     return PagingQueries.excute(
         sqlClient

@@ -215,8 +215,7 @@ public fun TreeNode.copy(block: TreeNodeDraft.() -> Unit): TreeNode =
     <TabItem value="java" label="Java">
     
     ```java
-    TreeNode oldTreeNode = TreeNodeDraft.$
-        .produce(treeNodeDraft -> {
+    TreeNode oldTreeNode = Objects.createTreeNode(treeNodeDraft -> {
             ...省略...
         });
     ```
@@ -239,8 +238,7 @@ public fun TreeNode.copy(block: TreeNodeDraft.() -> Unit): TreeNode =
     <TabItem value="java" label="Java">
     
     ```java
-    TreeNode newTreeNode = TreeNodeDraft.$
-        .produce(oldTreeNode, treeNodeDraft -> {
+    TreeNode newTreeNode = Objects.createTreeNode(oldTreeNode, treeNodeDraft -> {
             ...省略...
         });
     ```
@@ -305,8 +303,7 @@ public interface TreeNodeDraft : TreeNode {
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = TreeNodeDraft.$
-    .produce(draft -> {
+TreeNode treeNode = Objects.createTreeNode(draft -> {
         draft.setName("Root Node");
     });
 ```
@@ -369,8 +366,7 @@ public interface TreeNodeDraft : TreeNode {
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode newTreeNode = TreeNodeDraft.$
-    .produce(treeNode, draft -> {
+TreeNode newTreeNode = Objects.createTreeNode(treeNode, draft -> {
         draft.parent().setName("Daddy");
         draft.parent().parent().setName("Grandpa");
     });
@@ -436,8 +432,7 @@ Java的`parent(false)`和Kotlin的`parent`，具备以下两个问题：
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = TreeNodeDraft.$
-    .produce(/* No `base` here */ draft -> {
+TreeNode treeNode = Objects.createTreeNode(/* No `base` here */ draft -> {
         draft.parent(true).setName("Daddy");
         draft.parent(true).parent(true).setName("Grandpa");
     });
@@ -494,10 +489,9 @@ public interface TreeNodeDraft : TreeNode, Draft {
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = TreeNodeDraft.$
-    .produce(draft -> {
+TreeNode treeNode = Objects.createTreeNode(draft -> {
         draft.setParent(
-            TreeNodeDraft.$.produce(daddyDraft -> {
+            Objects.createTreeNode(daddyDraft -> {
                 daddyDraft.setName("Daddy")
             })
         )
@@ -548,10 +542,9 @@ public interface TreeNodeDraft extends TreeNode, Draft {
 
 1. 比较啰嗦的写法
     ```java
-    TreeNode oldTreeNode = TreeNodeDraft.$
-        .produce(draft -> {
+    TreeNode oldTreeNode = Objects.createTreeNode(draft -> {
             draft.setParent(
-                TreeNodeDraft.$.produce(daddyDraft -> {
+                Objects.createTreeNode(daddyDraft -> {
                     daddyDraft.setName("Daddy")
                 })
             )
@@ -560,8 +553,7 @@ public interface TreeNodeDraft extends TreeNode, Draft {
 
 2. 比较简洁的写法
     ```java
-    TreeNode oldTreeNode = TreeNodeDraft.$
-        .produce(draft -> {
+    TreeNode oldTreeNode = Objects.createTreeNode(draft -> {
             draft.applyParent(daddyDraft -> {
                 daddyDraft.setName("Daddy")
             })
@@ -609,8 +601,7 @@ var childNodes: List<TreeNode>
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode newTreeNode = TreeNodeDraft.$
-    .produce(treeNode, draft -> {
+TreeNode newTreeNode = Objects.createTreeNode(treeNode, draft -> {
         ((TreeNodeDraft)
             draft
                 .childNodes().get(0)
@@ -686,8 +677,7 @@ public interface TreeNodeDraft : TreeNode, Draft {
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode newTreeNode = TreeNodeDraft.$
-    .produce(treeNode, draft -> {
+TreeNode newTreeNode = Objects.createTreeNode(treeNode, draft -> {
         draft
             .childNodes(false)
             .get(0)
@@ -758,14 +748,13 @@ public interface TreeNodeDraft : TreeNode, Draft {
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = TreeNodeDraft.$
-    .produce(draft -> {
+TreeNode treeNode = Objects.createTreeNode(draft -> {
         draft.setChildNodes(
             Arrays.asList(
-                TreeNodeDraft.$.produce(childDraft -> {
+                Objects.createTreeNode(childDraft -> {
                     childDraft.setName("Eldest son")
                 }),
-                TreeNodeDraft.$.produce(childDraft -> {
+                Objects.createTreeNode(childDraft -> {
                     childDraft.setName("Second son")
                 })
             )
@@ -854,8 +843,7 @@ public fun MutableList<TreeNodeDraft>.addBy(
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = TreeNodeDraft.$
-    .produce(draft -> {
+TreeNode treeNode = Objects.createTreeNode(draft -> {
         draft
             .addIntoChildNodes(childDraft ->
                 childDraft.setName("Eldest son")

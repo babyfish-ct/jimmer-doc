@@ -18,7 +18,7 @@ In Jimmer SQL DSL, created join objects that are not used will be ignored. For e
 <TabItem value="java" label="Java">
 
 ```java 
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 
 // highlight-next-line
 System.out.println("Unsed join: " + table.store());
@@ -83,7 +83,7 @@ Here, we use another approach to solve the same problems.
             @Nullable String storeName,
             @Nullable String storeWebsite
     ) {
-        BookTable table = BookTable.$;
+        BookTable table = Tables.BOOK_TABLE;
 
         // Create JOIN object unconditionally first,  
         // will be auto ignored if not used later,
@@ -174,7 +174,7 @@ Here, we use another approach to solve the same problems.
             @Nullable Long dId,
             @Nullable Long eId
         ) {
-            ATable table = ATable.$;
+            ATable table = Tables.A_TABLE;
 
             // Create JOIN objects unconditionally first,
             // Not used join objects will be auto ignored,
@@ -285,7 +285,7 @@ For foreign key based associations, there are two ways to filter on the associat
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable book = BookTable.$;
+    BookTable book = Tables.BOOK_TABLE;
 
     List<Book> books = sqlClient
         .createQuery(book)
@@ -334,7 +334,7 @@ For foreign key based associations, there are two ways to filter on the associat
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable book = BookTable.$;
+    BookTable book = Tables.BOOK_TABLE;
 
     List<Book> books = sqlClient
         .createQuery(book)
@@ -414,7 +414,7 @@ Here, accessing the `name` property of the associated object is used as an examp
 <TabItem value="java" label="Java">
 
 ```java  
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
@@ -464,7 +464,7 @@ If only the id property of the associated object is accessed, phantom join elimi
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Book> books = sqlClient
     .createQuery(book)
@@ -531,7 +531,7 @@ For join table based associations, there are two ways to filter on the associate
     <TabItem value="java" label="Java">
     
     ```java
-    BookTable book = BookTable.$;
+    BookTable book = Tables.BOOK_TABLE;
     
     List<Book> books = sqlClient
         .createQuery(book)
@@ -585,7 +585,7 @@ For join table based associations, there are two ways to filter on the associate
     <TabItem value="java" label="Java">
     
     ```java
-    BookTable book = BookTable.$;
+    BookTable book = Tables.BOOK_TABLE;
     
     List<Book> books = sqlClient
         .createQuery(book)
@@ -678,7 +678,7 @@ Here, accessing the `Autor.firstName` property of the associated object is used 
 <TabItem value="java" label="Java">
 
 ```java
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Long> bookIds = sqlClient  
     .createQuery(book)
@@ -751,7 +751,7 @@ If only the id property of the associated object is accessed, half join eliminat
 <TabItem value="java" label="Java">
 
 ```java 
-BookTable book = BookTable.$;
+BookTable book = Tables.BOOK_TABLE;
 
 List<Long> bookIds = sqlClient
     .createQuery(book)

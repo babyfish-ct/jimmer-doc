@@ -38,8 +38,7 @@ This brings great simplification to application development.
 <TabItem value="java" label="Java">  
 
 ```java
-TreeNode aggregateRoot = TreeNodeDraft.$
-    .produce(aggregateRootDraft ->
+TreeNode aggregateRoot = Objects.createTreeNode(aggregateRootDraft ->
         aggregateRootDraft
             .setName("Aggregate root") 
             .addIntoChildNodes(childDraft ->

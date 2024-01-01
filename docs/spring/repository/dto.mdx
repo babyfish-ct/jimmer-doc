@@ -418,7 +418,7 @@ There are two implementation plans:
 ```java title="BookRepository.java"
 public interface BookRepository extends JRepository<Book, Long> {
 
-    BookTable table = BookTable.$;
+    BookTable table = Tables.BOOK_TABLE;
 
     default <V extends View<Book>> List<V> find(
         @Nullable String name, 

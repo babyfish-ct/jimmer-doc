@@ -97,7 +97,7 @@ Jimmer使用注解`@org.babyfish.jimmer.sql.Version`支持乐观锁。
 
     ```java
     BookStore savedData = sqlClient.save(
-            BookStoreDraft.$.produce(draft -> {
+            Objects.createBookStore(draft -> {
                 draft.setName("TURING");
                 draft.addIntoBooks(book -> {
                     book.setName("Introduction to Algorithms");
@@ -201,7 +201,7 @@ Jimmer使用注解`@org.babyfish.jimmer.sql.Version`支持乐观锁。
 
     ```java
     BookStore savedData = sqlClient.save(
-            BookStoreDraft.$.produce(draft -> {
+            Objects.createBookStore(draft -> {
                 draft.setName("TURING");
                 // highlight-next-line
                 draft.setVersion(0);
@@ -283,7 +283,7 @@ Jimmer使用注解`@org.babyfish.jimmer.sql.Version`支持乐观锁。
 
     ```java
     BookStore savedData = sqlClient.save(
-            BookStoreDraft.$.produce(draft -> {
+            Objects.createBookStore(draft -> {
                 draft.setName("TURING");
                 // highlight-next-line
                 draft.setVersion(0);
@@ -403,7 +403,7 @@ Jimmer使用注解`@org.babyfish.jimmer.sql.Version`支持乐观锁。
 
 ```java
 sqlClient.save(
-        BookStoreDraft.$.produce(draft -> {
+        Objects.createBookStore(draft -> {
             draft.setName("TURING");
             draft.addIntoBooks(book -> {
                 book.setName("Introduction to Algorithms");
@@ -564,7 +564,7 @@ sqlClient.save(
     sqlClient
             .getEntities()
             .saveCommand(
-                    BookStoreDraft.$.produce(draft -> {
+                    Objects.createBookStore(draft -> {
                         draft.setName("TURING");
                         draft.addIntoBooks(book -> {
                             book.setName("Introduction to Algorithms");

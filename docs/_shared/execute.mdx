@@ -49,7 +49,7 @@ interface KExecutable<R> {
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable book = BookTable.$;
+    BookTable book = Tables.BOOK_TABLE;
 
     List<Book> books = sqlClient
         .createQuery(book)
@@ -85,7 +85,7 @@ interface KExecutable<R> {
     <TabItem value="java" label="Java">
 
     ```java
-    BookTable book = BookTable.$;
+    BookTable book = Tables.BOOK_TABLE;
 
     List<Book> books = sqlClient
         .createQuery(book)

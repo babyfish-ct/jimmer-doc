@@ -20,16 +20,16 @@ import { ShortAssociation } from '@site/src/components/ShortAssociation';
 ```java
 Book book = bookRepository.findNullable(
     1L,
-    BookFetcher.$
+    Fetchers.BOOK_FETCHER
         .allScalarFields()
         // highlight-next-line
         .store(
-            BookStoreFetcher.$
+            Fetchers.BOOK_STORE_FETCHER
                 .allScalarFields()
         )
         // highlight-next-line
         .authors(
-            AuthorFetcher.$
+            Fetchers.AUTHOR_FETCHER
                 .firstName()
                 .lastName()
         )
@@ -125,7 +125,7 @@ System.out.println(book);
 ```java
 Book book = bookRepository.findNullable(
     1L,
-    BookFetcher.$
+    Fetchers.BOOK_FETCHER
         .allScalarFields()
         // highlight-next-line
         .store() //无参数表示id only
@@ -347,7 +347,7 @@ IdView属性和原始关联属性是联动的，设置一个，必然影响另�
 
     ```java
     // 设置视图属性
-    Book book = BookDraft.$.produce(draft -> {
+    Book book = Objects.createBook(draft -> {
         draft.setStoreId(10L);
         draft.setAuthorIds(Arrays.asList(100L, 101L));
     });
@@ -389,7 +389,7 @@ IdView属性和原始关联属性是联动的，设置一个，必然影响另�
 
     ```java
     // 设置原始属性
-    Book book = BookDraft.$.produce(draft -> {
+    Book book = Objects.createBook(draft -> {
         draft.applyStore(store -> {
             store.setId(10L).storeName("TURING")
         });
@@ -461,7 +461,7 @@ IdView属性和原始关联属性是联动的，设置一个，必然影响另�
 ```java
 Book book = bookRepository.findNullable(
     1L,
-    BookFetcher.$
+    Fetchers.BOOK_FETCHER
         .allScalarFields()
         // highlight-next-line
         .storeId()

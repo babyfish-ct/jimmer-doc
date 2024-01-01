@@ -85,7 +85,7 @@ The usage is:
 ```java 
 Author author = authorRepository.findNullable(
     1L,
-    AuthorFetcher.$
+    Fetchers.AUTHOR_FETCHER
         // Query id (implicit + forced) and fullName  
         // highlight-next-line
         .fullName()
@@ -200,7 +200,7 @@ The usage is:
 ```java
 Author author = authorRepository.findNullable(  
     1L,
-    AuthorFetcher.$
+    Fetchers.AUTHOR_FETCHER
         // Query id (implicit + forced) and fullName
         // highlight-next-line
         .fullName()

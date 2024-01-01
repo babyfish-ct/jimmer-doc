@@ -212,17 +212,17 @@ Jimmer会把查询结果放入缓存中，因此，我们可以从缓存中查�
 <TabItem value="java" label="Java">
 
 ```java
-BookTable table = BookTable.$;
+BookTable table = Tables.BOOK_TABLE;
 List<Book> books = sqlClient
     .createQuery(table)
     .where(table.name().like("GraphQL"))
     .select(
         table.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
                 // highlight-next-line
                 .store(
-                    BookStoreFetcher.$
+                    Fetchers.BOOK_STORE_FETCHER
                         .name()
                 )
         )
@@ -331,10 +331,10 @@ println(books)
     ...省略其他代码...
     .select(
         table.fetch(
-            BookFetcher.$
+            Fetchers.BOOK_FETCHER
                 .allScalarFields()
                 .store(
-                    BookStoreFetcher.$
+                    Fetchers.BOOK_STORE_FETCHER
                         // highlight-next-line
                         .name()
                 )
@@ -452,7 +452,7 @@ println(books)
     <TabItem value="java" label="Java">
 
     ```java
-    BookStoreTable table = BookStoreTable.$;
+    BookStoreTable table = Tables.BOOK_STORE_TABLE;
     sqlClient
         .createUpdate(table)
         .set(table.website(), "https://www.manning.com")

@@ -43,7 +43,7 @@ Even if the object has hundreds of properties, we have to do this, which is obvi
 
 ```java
 sqlClient.update(
-    BookDraft.$.produce(draft -> {
+    Objects.createBook(draft -> {
         draft.setId(8L);
         draft.setStore(null);
     })

@@ -43,7 +43,7 @@ entityManager.merge(book);
 
 ```java
 sqlClient.update(
-    BookDraft.$.produce(draft -> {
+    Objects.createBook(draft -> {
         draft.setId(8L);
         draft.setStore(null);
     })

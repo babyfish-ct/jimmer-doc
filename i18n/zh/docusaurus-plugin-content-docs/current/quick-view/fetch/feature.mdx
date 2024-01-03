@@ -185,7 +185,11 @@ class BookRepository(
             id
         )
 
-    fun findBooksByName(name: String?): List<Book> =
+    fun findBooksByName(
+        name: String? = null,
+        // highlight-next-line
+        fetcher: Fetcher<Book>? = null
+    ): List<Book> =
         sqlClient.createQuery(Book::class) {
             name?.takeIf { it.isNotEmpty() }?.let {
                 where(table.name ilike name);

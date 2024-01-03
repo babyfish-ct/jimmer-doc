@@ -1,0 +1,830 @@
+---
+sidebar_position: 2
+title: 返回输出DTO
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ViewMore } from '@site/src/components/ViewMore';
+import { DtoExplosion } from "@site/src/components/Image";
+
+## Java/Kotlin应用自己使用查询结果
+
+在[上一篇](./entity)文档中，我们介绍让Web服务直接返回实体，并辅以`@FetchBy`注解在客户端中恢复所有DTO爆炸。
+
+然而，如果某个查询的返回结果并不返回给Web客户端，而是服务端自己用呢?
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = bookRepository.findBooksByName(
+    "graphql",
+    Fetchers.BOOK_FETCHER ❶
+        .name()
+        .edition()
+);
+for (Book book : books) {
+    System.out.println("--------");
+    System.out.println("Id: " + book.id());
+    System.out.println("Name: " + book.id());
+    System.out.println("Edition: " + book.id());
+    System.out.println("Price:" + book.price()); ❷
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = bookRepository.findBooksByName(
+    "graphql",
+    newFetcher(Book::class).by { ❶
+        name()
+        edition()
+    }
+)
+for (book in books) {
+    println("--------")
+    println("Id: ${book.id}")
+    println("Name: ${book.name}")
+    println("Edition: ${book.edition}")
+    println("Price: ${book.price}") ❷
+}
+```
+
+</TabItem>
+</Tabs>
+
+这里，没有Web服务，没有远程调用，就是同一个JVM内部的调用
+
+-   ❶处，只查询对象的三个属性：`id` *(隐含)*、`name`和`edition`
+
+-   ❷处，访问`book`对象的未被查询属性`price`。
+
+    这种错误访问会导致异常
+
+    -   异常类型: org.babyfish.jimmer.UnloadedException
+
+    -   异常消息：The property "com.yourcompany.yourproject.model.Book.price" is unloaded
+
+可见，仅仅考虑在远程客户端Api中自动定义DTO类型是不够的。当JVM自身直接使用查询结果时，为Java/Kotlin定义DTO类型将不可避免，需要定义它们来保证更好的编译时安全。
+
+## DTO语言
+
+实体对象和DTO对象之间的转化是一件耗费体力但非常无聊的事情，是信息管理内软件开发中常见的痛点。
+
+为了让DTO类型的制作成本尽可能低廉，Jimmer引入了DTO语言，改语言作为Java/Kotlin类型系统的补充，可以快速构建DTO类型
+
+> 本文只做快速浏览，不做详细介绍，如果需要了解完整信息，请参见[DTO语言](../../../object/view/dto-language.mdx)
+
+### DTO语言插件
+
+有Jimmer用户为DTO语言提供了Intellij插件，详情请见https://github.com/ClearPlume/jimmer-dto
+
+> 安装DTO语言插件不是必须的，但是安装后可以获得更好的开发体验，推荐安装。
+
+### 定义DTO文件
+
+1.  对于任何需要使用DTO语言的Java项目而言，在其`src/main`目录下新建一个子目录`dto`。即，`src/main/dto`是DTO文件存放的位置。
+
+2.  在`src/main/dto`目下新建一个`Book.dto`文件，输入如下代码
+
+    ```sh="Book.dto"
+    export com.yourcompany.yourproject.model.Book 
+        -> package com.yourcompany.yourproject.model.dto
+
+    SimpleBookView {
+        id
+        name
+    }
+
+    ComplexBookView {
+        #allScalars(this)
+        store {
+            id
+            name
+        }
+        authors {
+            id
+            firstName
+            lastName
+        }
+    }
+    ```
+
+3.  编译项目
+
+    -   既可用maven/gradle命令
+    
+    -   也可以直接点击IDE的运行按钮 *(如果不使用Intellij插件，至少需要改变一个Java/Kotlin文件，推荐安装Intellij插件)*
+
+### 查看生成的DTO
+
+编译后，会自动生成如下两个类型`SimpleBookView`和`ComplexView`，各自代码如下:
+
+-   `SimpleBookView`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java title="SimpleBookView.java"
+    // highlight-next-line
+    @GeneratedBy( ❶
+            file = "<yourproject>/src/main/dto/Book.dto"
+    )
+    public class SimpleBookView implements View<Book> { ❷
+
+        private long id;
+
+        @NotNull
+        private String name;
+
+        public SimpleBookView(@NotNull Book base) { ❸ 
+            ...略...
+        }
+
+        @Override
+        public Book toEntity() { ❹
+            ...略...
+        }
+
+        ...省略getters和setters...
+
+        ...省略hashCode/equals/toString...
+
+        ...省略其他成员...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin title="SimpleBookView.kt"
+    // highlight-next-line
+    @GeneratedBy( ❶
+            file = "<yourproject>/src/main/dto/Book.dto"
+    )
+    data class SimpleBookView(
+        val id: Long
+        val name: String
+    ) : View<Book> { ❷
+        constructor(base: Book): ❸
+            this(...略...)
+
+        override fun toEntity(): Book = ❹
+            ...略...
+
+        ...省略其他成员...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    -   ❶ 提醒用户，这是Jimmer自动生成的代码
+
+    -   ❷ 实现`View<Book>`接口
+
+    -   ❸ 将实体转化为DTO
+
+    -   ❹ 将DTO转化为实体
+
+-   `ComplexBookView`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java title="ComplexBookView.java"
+    // highlight-next-line
+    @GeneratedBy( ❶
+            file = "<yourproject>/src/main/dto/Book.dto"
+    )
+    public class ComplexBookView implements View<Book> { ❷
+
+        private long id;
+
+        @NotNull
+        private String name;
+
+        private int edition;
+
+        @NotNull
+        private BigDecimal price;
+
+        @Nullable
+        private TargetOf_store store;
+
+        @NotNull
+        private List<TargetOf_authors> authors;
+
+        public ComplexBookView(@NotNull Book base) { ❸
+            ...略...
+        }
+
+        @Override
+        public Book toEntity() { ❹
+            ...略...
+        }
+
+        ...省略getters和setters...
+
+        ...省略hashCode/equals/toString...
+
+        ...省略其他成员...
+
+        public static class TargetOf_store implements View<BookStore> { ❺
+
+            private long id;
+
+            @NotNull
+            private String name;
+
+            public TargetOf_store(@NotNull BookStore base) {
+                ...略...
+            }
+
+            @Override
+            public BookStore toEntity() {
+                ...略...
+            }
+
+            ...省略getters和setters...
+
+            ...省略hashCode/equals/toString...
+
+            ...省略其他成员...
+        }
+
+        public static class TargetOf_authors implements View<Author> { ❻
+
+            private long id;
+
+            @NotNull
+            private String firstName;
+
+            @NotNull
+            private String lastName;
+
+            public TargetOf_authors(@NotNull Author base) {
+                ...略...
+            }
+
+            @Override
+            public Author toEntity() {
+                ...略...
+            }
+
+            ...省略getters和setters...
+
+            ...省略hashCode/equals/toString...
+
+            ...省略其他成员...
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin title="ComplexBookView.kt"
+    // highlight-next-line
+    @GeneratedBy( ❶
+            file = "<yourproject>/src/main/dto/Book.dto"
+    )
+    data class ComplexBookView(
+        val id: Long,
+        val name: String,
+        val edition: Int,
+        val price: BigDecimal,
+        val store: TargetOf_store?,
+        val authors: List<TargetOf_authors>
+    ) : View<Book> { ❷
+
+        constructor(base: Book): ❸
+            this(...略...)
+
+        override fun toEntity(): Book = ❹
+            ...略...
+
+        data class TargetOf_store( ❺
+            val id: Long,
+            val name: String
+        ) : View<BookStore> {
+
+            constructor(base: BookStore): 
+                this(...略...)
+
+            override fun toEntity(): BookStore = 
+                ...略...
+        }
+
+        data class TargetOf_authors( ❻
+            val id: Long,
+            val firstName: String,
+            val lastName: String
+        ) : View<Author> {
+
+            constructor(base: Author): 
+                this(...略...)
+
+            override fun toEntity(): Author = 
+                ...略...
+        }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    -   ❶ 提醒用户，这是Jimmer自动生成的代码
+
+    -   ❷ 实现`View<Book>`接口
+
+    -   ❸ 将实体转化为DTO
+
+    -   ❹ 将DTO转化为实体
+
+    -   ❺ 多对一关联`Book.store`所定义的关联对象的DTO定义
+
+    -   ❻ 多对多关联`Book.autors`所定义的关联对象的DTO定义
+
+## 新的BookRepository
+
+### 重温旧的BookRepository
+
+在[功能介绍](../feature)一文中，我们编写了一个`BookRepository`类
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title = "BookRepository.java"
+public class BookRepository {
+
+    @Nullable
+    public Book findBookById(
+        long id, 
+        // highlight-next-line
+        Fetcher<Book> fetcher
+    ) {
+        ...略...
+    }
+
+    public List<Book> findBooksByName(
+        @Nullable String name, 
+        // highlight-next-line
+        @Nullable Fetcher<Book> fetcher
+    ) {
+        ...略...
+    }
+
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookRepository.kt"
+class BookRepository(
+    ...省略其他成员...
+) {
+
+    fun findBookById(
+        id: Long, 
+        // highlight-next-line
+        fetcher: Fetcher<Book>
+    ): Book? = 
+        ...略...
+
+    fun findBooksByName(
+        name: String? = null,
+        // highlight-next-line
+        fetcher: Fetcher<Book>? = null
+    ): List<Book> =
+        ...略...
+}
+```
+
+</TabItem>
+</Tabs>
+
+每个查询方法添加了一个类型为`Fetcher<Book>`的参数，我们可以通过它灵活控制被查询对象的格式 *(即，被查询的数据结构的形状)*
+
+这是推荐的使用方式，Repository仅负责筛选、排序、分页等操作，但不控制返回数据的格式，而是通过`Fetcher<E>`参数将数据格式的控制权暴露出去，让更上层的业务逻辑来决定。
+
+### 编写新BookRepository
+
+现在，这个`BookRepository`不在符合我们的要求了，因为我们现在不想查询Jimmer实体，而是想查询由DTO语言自动生成的DTO类型，需要修改。
+
+但是，我们希望`BookRepository`仍然保持形状控制权对外暴露的优秀品质，修改代码如下。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title = "BookRepository.java"
+@Component
+public class BookRepository {
+
+    private final JSqlClient sqlClient;
+
+    public BookRepository(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
+    @Nullable
+    public <V extends View<Book>> V findBookById( ❶ 
+        long id, 
+        // highlight-next-line
+        Class<V> viewType ❷
+    ) {
+        return sqlClient.findById(
+            viewType, ❸
+            id
+        );
+    }
+
+    public <V extends View<Book>> List<V> findBooksByName( ❹
+        @Nullable String name,
+        // highlight-next-line
+        Class<V> viewType ❺
+    ) {
+        BookTable table = Tables.BOOK_TABLE;
+        return sqlClient
+            .createQuery(table)
+            .whereIf(
+                name != null && !name.isEmpty(), 
+                table.name().ilike(name)
+            )
+            .select(
+                table.fetch(viewType) ❻
+            )
+            .execute();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookRepository.kt"
+@Component
+class BookRepository(
+    private val sqlClient: KSqlClient
+) {
+
+    fun <V: View<Book>> findBookById( ❶
+        id: Long, 
+        // highlight-next-line
+        viewType: KClass<V> ❷
+    ): V? = 
+        sqlClient.findById(
+            viewType, ❸
+            id
+        )
+
+    fun <V: View<Book>> findBooksByName(  ❹
+        name: String? = null,
+        // highlight-next-line
+        viewType: KClass<V>  ❺
+    ): List<V> =
+        sqlClient
+            .createQuery(Book::class) {
+                name?.takeIf { it.isNotEmpty() }?.let {
+                    where(table.name ilike it)
+                }
+                select(
+                    table.fetch(viewType) ❻
+                )
+            }
+}
+```
+
+</TabItem>
+</Tabs>
+
+-   ❶ ❹: Java的`<V extends View<Book>>`或kotlin的`<V: View<Book>>`定义一个范型参数`V`，表示任何由`Book`衍生而来的DTO类型。
+    
+    比如：上文中自动生成的`SimpleBookView`和`ComplexBookView`，它们都实现了`View<Book>`接口。
+
+-   ❷ ❺: 用任何一个由`Book`衍生而来的DTO类型作为参数。
+
+    返回类型随着参数类型的变化而变化，实现任意DTO类型的查询，将DTO类型类型的决定权交给更上层的调用者。
+
+-   ❸ ❻: 让Jimmer查询指定类型的数据
+
+### 试用新的BookRepository
+
+以`bookRepository.findById`为例
+
+-   查询相对简单的`SimpleBookView`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    System.out.println(
+        bookRepository.findBookById(
+            1L, 
+            // highlight-next-line
+            SimpleBookView.class
+        )
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    println(
+        bookRepository.findBookById(
+            1L, 
+            // highlight-next-line
+            SimpleBookView::class
+        )
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    打印输出
+
+    ```json
+    // highlight-next-line
+    SimpleBookView(
+        id=1, 
+        name=Learning GraphQL
+    )
+    ```
+
+-   查询相对复杂的`ComplexBookView`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    System.out.println(
+        bookRepository.findBookById(
+            1L, 
+            // highlight-next-line
+            ComplexBookView.class
+        )
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    println(
+        bookRepository.findBookById(
+            1L, 
+            // highlight-next-line
+            ComplexBookView::class
+        )
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    打印输出
+
+    ```json
+    // highlight-next-line
+    ComplexBookView(
+        id=1, 
+        name=Learning GraphQL, 
+        edition=1, 
+        price=50.0, 
+        // highlight-next-line
+        store=ComplexBookView.TargetOf_store(
+            id=1, 
+            name=O'REILLY
+        ), 
+        authors=[
+            // highlight-next-line
+            ComplexBookView.TargetOf_authors(
+                id=1, 
+                firstName=Eve, 
+                lastName=Procello
+            ),
+            // highlight-next-line
+            ComplexBookView.TargetOf_authors(
+                id=2, 
+                firstName=Alex, 
+                lastName=Banks
+            )
+        ]
+    )
+    ```
+
+## 编写BookController
+
+虽然DTO语言更适合于Java/Kotlin应用自己实用查询结果，但你也可以用它们作为HTTP API的返回信息，和实用普通的POJO没有任何区别。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookController.java"
+@RestController
+public class BookController implements Fetchers {
+
+    private final BookRepository bookRepository;
+
+    public BookController(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }
+
+    @Nullable
+    @GetMapping("/book/{id}")
+    public ComplexBookView findBookById(@PathVariable("id") long id) {
+        return bookRepository.findBookById(
+            id, 
+            // highlight-next-line
+            ComplexBookView.class
+        );
+    }
+
+    @GetMapping("/books")
+    public List<SimpleBookView> findBooksByName(
+            @RequestParam(name = "name", required = false) String name
+    ) {
+        return bookRepository.findBooksByName(
+            name,
+            // highlight-next-line 
+            SimpleBookView.class
+        );
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookController.kt"
+@RestController
+class BookController(
+    private val bookRepository: BookRepository
+) {
+    @GetMapping("/book/{id}")
+    fun findBookById(
+        @PathVariable id: Long
+    ): ComplexBookView =
+        bookRepository.findBookById(
+            id,
+            // highlight-next-line 
+            ComplexBookView::class
+        )
+
+    @GetMapping("/books")
+    fun findBooksByName(
+            @RequestParam(required = false) name: String
+    ): List<SimpleBookView> =
+        bookRepository.findBooksByName(
+            name,
+            // highlight-next-line 
+            SimpleBookView::class
+        )
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 文档注释
+
+[上一篇文章](./entity)中，我们提及了Jimmer能把Java/Kotlin代码中的文档注释复制到客户端Api中，无论是OpenApi在线文档，还是生成TypeScript代码。
+
+本文介绍的这种方式具有相同的功能，但是需要说明一点，DTO语言中的类型和属性和Java/Kotlin类型一样支持文档注释，因此DTO语言可以覆盖Java/Kotlin的文档注释。例如，原始实体定义如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+//highlight-start
+/**
+ * The book entity
+ */
+//highlight-end
+@Entity
+public interface Book {
+
+    //highlight-start
+    /**
+     * The name of book entity
+     */
+    //highlight-end
+    String name();
+
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+//highlight-start
+/**
+ * The book entity
+ */
+//highlight-end
+@Entity
+interface Book {
+
+    //highlight-start
+    /**
+     * The name of book entity
+     */
+    //highlight-end
+    val price: BigDecimal
+
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+</Tabs>
+
+这里的文档注释就是原始的文档注释
+
+[DTO语言](../../../object/view/dto-language.mdx)也支持文档注释，例如
+
+```json title="Book.Dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+//highlight-start
+/**
+ * Simple book dto
+ */
+//highlight-end
+SimpleBookView {
+
+    //highlight-start
+    /**
+     * The name of simple book dto
+     */
+    //highlight-end
+    name
+
+    ...省略其他成员...
+}
+
+...省略其他DTO类型定义...
+```
+
+:::info
+[DTO语言](../../../object/view/dto-language.mdx)总的文档注释具有更高的优先级。
+
+即，DTO语言中的文档注释能覆盖原始实体中的文档注释，是Jimmer自动生成OpenApi文档或TypeScript代码时优先参考的。
+:::
+
+## 和直接返回实体对比
+
+-   [上一篇文章](./entity)中，我们介绍了在Web服务中直接返回实体的方法
+
+-   本文我们介绍了利用[DTO语言](../../../object/view/dto-language.mdx)快速生成DTO类型并基于他们开发的方法
+
+二者对比如下
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th>直接返回实体</th>
+<th>使用DTO语言</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="3">相同点</td>
+<td colspan="2">都能为客户端开发人员呈现每个API的返回类型的DTO类型定义</td>
+</tr>
+<tr>
+<td colspan="2">都能生成OpenApi在线文档和TypeScript RPC代码</td>
+</tr>
+<tr>
+<td colspan="2">都能把代码中的文档注释的信息展现给客户端</td>
+</tr>
+<tr>
+<td rowspan="3">不同点</td>
+<td>直接返回实体<b>(易)</b></td>
+<td>需要使用DTO语言快速生成DTO类型</td>
+</tr>
+<tr>
+<td>需要在RestController中使用`@FetchBy`注解为实体类型补充类型信息</td>
+<td>直接基于生成的DTO类型开发RestController<b>(易)</b></td>
+</tr>
+<tr>
+<td>更偏向对外暴露Api</td>
+<td>对外暴露和内部使用皆可</td>
+</tr>
+</tbody>
+</table>
+
+:::tip
+无论用户如何选择，Jimmer都能以JVM生态中其他常规技术栈难以想象的低开发成本优雅地解决<ViewMore buttonText="DTO爆炸问题"><DtoExplosion/></ViewMore>
+:::

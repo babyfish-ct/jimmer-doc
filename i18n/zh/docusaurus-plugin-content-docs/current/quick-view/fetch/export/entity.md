@@ -1,0 +1,293 @@
+---
+sidebar_position: 1  
+title: 直接返回实体
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 启动Web API自动分析
+
+:::caution
+目前，这部分内容支持Spring，以后会支持更多Web框架。
+:::
+
+为了导出客户端代码，需要先启用Web API分析能力。开发人员有两种选择
+
+-   使用`@org.babyfish.jimmer.client.EnableImplicitApi`修饰任何一个类。对于Spring Boot应用而言，Appplication类就是一个不错的选择。
+
+-   使用`@org.babyfish.jimmer.client.Api`修饰所有需要导出的所有`RestController`类以及它们的所有所有`HTTP Mapping`方法。
+
+第一种方法相对简单，所以，对Spring Boot Application类应用`@EnableImplicitApi`注解即可。由于代码过于简单，无需演示。
+
+## 书写RestController
+
+作为例子，没有复杂业务，我们忽略Service层，直接基于前文的`BookRepository`书写`BookController`，如下：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookController.java"
+@RestController
+public class BookController implements Fetchers {
+
+    private final BookRepository bookRepository;
+
+    public BookController(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }
+
+    @GetMapping("/book/{id}")
+    public 
+    @FetchBy("COMPLEX_BOOK") Book ❶
+    findBookById(@PathVariable("id") long id) {
+        return bookRepository.findBookById(
+            id, 
+            COMPLEX_BOOK ❷
+        );
+    }
+
+    @GetMapping("/books")
+    public List<
+        @FetchBy("SIMPLE_BOOK") Book ❸
+    > findBooksByName(
+            @RequestParam(name = "name", required = false) String name
+    ) {
+        return bookRepository.findBooksByName(
+            name, 
+            SIMPLE_BOOK ❹
+        );
+    }
+
+    /**
+     * Simple Book DTO which can access properties of `Book` itself
+     */
+    private static final Fetcher<Book> SIMPLE_BOOK = ❺
+            BOOK_FETCHER
+                    .allScalarFields();
+
+    /**
+     * Complex Book DTO which can access not only properties of `Book` itself,
+     * but also associated `BookStore` and `Author` objects with names
+     */
+    private static final Fetcher<Book> COMPLEX_BOOK = ❻
+            BOOK_FETCHER
+                    .allScalarFields()
+                    .store(
+                            BOOK_STORE_FETCHER.name()
+                    )
+                    .authors(
+                            AUTHOR_FETCHER
+                                    .firstName()
+                                    .lastName()
+                    );
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookController.kt"
+@RestController
+class BookController(
+    private val bookRepository: BookRepository
+) {
+    @GetMapping("/book/{id}")
+    fun findBookById(
+        @PathVariable id: Long
+    ): @FetchBy("COMPLEX_BOOK") Book = ❶
+        bookRepository.findBookById(
+            id, 
+            COMPLEX_BOOK ❷
+        )
+
+    @GetMapping("/books")
+    fun findBooksByName(
+            @RequestParam(required = false) name: String
+    ): List<
+        @FetchBy("SIMPLE_BOOK") Book ❸
+    > =
+        bookRepository.findBooksByName(
+            name, 
+            SIMPLE_BOOK ❹
+        )
+
+    companion object {
+
+        /**
+        * Simple Book DTO which can access properties of `Book` itself
+        */
+        val SIMPLE_BOOK = ❺
+            newFetcher(Book:::class).by {
+                allScalarFields()
+            }
+
+        /**
+        * Complex Book DTO which can access not only properties of `Book` itself,
+        * but also associated `BookStore` and `Author` objects with names
+        */
+        private val COMPLEX_BOOK = ❻
+            newFetcher(Book:::class).by {
+                allScalarFields()
+                store {
+                    name()
+                }
+                authors {
+                    firstName()
+                    lastName()
+                }
+            }
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+Java代码中，`BookController`类实现了Jimmer在编译时自动生成的`Fetchers`，只是为了让方便引用`BOOK_FETCHER`、`BOOK_STORE_FETCHER`和`AUTHOR_FETCHER`。
+
+重点在于6个编号
+
+-   ❶ 声明`findBookById`方法返回的`Book`对象的精确形状由静态变量`COMPLEX_BOOK`定义
+
+-   ❷ `findBookById`方法的内部实现需要与❶处的对外声明一致，查询形状为`COMPLEX_BOOK`的`Book`对象
+
+-   ❸ 声明`findBooksByName`方法返回`List`中的每一个`Book`对象的精确形状由静态变量`SIMPLE_BOOK`定义
+
+-   ❹ `findBooksByName`方法的内部实现需要与❸处的对外声明一致，查询形状为`SIMPLE_BOOK`的`Book`对象
+
+-   ❺ `SIMPLE_BOOK`形状的定义，既在❸处使用作为对外API声明的一部分，又在❹处使用以控制返回数据结构的形状
+
+-   ❻ `COMPLEX_BOOK`形状的定义，既在❶处使用作为对外API声明的一部分，又在❷处使用以控制返回数据结构的形状
+
+## 查看Api文档
+
+为了识别`@FetchBy`等Jimmer特有的注解，Jimmer对OpenAPI/Swagger给予了一套极具特色的实现。
+
+无需使用JVM生态中任何其他关于自动生成OpenAPI/Swagger的框架，只需对`application.yml`*(或`applicaiton.properties`)*进行修改如下即可
+
+```yml title="application.yml"
+jimmer:
+    ...省略其他配置...
+    client:
+        openapi:
+            # highlight-next-line
+            path: /openapi.yml
+            # highlight-next-line
+            ui-path: /openapi.html
+            properties:
+                info:
+                    title: My Web Service
+                    description: |
+                        Restore the DTO explosion that was 
+                        eliminated by server-side developers
+                    version: 1.0
+```
+
+启动Web项目，使用浏览器访问其`/openapi.html`，则可见
+
+![openapi](@site/static/img/openapi/openapi.webp)
+
+-   展开`/books`，可以看到返回的集合中，每一个元素都是一个相对简单的DTO对象
+
+    ![openapi-simple](@site/static/img/openapi/simple.webp)
+
+-   展开`/books/{id}`，可以看到返回类型是一个相对复杂的DTO类型
+
+    ![openapi-complex](@site/static/img/openapi/complex.webp)
+
+## 生成TypeScript
+
+修改`application.yml`*（或`application.properties`）*，添加对TypeScript的支持
+
+```yml title="application.yml"
+jimmer:
+    ...省略其他配置...
+    client:
+        openapi:
+            ...省略openapi相关配置...
+        ts:
+            # highlight-next-line
+            path: /ts.zip
+```
+
+启动Web项目，下载其`/ts.zip`，解压，可以看到TypeScript客户端代码中`BookController`定义如下：
+
+```ts title="services/BookController.ts"
+import type {Executor} from '../';
+import type {BookDto} from '../model/dto/';
+
+export class BookController {
+    
+    constructor(private executor: Executor) {}
+    
+    async findBookById(options: BookControllerOptions['findBookById']): Promise<
+        // highlight-next-line
+        BookDto['BookController/COMPLEX_BOOK']
+    > {
+        ...省略具体逻辑...
+    }
+    
+    async findBooksByName(options: BookControllerOptions['findBooksByName']): Promise<
+        ReadonlyArray<
+            // highlight-next-line
+            BookDto['BookController/SIMPLE_BOOK']
+        >
+    > {
+        ...省略具体逻辑...
+    }
+}
+export type BookControllerOptions = {
+    'findBookById': {
+        readonly id: number
+    }, 
+    'findBooksByName': {
+        readonly name?: string | undefined
+    }
+}
+```
+
+其中，`BookDto['BookController/COMPLEX_BOOK']`和`BookDto['BookController/SIMPLE_BOOK']`就是Jimmer生成的TypeScript客户端代码中被恢复的DTO类型，可以打开`model/dto/BookDto.ts`文件查看它们的定义，如下：
+
+```ts title="model/dto/BookDto.ts"
+export type BookDto = {
+    /**
+     * Complex Book DTO which can access not only properties of `Book` itself,
+     * but also associated `BookStore` and `Author` objects with names
+     */
+    // highlight-next-line
+    'BookController/COMPLEX_BOOK': {
+        readonly id: number;
+        readonly name: string;
+        readonly edition: number;
+        readonly price: number;
+        readonly store?: {
+            readonly id: number;
+            readonly name: string;
+        } | null | undefined;
+        readonly authors: ReadonlyArray<{
+            readonly id: number;
+            readonly firstName: string;
+            readonly lastName: string;
+        }>;
+    }
+    /**
+     * Simple Book DTO which can access properties of `Book` itself
+     */
+    // highlight-next-line
+    'BookController/SIMPLE_BOOK': {
+        readonly id: number;
+        readonly name: string;
+        readonly edition: number;
+        readonly price: number;
+    }
+}
+```
+
+## 文档注释
+
+通过上面的展示，我们看到服务端无需定义DTO相关的Java/Kotlin类型，而客户端却看到每个具体业务API都自动定义精确的DTO返回类型。这样服务端和客户端都得到了各自期望的编程模型。
+
+本文聚焦于演示这个强大功能，没有对如何为Api的各部分*(例如：类型，Api方法，Api参数，对象属性)* 添加文字描述的问题加以讨论。
+
+Jimmer对这类问题的提供了最简单的解决方案，无需使用特殊的注解，Java/Kotlin开发人员只编写最基本的文档注释即可，所有文档注释就自动复制到客户端Api中。这个功能很简单，读者可以自行实验，这里不再阐述。

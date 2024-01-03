@@ -1,0 +1,352 @@
+---
+sidebar_position: 1  
+title: 功能介绍
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 最简单的Repository
+
+现在让我们编写一个BookRepository，用于查询Book
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookRepository.java"
+@Repository
+pubic class BookRepository {
+
+    private final JSqlCleint sqlClient;
+
+    public BookRepository(JSqlCleint sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
+    @Nullable
+    public Book findBookById(long id) {
+        return sqlClient.findById(Book.class, id);
+    }
+
+    public List<Book> findBooksByName(@Nullable String name) {
+        BookTable table = Tables.BOOK_TABLE;
+        return sqlClient
+                .createQuery(table)
+                .whereIf(
+                    name != null && !name.isEmpty(), 
+                    table.name().ilike(name)
+                )
+                .select(table);
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookRepository.kt"
+@Repository
+class BookRepository(
+    private val sqlClient: KSqlClient
+) {
+
+    fun findBookById(id: Long): Book? =
+        sqlClient.findById(Book::class, id)
+
+    fun findBooksByName(name: String?): List<Book> =
+        sqlClient.createQuery(Book::class) {
+            name?.takeIf { it.isNotEmpty() }?.let {
+                where(table.name ilike name);
+            }
+            select(table)
+        }.execute()
+}
+```
+
+</TabItem>
+</Tabs>
+
+-   Java代码中的`JSqlClient`和Kotlin代码中的`KSqlClient`，是Jimmer为Java和Kotlin开发人员提供的API入口。
+
+    实际项目中改对象为全局对象，本章节文档用于快速预览，并不会深入介绍。这里读者可以先忽略具体细节，知道`sqlClient`是API入口即可。
+
+-   本文的目的在于控制返回对象的格式，而并非介绍复杂查询条件 *(这部分内容在[快速预览/任意动态查询](../dsl)中介绍)*。
+
+    所以这两个方法象征性采用`Book.id`和`Book.name`作为过滤条件。
+
+-   Jimmer是技术中立的，但是采用Spring风格的代码往往能够起到简化讲解的目的，所以，本例采用Spring风格书写。
+
+    但是，为了方便非Spring用户阅读，这里故意没有采用[Jimmer对Spring Data的支持](../../spring/repository)，而是采用了手动注入`sqlClient`这种相对原始的写法，把Spring的干扰降到最低。
+
+-   Java代码中的`Tables.BOOK_TABLE`是Jimmer编译时自动生成的代码。
+
+加入上述类有一个实例`bookRepository`，以`findBookById`为例：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+System.out.println(bookRepository.findBookById(1L));
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+println(bookRepository.findBookById(1L));
+```
+
+</TabItem>
+</Tabs>
+
+得到如下的输出结果:
+
+```json
+{
+  "id" : 1,
+  "name" : "Learning GraphQL",
+  "edition" : 1,
+  "price" : 50.00,
+  "store" : {
+    "id" : 1
+  }
+}
+```
+
+这样输出格式是固定的，和当前的要讨论的话题“查询任意形状的数据结构”不符，因此我们需要改进`BookRepository`。
+
+## 改进后的的Repository
+
+让我们对之前的`BookRepository`类稍加改进
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookRepository.java"
+@Repository
+pubic class BookRepository {
+
+    private final JSqlCleint sqlClient;
+
+    public BookRepository(JSqlCleint sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
+    @Nullable
+    public Book findBookById(
+        long id, 
+        // highlight-next-line
+        Fetcher<Book> fetcher
+    ) {
+        return sqlClient.findById(
+            // highlight-next-line
+            fetcher, 
+            id
+        );
+    }
+
+    public List<Book> findBooksByName(
+        @Nullable String name,
+        // highlight-next-line
+        @Nullable Fetcher<Book> fetcher
+    ) {
+        BookTable table = Tables.BOOK_TABLE;
+        return sqlClient
+                .createQuery(table)
+                .whereIf(
+                    name != null && !name.isEmpty(), 
+                    table.name().ilike(name)
+                )
+                .select(
+                    // highlight-next-line
+                    table.fetch(fetcher)
+                );
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookRepository.kt"
+@Repository
+class BookRepository(
+    private val sqlClient: KSqlClient
+) {
+
+    fun findBookById(
+        id: Long,
+        // highlight-next-line
+        fetcher: Fetcher<Book>
+    ): Book? =
+        sqlClient.findById(
+            // highlight-next-line
+            fetcher, 
+            id
+        )
+
+    fun findBooksByName(name: String?): List<Book> =
+        sqlClient.createQuery(Book::class) {
+            name?.takeIf { it.isNotEmpty() }?.let {
+                where(table.name ilike name);
+            }
+            select(
+                // highlight-next-line
+                table.fetch(fetcher)
+            )
+        }.execute()
+}
+```
+
+</TabItem>
+</Tabs>
+
+在这个例子中，我们为每个查询方法添加了一个类型为`Fetcher<Book>`的参数，我们可以通过它灵活控制被查询对象的格式 *(即，被查询的数据结构的形状)*
+
+:::tip
+这是推荐的使用方式，Repository仅负责筛选、排序、分页等操作，但不控制返回数据的格式，而是通过`Fetcher<E>`参数将数据格式的控制权暴露出去，让更上层的业务逻辑来决定。
+:::
+
+接下来，我们还是以`findBookById`方法为例，展示两种用法
+
+### 查询残缺对象
+
+这里，我们让返回的格式比默认对象格式更简单
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+System.out.println(
+    bookRepository.findBookById(
+        1L,
+        // highlight-next-line
+        Fetchers.BOOK_FETCHER
+            .name()
+    )
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+println(
+    bookRepository.findBookById(
+        1L,
+        // highlight-next-line
+        newFetcher(Book::class).by {
+            name()
+        }
+    )
+);
+```
+
+</TabItem>
+</Tabs>
+
+Java代码中，`Fetchers.BOOK_FETCHER`为Jimmer在编译时自动生成的代码。
+
+这个例子中，我们让返回的`Book`对象只有两个属性: `id`和`name` *(虽然代码中只指定了`name`, 但是`id`属性是隐含的，总是会被查询)*。
+
+得到的结果为
+
+```json
+{
+  "id" : 1,
+  "name" : "Learning GraphQL"
+}
+```
+
+返回的结果中，`Book`对象只有`id`和`name`属性，缺少`edition`, `price`和`store`等属性，这就叫做残缺对象。
+
+### 查询多个对象构成的数据结构
+
+这里，我们让返回的格式比默认对象格式更复杂，包括
+
+-   当前对象的所有非关联属性
+
+-   通过多对一关联`Book.store`获取关联对象`BookStore`，并让关联对象具备所有非关联属性
+
+-   通过多对多关联`Book.authors`获取所有关联对象`Author`，并让每一个关联对象具备所有非关联属性
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+System.out.println(
+    bookRepository.findBookById(
+        1L,
+        Fetchers.BOOK_FETCHER
+            .allScalarFields()
+            .store(
+                Fetchers.BOOK_STORE_FETCHER
+                    .allScalarFields()
+            )
+            .authors(
+                Fetchers.AUTHOR_FETCHER
+                    .allScalarFields()
+            )
+    )
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+println(
+    bookRepository.findBookById(
+        1L,
+        newFetcher(Book::class).by {
+            allScalarFields()
+            store {
+                allScalarFields()
+            }
+            authors {
+                allScalarFields()
+            }
+        }
+    )
+);
+```
+
+</TabItem>
+</Tabs>
+
+上述Java代码中，`Fetchers.BOOK_FETCHER`、`Fetchers.BOOK_STORE_FETCHER`、`Fetchers.AUTHOR_FETCHER`为Jimmer在编译时自动生成的代码。
+
+> 如果认为在Java代码中频繁书写`Fetchers.`前缀很麻烦，可以使用静态导入，或干脆让当前类直接实现`Fetchers`接口。
+
+这次，我们会得到一个复杂的数据结构，以`Book`对象作为聚合根，并通过关联属性附带上`BookStore`对象和`Author`对象。
+
+```json
+{
+  "id" : 1,
+  "name" : "Learning GraphQL",
+  "edition" : 1,
+  "price" : 50.00,
+  // highlight-next-line
+  "store" : {
+    "id" : 1,
+    "name" : "O'REILLY",
+    "website" : null
+  },
+  // highlight-next-line
+  "authors" : [{
+    "id" : 1,
+    "firstName" : "Eve",
+    "lastName" : "Procello",
+    "gender" : "FEMALE"
+  }, {
+    "id" : 2,
+    "firstName" : "Alex",
+    "lastName" : "Banks",
+    "gender" : "MALE"
+  }]
+}
+```
+
+用户可以通过这种手段控制任何普通属性和关联属性是否被查询，深度和广度都不受限制的。
+
+最终，我们无需构建任何HTTP服务，就可以在任何代码中直接获取媲美GraphQL的能力。

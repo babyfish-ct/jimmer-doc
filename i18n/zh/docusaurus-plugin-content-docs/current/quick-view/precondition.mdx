@@ -1,0 +1,214 @@
+---
+sidebar_position: 1  
+title: 前提
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+为了快速预览Jimmer最主要的特性，这里需要给出几个实体，作为本章节所有讨论的基本前提。
+
+## 实体的地位
+
+:::tip
+**在Jimmer应用中，唯一重要的就是全局统一的ORM实体模型。**
+
+全局实体模型随着数据库的设计的定型而定型，和具体查询/修改业务对交互格式的诉求无关，相对稳定。
+
+至于每个查询/修改业务需要交互什么样的DTO类型，完全不重要。
+
+-   要么根本不需要DTO, 比如[快速预览/查询任意形状/暴露功能/直接返回实体](./fetch/export/entity)。
+
+-   要么通过[对象篇/DTO转换/DTO语言](../object/view/dto-language)快速生成DTO类型，让DTO变得极其廉价。
+
+只有相对稳定的实体模型才是重要的。所以，Jimmer非常善于处理需求的变动。
+:::
+
+## 实体之间的UML关系
+
+这里，列举三个实体类型，`BookStore`、`Book`、`Author`和`TreeNode`，作为当前章节所有讨论的前提假设。
+
+![uml](@site/static/img/uml.svg)
+
+## 实体类型定义
+
+### BookStore
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface BookStore {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id();
+
+    String name();
+
+    @Nullable
+    String website();
+
+    @OneToMany(mappedBy = "store")
+    List<Book> books();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface BookStore {
+
+    @Id
+    @@GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long
+
+    val name: String
+
+    val website: String?
+
+    @OneToMany(mappedBy = "store")
+    val books: List<Book>
+}
+```
+
+</TabItem>
+</Tabs>
+
+### Book
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+/**
+ * The Book Entity
+ */
+@Entity
+public interface Book {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id();
+
+    @Key
+    String name();
+
+    @Key
+    int edition();
+
+    BigDecimal price();
+
+    @Nullable
+    @ManyToOne
+    BookStore store();
+
+    @ManyToMany
+    List<Author> authors();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Book {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long
+
+    @Key
+    val name: String
+
+    @Key
+    val edition: Int
+
+    val price: BigDecimal
+
+    @ManyToOne
+    val store: BookStore?
+
+    @ManyToMany
+    val authors: List<Author>
+}
+```
+
+</TabItem>
+</Tabs>
+
+### Author
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Author {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    UUID id();
+
+    @Key
+    String firstName();
+
+    @Key
+    String lastName();
+
+    Gender gender();
+
+    @ManyToMany(mappedBy = "authors")
+    List<Book> books();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Author {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long
+
+    @Key
+    val firstName String
+
+    @Key
+    val lastName: String
+
+    val gender: Gender
+
+    @ManyToMany(mappedBy = "authors")
+    val books: List<Book>
+}
+```
+
+</TabItem>
+</Tabs>
+
+其中，Gender是一个非常简单的枚举类型
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public enum Gender { MALE, FEMALE }
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+enum class Gender { MALE, FEMALE }
+```
+
+</TabItem>
+</Tabs>

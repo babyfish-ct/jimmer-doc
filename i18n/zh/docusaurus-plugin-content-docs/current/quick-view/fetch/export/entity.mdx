@@ -292,3 +292,187 @@ export type BookDto = {
 本文聚焦于演示这个强大功能，没有对如何为Api的各部分*(例如：类型，Api方法，Api参数，对象属性)* 添加文字描述的问题加以讨论。
 
 Jimmer对这类问题的提供了最简单的解决方案，无需使用特殊的注解，Java/Kotlin开发人员只编写最基本的文档注释即可，所有文档注释就自动复制到客户端Api中。这个功能很简单，读者可以自行实验，这里不再阐述。
+
+## Flat关联ID
+
+如果关联对象只有`id`属性，那么关联Id会比关联对象更好用，例如
+
+-   使用关联对象，结果稍显冗余
+
+    ```json
+    {
+        "id" : 1,
+        "name" : "Learning GraphQL",
+        "edition" : 1,
+        "price" : 50.00,
+        "store" : {
+            // highlight-next-line
+            "id" : 1
+        },
+        "authors" : [{
+            // highlight-next-line
+            "id" : 1
+        }, {
+            // highlight-next-line
+            "id" : 2
+        }]
+    }
+    ```
+
+-   使用关联Id，结果相对简练
+
+    ```json
+    {
+        "id" : 1,
+        "name" : "Learning GraphQL",
+        "edition" : 1,
+        "price" : 50.00,
+        // highlight-next-line
+        "storeId" : 1,
+        // highlight-next-line
+        "authorIds" : [1, 2]
+    }
+    ```
+
+如果选择直接返回实体 *(而非[下一篇文章](./dto)种的返回DTO)*，如果要使用关联id，可以先为实体添加@IdView属性
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Book {
+
+    @Nullable
+    @ManyToOne
+    BookStore store();
+
+    @ManyToMany
+    List<Author> authors();
+
+    @Nullable
+    // highlight-next-line
+    @IdView
+    Long storeId();
+
+    // highlight-next-line
+    @IdView("authors")
+    List<Long> authorIds();
+
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Book {
+
+    @ManyToOne
+    val store: BookStore?
+
+    @ManyToMany
+    val authors: List<Author>
+
+    // highlight-next-line
+    @IdView
+    val storeId: Long?
+
+    // highlight-next-line
+    @IdView("authors")
+    val authorIds: List<Long>
+
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+</Tabs>
+
+上例中
+
+-   `storeId`属性并非全新属性，而是`store`属性的视图，获取`store`属性所表示的关联对象的`id`属性。`storeId`和`store`共享相同的数据。
+
+-   `authorIds`属性并非全新属性，而是`authors`属性的，获取`authors`属性所表示的所有关联对象的`id`属性。`authorIds`和`authors`共享相同的数据。
+
+这是，如此编写REST Controll即可
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookController.java"
+@RestController
+public class BookController implements Fetchers {
+
+    private final BookRepository bookRepository;
+
+    public BookController(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }
+
+    @Nullable
+    @GetMapping("/book")
+    // highlight-next-line
+    public @FetchBy("SHALLOW_BOOK") Book findBookById(
+        @PathVariable("id") long id
+    ) {
+        // highlight-next-line
+        return bookRepository.findBookById(id, SHALLOW_BOOK);
+    }
+
+    /**
+     * Shallow Book DTO which can access properties of `Book` itself and all associated ids
+     */
+    private static final Fetcher<Book> SIMPLE_BOOK =
+            SHALLOW_BOOK
+                    .allScalarFields()
+                    // highlight-next-line
+                    .storeId()
+                    // highlight-next-line
+                    .authorIds();
+
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookController.kt"
+@RestController
+class BookController(
+    private val bookRepository: BookRepository
+) {
+    @GetMapping("/book/{id}")
+    fun findBookById(
+        @PathVariable id: Long
+        // highlight-next-line
+    ): @FetchBy("SHALLOW_BOOK") Book = 
+        // highlight-next-line
+        bookRepository.findBookById(id, SHALLOW_BOOK)
+
+    ...省略其他成员...
+
+    companion object {
+
+        /**
+        * Simple Book DTO which can access properties of `Book` itself
+        */
+        val SHALLOW_BOOK =
+            newFetcher(Book:::class).by {
+                allScalarFields()
+                // highlight-next-line
+                storeId()
+                // highlight-next-line
+                authorIds()
+            }
+
+        ...省略其他形状定义...
+    }
+}
+```
+
+</TabItem>
+</Tabs>

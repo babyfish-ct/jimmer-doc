@@ -1,0 +1,170 @@
+---
+sidebar_position: 3
+title: 保存长关联
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { LongAssociation } from '@site/src/components/LongAssociation';
+
+## 何谓短关联
+
+所谓长关联，指不仅要改变当前对象和其他对象之间的关联关系，还要进一步修改关联对象。
+
+对于到UI界面而言，通常表现为父子表单的嵌套 *(甚至树形递归)*。形式多样，以表单内嵌子表颇为常见，如下：
+
+<LongAssociation/>
+
+:::info
+只要开发人员愿意，这种父子表单嵌套结构的深度可以不只两层，从理论上讲，深度可以无限，这就是称其为长关联的原因。
+:::
+
+## 编写DTO
+
+在当前例子的在[实体定义](../../precondition#book)中，比较适合作为长关联的例子是保存`BookStore`以及它的`books`关联集合。
+
+1.  安装DTO语言Intellij插件：https://github.com/ClearPlume/jimmer-dto。此过程不是必须的，但非常推荐
+
+2.  新建目录`src/main/dto`
+
+3.  在`src/main/dto`下建立一个文件`BookStore.dto`，编写代码如下
+
+    ```sh title="BookStore.dto"
+    export org.doc.j.model.BookStore
+        -> package org.doc.j.model.dto
+
+    input BookStoreWithLongAssociation {
+        #allScalars(this)
+        #highlight-next-line
+        books { // LongAssociation
+            #allScalars(this)
+            -id
+            id(authors) as authorIds
+        }
+    }
+    ```
+## 生成的代码
+
+编译，Jimmer会生成如下代码
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookStoreWithLongAssociation.java"
+@GeneratedBy(
+        file = "<yourproject>/src/main/dto/BookStore.dto"
+)
+public class BookStoreWithLongAssociation implements Input<BookStore> {
+
+    @Nullable
+    private Long id;
+
+    @NotNull
+    private String name;
+
+    @Nullable
+    private String website;
+
+    @NotNull
+    // highlight-next-line
+    private List<TargetOf_books> books;
+
+    ...省略其他方法...
+
+    public static class TargetOf_books implements Input<Book> {
+
+        @NotNull
+        private String name;
+
+        private int edition;
+
+        @NotNull
+        private BigDecimal price;
+
+        @NotNull
+        private List<Long> authorIds;
+
+        ...省略其他方法...
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookStoreWithLongAssociation.kt"
+@GeneratedBy(
+        file = "<yourproject>/src/main/dto/BookStore.dto"
+)
+data class BookStoreWithLongAssociation(
+    val id: Long?
+    val name: String,
+    val website: String?,
+    // highlight-next-line
+    val books: List<TargetOf_books>
+) : Input<BookStore> {
+    
+    ...省略其他方法...
+
+    data class TargetOf_authors(
+        val name: String,
+        val edition: Int,
+        val price: BigDecimal,
+        val authorIds: List<Long>
+    )
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 编写HTTP服务
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookStoreController.java"
+@RestController
+public class BookStoreController {
+
+    private final JSqlClient sqlClient;
+
+    public BookController(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
+    } 
+
+    @PutMapping("/bookStore")
+    pubic int saveBookStoreWithLongAssociation(
+        // highlight-next-line
+        @RequestBody BookStoreWithLongAssociation input
+    ) {
+        return sqlClient
+            .save(input)
+            .getTotoalAffectedRowCount();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookStoreController.java"
+class BookStoreController(
+    private val sqlClient: KSqlClient
+) {
+
+    @PutMapping("/bookStore")
+    fun saveBookStoreWithLongAssociation(
+        // highlight-next-line
+        @RequestBody input: BookStoreWithLongAssociation
+    ): Int =
+        sqlClient
+            .save(input)
+            .totoalAffectedRowCount
+}
+```
+
+</TabItem>
+</Tabs>
+
+可见，无论Input DTO如何改变，Jimmer仍然只需一个方法调用即可完成数据保存。

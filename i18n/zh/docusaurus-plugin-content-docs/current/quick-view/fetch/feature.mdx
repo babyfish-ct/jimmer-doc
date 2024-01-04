@@ -17,9 +17,9 @@ import TabItem from '@theme/TabItem';
 @Repository
 pubic class BookRepository {
 
-    private final JSqlCleint sqlClient;
+    private final JSqlClient sqlClient;
 
-    public BookRepository(JSqlCleint sqlClient) {
+    public BookRepository(JSqlClient sqlClient) {
         this.sqlClient = sqlClient;
     }
 
@@ -126,9 +126,9 @@ println(bookRepository.findBookById(1L));
 @Repository
 pubic class BookRepository {
 
-    private final JSqlCleint sqlClient;
+    private final JSqlClient sqlClient;
 
-    public BookRepository(JSqlCleint sqlClient) {
+    public BookRepository(JSqlClient sqlClient) {
         this.sqlClient = sqlClient;
     }
 
@@ -257,8 +257,8 @@ Java代码中，`Fetchers.BOOK_FETCHER`为Jimmer在编译时自动生成的代�
 
 ```json
 {
-  "id" : 1,
-  "name" : "Learning GraphQL"
+    "id" : 1,
+    "name" : "Learning GraphQL"
 }
 ```
 
@@ -326,28 +326,28 @@ println(
 
 ```json
 {
-  "id" : 1,
-  "name" : "Learning GraphQL",
-  "edition" : 1,
-  "price" : 50.00,
-  // highlight-next-line
-  "store" : {
     "id" : 1,
-    "name" : "O'REILLY",
-    "website" : null
-  },
-  // highlight-next-line
-  "authors" : [{
-    "id" : 1,
-    "firstName" : "Eve",
-    "lastName" : "Procello",
-    "gender" : "FEMALE"
-  }, {
-    "id" : 2,
-    "firstName" : "Alex",
-    "lastName" : "Banks",
-    "gender" : "MALE"
-  }]
+    "name" : "Learning GraphQL",
+    "edition" : 1,
+    "price" : 50.00,
+    // highlight-next-line
+    "store" : {
+        "id" : 1,
+        "name" : "O'REILLY",
+        "website" : null
+    },
+    // highlight-next-line
+    "authors" : [{
+        "id" : 1,
+        "firstName" : "Eve",
+        "lastName" : "Procello",
+        "gender" : "FEMALE"
+    }, {
+        "id" : 2,
+        "firstName" : "Alex",
+        "lastName" : "Banks",
+        "gender" : "MALE"
+    }]
 }
 ```
 

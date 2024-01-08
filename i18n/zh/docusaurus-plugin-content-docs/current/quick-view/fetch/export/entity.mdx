@@ -61,11 +61,11 @@ public class BookController implements Fetchers {
     }
 
     /**
-     * Simple Book DTO which can access properties of `Book` itself
+     * Simple Book DTO which can only access `id` and `name` of `Book` itself
      */
     private static final Fetcher<Book> SIMPLE_BOOK = ❺
             BOOK_FETCHER
-                    .allScalarFields();
+                    .name();
 
     /**
      * Complex Book DTO which can access not only properties of `Book` itself,
@@ -116,17 +116,17 @@ class BookController(
     companion object {
 
         /**
-        * Simple Book DTO which can access properties of `Book` itself
-        */
+         * Simple Book DTO which can only access `id` and `name` of `Book` itself
+         */
         val SIMPLE_BOOK = ❺
             newFetcher(Book:::class).by {
-                allScalarFields()
+                name()
             }
 
         /**
-        * Complex Book DTO which can access not only properties of `Book` itself,
-        * but also associated `BookStore` and `Author` objects with names
-        */
+         * Complex Book DTO which can access not only properties of `Book` itself,
+         * but also associated `BookStore` and `Author` objects with names
+         */
         private val COMPLEX_BOOK = ❻
             newFetcher(Book:::class).by {
                 allScalarFields()
@@ -273,14 +273,12 @@ export type BookDto = {
         }>;
     }
     /**
-     * Simple Book DTO which can access properties of `Book` itself
+     * Simple Book DTO which can only access `id` and `name` of `Book` itself
      */
     // highlight-next-line
     'BookController/SIMPLE_BOOK': {
         readonly id: number;
         readonly name: string;
-        readonly edition: number;
-        readonly price: number;
     }
 }
 ```

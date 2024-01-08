@@ -2,3 +2,26 @@
 sidebar_position: 2  
 title: Query arbitrary shapes
 ---
+
+## Basic Concepts
+
+Although Jimmer entities are strongly typed, they are also dynamic and can express the ever-changing shape of data structures. 
+
+Therefore, Jimmer supports `ObjectFetcher`, which can control the shape of the queried data structure and then uniformly return Jimmer entities. 
+
+:::tip This is an extremely similar concept to GraphQL, but there are huge differences:
+
+-   GraphQL is an application layer protocol based on HTTP that can only expose this capability by building HTTP services, and only HTTP clients can enjoy this capability. 
+
+-   For Jimmer, the ability to query arbitrary shapes is an inherent behavior of ORM that can be used programmed anywhere.
+
+    -   You can use it to expose [GraphQL services](../../graphql).
+
+    -   As shown in the content of this section, you can also expose REST services.
+    
+    -   It can even be used within applications without crossing any remote boundaries.
+:::
+
+## Demo
+
+<ObjectFetcherPanel/>

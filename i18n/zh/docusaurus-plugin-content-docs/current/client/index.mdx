@@ -8,7 +8,17 @@ import { DtoExplosion } from "@site/src/components/Image";
 
 Jimmer为HTTP客户端开发提供了良好的开发体验。
 
-比较主流的HTTP服务有两种形式，REST和GraphQL。对于GraphQL而言，可以参考我的另外一个项目[graphql-ts-client](https://github.com/babyfish-ct/graphql-ts-client)；这里，我们重点讨论更为常见的REST客户端。
+比较主流的HTTP服务有两种形式，REST和GraphQL。
+
+## GraphQL
+
+-   服务端：Jimmer能够轻松构建GraphQL服务，请参见[GraphQL服务的Java示范](https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-sql-graphql)和[GraphQL服务的Kotlin示范](https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-sql-graphql-kt)。
+
+-   客户端：有很多技术可以选择，包括我的另外一个项目[graphql-ts-client](https://github.com/babyfish-ct/graphql-ts-client)。
+
+由于GraphQL客户端技术体系非常成熟，无需过多讨论。本章节中，我们重点讨论更为常见的REST客户端。
+
+## REST
 
 Jimmer能为REST服务自动生成TypeScript和OpenAPI代码，实现自动对接 *(以后会支持更多客户端语言)*，这套实现具备如下三个重要特征：
 

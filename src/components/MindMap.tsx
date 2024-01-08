@@ -295,7 +295,7 @@ const DATA_ZH = `
 
         -   良好的IDE智能提示，流畅开发
 
-    -   前后端免对接 [👁](#communication) [→](@site/spring/client)
+    -   前后端免对接 [👁](#communication) [→](@site/client)
 
         -   消除后端开发的DTO爆炸，从以传统开发方式(尤其是MyBatis)的重复劳动中解脱出来
 
@@ -405,7 +405,7 @@ const DATA_EN = `
 
         -   Excellent IDE smart suggestions for smooth development
 
-    -   No need for frontend-backend integration [👁](#communication) [→](@site/spring/client)
+    -   No need for frontend-backend integration [👁](#communication) [→](@site/client)
 
         -   Eliminate DTO explosion for backend development, freeing from repetitive work using traditional development approaches (especially MyBatis)
 

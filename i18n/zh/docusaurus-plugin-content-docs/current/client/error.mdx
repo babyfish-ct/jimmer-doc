@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: 生成前端异常
+title: 生成客户异常
 ---
 
 import Tabs from '@theme/Tabs';
@@ -26,9 +26,17 @@ import {VsModule, VsApi, VsFamily, VsCode, VsField} from '@site/src/components/I
 
 所以，Jimmer选择折中方案，把业务异常分为多个簇，每个簇用一套Error Code。
 
+用户可以采用两种方法定义异常簇
+
+-   自动生成
+
+-   纯手写
+
+### 自动生成异常簇
+
 Jimmer采用枚举来定义异常簇，枚举也是这簇异常的错误码，例如
 
-### 定义异常簇
+#### 定义异常簇
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -74,7 +82,7 @@ enum class UserInfoErrorCode {
 :::info
 这里的预编译器，对于Java而言就是Annotation Processor；对于Kotlin而言就是KSP。
 
-这部分类型已经在[概述/快速上手/生成代码](../../overview/get-started/generate-code)一节中讨论过，此处不在重复。
+这部分类型已经在[概述/快速上手/生成代码](../overview/get-started/generate-code)一节中讨论过，此处不在重复。
 :::
 
 预编译器会会根据此枚举生成如下异常类
@@ -96,7 +104,7 @@ enum class UserInfoErrorCode {
 
 ```java title="UserInfoException.java"
 public abstract class UserInfoException 
-    extends CodeBasedException { ❶
+    extends CodeBasedRuntimeException { ❶
 
     private UserInfoException(String message, Throwable cause) {
         super(message, cause);
@@ -105,14 +113,14 @@ public abstract class UserInfoException
     @Override
     public abstract UserInfoErrorCode getCode(); ❷
 
-    public static UserInfoException illegalUserName(@NotNull String message) { ❸
+    public static IllegalUserName illegalUserName(@NotNull String message) { ❸
         return new IllegalUserName(
             message,
             null
         );
     }
 
-    public static UserInfoException illegalUserName( ❹
+    public static IllegalUserName illegalUserName( ❹
             @NotNull String message,
             @Nullable Throwable cause
     ) {
@@ -122,14 +130,14 @@ public abstract class UserInfoException
         );
     }
 
-    public static UserInfoException passwordTooShort(@NotNull String message) { ❺
+    public static PasswordTooShort passwordTooShort(@NotNull String message) { ❺
         return new PasswordTooShort(
             message,
             null
         );
     }
 
-    public static UserInfoException passwordTooShort( ❻
+    public static PasswordTooShort passwordTooShort( ❻
             @NotNull String message,
             @Nullable Throwable cause
     ) {
@@ -139,14 +147,14 @@ public abstract class UserInfoException
         );
     }
 
-    public static UserInfoException passwordsNotSame(@NotNull String message) { ❼
+    public static PasswordsNotSame passwordsNotSame(@NotNull String message) { ❼
         return new PasswordsNotSame(
             message,
             null
         );
     }
 
-    public static UserInfoException passwordsNotSame( ❽
+    public static passwordsNotSame passwordsNotSame( ❽
             @NotNull String message,
             @Nullable Throwable cause
     ) {
@@ -213,7 +221,7 @@ public abstract class UserInfoException
 public abstract class UserInfoException private constructor(
     message: String,
     cause: Throwable? = null,
-) : CodeBasedException(message, cause) { ❶
+) : CodeBasedRuntimeException(message, cause) { ❶
 
     public abstract override val code: UserInfoErrorCode ❷
 
@@ -222,7 +230,7 @@ public abstract class UserInfoException private constructor(
         public fun illegalUserName( ❸❹
             message: String, 
             cause: Throwable? = null
-        ): UserInfoException =
+        ): IllegalUserName =
             IllegalUserName(
                 message,
                 cause
@@ -232,7 +240,7 @@ public abstract class UserInfoException private constructor(
         public fun passwordTooShort( ❺❻
             message: String, 
             cause: Throwable? = null
-        ): UserInfoException =
+        ): PasswordTooShort =
             PasswordTooShort(
                 message,
                 cause
@@ -242,7 +250,7 @@ public abstract class UserInfoException private constructor(
         public fun passwordsNotSame( ❼❽
             message: String, 
             cause: Throwable? = null
-            ): UserInfoException =
+            ): PasswordsNotSame =
                 PasswordsNotSame(
                     message,
                     cause
@@ -290,7 +298,7 @@ public abstract class UserInfoException private constructor(
 </TabItem>
 </Tabs>
 
--   ❶ 基于枚举错误码的异常必然继承`org.babyfish.jimmer.error.CodeBasedException`
+-   ❶ 基于枚举错误码的异常必然继承`org.babyfish.jimmer.error.CodeBasedRuntimeException`
 
 -   ❷ 这一簇异常的错误码的类型为`UserInfoErrorCode`
 
@@ -306,7 +314,7 @@ public abstract class UserInfoException private constructor(
 
 -   ⓫ 异常类`UserInfoException.PasswordsNotSame`的错误码为`PASSWORDS_NOT_SAME`
 
-### 为异常码添加字段
+#### 为异常码添加字段
 
 可以为任何一个错误码添加附加字段。
 
@@ -355,9 +363,9 @@ enum class UserInfoErrorCode {
 <TabItem value="java" label="Java">
 
 ```java title="UserInfoException.java"
-public abstract class UserInfoException extends CodeBasedException {
+public abstract class UserInfoException extends CodeBasedRuntimeException {
 
-    public static UserInfoException illegalUserName(
+    public static IllegalUserName illegalUserName(
         @NotNull String message,
         // highlight-next-line
         @NotNull List<Character> illegalChars
@@ -365,7 +373,7 @@ public abstract class UserInfoException extends CodeBasedException {
         ...省略代码...
     }
 
-    public static UserInfoException illegalUserName(
+    public static IllegalUserName illegalUserName(
         @NotNull String message,
         @Nullable Throwable cause, 
         // highlight-next-line
@@ -415,7 +423,7 @@ public abstract class UserInfoException extends CodeBasedException {
 public abstract class UserInfoException private constructor(
     message: String,
     cause: Throwable? = null,
-) : CodeBasedException(message, cause) { ❶
+) : CodeBasedRuntimeException(message, cause) { ❶
 
     public abstract override val code: UserInfoErrorCode ❷
 
@@ -427,7 +435,7 @@ public abstract class UserInfoException private constructor(
             cause: Throwable? = null,
             // highlight-next-line
             illegalChars: List<Char>,
-        ): UserInfoException = 
+        ): IllegalUserName = 
             ...省略代码...
 
         ...省略其他代码...
@@ -454,9 +462,21 @@ public abstract class UserInfoException private constructor(
 </TabItem>
 </Tabs>
 
+### 手写异常簇
+
+【TODO】
+
 ## 为REST API声明异常
 
-### 允许抛出异常簇中所有异常
+### 允许抛出整个异常簇
+
+所谓抛出异常簇中部分异常，就是抛出抽象的异常类型 *(例如：throws UserInfoException)*。
+
+Jimmer允许任何HTTP服务方法抛出异常
+
+-   Java： 使用throws语法
+
+-   Kotlin：使用`@kotlin.Throws`注解
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -467,9 +487,10 @@ package com.example.service;
 import org.babyfish.jimmer.client.ThrowsAll;
 
 @PostMapping("/user")
+public void registerUser(
+    @RequestBody RegisterUserInput input
 // highlight-next-line
-@ThrowsAll(UserInfoErrorCode.class)
-public void registerUser(@RequestBody RegisterUserInput input) {
+) throws UserInfoException {
     ...省略代码...
 }
 ```
@@ -484,7 +505,7 @@ import import org.babyfish.jimmer.client.ThrowsAll
 
 @PostMapping("/user")
 // highlight-next-line
-@ThrowsAll(UserInfoErrorCode::class)
+@Throws(UserInfoException::class)
 fun registerUser(@RequestBody input: RegisterUserInput) {
     ...省略代码...
 }
@@ -493,94 +514,19 @@ fun registerUser(@RequestBody input: RegisterUserInput) {
 </TabItem>
 </Tabs>
 
-:::info
-注解`@org.babyfish.jimmer.client.ThrowsAll`允许REST API抛出异常簇中所有异常。
-:::
-
 ### 允许抛出异常簇中部分异常
 
-让我定位另外一个业务异常簇
-
-<Tabs groupId="language">
-<TabItem value="java" label="Java">
-
-```java title="PlatformErrorCode.java"
-@ErrorFamily
-public enum PlatformErrorCode {
-    PERMISSION_DENIED,
-    DATA_IS_FROZEN,
-    SERVICE_IS_SUSPENDED,
-}
-```
-
-</TabItem>
-<TabItem value="kotlin" label="Kotlin">
-
-```kotlin title="PlatformErrorCode.kt"
-@ErrorFamily
-enum class PlatformErrorCode {
-    PERMISSION_DENIED,
-    DATA_IS_FROZEN,
-    SERVICE_IS_SUSPENDED
-}
-```
-
-</TabItem>
-</Tabs>
-
-为了能声明某个REST API只能抛出这簇异常中的部分异常，定义如下注解
-
-<Tabs groupId="language">
-<TabItem value="java" label="Java">
-
-```java title="ThrowsPlatformError.java"
-@Documented
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface ThrowsPlatformError {
-    PlatformErrorCode[] value();
-}
-```
-
-</TabItem>
-<TabItem value="kotlin" label="Kotlin">
-
-```kotlin title="ThrowsPlatformError.kt"
-@Retention(AnnotationRetention.RUNTIME)
-@Target(AnnotationTarget.FUNCTION)
-annotation class ThrowsPlatformError(
-    val value: Array<PlatformErrorCode>
-)
-```
-
-</TabItem>
-</Tabs>
-
-这个注解满足以下5个条件
-
--   `Retention`被配置为`RUNTIME`，即运行时可反射
-
--   `Target`被配置为`METHOD`或`FUNCTION` *(kotlin)*，可以用于修饰方法
-
--   具备一个名称为`value`的属性
-
--   `value`属性的类型为数组
-
--   `value`数组的元素类型时被`@ErrorFamily`修饰的枚举。
-
-:::tip
-如果一个注解满足以上所有条件时，就可以用它修饰REST API，为其声明所抛出的异常。就如同我们使用`@ThrowsAll`那样
-:::
+所谓抛出异常簇中部分异常，就是抛出具体的异常类型 *(例如：throws UserInfoException.PasswordTooShort)*。
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
 ```java title="UserController.java"
 @PostMapping("/user")
-@ThrowsAll(UserInfoErrorCode.class)
-// highlight-next-line
-@ThrowsPlatformError({PlatformErrorCode.SERVICE_IS_SUSPENDED})
-public void registerUser(@RequestBody RegisterUserInput input) {
+public void registerUser(
+    @RequestBody RegisterUserInput input
+//highlight-next-line
+) throws UserInfoException.PasswordTooShort {
     ...省略代码...
 }
 ```
@@ -590,9 +536,8 @@ public void registerUser(@RequestBody RegisterUserInput input) {
 
 ```kotlin title="UserController.kt"
 @PostMapping("/user")
-@ThrowsAll(UserInfoErrorCode::class)
 // highlight-next-line
-@ThrowsPlatformError([PlatformErrorCode.SERVICE_IS_SUSPENDED])
+@Throws(UserInfoException.PasswordsNotSame::class)
 fun registerUser(@RequestBody input: RegisterUserInput) {
     ...省略代码...
 }
@@ -600,6 +545,16 @@ fun registerUser(@RequestBody input: RegisterUserInput) {
 
 </TabItem>
 </Tabs>
+
+### 比较和建议
+
+:::tip
+其实允许抛出整个异常簇就是抛出簇内所有异常。
+
+即，抛出整个异常簇`throws UserInfoException`，其实和抛出具体异常类型列表`throws UserInfoException.IllegalUserName, UserInfoException.PasswordTooShort, UserInfoException.PasswordsNotSame`等价。
+
+建议尽量抛出具体的异常类型列表，以减少客户端需要处理的异常的种类。
+:::
 
 ## 导出服务端异常
 
@@ -612,13 +567,15 @@ fun registerUser(@RequestBody input: RegisterUserInput) {
 
 ```java title="UserController.java"
 @PostMapping("/user")
-@ThrowsAll(UserInfoErrorCode.class)
-@ThrowsPlatformError({PlatformErrorCode.SERVICE_IS_SUSPENDED})
-public void registerUser(@RequestBody RegisterUserInput input) {
+public void registerUser(
+    @RequestBody RegisterUserInput input
+) throws UserInfoException.IllegalUserName {
     if (...某些条件...) {
+        List<Character> illegalChars = ...略...
         // highlight-next-line
-        throw PlatformException.serviceIsSuspended(
-            "The service is suspended"
+        throw UserInfoException.illegalUserName(
+            "The user name is invalid", 
+            illegalChars
         );
     }
     ...省略其他代码...
@@ -630,13 +587,14 @@ public void registerUser(@RequestBody RegisterUserInput input) {
 
 ```kotlin title="UserController.kt"
 @PostMapping("/user")
-@ThrowsAll(UserInfoErrorCode::class)
-@ThrowsPlatformError([PlatformErrorCode.SERVICE_IS_SUSPENDED])
+@Throwss(UserInfoException.IllegalUserName::class)
 fun registerUser(@RequestBody input: RegisterUserInput) {
     if (...某些条件...) {
+        val illegalChars: List<Char> = ...略...
         // highlight-next-line
-        throw PlatformException.serviceIsSuspended(
-            "The service is suspended"
+        throw UserInfoException.illegalUserName(
+            "The user name is invalid",
+            illegalChars
         )
     }
     ...省略其他代码...
@@ -653,7 +611,7 @@ fun registerUser(@RequestBody input: RegisterUserInput) {
 ### 将异常消息写入HTTP响应
 
 :::tip
-只要使用了Jimmer的Spring Boot Starter，无需任何工作，服务抛出任何继承自`CodeBasedException`的异常都会被自动翻译。
+只要使用了Jimmer的Spring Boot Starter，无需任何工作，服务抛出任何继承自`CodeBasedRuntimeException`的异常都会被自动翻译。
 :::
 
 翻译结果为
@@ -936,16 +894,154 @@ jimmer:
 
 ### 生成的TypeScript代码
 
+上文中我们已经定义了一个异常簇`USER_INFO_ERROR_CODE`，假如还有另外一个异常簇`PLATFORM_ERROR_CODE`，采用自动生成的方式，原始枚举类型为。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="PlatformErrorCode.java"
+@ErrorFamily
+public enum PlatformErrorCode {
+    PERMISSION_DENIED,
+    DATA_IS_FROZEN,
+    SERVICE_IS_SUSPENDED,
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="PlatformErrorCode.kt"
+@ErrorFamily
+enum class PlatformErrorCode {
+    PERMISSION_DENIED,
+    DATA_IS_FROZEN,
+    SERVICE_IS_SUSPENDED
+}
+```
+
+</TabItem>
+</Tabs>
+
+假设Controller代码如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="UserController.kt"
+@RestController
+public class UserController {
+
+    @PutMapping("/user")
+    public void registerUser(
+        BookInput input
+    // highlight-next-line
+    ) throws
+        UserInfoException,
+        PlatformException.ServiceIsSuspended {
+        ...略...
+    }
+
+    @DeleteMapping("/user")
+    public void deleteUser(
+        long id
+    // highlight-next-line
+    ) throws
+        UserInfoException,
+        PlatformException.PermissionDenied {
+        ...略...
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="UserController.kt"
+@RestController
+class UserController {
+
+    @PutMapping("/user")
+    // highlight-next-line
+    @Throws(
+        UserController::class
+        PlatformException.ServiceIsSuspended::class
+    )
+    fun registerUser(
+        input: BookInput
+    ) {
+        ...略...   
+    }
+
+    @DeleteMapping("/user")
+    // highlight-next-line
+    @Throws(
+        UserController::class
+        PlatformException.PermissionDenied::class
+    )
+    fun deleteUser(
+        id: Long
+    ) {
+        ...略...   
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+统计各种异常被Java Web API方法throws子句或Kotlin Web方法的`@Throws`注解使用的情况，不难发现
+
+<table>
+<thead>
+<tr>
+<th colspan="2">USER_INFO_ERROR_CODE</th>
+<th colspan="2">PLATFORM_ERROR_CODE</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ILLEGAL_USER_NAME</td>
+<td>Used</td>
+<td>PERMISSION_DENIED</td>
+<td>Used</td>
+</tr>
+<tr>
+<td>PASSWORD_TOO_SHORT</td>
+<td>Used</td>
+<td>DATA_IS_FROZEN</td>
+<td><b>Not used!</b></td>
+</tr>
+<tr>
+<td>PASSWORD_NOT_SAME</td>
+<td>Used</td>
+<td>SERVICE_IS_SUSPENDED</td>
+<td>Used</td>
+</tr>
+</tbody>
+</table>
+
+:::info
+请注意我们定义了6种具体的异常类型，但是Web Api只`throws`了5种，`PLATFORM_ERROR_CODE`簇中的`DATA_IS_FORZEN`从未被使用，后文会讨论。
+:::
+
+生成的TypeScript代码如下
+
 ```ts
 export type AllErrors = ❶
     {
-        readonly family: "PLATFORM_ERROR_CODE", ❷
-        readonly code: "SERVICE_IS_SUSPENDED" ❸
+        readonly family: "PLATFORM_ERROR_CODE", 
+        readonly code: "SERVICE_IS_SUSPENDED"
+    } |
+    {
+        readonly family: "PLATFORM_ERROR_CODE", 
+        readonly code: "PERMISSION_DENIED"
     } | 
     {
         readonly family: "USER_INFO_ERROR_CODE",
         readonly code: "ILLEGAL_USER_NAME",
-        readonly "illegalChars": ReadonlyArray<number> ❹
+        // highlight-next-line
+        readonly "illegalChars": ReadonlyArray<number>
     } | 
     {
         readonly family: "USER_INFO_ERROR_CODE",
@@ -958,9 +1054,9 @@ export type AllErrors = ❶
     ...省略其他代码...
 ;
 
-export type ApiErrors = { ❺
-    "userController": { ❻
-        "registerUser": AllErrors & ( ❼
+export type ApiErrors = { ❷
+    "userController": {
+        "registerUser": AllErrors & (
             {
                 readonly family: 'USER_INFO_ERROR_CODE',
                 readonly code: 'ILLEGAL_USER_NAME',
@@ -982,43 +1078,40 @@ export type ApiErrors = { ❺
                 readonly [key:string]: any
             }
         ),
-        ...省略其他代码...
+        "deleteUser": AllErrors & (
+            {
+                readonly family: 'USER_INFO_ERROR_CODE',
+                readonly code: 'ILLEGAL_USER_NAME',
+                readonly [key:string]: any
+            } | 
+            {
+                readonly family: 'USER_INFO_ERROR_CODE',
+                readonly code: 'PASSWORD_TOO_SHORT',
+                readonly [key:string]: any
+            } | 
+            {
+                readonly family: 'USER_INFO_ERROR_CODE',
+                readonly code: 'PASSWORDS_NOT_SAME',
+                readonly [key:string]: any
+            } | 
+            {
+                readonly family: 'PLATFORM_ERROR_CODE',
+                readonly code: 'PERMISSION_DENIED',
+                readonly [key:string]: any
+            }
+        ) 
     },
-    "bookController": {
-        ...省略代码...
-    },
-    ...省略其他代码...
+    ...如果还有更多Controller有抛出客户端异常的行为，将会出现在这里...
 };
 ```
 
--   ❶ `AllErrors`定义所有错误类型
+-   ❶ `AllErrors`定义所有错误类型，包括`family`，`code`以及各异常的自定义字段 *(灰色北京一样)*
 
-    :::caution
-    只有REST API使用注解明确声明会被抛出错误码才会被用于生成TypeScript代码。
-    
-    比如，上文中我们使用Java/Kotlin代码定义了错误码`PlatformError.PERMISSION_DENIED`和`PlatformErrorCode.DATA_IS_FROZEN`，
-    但它们暂未被被任何REST API使用`@ThrowsAll`或自定义的`@ThrowsPlatformError`声明。所以，它们不会在`AllErrors`中被定义。
+    :::info
+    前文我们讨论过，虽然我定义了6种异常，但是只有5种被Web Api使用。因此，TypeScript代码中只有5种错误定义。
     :::
 
--   ❷ 被`@ErrorFamily`修饰的枚举名，在客户端代码中是错误的`family`字段。用于鉴别错误属于哪一簇
-
--   ❸ 枚举变量的名字，在客户端代码中是错误的`code`字段。用于鉴别错误是哪一种
-
--   ❹ 服务端使用`@ErrorField` *(此注解可以重复)* 为某个错误码声明任意个附加字段 *(本例只有一个)*，因此，这里生成所有附加字段
-
-    :::tip
-    ❶处的`AllErrors`定义所有错误，绝不重复。
-    
-    稍后❺处的`ApiErrors`引用错误，可能重复。因为不同的REST API可能都会被声明未抛出同一种错误码。
-
-    所以，附加字段总是被声明在`AllErrors`中，不会被声明再`ApiErrors`中。这也是`AllErrors`和`ApiErrors`分离的根本原因。
-    :::
-
--   ❺ 各REST API可能抛出的错误
-
--   ❻ `userController`模块可能抛出的错误
-
--   ❼ `userController.registerUser`接口可能抛出的错误
+-   ❷ Web Api种HTTP各接口抛出的错误类型。
 
 ### TypeScript IDE的效果
 

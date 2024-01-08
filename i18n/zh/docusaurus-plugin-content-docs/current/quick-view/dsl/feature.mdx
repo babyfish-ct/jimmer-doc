@@ -37,9 +37,9 @@ public class BookRepository {
         return sqlClient
             .createQuery(table)
             // highlight-next-line
-            .where(table.name().ilikeIf(name))
+            .where(table.name().ilikeIf(name)) ❶
             // highlight-next-line
-            .where(table.price().betweenIf(minPrice, maxPrice))
+            .where(table.price().betweenIf(minPrice, maxPrice)) ❷
             .select(table.fetch(fetcher))
             .execute();
     }
@@ -81,17 +81,19 @@ class BookRepository(
 
 其中，`fetcher`参数的作用已经在[快速浏览/查询任意形状](../fetch)中做过介绍，本文不再重复，请读者忽略之。
 
--   ❶ 如果`name`既然非null也非empty string，则添加SQL条件`table.name ilike name`
+-   ❶ 和静态谓词`ilike`不同，`ilikeIf`/`ilike?`是动态谓词，根据参数来决定是否添加SQL条件
 
--   ❷ 存在如下四种情况
+    如果`name`既非null也非empty string，则添加SQL条件`table.name ilike name`
+
+-   ❷ 和静态谓词`between`不同，`betweenIf`/`between?`是动态谓词，根据参数来决定是否添加SQL条件。存在如下四种情况
 
     -   如果`minPrice`和`maxPrice`都非null，则添加SQL条件`table.price between minPrice and maxPrice`。
 
     -   如果仅`minPrice`非null，则添加SQL条件`name >= minPrice`
 
-    -   如果仅`maxPrice`非null，则添加SQL条件`name <= minPrice`
+    -   如果仅`maxPrice`非null，则添加SQL条件`name <= maxPrice`
 
-    -   如果`minPrice`和`maxPrice`都为null，则不提你啊任何添加SQL条件
+    -   如果`minPrice`和`maxPrice`都为null，则不添加任何添加SQL条件
 
 现在让我们来看看效果
 
@@ -183,7 +185,7 @@ class BookRepository(
 
 ### 定义动态动态表连接
 
-前面的例子中，我们的动态SQL条件都是正对当前实体 *(Book)* 的。接下来我们通过引用关联 *(一对一活多对一)* 来为关联对象添加过滤条件
+前面的例子中，我们的动态SQL条件都是作用于当前实体 *(Book)* 的。接下来我们通过引用关联 *(一对一或多对一)* 获取关联对象并为之添加过滤条件
 
 多对一关联`Book.store`关联到`BookStore`实体，让我们为`BookStore.name`和`BookStore.website`添加动态SQL条件。
 
@@ -364,7 +366,7 @@ val books = bookRepository.findBooks(
 </TabItem>
 </Tabs>
 
-这会导致❶和❷两处的`ilikeIf`/`ilike?`都生效，进一步导致两处的表连接`table.store()`/`table.store`都生效。即，表连接创建和使用了多次。
+这会导致❶和❷两处的`ilikeIf`/`ilike?`都生效，进一步导致两处的表连接`table.store()`/`table.store`都生效。即，表连接被创建和使用了多次。
 
 :::tip
 如果在DSL中相同关联的表连接被多次创建，那么所有冲突表连接将会被自动合并，最终在生成的SQL中只有一个JOIN，不会重复JOIN。
@@ -513,7 +515,7 @@ class BookRepository(
 
 其实，关联父子查询的SQL条件会被隐式子查询隐含了，它总会被自动生成。所以，用户只需要编写关联对象相关的SQL条件。
 
-注意：这里所讨论的是隐式子查询，不是普通子查询 *(Jimmer也支持普通子查询)*。这里所讨论的规则对普通子查询不适用，普通子查询不在快速预览的范围内。
+注意：这里所讨论的是隐式子查询，不是普通子查询 *(Jimmer也支持普通子查询，但不在快速预览的讨论范围内)*。这里所讨论的规则对普通子查询不适用。
 :::
 
 ### 忽略无用子查询

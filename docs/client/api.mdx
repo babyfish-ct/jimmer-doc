@@ -24,7 +24,7 @@ Let's discuss the three cases separately:
 
 Use Jimmer to build GraphQL services
 
-Server: [Develop GraphQL Backend with Jimmer](../../graphql) 
+Server: [Develop GraphQL Backend with Jimmer](../graphql) 
 
 Client: Many client frameworks to choose from. Using my [graphql-ts-client](https://github.com/babyfish-ct/graphql-ts-client) can get the ultimate TypeScript experience
 
@@ -120,7 +120,7 @@ This contradiction is essentially the difference in awareness of <ViewMore butto
 
     From the producer's point of view, DTO explosion is a very annoying problem, which means that their own development costs will also increase dramatically.
 
-    Therefore, Jimmer uses dynamic entities combined with [object fetchers](../../query/object-fetcher) to eliminate DTO explosions on the server side.
+    Therefore, Jimmer uses dynamic entities combined with [object fetchers](../query/object-fetcher) to eliminate DTO explosions on the server side.
 
 -   Client perspective is consumer perspective. 
 
@@ -708,7 +708,7 @@ Obviously, this data structure differs greatly from the underlying entity model.
 :::tip
 In some cases, the data required by the client may contain multiple entity objects that have no direct ORM association, but only a certain business-level correlation.
 
-If such business-level correlations are not generic at all, then defining [complex calculated properties](../../mapping/advanced/calculated/transient) for entities is not a good choice either.
+If such business-level correlations are not generic at all, then defining [complex calculated properties](../mapping/advanced/calculated/transient) for entities is not a good choice either.
 
 At this point, we can break the stereotypical thinking of the entity object graph and use custom data to represent the return results, just like `ActiveAutorInfo` here.
 :::

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: 生成前端API
+title: 生成客户端API
 ---
 
 import Tabs from '@theme/Tabs';
@@ -8,133 +8,158 @@ import TabItem from '@theme/TabItem';
 import { DtoExplosion } from "@site/src/components/Image";
 import { ViewMore } from '@site/src/components/ViewMore';
 
-## 基本概念
+## 启用客户端能力
 
-如果使用Jimmer构建服务端系统，开发人员有三种解决<ViewMore buttonText="DTO爆炸"><DtoExplosion/></ViewMore>的方法。
+默认情况下，自动生成客户端的能力是关闭的。要启用这种个功能，有两种选择
 
-||描述|返回对象的形状被限定的地方|Web前端体验|
-|---|---|---------------|----------|
-|方案一|使用Jimmer构建GraphQL服务|客户端|好|
-|方案二|使用Jimmer构建REST服务，由客户端指定需要的对象的形状|客户端|差|
-|方案三|使用Jimmer构建REST服务，由服务端罗列客户端所需对象的所有形状|服务端|好|
+1.  采用`@EnalbeExplicitApi`修饰项目中任何一个类。
 
-现在分别对这三种情况加一讨论
+    对于Spring Boot应用而言，Application是一个不错的选择。由于过于简单，无需示范。
 
-### 方案一(GraphQL)
+2.  为每一个Controller和内部的HTTP放方法加上@Api
 
-使用Jimmer构建GraphQL服务
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
 
-服务端：[使用Jimmer开发GraphQL服务端](../../graphql)
+    ```java title="HelloWorldController.java"
+    // highlight-next-line
+    @Api
+    @RestController
+    public class HelloWorldController {
+        
+        // highlight-next-line
+        @Api
+        @GetMapping("/helloworld")
+        public String helloworld() {
+            return "hello world"
+        }
+    }
+    ```
 
-客户端：有大量的客户端框架可以选择。其中，使用我的[graphql-ts-client](https://github.com/babyfish-ct/graphql-ts-client)可以获得极致的TypeScript开发体验
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
 
-:::caution
-Jimmer本身支持自关联属性的递归查询，然而，截止到目前为止，GraphQL协议尚未支持此特性，这意味着此特性将丢失。
-:::
+    ```kotlin title="HelloWorldController.kt"
+    // highlight-next-line
+    @Api
+    @RestController
+    class HelloWorldController {
+        
+        // highlight-next-line
+        @Api
+        @GetMapping("/helloworld")
+        fun helloworld() = "hello world"
+    }
+    ```
 
-### 方案二(不推荐)
+    </TabItem>
+    </Tabs>
 
-使用Jimmer构建REST服务，由客户端指定需要的对象的形状
-
-这种方法其实是为REST赋予GraphQL的能力，客户端传递一个字符串，服务端通过`org.babyfish.jimmer.sql.fetcher.compiler.FetcherCompiler`将其解析为Fetcher即可
+为什么要如此设计呢？让我们来看一个Controller
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
-```java title="BookController.java"
-@GetMapping("/book/{id}")
-public Book findBookById(
-    @PathVariable long id,
-    @RequestParam(required = false) String fetcherCode
-) {
-    // highlight-next-line
-    Fetcher<Book> fetcher = FetcherCompiler.compile(fetcherCode, Book.class);
-    return bookRepository.findNullable(id, fetcher);
+```java tilte="XController.java"
+@RestController
+public class XController {
+
+    @GetMapping("/clientFriendlyData") 
+    SomePojo clientFriendlyData() { ❶
+        ...略...
+    }
+
+    @GetMapping("/clientUnfriendlyData") 
+    Object clientUnfriendlyData() { ❷
+        ...略...
+    }
 }
 ```
 
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin title="BookController.kt"
-@GetMapping("/book/{id}")
-fun findBookById(
-    @PathVariable id: Long,
-    @RequestParam(required = false) fetcherCode: String?
-): Book? =
-    bookRepository.findNullable(
-        id, 
-        // highlight-next-line
-        FetcherCompiler.compile(fetcherCode, Book::class.java)
-    )
+```kotlin title="XController.kt"
+@RestController
+class XController() {
+
+    @GetMapping("/clientFriendlyData")
+    fun clientFriendlyData(): SomePojo = ❶
+        ...略..
+
+    @GetMapping("/clientUnfriendlyData") 
+    fun clientUnfriendlyData(): Any = ❷
+        ...略...
+}
 ```
 
 </TabItem>
 </Tabs>
 
-客户端调用时，指定fetcherCode参数即可，比如
-```
-{
-    id
-    name
-    authors {
-        id
-        firstName
-        lastName
-    }
-}
-```
-或
-```
-{ id, name, authors { id, firstName, lastName }}
-```
-:::info
-想了解如何用字符串代码表达更复杂的Fetcher，参考Fetcher的`toString()`方法即可。
-:::
+-   ❶ 精确的Api定义，对客户端友好
 
-:::caution
-虽然这种做法可以为REST赋予类似于GraphQL的能力，非常灵活。但它只是方便了服务端的书写，客户端会得到混乱的类型系统，因此不推荐。
+-   ❷ 非常模糊的Api定义，对客户端不友好，甚至可以说是远程API的不良设计。
 
-如果因为某些历史包袱导致客户端采用JavaScript而非TypeScript，而且在可预见的未来看不到任何改进的希望，可以考虑这种用法。
-:::
+当然，导致客户端不友好的原因很多，这里只是列举一种最简单的案例。
 
-### 方案三(本文议题)
+如果要求Jimmer为客户端不友好Api生成客户端代码，将会导致编译错误。所以，我们需要有选择性地对一部分Api生成客户端代码，而非盲目地处理所有Api。
 
-使用Jimmer构建REST服务，由服务端罗列客户端所需对象的所有形状
+-   如果大部分Api都是客户端不友好的，只有个别Api才是友好的 *（这种项目处理的大部分信息都非结构化，结构化Api很少）*，建议选择显式地为Controller类和HTTP方法添加@Api注解。由于这种做法已经示范过，不再重复。
 
-这种用法比较符合REST协议的初衷，也比较便于权限管理 *(前面两种用法虽然灵活，但权限控制很难)*，也是本文要讨论的话题。
+-   如果大部分Api都是客户端友好的，只有个别Api才是不友好的，推荐
 
-:::info
-这里所讨论的是服务端API返回动态实体的情况 *(更推荐的做法)*，而非返回DTO类型的情况。
-:::
+    1.  先用`@EnalbeExplicitApi`修饰任何一个类，比如SpringBoot的主类。由于过于简单，不必示范。
 
-让我们先来看一个矛盾
+    2.  再用`@ApiIgnore`修饰无法支持的类或方法，比如
+        
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
 
--   Jimmer采用动态实体，只要聚合根类型相同，任何形状的数据结构都用同一个Java/Kotlin类型表达。
+        ```java tilte="XController.java"
+        @RestController
+        public class XController {
 
--   客户端需要看到丰富的数据类型，同一个实体类型在不同的HTTP接口中返回的形状不一样。
+            @GetMapping("/clientFriendlyData") 
+            SomePojo clientFriendlyData() {
+                ...略...
+            }
 
-这个矛盾，本质上就是服务端和客户端对<ViewMore buttonText="DTO爆炸"><DtoExplosion/></ViewMore>的认知不同。
+            // highlight-next-line
+            @ApiIgnore
+            @GetMapping("/clientUnfriendlyData") 
+            Object clientUnfriendlyData() {
+                ...略...
+            }
+        }
+        ```
 
--   服务端视角，即生产者视角。
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
 
-    在生产者眼中，DTO爆炸是一个非常头疼的问题，这意味着自己的开发成本也会急剧上升。
-    
-    因此，Jimmer使用动态实体配合[对象抓取器](../../query/object-fetcher)，在服务端消灭了DTO爆炸。
+        ```kotlin title="XController.kt"
+        @RestController
+        class XController() {
 
--   前端视角，即消费者视角。
+            @GetMapping("/clientFriendlyData")
+            fun clientFriendlyData(): SomePojo = 
+                ...略..
 
-    在消费者眼中，DTO爆炸是有益的，每一个业务场景都有精确的返回类型，使用起来体验非常好。*（实现不容易？和我有什么关系？）*
+            // highlight-next-line
+            @ApiIgnore
+            @GetMapping("/clientUnfriendlyData") 
+            fun clientUnfriendlyData(): Any = 
+                ...略...
+        }
+        ```
 
-    因此，Jimmer服务端能自动生成客户端代码 *(例如TypeScript)*，把服务端消灭掉的DTO爆炸在客户端中恢复出来。
+        </TabItem>
+        </Tabs>
 
 :::tip
-服务端消灭DTO爆炸，客户端恢复DTO爆炸，这是Jimmer的前后端免对接功能的根本价值，也是Jimmer和其他任何自动生成客户端代码的技术的本质区别。
-
-只有让服务端和客服端使用完全不同的编程模型，才能同时让双方都获得极致的开发体验。
+`@ApiIgnore`还有另外一个重要作用，比如Spring安全相关的编程中，Java/Kotlin方法经常通过参数注入一些安全上下文相关的东西，比如`javax.security.Principal`类型的参数，这类参数只是spring运行所需，并非Api契约的一部分，可以为这类参数添加`@ApiIgnore`。
 :::
 
-## 使用
+## 开发Web服务
 
 ### 声明@FetchBy
 
@@ -174,7 +199,7 @@ public @interface FetchBy {
 ```java title="BookController.java"
 @GetMapping("/books")
 public Page<
-    @FetchBy("SIMPLE_FETCHER") Book ❶
+    @FetchBy("SIMPLE_BOOK") Book ❶
 > findBookById(
     @RequestParam(defaultValue = "0") int pageIndex,
     @RequestParam(defaultValue = "5") int pageSize,
@@ -182,40 +207,38 @@ public Page<
 ) {
     return bookRepository.findBooks(
             PageRequest.of(pageIndex, pageSize, SortUtils.toSort(sortCode)),
-            SIMPLE_FETCHER ❷
+            SIMPLE_BOOK ❷
     );
 }
 
 @GetMapping("book/{id}")
 @Nullable
 public 
-    @FetchBy("COMPLEX_FETCHER") Book ❸
+    @FetchBy("COMPLEX_BOOK") Book ❸
 findComplexBook(
         @PathVariable("id") long id
 ) {
     return bookRepository.findNullable(
         id, 
-        COMPLEX_FETCHER ❹
+        COMPLEX_BOOK ❹
     );
 }
 
-private static final Fetcher<Book> SIMPLE_FETCHER = ❺
-    Fetchers.BOOK_FETCHER
-        .allScalarFields()
-        .tenant(false);
+private static final Fetcher<Book> SIMPLE_BOOK = ❺
+    Fetchers.BOOK_BOOK
+        .name();
 
-private static final Fetcher<Book> COMPLEX_FETCHER = ❻
-    Fetchers.BOOK_FETCHER
+private static final Fetcher<Book> COMPLEX_BOOK = ❻
+    Fetchers.BOOK_BOOK
         .allScalarFields()
-        .tenant(false)
         .store(
-            Fetchers.BOOK_STORE_FETCHER
-                .allScalarFields()
-                .avgPrice()
+            Fetchers.BOOK_STORE_BOOK
+                .name()
         )
         .authors(
-            Fetchers.AUTHOR_FETCHER
-                .allScalarFields()
+            Fetchers.AUTHOR_BOOK
+                .firstName()
+                .lastName()
         );
 ```
 
@@ -229,46 +252,44 @@ fun findBooks(
     @RequestParam(defaultValue = "5") pageSize: Int,
     @RequestParam(defaultValue = "name asc, edition desc") sortCode: String
 ): Page<
-    @FetchBy("SIMPLE_FETCHER") Book ❶
+    @FetchBy("SIMPLE_BOOK") Book ❶
 > =
     bookRepository.findBooks(
         PageRequest.of(pageIndex, pageSize, SortUtils.toSort(sortCode)),
         name,
         storeName,
         authorName,
-        SIMPLE_FETCHER ❷
+        SIMPLE_BOOK ❷
     )
 
 @GetMapping("/book/{id}")
 fun findBookById(
     @PathVariable id: Long,
-): @FetchBy("COMPLEX_FETCHER") Book? = ❸
+): @FetchBy("COMPLEX_BOOK") Book? = ❸
     bookRepository.findNullable(
         id, 
-        COMPLEX_FETCHER ❹
+        COMPLEX_BOOK ❹
     )
 
 companion object {
 
-    private val SIMPLE_FETCHER = ❺
+    private val SIMPLE_BOOK = ❺
         newFetcher(Book::class).by {
-            allScalarFields()
-            tenant(false)
+            name()
         }
 
-    private val COMPLEX_FETCHER = ❻
+    private val COMPLEX_BOOK = ❻
         newFetcher(Book::class).by {
 
             allScalarFields()
-            tenant(false)
 
             store {
-                allScalarFields()
-                avgPrice()
+                name()
             }
             
             authors {
-                allScalarFields()
+                firstName()
+                lastName()
             }
         }
 }
@@ -277,17 +298,17 @@ companion object {
 </TabItem>
 </Tabs>
 
--   ❶ 对外承诺，`GET /books`返回的分页对象中的每一个`Book`对象的形状为静态常量`SIMPLE_FETCHER`所表达的形状
+-   ❶ 对外承诺，`GET /books`返回的分页对象中的每一个`Book`对象的形状为静态常量`SIMPLE_BOOK`所表达的形状
 
--   ❷ 内部实现，`GET /books`内部使用静态常量`SIMPLE_FETCHER`查询数据
+-   ❷ 内部实现，`GET /books`内部使用静态常量`SIMPLE_BOOK`查询数据
 
     :::caution
     作为对外承诺的❶和作为内部实现的❷必须一致
     :::
 
--   ❸ 对外承诺，如果`GET /book/{id}`返回非null, 其形状为静态常量`COMPLEX_FETCHER`所表达的形状
+-   ❸ 对外承诺，如果`GET /book/{id}`返回非null, 其形状为静态常量`COMPLEX_BOOK`所表达的形状
 
--   ❹ 内部实现，`GET /book/{id}`内部使用静态常量`COMPLEX_FETCHER`查询数据
+-   ❹ 内部实现，`GET /book/{id}`内部使用静态常量`COMPLEX_BOOK`查询数据
 
     :::caution
     作为对外承诺的❸和作为内部实现的❹必须一致
@@ -297,15 +318,104 @@ companion object {
 
 通过@FetchBy的修饰，Jimmer就明白每个对象对外返回的数据的具体形状了，它就可以为客户端生成代码了，包括TypeScript。
 
-:::info
-在这个例子中，使用注解`@FetchBy`的类和用静态常量声明对象的形状的类是同一个类。
+### @DefaultFetcherOwner
 
-若非如此，可以使用`@FetchBy`的`ownerType`参数，例如
+在上个例子中，使用注解`@FetchBy`的类和为各种形状声明`Fetcher`类型静态常量的类是同一个类 *(BookController)*。
 
-`@FetchBy(value = "COMPLEX_FETCHER", ownerType = FetcherConstants.class)`
-:::
+若非如此，需要为`@FetchBy`注解指定`ownerType`参数，例如
 
-### 生成客户端代码
+`@FetchBy(value = "COMPLEX_BOOK", ownerType = FetcherConstants.class)`
+
+然而，为每个`@FetchBy`都配置`ownerType`比较繁琐，因此Jimmer支持`@DefaultFetcherOwner`
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookController"
+@RestController
+// highlight-next-line
+@DefautFetcherOwner(FetcherConstants.class)
+public class BookController {
+
+    public List<@FetchBy("SIMPLE_BOOK") Book> getSimpleBooks(...略...) {
+        ...略...
+    }
+
+    public List<@FetchBy("DEFAULT_BOOK") Book> getDefaultBooks(...略...) {
+        ...略...
+    }
+
+    @Nullable
+    public @FetchBy("COMPLEX_BOOK") Book findComplexBookById(long id) {
+        ...略...
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@RestController
+// highlight-next-line
+@DefautFetcherOwner(FetcherConstants.class)
+class BookController {
+
+    fun getSimpleBooks(...略...): List<@FetchBy("SIMPLE_BOOK") Book> =
+        ...略...
+
+    fun getDefaultBooks(...略...): List<@FetchBy("DEFAULT_BOOK") Book> =
+        ...略...
+
+    fun findComplexBookById(long id): @FetchBy("COMPLEX_BOOK") Book? =
+        ...略...
+}
+```
+
+</TabItem>
+</Tabs>
+
+在类级别使用`@DefaultFetcherOwner`可以一次性调整所有`@FetchBy`的`ownerType`属性，不必为每个`@FetchBy`配置`ownerType`了。
+
+## 查看Api文档
+
+为了识别`@FetchBy`等Jimmer特有的注解，Jimmer对OpenAPI/Swagger给予了一套极具特色的实现。
+
+无需使用JVM生态中任何其他关于自动生成OpenAPI/Swagger的框架，只需对`application.yml`*(或`applicaiton.properties`)*进行修改如下即可
+
+```yml title="application.yml"
+jimmer:
+    ...省略其他配置...
+    client:
+        openapi:
+            # highlight-next-line
+            path: /openapi.yml
+            # highlight-next-line
+            ui-path: /openapi.html
+            properties:
+                info:
+                    title: My Web Service
+                    description: |
+                        Restore the DTO explosion that was 
+                        eliminated by server-side developers
+                    version: 1.0
+```
+
+启动Web项目，使用浏览器访问其`/openapi.html`，则可见
+
+![openapi](@site/static/img/openapi/openapi.webp)
+
+-   展开`/books`，可以看到返回的集合中，每一个元素都是一个相对简单的DTO对象
+
+    ![openapi-simple](@site/static/img/openapi/simple.webp)
+
+-   展开`/books/{id}`，可以看到返回类型是一个相对复杂的DTO类型
+
+    ![openapi-complex](@site/static/img/openapi/complex.webp)
+
+## 开发Web客户端
+
+### 生成TypeScript代码
 
 可以在`application.yml`或`application.properties`中声明如下配置，用于下载相关的客户端代码
 
@@ -315,8 +425,6 @@ jimmer:
     client:
         ts:
             path: /ts.zip ❶
-        java-feign:
-            path: /java-feign.zip ❷
 ```
 
 目前，Jimmer支持生成两种客户端代码，TypeScript和Spring Cloud所需的Java Feign Client代码
@@ -334,29 +442,24 @@ jimmer:
 ```ts title="BookDto.ts"
 export type BookDto = {
     // highlight-next-line
-    'BookService/SIMPLE_FETCHER': {
+    'BookController/SIMPLE_BOOK': {
         readonly id: number, 
-        readonly name: string, 
-        readonly edition: number,
-        readonly price: number,
+        readonly name: string
     }, 
     // highlight-next-line
-    'BookService/COMPLEX_FETCHER': {
+    'BookController/COMPLEX_BOOK': {
         readonly id: number, 
         readonly name: string, 
         readonly edition: number, 
         readonly price: number, 
         readonly store?: {
             readonly id: number, 
-            readonly name: string, 
-            readonly website?: string, 
-            readonly avgPrice: number
+            readonly name: string
         }, 
         readonly authors: ReadonlyArray<{
             readonly id: number, 
             readonly firstName: string, 
-            readonly lastName: string, 
-            readonly gender: Gender
+            readonly lastName: string
         }>
     }
 }
@@ -379,7 +482,7 @@ export class BookService {
     ): Promise<
         Page<
             // highlight-next-line
-            BookDto['BookService/SIMPLE_FETCHER']
+            BookDto['BookService/SIMPLE_BOOK']
         >
     > {
         ...省略代码...
@@ -389,7 +492,7 @@ export class BookService {
         options: BookServiceOptions['findBookById']
     ): Promise<
         // highlight-next-line
-        BookDto['BookService/COMPLEX_FETCHER'] | 
+        BookDto['BookService/COMPLEX_BOOK'] | 
         undefined
     > {
         ...省略代码...
@@ -414,9 +517,9 @@ export type BookServiceOptions = {
 很明显，每个业务场景的返回类型都得到了精确的定义。
 :::
 
-### 开发Web客户端项目
+### 使用生成的TypeScript代码
 
-1.  创建项目
+1.  创建React项目
 
     首先创建一个基于typescript的react项目
 
@@ -519,24 +622,26 @@ export type BookServiceOptions = {
 
     // 导出全局变量`api`
     // highlight-next-line
-    export const api = 
-        new Api(async({uri, method, body}) => {
-            const response = await fetch(`${BASE_URL}${uri}`, {
-                body: body !== undefined ? JSON.stringify(body) : undefined,
-                headers: {
-                    'content-type': 'application/json;charset=UTF-8',
-                    ...其他重要HTTP请求头，比如Authorization...
-                }
-            });
-            if (response.status !== 200) {
-                throw response.json();
+    export const api = new Api(async({uri, method, headers, body}) => {
+        const tenant = (window as any).__tenant as string | undefined;
+        const response = await fetch(`${BASE_URL}${uri}`, {
+            method,
+            body: body !== undefined ? JSON.stringify(body) : undefined,
+            headers: {
+                'content-type': 'application/json;charset=UTF-8',
+                ...headers,
+                ...(tenant !== undefined && tenant !== "" ? {tenant} : {})
             }
-            const text = await response.text();
-            if (text.length === 0) {
-                return null;
-            }
-            return JSON.parse(text);
         });
+        if (response.status !== 200) {
+            throw response.json();
+        }
+        const text = await response.text();
+        if (text.length === 0) {
+            return null;
+        }
+        return JSON.parse(text);
+    });
     ```
 
 4.  调用REST API
@@ -569,7 +674,7 @@ export type BookServiceOptions = {
         const { 
             isLoading, 
             // 如果`data`非`undefined`, 则其类型必为
-            // `Page<BookDto['BookService/SIMPLE_FETCHER']>`
+            // `Page<BookDto['BookService/SIMPLE_BOOK']>`
             // highlight-next-line
             data, 
             error, 
@@ -582,9 +687,9 @@ export type BookServiceOptions = {
         });
         ```
 
-        如果请求成功，`data`的类型为`Page<BookDto['BookService/SIMPLE_FETCHER']>`。
+        如果请求成功，`data`的类型为`Page<BookDto['BookService/SIMPLE_BOOK']>`。
 
-        其中, `BookDto['BookService/SIMPLE_FETCHER']`的定义为
+        其中, `BookDto['BookService/SIMPLE_BOOK']`的定义为
         ```ts
         {
             readonly id: number, 
@@ -601,7 +706,7 @@ export type BookServiceOptions = {
         ```ts
         const { 
             // 如果`data`非`undefined`, 则其类型必为
-            // `BookDto['BookService/COMPLEX_FETCHER']`
+            // `BookDto['BookService/COMPLEX_BOOK']`
             // highlight-next-line
             data, 
             isLoading, 
@@ -613,7 +718,7 @@ export type BookServiceOptions = {
         });
         ```
 
-        如果请求成功且`data`非null, 其类型为`BookDto['BookService/COMPLEX_FETCHER']`。该类型定义如下
+        如果请求成功且`data`非null, 其类型为`BookDto['BookService/COMPLEX_BOOK']`。该类型定义如下
         ```ts
         {
             readonly id: number, 
@@ -707,7 +812,7 @@ fun findMostActiveAuthorInfos(
 :::tip
 某些情况下，客户端需要的数据可能包含多种实体对象，它们之间并不存在直接的ORM关联，只是特定业务层面的一种的联系。
 
-如果这种特定业务层面的联系毫无通用性，那么为实体定义[复杂计算属性](../../mapping/advanced/calculated/transient)也并非一个好的选择。
+如果这种特定业务层面的联系毫无通用性，那么为实体定义[复杂计算属性](../mapping/advanced/calculated/transient)也并非一个好的选择。
 
 这时，我们可以打破实体对象图的定式思维，用自定义数据表示返回结果，就如同这里的`ActiveAutorInfo`
 :::
@@ -724,18 +829,18 @@ fun findMostActiveAuthorInfos(
 public class ActiveAutorInfo {
 
     // highlight-next-line
-    private @FetchBy("AUTHOR_FETCHER") Author raw;
+    private @FetchBy("AUTHOR_BOOK") Author raw;
 
     // highlight-next-line
-    private List<@FetchBy("STORE_FETCHER") BookStore> stores;
+    private List<@FetchBy("STORE_BOOK") BookStore> stores;
 
-    private static final Fetcher<Author> AUTHOR_FETCHER = 
-        Fetchers.AUTHOR_FETCHER
+    private static final Fetcher<Author> AUTHOR_BOOK = 
+        Fetchers.AUTHOR_BOOK
             .firstName()
             .lastName();
 
-    private static final Fetcher<BookStore> STORE_FETCHER = 
-        Fetchers.AUTHOR_FETCHER.name();
+    private static final Fetcher<BookStore> STORE_BOOK = 
+        Fetchers.AUTHOR_BOOK.name();
 }
 ```
 
@@ -746,10 +851,10 @@ public class ActiveAutorInfo {
 data class ActiveAutorInfo(
     
     // highlight-next-line
-    val raw: @FetchBy("AUTHOR_FETCHER") Author,
+    val raw: @FetchBy("AUTHOR_BOOK") Author,
 
     // highlight-next-line
-    val stores: List<@FetchBy("STORE_FETCHER") BookStore>
+    val stores: List<@FetchBy("STORE_BOOK") BookStore>
 ) {
     companion object {
 
@@ -759,7 +864,7 @@ data class ActiveAutorInfo(
                 lastName()
             }
 
-        private val STORE_FETCHER = 
+        private val STORE_BOOK = 
             new Fetcher(BookStore::class) {
                 name()
             }
@@ -776,17 +881,17 @@ data class ActiveAutorInfo(
 export interface ActiveAutorInfo {
 
     // highlight-next-line
-    readonly raw: AuthorDto['ActiveAutorInfo/AUTHOR_FETCHER'];
+    readonly raw: AuthorDto['ActiveAutorInfo/AUTHOR_BOOK'];
 
     readonly stores: ReadonlyArray<
         // highlight-next-line
-        BookStoreDto['ActiveAutorInfo/STORE_FETCHER']
+        BookStoreDto['ActiveAutorInfo/STORE_BOOK']
     >;
 }
 
 export type AuthorDto {
     // highlight-next-line
-    'ActiveAutorInfo/AUTHOR_FETCHER': {
+    'ActiveAutorInfo/AUTHOR_BOOK': {
         readonly id: number,
         readonly firstName: string,
         readonly lastName: string
@@ -796,10 +901,130 @@ export type AuthorDto {
 
 export type BookStoreDto {
     // highlight-next-line
-    'ActiveAutorInfo/STORE_FETCHER': {
+    'ActiveAutorInfo/STORE_BOOK': {
         readonly id: number,
         readonly name: string
     },
     ...省略其他DTO类型定义...
 }
 ```
+
+## Api分组
+
+有两种方式分组方式
+
+-   Controller级别
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    // highlight-next-line
+    @Api("pc")
+    @RestController
+    public class BookPcController {...略...}
+
+    // highlight-next-line
+    @Api("mobile")
+    @RestController
+    public class BookMobileController {...略...} 
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    // highlight-next-line
+    @Api("pc")
+    @RestController
+    class PcBookController {...略...}
+
+    // highlight-next-line
+    @Api("mobile")
+    @RestController
+    class MobileBookController {...略...} 
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   Api级别
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java title="BookController.java"
+    @RestController
+    public class BookController {
+        
+        // highlight-next-line
+        @Api("pc")
+        @GetMapping("/pc/books")
+        public List<@FetchBy("BOOK_FOR_PC")> findPcBooks(...略...) {
+            ...略...
+        }
+
+        // highlight-next-line
+        @Api("mobile")
+        @GetMapping("/mobile/books")
+        public List<@FetchBy("BOOK_FOR_MOBILE")> findMobileBooks(...略...) {
+            ...略...
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin title="BookController.kt"
+    @RestController
+    class BookController {
+        
+        // highlight-next-line
+        @Api("pc")
+        @GetMapping("/pc/books")
+        fun findBooks(...略...): List<@FetchBy("BOOK_FOR_PC")> =
+            ...略...
+
+        // highlight-next-line
+        @Api("mobile")
+        @GetMapping("/mobile/books")
+        fun findBooks(...略...): List<@FetchBy("BOOK_FOR_MOBILE")> 
+            ...略...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+:::tip
+@Api可以接受多个组名，比如`@Api({"group1", "group2", "groupN"})`。为了简化问题，上例未示范
+:::
+
+:::caution
+类级别和方法级别的分组可以混用，此时，方法级的任何组名都必须是类级组名之一，否则无法编译。
+:::
+
+查看/下载客户端的URL如下:
+
+-   http://localhost:8080/openapi.yml
+-   http://localhost:8080/openapi.html
+-   http://localhost:8080/ts.zip
+
+现在，可以通过如下方法只查看/下载PC相关的客户端
+
+-   http://localhost:8080/openapi.yml?groups=pc
+-   http://localhost:8080/openapi.html?groups=pc
+-   http://localhost:8080/ts.zip?groups=pc
+
+同理，也可以只查看/下载Mobile相关的客户端
+
+-   http://localhost:8080/openapi.yml?groups=mobile
+-   http://localhost:8080/openapi.html?groups=mobile
+-   http://localhost:8080/ts.zip?groups=mobile
+
+也可以附加多个参数 *(当然，对于本例而言，这样做和不指定参数效果一样)*
+
+-   http://localhost:8080/openapi.yml?groups=pc,mobile
+-   http://localhost:8080/openapi.html?groups=pc,mobile
+-   http://localhost:8080/ts.zip?groups=pc,mobile

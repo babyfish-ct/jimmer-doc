@@ -1,4 +1,1037 @@
----
-sidebar_position: 2
+---  
+sidebar_position: 2  
 title: Return Output DTO
----
+---  
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ViewMore } from '@site/src/components/ViewMore';
+import { DtoExplosion } from "@site/src/components/Image";  
+
+## Java/Kotlin Applications Use Query Results  
+
+In the [previous article](./entity), we introduced that the web service does not need to define DTO types, directly returns entities, and uses `@FetchBy` annotations to restore all DTO type definitions in automatically generated client code.  
+
+However, what if a query result is not returned to the Web remote client, but the server itself uses it?  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java  
+List<Book> books = bookRepository.findBooksByName(
+    "graphql",
+    Fetchers.BOOK_FETCHER ❶
+        .name()
+        .edition()
+);
+for (Book book : books) {
+    System.out.println("--------");
+    System.out.println("Id: " + book.id());
+    System.out.println("Name: " + book.id());
+    System.out.println("Edition: " + book.id());
+    System.out.println("Price:" + book.price()); ❷
+}
+```  
+
+</TabItem>  
+<TabItem value="kotlin" label="Kotlin">   
+
+```kotlin 
+val books = bookRepository.findBooksByName(
+    "graphql",
+    newFetcher(Book::class).by { ❶
+        name()
+        edition()
+    }  
+)
+for (book in books) {
+    println("--------")
+    println("Id: ${book.id}")
+    println("Name: ${book.name}")
+    println("Edition: ${book.edition}")  
+    println("Price: ${book.price}") ❷
+}  
+```   
+
+</TabItem>
+</Tabs>   
+
+Here, there is no web service or remote call, it is just a call within the same JVM  
+
+-   ❶ Only queries three properties of the object: `id` *(implicit)*, `name` and `edition`  
+
+-   ❷ Access the unqueried `price` property of the `book` object.  
+
+    This erroneous access will cause an exception:  
+
+    -   Exception type: org.babyfish.jimmer.UnloadedException  
+
+    -   Exception message: The property "com.yourcompany.yourproject.model.Book.price" is unloaded  
+
+It can be seen that it is not enough to only consider automatically defining DTO types in remote client APIs. When the JVM itself directly uses query results, if sufficient compile-time security is required, defining DTO types for Java/Kotlin will be inevitable and necessary to ensure better compile-time safety.   
+
+## DTO Language  
+
+The mutual conversion between entity objects and DTO objects is a boring, labor-intensive and error-prone thing that is common pain point in information management software development. Although many frameworks are trying to mitigate this problem, development efficiency has remained unable to be improved qualitatively.  
+
+In order to minimize the cost of DTO type creation, Jimmer introduces the DTO language, which supplements the Java/Kotlin type system and can quickly generate Java/Kotlin DTO type definitions at compile time.   
+
+> This article only provides a quick overview without detailed introduction. For complete information, please refer to [DTO Language](../../../object/view/dto-language.mdx)  
+
+### DTO Language Plugin  
+
+Some Jimmer users provide Intellij plugins for the DTO language. For details, see https://github.com/ClearPlume/jimmer-dto
+
+> Installing the DTO language plugin is not required, but you can get a better development experience after installation, so it is recommended to install.
+
+### Define DTO Files  
+
+1.  For any Java project that needs to use the DTO language, create a subdirectory `dto` under its `src/main` directory. That is, `src/main/dto` is where DTO files are stored.   
+
+2.  Create a `Book.dto` file under `src/main/dto` and enter the following code:  
+
+    ```sh="Book.dto"  
+    export com.yourcompany.yourproject.model.Book  
+        -> package com.yourcompany.yourproject.model.dto  
+
+    SimpleBookView {  
+        id  
+        name
+    }  
+
+    ComplexBookView {  
+        #allScalars(this)
+        store {  
+            id   
+            name
+        }
+        authors {
+            id
+            firstName
+            lastName   
+        }
+    }
+    ```  
+
+3.  Compile the project *(either use gradle/maven commands on the command line or click gradle/maven build on the right side of Intellij)* to generate related DTO types  
+
+### View Generated DTOs  
+
+After compilation, the following two types `SimpleBookView` and `ComplexView` will be generated automatically. The code for each is as follows:  
+
+-   `SimpleBookView`  
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">  
+
+    ```java title="SimpleBookView.java" 
+    // highlight-next-line 
+    @GeneratedBy( ❶
+            file = "<yourproject>/src/main/dto/Book.dto"
+    )
+    public class SimpleBookView implements View<Book> { ❷
+
+        private long id;  
+
+        @NotNull  
+        private String name;  
+
+        public SimpleBookView(@NotNull Book base) { ❸
+            ...omitted...
+        }
+
+        @Override 
+        public Book toEntity() { ❹
+            ...omitted...
+        }  
+
+        ...Omit getters and setters...  
+
+        ...Omit hashCode/equals/toString...
+
+        ...Omit other members...
+    }
+    ```  
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">  
+
+    ```kotlin title="SimpleBookView.kt" 
+    // highlight-next-line
+    @GeneratedBy( ❶
+            file = "<yourproject>/src/main/dto/Book.dto"
+    )
+    data class SimpleBookView(  
+        val id: Long
+        val name: String
+    ) : View<Book> { ❷
+        constructor(base: Book): ❸  
+            this(...omitted...)
+
+        override fun toEntity(): Book = ❹
+            ...omitted...  
+
+        ...Omit other members...
+    }
+    ```  
+
+    </TabItem>
+    </Tabs>  
+
+    -   ❶ Reminds users that this is code automatically generated by Jimmer  
+
+    -   Output DTO based on `Book` entity needs to implement `View<Book>` interface  
+
+    -   ❸ Converts entity to DTO  
+
+    -   ❹ Converts DTO to entity  
+
+-   `ComplexBookView`  
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">   
+
+    ```java title="ComplexBookView.java"
+    // highlight-next-line
+    @GeneratedBy( ❶
+            file = "<yourproject>/src/main/dto/Book.dto"
+    )
+    public class ComplexBookView implements View<Book> { ❷
+
+        private long id;
+
+        @NotNull  
+        private String name;
+
+        private int edition;
+
+        @NotNull
+        private BigDecimal price;
+
+        @Nullable  
+        private TargetOf_store store;  
+
+        @NotNull
+        private List<TargetOf_authors> authors;  
+
+        public ComplexBookView(@NotNull Book base) { ❸   
+            ...omitted... 
+        }
+
+        @Override
+        public Book toEntity() { ❹
+            ...omitted...
+        }  
+
+        ...Omit getters and setters...   
+
+        ...Omit hashCode/equals/toString... 
+
+        ...Omit other members...
+
+        public static class TargetOf_store implements View<BookStore> { ❺
+
+            private long id;
+
+            @NotNull  
+            private String name;
+
+            public TargetOf_store(@NotNull BookStore base) {  
+                ...omitted...
+            }  
+
+            @Override
+            public BookStore toEntity() {  
+                ...omitted...
+            }  
+
+            ...Omit getters and setters...
+
+            ...Omit hashCode/equals/toString...
+
+            ...Omit other members...
+        }
+
+        public static class TargetOf_authors implements View<Author> { ❻ 
+
+            private long id;
+
+            @NotNull  
+            private String firstName;  
+
+            @NotNull
+            private String lastName;
+
+            public TargetOf_authors(@NotNull Author base) {
+                ...omitted...
+            }  
+
+            @Override  
+            public Author toEntity() {
+                ...omitted...
+            }   
+
+            ...Omit getters and setters...  
+
+            ...Omit hashCode/equals/toString...
+
+            ...Omit other members...
+        }
+    }
+    ```  
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">   
+
+    ```kotlin title="ComplexBookView.kt"
+    // highlight-next-line
+    @GeneratedBy( ❶
+            file = "<yourproject>/src/main/dto/Book.dto"
+    )
+    data class ComplexBookView(  
+        val id: Long,  
+        val name: String,
+        val edition: Int,  
+        val price: BigDecimal,
+        val store: TargetOf_store?,  
+        val authors: List<TargetOf_authors>
+    ) : View<Book> { ❷
+
+        constructor(base: Book): ❸  
+            this(...omitted...)
+
+        override fun toEntity(): Book = ❹  
+            ...omitted...  
+
+        data class TargetOf_store( ❺
+            val id: Long,
+            val name: String  
+        ) : View<BookStore> {  
+
+            constructor(base: BookStore):   
+                this(...omitted...)  
+
+            override fun toEntity(): BookStore =   
+                ...omitted...
+        }
+
+        data class TargetOf_authors( ❻
+            val id: Long,  
+            val firstName: String,
+            val lastName: String  
+        ) : View<Author> {  
+
+            constructor(base: Author):  
+                this(...omitted...)   
+
+            override fun toEntity(): Author =   
+                ...omitted...
+        }  
+    }
+    ```  
+
+    </TabItem>
+    </Tabs>  
+
+    -   ❶ Reminds users that this is code automatically generated by Jimmer  
+
+    -   ❷ Output DTO based on `Book` entity needs to implement `View<Book>` interface  
+
+    -   ❸ Converts entity to DTO
+
+    -   ❹ Converts DTO to entity  
+
+    -   ❺ DTO definition of associated object referenced by many-to-one association `Book.store`  
+
+    -   ❻ DTO definition of associated object referenced by many-to-many association `Book.autors`
+
+## New BookRepository  
+
+### Review Old BookRepository  
+
+In the [Feature Introduction](../feature#improved-repository) article, we wrote a `BookRepository` class  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java title = "BookRepository.java"
+public class BookRepository {
+
+    @Nullable
+    public Book findBookById(
+        long id,  
+        // highlight-next-line 
+        Fetcher<Book> fetcher
+    ) {
+        ...omitted...
+    }
+
+    public List<Book> findBooksByName(
+        @Nullable String name,  
+        // highlight-next-line
+        @Nullable Fetcher<Book> fetcher
+    ) {
+        ...omitted...
+    }
+
+    ...Omit other members...
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">   
+
+```kotlin title="BookRepository.kt"
+class BookRepository(
+    ...Omit other members...  
+) {
+
+    fun findBookById(
+        id: Long,   
+        // highlight-next-line
+        fetcher: Fetcher<Book>
+    ): Book? =  
+        ...omitted...
+
+    fun findBooksByName(
+        name: String? = null,
+        // highlight-next-line  
+        fetcher: Fetcher<Book>? = null
+    ): List<Book> =  
+        ...omitted...
+}
+```  
+
+</TabItem>
+</Tabs>  
+
+Each query method adds a parameter of type `Fetcher<Book>`. We can use it to flexibly control the format of queried objects *(that is, the shape of queried data structures)*.   
+
+This is the recommended usage. The Repository is only responsible for filtering, sorting, paging and other operations, but does not control the format of the returned data. Instead, it exposes the control of the data format through the `Fetcher<E>` parameter to allow upper layer business logic to decide.   
+
+### Write New BookRepository   
+
+Now, this `BookRepository` no longer meets our requirements. Because we no longer want to query Jimmer entities, but want to query DTO types automatically generated by the DTO language, we need to modify it.  
+
+However, we want `BookRepository` to still maintain the excellent quality of exposing shape control externally. The modified code is as follows.  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java title = "BookRepository.java"  
+@Component
+public class BookRepository {
+
+    private final JSqlClient sqlClient;  
+
+    public BookRepository(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
+    @Nullable
+    public <V extends View<Book>> V findBookById( ❶
+        long id,  
+        // highlight-next-line 
+        Class<V> viewType ❷
+    ) {
+        return sqlClient.findById(
+            viewType, ❸   
+            id
+        );
+    }
+
+    public <V extends View<Book>> List<V> findBooksByName( ❹
+        @Nullable String name,
+        // highlight-next-line
+        Class<V> viewType ❺
+    ) {
+        BookTable table = Tables.BOOK_TABLE;
+        return sqlClient
+            .createQuery(table)
+            .whereIf(
+                name != null && !name.isEmpty(),   
+                table.name().ilike(name)
+            )
+            .select(
+                table.fetch(viewType) ❻
+            )
+            .execute();
+    }
+} 
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">   
+
+```kotlin title="BookRepository.kt"
+@Component  
+class BookRepository(
+    private val sqlClient: KSqlClient  
+) {
+
+    fun <V: View<Book>> findBookById( ❶
+        id: Long,    
+        // highlight-next-line
+        viewType: KClass<V> ❷
+    ): V? =    
+        sqlClient.findById(
+            viewType, ❸
+            id
+        )
+
+    fun <V: View<Book>> findBooksByName(  ❹
+        name: String? = null,
+        // highlight-next-line 
+        viewType: KClass<V>  ❺
+    ): List<V> =   
+        sqlClient  
+            .createQuery(Book::class) {
+                name?.takeIf { it.isNotEmpty() }?.let {
+                    where(table.name ilike it)
+                }
+                select(
+                    table.fetch(viewType) ❻
+                )
+            }  
+}
+```  
+
+</TabItem>
+</Tabs>  
+
+-   ❶ ❹: Java `<V extends View<Book>>` or Kotlin `<V: View<Book>>` defines a generic parameter `V` representing any Output DTO type derived from `Book`.  
+    
+    For example: `SimpleBookView` and `ComplexBookView` generated above implement the `View<Book>` interface.  
+
+-   ❷ ❺: Use the type of any DTO derived from `Book` as a parameter.  
+
+    The return type varies with the change of the parameter type to achieve querying any DTO type and hand over the decision of the DTO type to the upper caller.  
+
+-   ❸ ❻: Let Jimmer query data of the specified type  
+
+    :::tip  
+    The DTO type internally includes a `Fetcher` matching the shape. First, entity data structures matching the shape are queried through this `Fetcher`, and then automatically converted to DTO types.  
+    :::  
+
+### Try New BookRepository  
+
+Take `bookRepository.findById` as an example  
+
+-   Query relatively simple `SimpleBookView`  
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">   
+
+    ```java
+    System.out.println(
+        bookRepository.findBookById(
+            1L,     
+            // highlight-next-line
+            SimpleBookView.class
+        )
+    );
+    ```  
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">  
+
+    ```kotlin 
+    println(
+        bookRepository.findBookById(
+            1L,     
+            // highlight-next-line
+            SimpleBookView::class
+        )
+    )
+    ```  
+
+    </TabItem>
+    </Tabs>  
+
+    Print output:  
+
+    ```json
+    // highlight-next-line
+    SimpleBookView(
+        id=1,  
+        name=Learning GraphQL
+    )
+    ```  
+
+-   Query relatively complex `ComplexBookView`  
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">   
+
+    ```java
+    System.out.println(
+        bookRepository.findBookById(
+            1L,     
+            // highlight-next-line
+            ComplexBookView.class
+        )
+    );
+    ```  
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">   
+
+    ```kotlin
+    println(
+        bookRepository.findBookById(
+            1L,     
+            // highlight-next-line
+            ComplexBookView::class
+        )
+    )
+    ```  
+
+    </TabItem>
+    </Tabs>  
+
+    Print output:  
+
+    ```json
+    // highlight-next-line
+    ComplexBookView(
+        id=1,  
+        name=Learning GraphQL,   
+        edition=1,   
+        price=50.0,    
+        // highlight-next-line
+        store=ComplexBookView.TargetOf_store(
+            id=1,     
+            name=O'REILLY
+        ),    
+        authors=[
+            // highlight-next-line
+            ComplexBookView.TargetOf_authors(
+                id=1,   
+                firstName=Eve,    
+                lastName=Procello
+            ),
+            // highlight-next-line
+            ComplexBookView.TargetOf_authors(
+                id=2,   
+                firstName=Alex,   
+                lastName=Banks
+            )
+        ]
+    )
+    ```  
+
+## Write BookController  
+
+Although the DTO language is more suitable for Java/Kotlin applications to use query results internally, you can also use them as return information for HTTP APIs without any difference from using ordinary POJOs.  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java title="BookController.java"
+@RestController  
+public class BookController implements Fetchers {  
+
+    private final BookRepository bookRepository;  
+
+    public BookController(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }   
+
+    @Nullable
+    @GetMapping("/book/{id}")
+    public ComplexBookView findBookById(@PathVariable("id") long id) {
+        return bookRepository.findBookById(
+            id,     
+            // highlight-next-line
+            ComplexBookView.class
+        );
+    }
+
+    @GetMapping("/books")
+    public List<SimpleBookView> findBooksByName(
+            @RequestParam(name = "name", required = false) String name
+    ) {
+        return bookRepository.findBooksByName(
+            name,
+            // highlight-next-line     
+            SimpleBookView.class
+        );
+    }
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">   
+
+```kotlin title="BookController.kt"
+@RestController
+class BookController(
+    private val bookRepository: BookRepository  
+) {  
+    @GetMapping("/book/{id}")
+    fun findBookById(
+        @PathVariable id: Long
+    ): ComplexBookView =  
+        bookRepository.findBookById(
+            id,     
+            // highlight-next-line     
+            ComplexBookView::class
+        )
+
+    @GetMapping("/books")
+    fun findBooksByName(  
+            @RequestParam(required = false) name: String  
+    ): List<SimpleBookView> =  
+        bookRepository.findBooksByName(
+            name,
+            // highlight-next-line     
+            SimpleBookView::class
+        )  
+}
+```   
+
+</TabItem>
+</Tabs>
+
+## Document Comments
+
+In the [previous article](./entity), we mentioned that Jimmer can copy the document comments in Java/Kotlin code to the client Api, whether it is OpenApi online documentation or generated TypeScript code.
+
+The method introduced in this article has the same functionality, but it needs to be explained that the types and properties in the DTO language support document comments like Java/Kotlin types, so the DTO language can override Java/Kotlin document comments. For example, the original entity definition is as follows
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+//highlight-start
+/**
+ * The book entity
+ */
+//highlight-end
+@Entity
+public interface Book {
+
+    //highlight-start
+    /**
+     * The name of book entity
+     */
+    //highlight-end
+    String name();
+
+    ...Omit other members...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin 
+//highlight-start
+/**
+ * The book entity
+ */ 
+//highlight-end
+@Entity
+interface Book {
+
+    //highlight-start
+    /**
+     * The name of book entity
+     */
+    //highlight-end
+    val price: BigDecimal
+
+    ...Omit other members...
+}
+```
+
+</TabItem>
+</Tabs>
+
+The document comments here are the original document comments.
+
+The [DTO Language](../../../object/view/dto-language.mdx) also supports document comments. For example:
+
+```json title="Book.Dto"  
+export com.yourcompany.yourproject.model.Book  
+    -> package com.yourcompany.yourproject.model.dto
+
+//highlight-start  
+/**
+ * Simple book dto
+ */ 
+//highlight-end
+SimpleBookView {
+
+    //highlight-start
+    /**
+     * The name of simple book dto
+     */
+    //highlight-end  
+    name
+
+    ...Omit other members...
+}
+
+...Omit other DTO definitions...
+```  
+
+:::info
+The overall document comment of the [DTO Language](../../../object/view/dto-language.mdx) has higher priority.   
+
+That is, the document comments in the DTO language can override the document comments of the original entity, which Jimmer automatically generates OpenApi documentation or TypeScript code.  
+:::
+
+## Flat Association ID  
+
+If the associated object only has the `id` property, the associated Id will be better than the associated object. For example:  
+
+-   Using associated objects will lead to a large number of objects with only id properties, making the results slightly redundant:  
+
+    ```json
+    {
+        "id": 1, 
+        "name": "Learning GraphQL",
+        "edition": 1,
+        "price": 50.00, 
+        "store": {  
+            // highlight-next-line
+            "id": 1  
+        },
+        "authors": [{
+            // highlight-next-line  
+            "id": 1
+        }, {
+            // highlight-next-line
+            "id": 2 
+        }]
+    }
+    ```
+
+-   Using associated Ids makes the results relatively concise:  
+
+    ```json
+    {
+        "id": 1,
+        "name": "Learning GraphQL", 
+        "edition": 1,
+        "price": 50.00,  
+        // highlight-next-line
+        "storeId": 1, 
+        // highlight-next-line
+        "authorIds": [1, 2]  
+    }
+    ```  
+
+If you choose to return DTO *(instead of directly returning entities as in [the previous article](./entity))*, you can define the following DTO code:  
+
+```title="Book.dto" 
+export com.yourcompany.yourproject.model.Book  
+        -> package com.yourcompany.yourproject.model.dto
+
+ShallowBookView {  
+    #allScalars(this)  
+    #highlight-next-line
+    id(store)
+    #highlight-next-line  
+    id(authors) as authorIds  
+}  
+
+...Omit other DTO definitions...
+```
+
+After compilation, the following code is generated:  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">  
+
+```java title="ShallowBookView.java"  
+// highlight-next-line
+@GeneratedBy(  
+        file = "<yourproject>/src/main/dto/Book.dto"  
+)
+public class ShallowBookView implements View<Book> {  
+    
+    private long id;  
+
+    @NotNull  
+    private String name;  
+
+    private int edition;  
+
+    @NotNull
+    private BigDecimal price;  
+
+    @Nullable
+    // highlight-next-line
+    private Long storeId;  
+
+    @NotNull
+    // highlight-next-line
+    private List<Long> authorIds;  
+
+    ...Omit other members...
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="ShallowBookView.kt"
+// highlight-next-line  
+@GeneratedBy(  
+        file = "<yourproject>/src/main/dto/Book.dto"  
+)
+data class ShallowBookView(
+    val id: Long,
+    val name: String,
+    val edition: Int,
+    val price: BigDecimal, 
+    // highlight-next-line
+    val storeId: Long?,
+    // highlight-next-line
+    val authorIds: List<Long>  
+): View<Book> {   
+    ...Omit other members...      
+}
+```
+
+</TabItem>  
+</Tabs>
+
+## Flat Associated Objects  
+
+A large part of server development teams will deal with a type of frontend development team who do not accept data structures composed of associated multiple objects, and only want to accept a huge single object. So they require all non-collection associations to be flattened. That is:  
+
+-   They do not accept structured return information:  
+
+    ```json
+    {
+        "prop1": 1,
+        "prop2": 2, 
+        "a": {
+            "prop1": 3,
+            "prop2": 4, 
+            "b": {
+                "prop1": 5,
+                "prop2": 6,  
+            }
+        },
+        "c": {
+            "prop1": 7, 
+            "prop2": 8,
+            "d": {
+                "prop1": 9,
+                "prop2": 10,
+            }   
+        }
+    }
+    ```  
+
+-   Insist on asking for such flat data:    
+
+    ```json
+    {    
+        "prop1": 1,    
+        "prop2": 2,    
+        "aProp1": 3,    
+        "aProp2": 4,    
+        "aBProp1": 5,   
+        "abProp2": 6,    
+        "cProp1": 7,    
+        "cProp2": 8,    
+        "cdProp1": 9,    
+        "cdProp2": 10   
+    }
+    ```    
+
+In fact, such flat non-structured data is a disaster for client programs that need state management. But such frontend teams only do UI rendering without state management, so they do not realize this problem and insist on it very much.   
+
+When you can't argue but need to complete the task quickly, write DTO code as follows:   
+
+```sh title="Book.dto"
+export com.yourcompany.yourproject.model.Book  
+    -> package com.yourcompany.yourproject.model.dto
+
+FlatBookView {  
+    #allScalars(this)  
+    flat(store) { ❶
+        as(^ -> store) { ❷  
+            #allScalar(this)  
+        }
+    }  
+}  
+
+...Omit other DTO definitions...
+```  
+
+-   ❶ The `flat` function means to flatten the properties of the associated object pointed to by the `Book.store` one-to-many association to the current object.  
+
+-   ❷ For the properties of the associated object, the property name needs to be changed after being flattened to the current object. Prefix the old property name with `store`. For example, `name` -> `storeName`.   
+
+After compilation, the following code is generated:  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java title="FlatBookView.java" 
+// highlight-next-line
+@GeneratedBy(  
+        file = "<yourproject>/src/main/dto/Book.dto"  
+)
+public class FlatBookView implements View<Book> {    
+    
+    private long id;  
+
+    @NotNull
+    private String name;  
+
+    private int edition;  
+
+    @NotNull
+    private BigDecimal price;  
+
+    @Nullable
+    // highlight-next-line  
+    private Long storeId;  
+
+    @Nullable
+    // highlight-next-line
+    private String storeName;  
+
+    @Nullable
+    // highlight-next-line
+    private String storeWebsite;  
+
+    ...Omit other members...
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="FlatBookView.kt"  
+// highlight-next-line  
+@GeneratedBy(  
+        file = "<yourproject>/src/main/dto/Book.dto"  
+)
+data class FlatBookView(  
+    val id: Long,
+    val name: String,
+    val edition: Int,
+    val price: BigDecimal,
+    // highlight-next-line
+    val storeId: Long?,
+    // highlight-next-line
+    val storeName: String?,
+    // highlight-next-line
+    val storeWebsite: String?
+): View<Book> {  
+    ...Omit other members...     
+}
+```  
+
+</TabItem>  
+</Tabs>  
+
+> Here, the flattened properties are all nullable, because the `Book.store` association itself allows null.  

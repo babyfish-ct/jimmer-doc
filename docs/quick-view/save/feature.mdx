@@ -1,4 +1,238 @@
+---  
+sidebar_position: 1   
+title: Feature Introduction  
 ---
-sidebar_position: 1  
-title: Feature Introduction
----
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { SaveCommandPanel } from '@site/src/components/HomepageFeatures/SaveCommand';  
+
+## Concept  
+
+<SaveCommandPanel/>  
+
+## Demo  
+
+In actual development, the data to be saved is always submitted by the client and can be passively accepted by the server (for example, `@RequestBody` in Spring).  
+
+However, to simplify the discussion here, we directly hard code the object to be saved, so the code for the saved parameters is relatively more.  
+
+- Save simple object  
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">  
+
+    ```java 
+    // highlight-next-line
+    sqlClient.save(  
+        Objects.createBook(draft -> {
+            draft.setName("GraphQL in Action");  
+            draft.setEdition(4);
+            draft.setPrice(new BigDecimal("59.9"));
+        })
+    );
+    ```  
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    // highlight-next-line
+    sqlClient.save(
+        new(Book::class).by {  
+            name = "GraphQL in Action"
+            edition = 4
+            price = BigDecimal("59.9")  
+        }  
+    )
+    ```
+
+    </TabItem>
+    </Tabs>  
+
+    :::note
+    Here, the id attribute of the object to be saved is not specified. Jimmer will determine whether related data exists in the database according to the `name` and `edition` attributes,  
+    so as to decide whether to `INSERT` or `UPDATE`.  
+
+    This is because in the [entity definition](../precondition#book), `Book.name` and `Book.edition` are annotated with `@org.babyfish.jimmer.sql.Key`.  
+    This article is just a quick preview and does not go deep into it. Interested parties can view [Mapping Part/Advanced Mapping/Key](../../mapping/advanced/key) and [Mutation Part/Save Command](../../mutation/save-command).
+    :::  
+
+- Save data structures formed by multiple objects  
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">  
+
+    ```java
+    // highlight-next-line
+    sqlClient.save(  
+        Objects.createBook(draft -> {
+            draft.setName("GraphQL in Action");
+            draft.setEdition(4); 
+            draft.setPrice(new BigDecimal("59.9"));
+            draft.applyStore(store -> {  
+                store.setName("MANNING");
+                store.setWebsite("https://www.manning.com");  
+            });
+            draft.addIntoAuthors(author -> {
+                author.setFirstName("Bob");  
+                author.setLastName("Rockefeller");
+                author.setGender(Gender.MALE);  
+            });
+            draft.addIntoAuthors(author -> {
+                author.setFirstName("Eve");
+                author.setLastName("Procello");  
+                author.setGender(Gender.FEMALE);
+            });  
+        })
+    );
+    ```  
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    // highlight-next-line
+    sqlClient.save(
+        new(Book::class).by {
+            name = "GraphQL in Action"
+            edition = 4  
+            price = BigDecimal("59.9")
+            store().apply {
+                name = "MANNING"  
+                website = "https://www.manning.com"  
+            }
+            authors().addBy {
+                firstName = "Bob"
+                lastName = "Rockefeller"
+                gender = Gender.MALE
+            }
+            authors().addBy {
+                firstName = "Eve" 
+                lastName = "Procello"
+                gender = Gender.FEMALE  
+            }
+        }  
+    );
+    ```  
+
+    </TabItem>
+    </Tabs>
+
+## Essential Difference from Other ORM  
+
+In the previous text, we demonstrated two examples, one describing how to save a simple object, and the other describing how to save an aggregate root object and cascade save more associated objects.  
+
+It is obvious that Jimmer's save directive can appear both simple and complex, depending on whether the data structure expressed by the dynamic entity passed by the user is simple or complex.   
+
+Jimmer does not provide configuration `cascade` options for association properties like traditional ORM, because it is not necessary at all. The dynamic entity gives Jimmer's save capability unlimited possibilities, so there is no need to limit it to some fixed configuration.  
+
+This absolute flexibility has many wonderful uses. For example, changing the price of book with id 100 to 60, the traditional ORM and Jimmer approaches are different:  
+
+- Traditional ORM (take JPA as an example) adopts find first and then modify, which is intuitive but wastes performance
+
+    ```java
+    Book book = entityManager.find(Book.class, 100L);
+    if (book != null) {  
+        book.setPrice(new BigDecimal(60));
+        // entityManager.merge(book); //Omit if the current JPA transaction context exists  
+    }
+    ```  
+
+- Jimmer's approach, make up a truncated object out of thin air and directly update  
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">  
+
+    ```java 
+    boolean matched = sqlClient.update(
+        Objects.createBook(draft -> {
+            draft.setId(100L);  
+            draft.setPrice(new BigDecimal(60));
+            // No other attributes except `id` and `price` are specified
+            // So no other attributes except `price` will be affected 
+        })  
+    ).getTotoalAffectedRowCount() != 0;
+    ```  
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val matched sqlClient.update(  
+        new(Book::class).by {
+            id = 100L
+            price = BigDecimal(60)
+            // No other attributes except `id` and `price` are specified
+            // So no other attributes except `price` will be affected
+        } 
+    ).totoalAffectedRowCount != 0
+    ```
+
+    </TabItem>
+    </Tabs>  
+
+## Note: Cannot Expose Directly to the Outside  
+
+The ability to save data structures of arbitrary shapes is too powerful to expose directly, which will lead to huge security vulnerabilities. For example:   
+
+:::warning
+<Tabs groupId="language">
+<TabItem value="java" label="Java">  
+
+```java title="BookController.java"  
+@RestController
+public class BookController {  
+
+    private final JSqlClient sqlClient;  
+
+    public BookController(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;  
+    }  
+
+    @PutMapping("/book")
+    pubic int saveBook(  
+        // highlight-next-line
+        @RequestBody Book book  
+    ) {
+        return sqlClient
+            .save(book)
+            .getTotoalAffectedRowCount();
+    }  
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookController.java"  
+class BookController(  
+    private val sqlClient: KSqlClient  
+) {  
+
+    @PutMapping("/book")
+    fun saveBook(
+        // highlight-next-line
+        @RequestBody book: Book
+    ): Int =
+        sqlClient
+            .save(book)
+            .totoalAffectedRowCount
+}  
+```  
+
+</TabItem>
+</Tabs>  
+:::  
+
+This method can work and is very powerful. The client can upload any data structure with `Book` as the aggregate root for the server to save.  
+
+But this is also dangerous. You cannot limit the complexity of the data structure uploaded by the client. The client can arbitrarily modify associated data of any depth through this API.  
+
+Even if you try to verify and limit the shape of the `book` parameter, it is still very easy to overlook and make mistakes.  
+
+:::warning
+Therefore, the powerful Jimmer data saving capability can only be used as an underlying support internally in the service, and cannot expose this capability directly to remote clients by using dynamic entities as input parameters, because this will result in the security door wide open.
+
+To safely expose Jimmer's data saving capabilities, please continue reading the next article: [Export Functionality](./export)  
+:::

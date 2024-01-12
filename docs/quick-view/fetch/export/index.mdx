@@ -1,0 +1,35 @@
+---  
+sidebar_position: 2
+title: Exposing Features  
+---  
+
+import { ViewMore } from '@site/src/components/ViewMore';
+import { DtoExplosion } from "@site/src/components/Image";  
+
+Through the introduction of the [previous article](../feature), we quickly previewed Jimmer's powerful ability to query arbitrary data structures at will.  
+
+Jimmer entities are both strongly typed and dynamic. This dynamicity can easily express any data structure and return it directly.  
+
+This eliminates <ViewMore buttonText="DTO explosions"><DtoExplosion/></ViewMore>, allowing the server side to build DTO types without constructing DTO types, requiring only entity-oriented programming, reducing server-side development costs to the extreme.   
+
+However, for client developers, getting a dynamic data structure that is possible at all is a very painful thing. The client wants each query API to precisely define the type of its returned data format.   
+
+To this end, Jimmer provides two methods, both of which can provide first-class API support for clients.  
+
+- Directly return dynamic entities  
+
+    As a comprehensive solution, Jimmer is not limited to ORM. It generates client code for HTTP clients. In the generated client code, precise DTO types are defined for each specific data structure.  
+
+    :::tip 
+    If the service itself does not use the query results, but directly as an HTTP Response, it is suitable to use this method.
+    :::  
+
+- Jimmer supports a programming language called DTO that can quickly define DTO types for output data structures at extremely low cost.   
+
+    :::tip
+    When any of the following is met, this method can be adopted.  
+
+    - The query results are not intended to be returned directly as HTTP Response, but the service itself uses them. At this point, the business code that uses the query results does not want to get dynamic entities with slightly weaker compile-time safety *(although Jimmer entities are still strongly typed)*.  
+
+    - The front-end team does not accept multiple interrelated objects and requires all non-collection association attributes to be `flat` operated to form an ultra-large orphan object, which seems very stubborn. *(This situation will be introduced in detail in related chapters, not discussed in depth here)*.  
+    :::

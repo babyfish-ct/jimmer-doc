@@ -1,4 +1,482 @@
----
-sidebar_position: 1  
-title: Directly Return Entity
----
+---  
+sidebar_position: 1
+title: Directly Return Entities  
+---  
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';  
+
+## Enable Web API Analysis  
+
+:::caution
+At present, this part of the content supports Spring, and more web frameworks will be supported in the future.  
+:::
+
+To export client code, you first need to enable Web API analysis capabilities. Developers have two options  
+
+-   Use `@org.babyfish.jimmer.client.EnableImplicitApi` to decorate any class in the project where the RestController belongs. For Spring Boot applications, the Appplication class is a good choice.  
+
+-   Use `@org.babyfish.jimmer.client.Api` to decorate all `RestController` classes that need to be exported and their `HTTP Mapping` methods.  
+
+The first method is relatively simple, so applying the `@EnableImplicitApi` annotation to the Spring Boot Application class is enough. Since the code is too simple, there is no need to demonstrate.  
+
+## Write RestController  
+
+As an example, there is no complex business logic. We ignore the Service layer and write `BookController` directly based on the `BookRepository` in the previous article, as follows:  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">  
+
+```java title="BookController.java"
+@RestController  
+public class BookController implements Fetchers {
+
+    private final BookRepository bookRepository;  
+
+    public BookController(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }  
+
+    @Nullable
+    @GetMapping("/book/{id}")
+    public  
+    @FetchBy("COMPLEX_BOOK") Book ❶
+    findBookById(@PathVariable("id") long id) {
+        return bookRepository.findBookById(  
+            id,   
+            COMPLEX_BOOK ❷
+        );
+    }  
+
+    @GetMapping("/books")
+    public List<
+        @FetchBy("SIMPLE_BOOK") Book ❸ 
+    > findBooksByName(
+            @RequestParam(name = "name", required = false) String name  
+    ) {
+        return bookRepository.findBooksByName(
+            name,    
+            SIMPLE_BOOK ❹
+        );
+    }  
+
+    /**
+     * Simple Book DTO which can only access `id` and `name` of `Book` itself
+     */
+    private static final Fetcher<Book> SIMPLE_BOOK = ❺
+            BOOK_FETCHER  
+                    .name();  
+
+    /**
+     * Complex Book DTO which can access not only properties of `Book` itself,
+     * but also associated `BookStore` and `Author` objects with names
+     */
+    private static final Fetcher<Book> COMPLEX_BOOK = ❻
+            BOOK_FETCHER
+                    .allScalarFields()  
+                    .store(  
+                            BOOK_STORE_FETCHER.name()
+                    )
+                    .authors(
+                            AUTHOR_FETCHER  
+                                    .firstName()
+                                    .lastName()
+                    );
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">   
+
+```kotlin title="BookController.kt"
+@RestController
+class BookController(
+    private val bookRepository: BookRepository  
+) {  
+    @GetMapping("/book/{id}")  
+    fun findBookById(
+        @PathVariable id: Long
+    ): @FetchBy("COMPLEX_BOOK") Book = ❶
+        bookRepository.findBookById(
+            id,    
+            COMPLEX_BOOK ❷
+        )  
+
+    @GetMapping("/books")  
+    fun findBooksByName(  
+            @RequestParam(required = false) name: String  
+    ): List<  
+        @FetchBy("SIMPLE_BOOK") Book ❸  
+    > =
+        bookRepository.findBooksByName(
+            name,     
+            SIMPLE_BOOK ❹
+        )  
+
+    companion object {  
+
+        /**  
+         * Simple Book DTO which can only access `id` and `name` of `Book` itself  
+         */
+        val SIMPLE_BOOK = ❺
+            newFetcher(Book:::class).by {
+                name() 
+            }  
+
+        /**
+         * Complex Book DTO which can access not only properties of `Book` itself,  
+         * but also associated `BookStore` and `Author` objects with names  
+         */
+        private val COMPLEX_BOOK = ❻
+            newFetcher(Book:::class).by {  
+                allScalarFields()
+                store {
+                    name()
+                }  
+                authors {  
+                    firstName()
+                    lastName()
+                }
+            }  
+    }  
+}
+```   
+
+</TabItem>  
+</Tabs>  
+
+The focus is on the 6 numbered items:   
+
+-   ❶ Declare that the exact shape of the `Book` object returned by the `findBookById` method is defined by the static variable `COMPLEX_BOOK`  
+
+-   ❷ The internal implementation of the `findBookById` method needs to be consistent with the external declaration at ❶, querying the `Book` object in the shape of `COMPLEX_BOOK`  
+
+-   ❸ Declare that the exact shape of each `Book` object in the `List` returned by the `findBooksByName` method is defined by the static variable `SIMPLE_BOOK`   
+
+-   ❹ The internal implementation of the `findBooksByName` method needs to be consistent with the external declaration at ❸, querying the `Book` object in the shape of `SIMPLE_BOOK`   
+
+-   ❺ The definition of the `SIMPLE_BOOK` shape is used both at ❸ as part of the external API declaration and at ❹ to control the shape of the returned data structure  
+
+-   ❻ The definition of the `COMPLEX_BOOK` shape is used both at ❶ as part of the external API declaration and at ❷ to control the shape of the returned data structure  
+
+## View API Documentation  
+
+To recognize the Jimmer-specific annotation `@FetchBy`, Jimmer gives OpenAPI/Swagger a set of highly distinctive implementations.  
+
+Without using any other frameworks in the JVM ecosystem for automatically generating OpenAPI/Swagger, just modify `application.yml` *(or `application.properties`)* as follows:  
+
+```yml title="application.yml"  
+jimmer:  
+    ...Omit other configurations...  
+    client:  
+        openapi:  
+            # highlight-next-line
+            path: /openapi.yml
+            # highlight-next-line 
+            ui-path: /openapi.html
+            properties:  
+                info:  
+                    title: My Web Service  
+                    description: |  
+                        Restore the DTO explosion that was   
+                        eliminated by server-side developers  
+                    version: 1.0
+```  
+
+Start the web project and access `http://localhost:8080/openapi.html` with a browser to see:  
+
+![openapi](@site/static/img/openapi/openapi.webp)  
+
+-   Expand `/books` to see that each element in the returned collection is a relatively simple DTO object  
+
+    ![openapi-simple](@site/static/img/openapi/simple.webp)  
+
+-   Expand `/books/{id}` to see that the return type is a relatively complex DTO type  
+
+    ![openapi-complex](@site/static/img/openapi/complex.webp)  
+
+## Generate TypeScript  
+
+Modify `application.yml` *(or `application.properties`)* to add support for TypeScript:  
+
+```yml title="application.yml"  
+jimmer:  
+    ...Omit other configurations...   
+    client:  
+        openapi:  
+            ...Omit openapi related configurations...   
+        ts:  
+            # highlight-next-line
+            path: /ts.zip  
+```  
+
+Start the web project, download `http://localhost:8080/ts.zip`, unzip it, and you can see the TypeScript client code defines `BookController` as follows:  
+
+```ts title="services/BookController.ts"
+import type {Executor} from '../';  
+import type {BookDto} from '../model/dto/';  
+
+export class BookController {   
+   
+    constructor(private executor: Executor) {}   
+     
+    async findBookById(options: BookControllerOptions['findBookById']): Promise<  
+        // highlight-next-line
+        BookDto['BookController/COMPLEX_BOOK']  
+    > {  
+        ...Omit specific logic...
+    }   
+     
+    async findBooksByName(options: BookControllerOptions['findBooksByName']): Promise<
+        ReadonlyArray<  
+            // highlight-next-line
+            BookDto['BookController/SIMPLE_BOOK']  
+        >
+    > {  
+        ...Omit specific logic...
+    }  
+}
+export type BookControllerOptions = {  
+    'findBookById': {  
+        readonly id: number
+    },    
+    'findBooksByName': {  
+        readonly name?: string | undefined  
+    }  
+}
+```  
+
+Where `BookDto['BookController/COMPLEX_BOOK']` and `BookDto['BookController/SIMPLE_BOOK']` are the restored DTO types in the TypeScript client code generated by Jimmer. You can open the `model/dto/BookDto.ts` file to view their definitions as follows:  
+
+```ts title="model/dto/BookDto.ts"  
+export type BookDto = {  
+    /**  
+     * Complex Book DTO which can access not only properties of `Book` itself,
+     * but also associated `BookStore` and `Author` objects with names  
+     */  
+    // highlight-next-line
+    'BookController/COMPLEX_BOOK': {  
+        readonly id: number;  
+        readonly name: string;
+        readonly edition: number;  
+        readonly price: number;  
+        readonly store?: {  
+            readonly id: number;  
+            readonly name: string; 
+        } | null | undefined;  
+        readonly authors: ReadonlyArray<{  
+            readonly id: number;  
+            readonly firstName: string;
+            readonly lastName: string;  
+        }>;  
+    }  
+    /**  
+     * Simple Book DTO which can only access `id` and `name` of `Book` itself  
+     */
+    // highlight-next-line
+    'BookController/SIMPLE_BOOK': {  
+        readonly id: number;
+        readonly name: string;  
+    }  
+}
+```
+
+## Document Comments  
+
+Through the above demonstration, we see that the server side does not need to define any Java/Kotlin types related to DTOs, while the client sees that each specific business API automatically defines precise DTO return types. In this way, both the server side and the client side get the programming models they expect.  
+
+This article focuses on demonstrating this powerful feature without discussing how to add textual descriptions to various parts of the API *(e.g. types, API methods, API parameters, object properties)*.  
+
+:::tip  
+Jimmer provides the simplest solution to these issues. Java/Kotlin developers only need to write the most basic documentation comments, and all documentation comments are automatically copied to the client API.  
+:::  
+
+This feature is simple. Readers can experiment on their own without elaboration here.  
+
+## Flat Associated IDs   
+
+If the associated object has only the `id` attribute, the associated id is better than the associated object. For example:  
+
+-   Using the associated object will lead to a large number of objects with only the id attribute, making the results slightly redundant:  
+
+    ```json 
+    {
+        "id" : 1,  
+        "name" : "Learning GraphQL",
+        "edition" : 1,
+        "price" : 50.00,  
+        "store" : {
+            // highlight-next-line
+            "id" : 1  
+        },  
+        "authors" : [{
+            // highlight-next-line 
+            "id" : 1  
+        }, {   
+            // highlight-next-line
+            "id" : 2
+        }]  
+    }
+    ```  
+
+-   Using the associated id makes the results relatively concise:  
+
+    ```json
+    {
+        "id" : 1,
+        "name" : "Learning GraphQL", 
+        "edition" : 1,
+        "price" : 50.00,  
+        // highlight-next-line
+        "storeId" : 1, 
+        // highlight-next-line  
+        "authorIds" : [1, 2]  
+    }
+    ```  
+
+If you choose to directly return entities *(rather than the DTO returns in the [next article](./dto))*, and want to use associated ids, you need to add @IdView attributes to the entities first:  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java 
+@Entity
+public interface Book {
+
+    @Nullable  
+    @ManyToOne
+    BookStore store();  
+
+    @ManyToMany
+    List<Author> authors();   
+
+    @Nullable
+    // highlight-next-line
+    @IdView  
+    Long storeId();
+
+    // highlight-next-line
+    @IdView("authors")
+    List<Long> authorIds();  
+
+    ...Omit other members...
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">   
+
+```kotlin
+@Entity  
+interface Book {  
+
+    @ManyToOne
+    val store: BookStore?   
+
+    @ManyToMany
+    val authors: List<Author>
+
+    // highlight-next-line
+    @IdView   
+    val storeId: Long?  
+
+    // highlight-next-line
+    @IdView("authors")
+    val authorIds: List<Long>   
+
+    ...Omit other members...
+}
+```   
+
+</TabItem>   
+</Tabs>  
+
+In the above example:  
+
+-   The `storeId` attribute is not a brand new attribute. It is just a view of the `store` attribute, getting the `id` attribute of the associated object represented by the `store` attribute *(or null)*. `storeId` and `store` share the same data.  
+
+-   The `authorIds` attribute is not a brand new attribute either. It is just a view of the `authors` attribute, getting a list of `id` attributes of all associated objects represented by the `authors` attribute. `authorIds` and `authors` share the same data.  
+
+Now, write the REST Controller as follows:   
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">    
+
+```java title="BookController.java" 
+@RestController  
+public class BookController implements Fetchers {  
+
+    private final BookRepository bookRepository;  
+
+    public BookController(BookRepository bookRepository) {
+        this.bookRepository = bookRepository;
+    }   
+
+    @Nullable
+    @GetMapping("/book")
+    // highlight-next-line
+    public @FetchBy("SHALLOW_BOOK") Book findBookById(
+        @PathVariable("id") long id  
+    ) {  
+        // highlight-next-line
+        return bookRepository.findBookById(id, SHALLOW_BOOK);
+    }   
+
+    /**
+     * Shallow Book DTO which can access  
+     * 1. All scalar properties of `Book` itself  
+     * 2. All associated ids, not associated objects.  
+     */
+    private static final Fetcher<Book> SIMPLE_BOOK =
+            SHALLOW_BOOK
+                    .allScalarFields()  
+                    // highlight-next-line
+                    .storeId()
+                    // highlight-next-line
+                    .authorIds();  
+
+    ...Omit other members...
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">   
+
+```kotlin title="BookController.kt"
+@RestController  
+class BookController(
+    private val bookRepository: BookRepository  
+) {  
+    @GetMapping("/book/{id}")
+    fun findBookById(
+        @PathVariable id: Long  
+        // highlight-next-line
+    ): @FetchBy("SHALLOW_BOOK") Book =   
+        // highlight-next-line
+        bookRepository.findBookById(id, SHALLOW_BOOK)  
+
+    ...Omit other members...  
+
+    companion object {   
+
+        /**
+         * Shallow Book DTO which can access  
+         * 1. All scalar properties of `Book` itself   
+         * 2. All associated ids, not associated objects.  
+         */
+        val SHALLOW_BOOK =
+            newFetcher(Book:::class).by {
+                allScalarFields()
+                // highlight-next-line
+                storeId()
+                // highlight-next-line
+                authorIds()
+            }  
+
+        ...Omit other shape definitions...
+    }  
+}
+```   
+
+</TabItem>  
+</Tabs>

@@ -15,7 +15,7 @@ import { SaveCommandPanel } from '@site/src/components/HomepageFeatures/SaveComm
 
 实际开发中，被保存的数据都由客户端提交，服务端被动接受即可 *(比如，Spring的`@RequestBody`)*。
 
-但是这里，为了简化讨论，我们直接硬书写被保存的对象。
+但是这里，为了简化讨论，我们直接硬编码书写被保存的对象，所以被保存参数的代码相对多一点。
 
 -   保存简单对象
 
@@ -127,7 +127,7 @@ import { SaveCommandPanel } from '@site/src/components/HomepageFeatures/SaveComm
 
 Jimmer并没有像传统ORM一样为关联属性提供配置`cascade`选项，因为根本不需要。动态实体为Jimmer的保存功能赋予了无限种可能，自然不必限定为某种固定的配置。
 
-这种绝对的灵活性，存在很多妙用，比如：讲id为100的书籍的价格修改为60，传统ORM和Jimmer做法不同。
+这种绝对的灵活性，存在很多妙用，比如：将id为100的书籍的价格修改为60，传统ORM和Jimmer做法不同。
 
 -   传统ORM *(以JPA为例)* 采用先查再改的方式，虽然直观，但是浪费性能
 
@@ -145,28 +145,28 @@ Jimmer并没有像传统ORM一样为关联属性提供配置`cascade`选项，�
     <TabItem value="java" label="Java">
 
     ```java
-    sqlClient.update(
+    boolean matched = sqlClient.update(
         Objects.createBook(draft -> {
             draft.setId(100L);
             draft.setPrice(new BigDecimal(60));
             // 除了`id`和`price`外，其他属性都没有被指定
             // 所以除了`price`属性会被修改外，其他属性不会被影响
         })
-    );
+    ).getTotoalAffectedRowCount() != 0;
     ```
 
     </TabItem>
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    sqlClient.update(
+    val matched sqlClient.update(
         new(Book::class).by {
             id = 100L
             price = BigDecimal(60)
             // 除了`id`和`price`外，其他属性都没有被指定
             // 所以除了`price`属性会被修改外，其他属性不会被影响
         }
-    )
+    ).totoalAffectedRowCount != 0
     ```
 
     </TabItem>
@@ -232,7 +232,7 @@ class BookController(
 即使你想办法对`book`参数的形状进行验证和限制，也是非常容易疏忽和犯错的。
 
 :::warning
-因此，强大的Jimmer数据保存能力只能在服务内部作为底层支撑，不能用动态实体作为输入参数讲此能力直接暴露出去，因为这会导致安全门户大开。
+因此，强大的Jimmer数据保存能力只能在服务内部作为底层支撑，不能用动态实体作为输入参数并将此能力直接暴露给远程客户端，因为这会导致安全门户大开。
 
-至于如何安全地暴露Jimmer的数据，请继续阅读下一篇文章：[暴露功能](./export)
+如何安全地暴露Jimmer的数据保存能力，请继续阅读下一篇文章：[暴露功能](./export)
 :::

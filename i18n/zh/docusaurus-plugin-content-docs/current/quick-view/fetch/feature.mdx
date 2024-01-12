@@ -68,11 +68,11 @@ class BookRepository(
 
 -   Java代码中的`JSqlClient`和Kotlin代码中的`KSqlClient`，是Jimmer为Java和Kotlin开发人员提供的API入口。
 
-    实际项目中改对象为全局对象，本章节文档用于快速预览，并不会深入介绍。这里读者可以先忽略具体细节，知道`sqlClient`是API入口即可。
+    实际项目中该对象为全局对象，本章节文档用于快速预览，并不会深入介绍。这里读者可以先忽略具体细节，知道`sqlClient`是API入口即可。
 
 -   本文的目的在于控制返回对象的格式，而并非介绍复杂查询条件 *(这部分内容在[快速预览/任意动态查询](../dsl)中介绍)*。
 
-    所以这两个方法象征性采用`Book.id`和`Book.name`作为过滤条件。
+    所以这两个方法象征性地采用`Book.id`和`Book.name`作为过滤条件。
 
 -   Jimmer是技术中立的，但是采用Spring风格的代码往往能够起到简化讲解的目的，所以，本例采用Spring风格书写。
 
@@ -80,7 +80,7 @@ class BookRepository(
 
 -   Java代码中的`Tables.BOOK_TABLE`是Jimmer编译时自动生成的代码。
 
-加入上述类有一个实例`bookRepository`，以`findBookById`为例：
+假如上述类有一个实例`bookRepository`，以`findBookById`为例：
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -113,7 +113,7 @@ println(bookRepository.findBookById(1L));
 }
 ```
 
-这样输出格式是固定的，和当前的要讨论的话题“查询任意形状的数据结构”不符，因此我们需要改进`BookRepository`。
+输出格式是固定的，和当前的要讨论的话题“查询任意形状的数据结构”不符，因此我们需要改进`BookRepository`。
 
 ## 改进后的的Repository
 
@@ -211,11 +211,13 @@ class BookRepository(
 这是推荐的使用方式，Repository仅负责筛选、排序、分页等操作，但不控制返回数据的格式，而是通过`Fetcher<E>`参数将数据格式的控制权暴露出去，让更上层的业务逻辑来决定。
 :::
 
+## 用法
+
 接下来，我们还是以`findBookById`方法为例，展示两种用法
 
 ### 查询残缺对象
 
-这里，我们让返回的格式比默认对象格式更简单
+这里，我们让返回的格式比默认对象格式更简单。即，返回残缺对象，它只有完整对象的一部分属性。
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -351,6 +353,6 @@ println(
 }
 ```
 
-用户可以通过这种手段控制任何普通属性和关联属性是否被查询，深度和广度都不受限制的。
+用户可以通过这种手段控制任何普通属性和关联属性是否被查询，深度和广度都不受限制。
 
 最终，我们无需构建任何HTTP服务，就可以在任何代码中直接获取媲美GraphQL的能力。

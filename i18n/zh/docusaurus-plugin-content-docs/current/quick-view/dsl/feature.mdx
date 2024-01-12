@@ -6,7 +6,17 @@ title: 功能介绍
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-为了解决原生SQL抽象程度低的问题。Jimmer DSL支持了动态谓词、动态表连接和隐式子查询，从而让任意复杂的动态查询可以被轻松实现。
+## Jimmer SQL DSL
+
+1.  和大部分ORM中DSL仅仅为了引入强类型体验不同，Jimmer DSL为解决原生SQL在复杂场景下开发效率低下的问题，给予全新的抽象。
+
+    > 因此，Jimmer SQL DSL和绝大部分SQL DSL存在本质差异 *(这也是Jimmer项目立项的最初动机)*
+
+2.  Jimmer DSL可以嵌入原生SQL片段，和特定数据库产品特有功能的联系没有被切断。
+
+本章章节为了快速预览，所以我们仅仅专注于1。
+
+> 至于2，有兴趣者可参见[Native表达式](../../query/native-sql)
 
 ## 动态谓词
 
@@ -83,15 +93,15 @@ class BookRepository(
 
 -   ❶ 和静态谓词`ilike`不同，`ilikeIf`/`ilike?`是动态谓词，根据参数来决定是否添加SQL条件
 
-    如果`name`既非null也非empty string，则添加SQL条件`table.name ilike name`
+    如果`name`既非null也非empty string，则添加SQL条件`name ilike :name`
 
 -   ❷ 和静态谓词`between`不同，`betweenIf`/`between?`是动态谓词，根据参数来决定是否添加SQL条件。存在如下四种情况
 
-    -   如果`minPrice`和`maxPrice`都非null，则添加SQL条件`table.price between minPrice and maxPrice`。
+    -   如果`minPrice`和`maxPrice`都非null，则添加SQL条件`price between :minPrice and :maxPrice`。
 
-    -   如果仅`minPrice`非null，则添加SQL条件`name >= minPrice`
+    -   如果仅`minPrice`非null，则添加SQL条件`name >= :minPrice`
 
-    -   如果仅`maxPrice`非null，则添加SQL条件`name <= maxPrice`
+    -   如果仅`maxPrice`非null，则添加SQL条件`name <= :maxPrice`
 
     -   如果`minPrice`和`maxPrice`都为null，则不添加任何添加SQL条件
 
@@ -388,8 +398,6 @@ inner join BOOK_STORE tb_2_
     on tb_1_.STORE_ID = tb_2_.ID
 /* highlight-end */
 where
-        1 = 1
-    and
         lower(tb_2_.NAME) like ? /* %m% */
     and
         lower(tb_2_.WEBSITE) like ? /* %.com% */
@@ -586,9 +594,9 @@ val books = bookRepository.findBooks()
 
     -   由于①和②的表达都是null，导致③处的`or`为null
 
-    -   ③处的`or`为null将会导致隐式子查询没有任何SQL条件，这时创建子查询毫无意义，最终④处得到的子查询为null
+    -   ③处的`or`为null将会导致隐式子查询没有任何SQL条件，这时创建子查询毫无意义，最终④处得到的隐式子查询条件为null
 
-    -   ④处得到的子查询为null，将会导致⑤处的where毫无意义，此操作将会被忽略。
+    -   ④处得到的子查询条件为null，将会导致⑤处的where毫无意义，此操作将会被忽略。
 
     即，第一个隐式子查询被忽略
 

@@ -10,9 +10,9 @@ import { DtoExplosion } from "@site/src/components/Image";
 
 ## Java/Kotlin应用自己使用查询结果
 
-在[上一篇](./entity)文档中，我们介绍让Web服务直接返回实体，并辅以`@FetchBy`注解在客户端中恢复所有DTO爆炸。
+在[上一篇](./entity)文档中，我们介绍让Web服务无需定义DTO类型，直接返回实体，并辅以`@FetchBy`注解在自动生成的客户端代码中恢复所有DTO类型定义。
 
-然而，如果某个查询的返回结果并不返回给Web客户端，而是服务端自己用呢?
+然而，如果某个查询的返回结果并不是为了返回给Web远程客户端，而是服务端自己用呢?
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -68,13 +68,13 @@ for (book in books) {
 
     -   异常消息：The property "com.yourcompany.yourproject.model.Book.price" is unloaded
 
-可见，仅仅考虑在远程客户端Api中自动定义DTO类型是不够的。当JVM自身直接使用查询结果时，为Java/Kotlin定义DTO类型将不可避免，需要定义它们来保证更好的编译时安全。
+可见，仅仅考虑在远程客户端Api中自动定义DTO类型是不够的。当JVM自身直接使用查询结果时，如果需要足够的编译时安全性，为Java/Kotlin定义DTO类型将不可避免，需要定义它们来保证更好的编译时安全。
 
 ## DTO语言
 
-实体对象和DTO对象之间的转化是一件耗费体力但非常无聊的事情，是信息管理内软件开发中常见的痛点。
+实体对象和DTO对象之间的相互转化，是一件无聊、耗费体力且容易出错的事，是信息管理类软件开发中常见的痛点。尽管有很多框架都在试图缓解这个问题，但开发效率一直无法得到质的提高。
 
-为了让DTO类型的制作成本尽可能低廉，Jimmer引入了DTO语言，改语言作为Java/Kotlin类型系统的补充，可以快速构建DTO类型
+为了让DTO类型的制作成本尽可能低廉，Jimmer引入了DTO语言，该语言作为Java/Kotlin类型系统的补充，可以在编译时快速生成Java/Kotlin的DTO类型定义。
 
 > 本文只做快速浏览，不做详细介绍，如果需要了解完整信息，请参见[DTO语言](../../../object/view/dto-language.mdx)
 
@@ -113,11 +113,7 @@ for (book in books) {
     }
     ```
 
-3.  编译项目
-
-    -   既可用maven/gradle命令
-    
-    -   也可以直接点击IDE的运行按钮 *(如果不使用Intellij插件，至少需要改变一个Java/Kotlin文件，推荐安装Intellij插件)*
+3.  编译项目 *(既可在命令行中使用gradle/maven命令，也可以在Intellij右侧点击gradle/maven的build)*，即可生成相关的DTO类型
 
 ### 查看生成的DTO
 
@@ -184,7 +180,7 @@ for (book in books) {
 
     -   ❶ 提醒用户，这是Jimmer自动生成的代码
 
-    -   ❷ 实现`View<Book>`接口
+    -   基于`Book`实体的Output DTO需实现`View<Book>`接口
 
     -   ❸ 将实体转化为DTO
 
@@ -339,21 +335,21 @@ for (book in books) {
 
     -   ❶ 提醒用户，这是Jimmer自动生成的代码
 
-    -   ❷ 实现`View<Book>`接口
+    -   ❷ 基于`Book`实体的Output DTO需实现`View<Book>`接口
 
     -   ❸ 将实体转化为DTO
 
     -   ❹ 将DTO转化为实体
 
-    -   ❺ 多对一关联`Book.store`所定义的关联对象的DTO定义
+    -   ❺ 多对一关联`Book.store`所引用的关联对象的DTO定义
 
-    -   ❻ 多对多关联`Book.autors`所定义的关联对象的DTO定义
+    -   ❻ 多对多关联`Book.autors`所引用的关联对象的DTO定义
 
 ## 新的BookRepository
 
 ### 重温旧的BookRepository
 
-在[功能介绍](../feature)一文中，我们编写了一个`BookRepository`类
+在[功能介绍](../feature#改进后的的repository)一文中，我们编写了一个`BookRepository`类
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -415,7 +411,7 @@ class BookRepository(
 
 ### 编写新BookRepository
 
-现在，这个`BookRepository`不在符合我们的要求了，因为我们现在不想查询Jimmer实体，而是想查询由DTO语言自动生成的DTO类型，需要修改。
+现在，这个`BookRepository`不再符合我们的要求了，因为我们现在不想查询Jimmer实体，而是想查询由DTO语言自动生成的DTO类型，需要修改。
 
 但是，我们希望`BookRepository`仍然保持形状控制权对外暴露的优秀品质，修改代码如下。
 
@@ -503,15 +499,19 @@ class BookRepository(
 </TabItem>
 </Tabs>
 
--   ❶ ❹: Java的`<V extends View<Book>>`或kotlin的`<V: View<Book>>`定义一个范型参数`V`，表示任何由`Book`衍生而来的DTO类型。
+-   ❶ ❹: Java的`<V extends View<Book>>`或kotlin的`<V: View<Book>>`定义一个范型参数`V`，表示任何由`Book`衍生而来的Output DTO类型。
     
     比如：上文中自动生成的`SimpleBookView`和`ComplexBookView`，它们都实现了`View<Book>`接口。
 
--   ❷ ❺: 用任何一个由`Book`衍生而来的DTO类型作为参数。
+-   ❷ ❺: 用任何一个由`Book`衍生而来的DTO的类型作为参数。
 
-    返回类型随着参数类型的变化而变化，实现任意DTO类型的查询，将DTO类型类型的决定权交给更上层的调用者。
+    返回类型随着参数类型的变化而变化，实现任意DTO类型的查询，将DTO类型的决定权交给更上层的调用者。
 
 -   ❸ ❻: 让Jimmer查询指定类型的数据
+
+    :::tip
+    DTO类型内部已经包括了与形状之匹配的`Fetcher`，先通过此`Fetcher`查询出形状匹配的实体数据结构，再自动转化为DTO类型。
+    :::
 
 ### 试用新的BookRepository
 
@@ -622,7 +622,7 @@ class BookRepository(
 
 ## 编写BookController
 
-虽然DTO语言更适合于Java/Kotlin应用自己实用查询结果，但你也可以用它们作为HTTP API的返回信息，和实用普通的POJO没有任何区别。
+虽然DTO语言更适合于Java/Kotlin应用内部自己使用查询结果，但你也可以用它们作为HTTP API的返回信息，和实用普通的POJO没有任何区别。
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -826,14 +826,14 @@ SimpleBookView {
 </table>
 
 :::tip
-无论用户如何选择，Jimmer都能以JVM生态中其他常规技术栈难以想象的低开发成本优雅地解决<ViewMore buttonText="DTO爆炸问题"><DtoExplosion/></ViewMore>
+无论用户如何选择，Jimmer都能以JVM生态中其他技术栈难以想象的低开发成本优雅地解决<ViewMore buttonText="DTO爆炸问题"><DtoExplosion/></ViewMore>
 :::
 
 ## Flat关联ID
 
 如果关联对象只有`id`属性，那么关联Id会比关联对象更好用，例如
 
--   使用关联对象，结果稍显冗余
+-   使用关联对象，会导致大量的只有id属性的对象，结果稍显冗余
 
     ```json
     {

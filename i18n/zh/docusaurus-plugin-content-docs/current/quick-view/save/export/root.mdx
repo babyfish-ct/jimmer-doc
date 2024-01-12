@@ -122,7 +122,7 @@ data class BookInput(
 
     最终DTO对象要通过❺转化为实体对象再由Jimmer保存，如果DTO的id属性为null，那么转化为实体后，实体的id属性就会处于未指定状状态。
 
-    对于没有制定`INSERT`或`UPDATE`的保存操作而言。
+    对于没有明确指定`INSERT`模式或`UPDATE`模式的保存操作而言。
 
     -   如果实体对象`id`属性被指定了，按照`id`判断应该`INSERT`还是`UPDATE`
 
@@ -236,7 +236,7 @@ class BookController(
 
     -   Adminsitrator: 能新建和编辑书籍的所有信息
 
--   针对Adminsitrator角色的新建Api和编辑Api需要分开
+-   对于Adminsitrator角色而言，新建书籍的Web Api和编辑书籍的Web Api需要分开
 
 ### 编写DTO
 

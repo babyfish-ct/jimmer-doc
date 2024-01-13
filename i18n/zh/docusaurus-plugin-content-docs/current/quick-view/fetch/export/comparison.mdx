@@ -1,0 +1,48 @@
+---  
+sidebar_position: 4  
+title: 比较
+---  
+
+import { ViewMore } from '@site/src/components/ViewMore';
+import { DtoExplosion } from "@site/src/components/Image";  
+
+二者对比如下
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th>直接返回实体</th>
+<th>使用DTO语言</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="3">相同点</td>
+<td colspan="2">都能为客户端开发人员呈现每个API的返回类型的DTO类型定义</td>
+</tr>
+<tr>
+<td colspan="2">都能生成OpenApi在线文档和TypeScript RPC代码</td>
+</tr>
+<tr>
+<td colspan="2">都能把代码中的文档注释的信息展现给客户端</td>
+</tr>
+<tr>
+<td rowspan="3">不同点</td>
+<td>直接返回实体<b>(易)</b></td>
+<td>需要使用DTO语言快速生成DTO类型</td>
+</tr>
+<tr>
+<td>需要在RestController中使用`@FetchBy`注解为实体类型补充类型信息</td>
+<td>直接基于生成的DTO类型开发RestController<b>(易)</b></td>
+</tr>
+<tr>
+<td>更偏向对外暴露Api</td>
+<td>对外暴露和内部使用皆可</td>
+</tr>
+</tbody>
+</table>
+
+:::tip
+无论用户如何选择，Jimmer都能以JVM生态中其他技术栈难以想象的低开发成本优雅地解决<ViewMore buttonText="DTO爆炸问题"><DtoExplosion/></ViewMore>
+:::

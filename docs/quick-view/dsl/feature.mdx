@@ -1,4 +1,700 @@
 ---
-sidebar_position: 1  
-title: Feature Introduction
+sidebar_position: 1
+title: Feature Introduction  
 ---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Jimmer SQL DSL
+
+1. Different from most ORM DSLs that only provide strong typing, Jimmer DSL aims to solve the low efficiency issue of native SQL under complex scenarios and offers a brand new abstraction.
+
+    > So Jimmer SQL DSL has essential differences from most other SQL DSLs *(which is also the original motivation of the Jimmer project)*  
+
+2. Jimmer DSL can embed native SQL snippets and keeps connected with database-specific features. 
+
+To quickly preview, this chapter only focuses on 1.
+
+> For 2, readers who are interested can check [Native Expressions](../../query/native-sql).
+
+## Dynamic Predicates
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookRepository.java" 
+@Repository
+public class BookRepository {
+
+    private final JSqlClient sqlClient;
+
+    public BookRepository(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
+    List<Book> findBooks(
+        // highlight-next-line
+        @Nullable String name, 
+        // highlight-next-line
+        @Nullable BigDecimal minPrice,
+        // highlight-next-line  
+        @Nullable BigDecimal maxPrice, 
+        @Nullable Fetcher<Book> fetcher
+    ) {  
+        BookTable table = Tables.BOOK_TABLE;
+
+        return sqlClient
+            .createQuery(table)
+            // highlight-next-line
+            .where(table.name().ilikeIf(name)) ❶
+            // highlight-next-line
+            .where(table.price().betweenIf(minPrice, maxPrice)) ❷
+            .select(table.fetch(fetcher))
+            .execute();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookRepository.kt" 
+@Repository  
+class BookRepository(
+    private val sqlClient: KSqlClient
+) {
+
+    fun findBooks( 
+        // highlight-next-line
+        name: String? = null,
+        // highlight-next-line
+        minPrice: BigDecimal? = null, 
+        // highlight-next-line
+        maxPrice: BigDecimal? = null,
+        fetcher: Fetcher<Book>? = null
+    ): List<Book> =  
+        sqlClient  
+            .createQuery(Book::class) {
+                // highlight-next-line
+                where(table.name `ilike?` name) ❶
+                // highlight-next-line 
+                where(table.price.`between?`(minPrice, maxPrice)) ❷
+            }
+            .select(table.fetch(table))
+            .execute() 
+}
+```
+
+</TabItem> 
+</Tabs>
+
+Where the meaning of the `fetcher` parameter has been introduced in [Quick Tour/Fetch Any Shape](../fetch), this article does not repeat it and readers can ignore it.  
+
+- ❶ Different from the static predicate `ilike`, `ilikeIf`/`ilike?` is a dynamic predicate that decides whether to add the SQL condition based on parameters. 
+
+    If `name` is neither null nor empty string, the SQL condition `name ilike :name` will be added.
+
+- ❷ Different from the static predicate `between`, `betweenIf`/`between?` is a dynamic predicate that decides whether to add the SQL condition based on parameters. There are four cases:
+
+    - If both `minPrice` and `maxPrice` are not null, the SQL condition `price between :minPrice and :maxPrice` will be added.  
+
+    - If only `minPrice` is not null, the SQL condition `name >= :minPrice` will be added.   
+
+    - If only `maxPrice` is not null, the SQL condition `name <= :maxPrice` will be added.   
+
+    - If both `minPrice` and `maxPrice` are null, no SQL condition will be added.   
+
+Now let's see the effects:
+
+- When all three parameters are null:  
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java  
+    List<Book> books = bookRepository.findBooks(
+        null, // name  
+        null, // minPrice
+        null, // maxPrice
+        null
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = bookRepository.findBooks() 
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    No where condition will be generated and the SQL is:  
+
+    ```sql
+    select 
+        tb_1_.ID,
+        tb_1_.NAME, 
+        tb_1_.EDITION,
+        tb_1_.PRICE,
+        tb_1_.STORE_ID
+    from BOOK tb_1_  
+    // highlight-next-line
+    // No SQL predicates
+    ```
+
+- When all three parameters are not null:   
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java  
+    List<Book> books = bookRepository.findBooks(
+        "GraphQL", // name  
+        new BigDecimal(20), // minPrice
+        new BigDecimal(50), // maxPrice 
+        null 
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin  
+    val books = bookRepository.findBooks(
+        name = "GraphQL",
+        minPrice = BigDecimal(20),  
+        maxPrice = BigDecimal(50)  
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    The SQL is:  
+
+    ```sql
+    select
+        tb_1_.ID,  
+        tb_1_.NAME,
+        tb_1_.EDITION,
+        tb_1_.PRICE,
+        tb_1_.STORE_ID
+    from BOOK tb_1_
+    where  
+            /* highlight-next-line */
+            lower(tb_1_.NAME) like ? /* %graphql% */
+        and
+            /* highlight-next-line */
+            (tb_1_.PRICE between ? /* 20 */ and ? /* 50 */) 
+    ```
+
+## Dynamic Table Joins  
+
+### Define dynamic table joins  
+
+In the previous examples, our dynamic SQL conditions are all applied to the current entity *(Book)*. Next, we use the reference association *(one-to-one or many-to-one)* to get associated object and add SQL conditions for it.  
+
+The many-to-one association `Book.store` is associated with the `BookStore` entity. Let us add dynamic SQL conditions for `BookStore.name` and `BookStore.website`.  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookRepository.java"  
+@Repository
+public class BookRepository {
+
+    private final JSqlClient sqlClient;
+
+    public BookRepository(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient; 
+    }
+
+    List<Book> findBooks(
+        @Nullable String name,
+        @Nullable BigDecimal minPrice,  
+        @Nullable BigDecimal maxPrice,  
+        // highlight-next-line
+        @Nullable String storeName,
+        // highlight-next-line  
+        @Nullable String storeWebsite,
+        @Nullable Fetcher<Book> fetcher 
+    ) {
+        BookTable table = Tables.BOOK_TABLE;
+
+        return sqlClient  
+            .createQuery(table)
+            .where(table.name().ilikeIf(name))  
+            .where(table.price().betweenIf(minPrice, maxPrice))  
+            // highlight-next-line
+            .where(table.store().name().ilikeIf(storeName)) ❶ 
+            // highlight-next-line
+            .where(table.store().website().ilikeIf(storeWebsite)) ❷
+            .select(table.fetch(fetcher))
+            .execute(); 
+    } 
+} 
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">  
+
+```kotlin title="BookRepository.kt"
+@Repository
+class BookRepository(
+    private val sqlClient: KSqlClient  
+) {
+
+    fun findBooks(
+        name: String? = null,
+        minPrice: BigDecimal? = null,
+        maxPrice: BigDecimal? = null,  
+        // highlight-next-line
+        storeName: String? = null,
+        // highlight-next-line
+        storeWebsite: String? = null,  
+        fetcher: Fetcher<Book>? = null
+    ): List<Book> =
+        sqlClient
+            .createQuery(Book::class) { 
+                where(table.name `ilike?` name)  
+                where(table.price.`between?`(minPrice, maxPrice))   
+                // highlight-next-line
+                where(table.store.name `ilike?` storeName) ❶
+                // highlight-next-line
+                where(table.store.name `ilike?` storeWebsite) ❷
+            }
+            .select(table.fetch(table))
+            .execute() 
+}
+``` 
+
+</TabItem>
+</Tabs>
+
+
+:::tip
+The path `table.store()` in Java code or `table.name` in Kotlin code is called a dynamic table join path, which is represented by the following SQL logic
+```sql
+from BOOK b
+    /* highlight-next-line */
+    inner join BOOK_STORE s on b.STORE_ID = s.ID
+```
+
+In fact, if the entity model is richer, you can write a longer path, 
+such as 'table.store().city().province()'.
+
+Here, just for the quick preview, 
+there is no need to build richer entity model to demonstrate a longer join path, 
+and the shortest join path 'table.store()' is enough.
+:::
+
+-   ❶ When 'storeName' is neither null nor empty string
+
+    1. Associate to the `BookStore` entity via the association `Book.store`
+    
+    2. Add the SQL condition to 'BookStore.name'
+
+-   ❷ When 'storeWebsite' is neither null nor empty string
+
+    1. Associate to the `BookStore` entity via the association `Book.store`
+
+    2. Add the SQL condition to 'BookStore.website'
+
+### Ignore useless table joins
+
+If both the `storeName` and `storeWebsite` parameters are null
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = bookRepository.findBooks(
+    null,
+    null, 
+    null, 
+    null, // storeName
+    null, // storeWebsite
+    null
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = bookRepository.findBooks()
+```
+
+</TabItem>
+</Tabs>
+
+This will cause the 'ilikeIf'/'ilike?' at ❶ and ❷ to be invalid, further causing 'table.store()'/'table.store' to be ignored. 
+That is, although a table join is created, it is not used.
+
+:::tip
+If a table join is created in the DSL but is not actually used, the table join will be automatically ignored and there will be no corresponding SQL join in the generated SQL statement.
+:::
+
+The generated SQL statement is as follows
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+// highlight-next-line
+// No SQL table joins
+```
+
+### Merge Conflicting Table Joins  
+
+If both `storeName` and `storeWebsite` parameters are not null:   
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">  
+
+```java  
+List<Book> books = bookRepository.findBooks(
+    null,
+    null,
+    null,
+    "M", // storeName
+    ".com", // storeWebsite 
+    null
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = bookRepository.findBooks( 
+    storeName = "M",
+    storeWebsite = ".com"  
+)
+```
+
+</TabItem>
+</Tabs>
+
+This will make both ❶ and ❷ `ilikeIf`/`ilike?` effective, which further makes both table joins `table.store()`/`table.store` effective. That is, the table join is created and used multiple times.  
+
+:::tip
+If conflicting table joins of the same association are created multiple times in DSL, all the conflicting joins will be automatically merged into one JOIN in the final SQL without duplicate JOINs.  
+:::  
+
+The generated SQL is:  
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,  
+    tb_1_.EDITION,
+    tb_1_.PRICE, 
+    tb_1_.STORE_ID
+from BOOK tb_1_  
+/* highlight-start */  
+/* Multiple conflicting table joins are merged into one */
+inner join BOOK_STORE tb_2_
+    on tb_1_.STORE_ID = tb_2_.ID
+/* highlight-end */
+where  
+        lower(tb_2_.NAME) like ? /* %m% */
+    and 
+        lower(tb_2_.WEBSITE) like ? /* %.com% */  
+```
+
+## Implicit Subqueries   
+
+### Define implicit subqueries   
+
+In the previous examples, the dynamic table joins are created based on references *(one-to-one or many-to-one)*.
+
+For collection associations *(one-to-many or many-to-many)*, we can create implicit subqueries.  
+
+> Actually, we can also create dynamic table joins based on collection associations using special DSL syntax. But it is more recommended to create implicit subqueries based on collection associations.   
+
+Next, we demonstrate related features using the many-to-many association `Book.authors`.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookRepository.java"  
+@Repository
+public class BookRepository {
+
+    private final JSqlClient sqlClient;
+
+    public BookRepository(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
+    List<Book> findBooks(
+        @Nullable String name,
+        @Nullable BigDecimal minPrice,
+        @Nullable BigDecimal maxPrice,
+        @Nullable String storeName,
+        @Nullable String storeWebsite,
+        @Nullable String authorName,
+        // highlight-next-line
+        @Nullable Gender authorGender, 
+        // highlight-next-line
+        @Nullable Fetcher<Book> fetcher
+    ) {
+        BookTable table = Tables.BOOK_TABLE;
+
+        return sqlClient
+            .createQuery(table)
+            .where(table.name().ilikeIf(name))
+            .where(table.price().betweenIf(minPrice, maxPrice))
+            .where(table.store().name().ilikeIf(storeName))  
+            .where(table.store().website().ilikeIf(storeWebsite))
+            .where(
+                table.authors(author -> ❶  
+                    Predicate.or(
+                        author.firstName().ilikeIf(authorName),
+                        author.lastName().ilikeIf(authorName)
+                    )
+                )
+            )
+            .where(
+                table.authors(author -> ❷
+                    author.gender().eqIf(authorGender)
+                )
+            ) 
+            .select(table.fetch(fetcher))
+            .execute();
+    }
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookRepository.kt"
+@Repository 
+class BookRepository(
+    private val sqlClient: KSqlClient  
+) {
+
+    fun findBooks(
+        name: String? = null,
+        minPrice: BigDecimal? = null,
+        maxPrice: BigDecimal? = null,
+        storeName: String? = null, 
+        storeWebsite: String? = null,
+        authorName: String? = null,
+        authorGender: String? = null,
+        fetcher: Fetcher<Book>? = null
+    ): List<Book> =
+        sqlClient
+            .createQuery(Book::class) {
+                where(table.name `ilike?` name)   
+                where(table.price.`between?`(minPrice, maxPrice))
+                where(table.store.name `ilike?` storeName)  
+                where(table.store.name `ilike?` storeWebsite)
+                where += table.authors { ❶
+                    or(
+                        firstName `ilike?` authorName,  
+                        lastName `ilike?` authorName
+                    )
+                } 
+                where += table.authors { ❷  
+                    gender `eq?` authorGender
+                }
+            }
+            .select(table.fetch(table))
+            .execute()  
+}
+```
+
+</TabItem> 
+</Tabs>  
+
+The two SQL conditions based on lambda expressions at ❶ and ❷ are implicit subqueries.   
+
+> Actually these two implicit subqueries can be merged into one. But two subqueries are created on purpose here to demonstrate subsequent features.    
+
+- ❶ Create the subquery of associated `Author` objects through the many-to-many association `Book.authors` and check if `Author`'s `firstName` or `lastName` property fuzzy matches the `authorName` parameter.    
+
+- ❷ Create the subquery of associated `Author` objects through the many-to-many association `Book.authors` and check if `Author`'s `gender` property equals the `authorGender` parameter.  
+
+:::tip
+If effective, implicit subqueries will eventually generate SQL `exists` statements. The subqueries in SQL `exists` usually have a condition for joining parent and child queries.     
+
+However, from the above code, we can see that all the conditions in subqueries are applied to `Author` objects without the join condition.     
+
+Actually, the join condition between parent and child queries is implicitly included by implicit subqueries. It is always generated automatically. So users only need to write conditions related to associated objects.      
+
+Note: Here we are discussing implicit subqueries instead of normal subqueries *(Jimmer also supports normal subqueries which are not included in the quick tour)*. The rules here do not apply to normal subqueries.   
+:::
+
+### Ignore useless subqueries   
+
+If both `authorName` and `authorGender` parameters are null:      
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java 
+List<Book> books = bookRepository.findBooks(
+    null,  
+    null,
+    null,
+    null,
+    null,
+    null, // authorName
+    null, // authorGender 
+    null  
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">  
+
+```kotlin
+val books = bookRepository.findBooks()  
+```
+
+</TabItem>
+</Tabs>  
+
+- The first implicit subquery will be ignored:   
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    where( ⑤
+        table.authors(author -> ④
+            Predicate.or( ③
+                author.firstName().ilikeIf(authorName), ①
+                author.lastName().ilikeIf(authorName) ②
+            )
+        )
+    )
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    where += ⑤
+        table.authors { ④
+            or( ③
+                firstName `ilike?` authorName, ①
+                lastName `ilike?` authorName ②
+            )
+        }
+    ```
+
+    </TabItem>
+    </Tabs>  
+
+    When `authorName` is null or empty string,   
+
+    -   At ① and ②, `ilikeIf`/`ilike?` will be ignored and return null   
+
+    -   As expressions at ① and ② are null, the `or` expression at ③ will become null    
+
+    -   the `or` expression at ③ being null will lead to no SQL conditions for the subquery,
+        so the preicate based on implicit subquery at ④ is null.   
+
+    -   The expression at ④  being null make `where` at ⑤ become meaningless, so the whole operation will be ignored.    
+
+    That is, the first implicit subquery is ignored.  
+
+- Similarly, the second implicit subquery will also be ignored.  
+
+The final SQL does not contain any subqueries:  
+
+```sql  
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_  
+// highlight-next-line
+// No SQL sub queries 
+```
+
+### Merge conflicting subqueries   
+
+If both `authorName` and `authorGender` parameters are not null:      
+
+<Tabs groupId="language"> 
+<TabItem value="java" label="Java">   
+
+```java 
+List<Book> books = bookRepository.findBooks(
+    null,   
+    null,  
+    null,
+    null,
+    null,
+    "A", // authorName  
+    Gender.MALE, // authorGender
+    null  
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">   
+
+```kotlin  
+val books = bookRepository.findBooks(
+    authorName = "A",
+    authorGender = Gender.MALE  
+)
+```
+
+</TabItem>
+</Tabs>   
+
+In this case, two implicit subqueries based on the same association *(Book.authors)* will take effect.  
+
+:::tip 
+If conflicting implicit subqueries of the same association are created multiple times in DSL, all the conflicting subqueries will be automatically merged into one subquery in the final SQL.
+:::   
+
+The final generated SQL is:
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+where
+    /* Multiple conflicting implicit subqueries are merged into one */
+    exists(
+        select
+            1
+        from AUTHOR tb_2_
+        inner join BOOK_AUTHOR_MAPPING tb_3_
+            on tb_2_.ID = tb_3_.AUTHOR_ID
+        where
+                /* Parent-child query join condition implied by the implicit subquery */
+                tb_3_.BOOK_ID = tb_1_.ID
+            and
+                (
+                    lower(tb_2_.FIRST_NAME) like ? /* %a% */
+                or
+                    lower(tb_2_.LAST_NAME) like ? /* %a% */
+                )
+            and
+                tb_2_.GENDER = ? /* M */
+    )
+```
+
+> There is a restriction on conflicting implicit subquery merges, multiple subqueries that are merged must be inside the same context of and, or, or not.

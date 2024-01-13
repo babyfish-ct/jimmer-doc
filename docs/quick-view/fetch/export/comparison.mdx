@@ -1,0 +1,48 @@
+---  
+sidebar_position: 4  
+title: Comparison
+---  
+
+import { ViewMore } from '@site/src/components/ViewMore';
+import { DtoExplosion } from "@site/src/components/Image";  
+
+The comparison is as below:  
+
+<table>
+<thead>
+<tr>  
+<th></th>
+<th>Return Entities Directly</th> 
+<th>Use DTO Language</th>
+</tr>
+</thead>
+<tbody>
+<tr>  
+<td rowspan="3">Similarities</td>  
+<td colspan="2">Both can present DTO type definitions for the return type of each API to client developers</td>
+</tr>
+<tr>
+<td colspan="2">Both can generate online OpenApi docs and TypeScript RPC code</td>  
+</tr>
+<tr>
+<td colspan="2">Both can show information in code comments to clients</td>
+</tr>
+<tr>
+<td rowspan="3">Differences</td>
+<td>Directly return entities <b>(Easy)</b></td>  
+<td>Need to use DTO language to quickly generate DTO types</td>  
+</tr>
+<tr> 
+<td>Need `@FetchBy` annotation in RestController to supplement type info for entity types </td>  
+<td>Directly develop RestController based on the generated DTO types <b>(Easy)</b></td>
+</tr>
+<tr>  
+<td>More oriented to external API exposure</td>  
+<td>Both external exposure and internal use are applicable</td> 
+</tr>
+</tbody>
+</table>
+
+:::tip  
+No matter how users choose, Jimmer can elegantly solve the <ViewMore buttonText="DTO Explosion Problem"><DtoExplosion/></ViewMore> with development costs unimaginable in other JVM stacks.
+:::

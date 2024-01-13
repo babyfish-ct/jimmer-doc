@@ -1,4 +1,170 @@
 ---
-sidebar_position: 3
+sidebar_position: 3 
 title: Save Long Associations
 ---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { LongAssociation } from '@site/src/components/LongAssociation';  
+
+## What is Long Association  
+
+A long association refers to not only changing the association relationship between the current object and other objects, but also further modifying the associated object.  
+
+For the UI interface, it is usually manifested as nested parent-child forms (or even recursive trees). The forms are diverse, and sub-forms embedded in forms are quite common, as follows:  
+
+<LongAssociation/>  
+
+:::info
+As long as developers are willing, the depth of this nested parent-child form structure can be more than two layers. In theory, the depth can be infinite, which is why it is called a long association.
+:::  
+
+## Write DTO  
+
+In the current example in the [entity definition](../../precondition#book), the more suitable example as a long association to save is the `BookStore` and its associated `books` collection.  
+
+1.  Install DTO language Intellij plugin: https://github.com/ClearPlume/jimmer-dto *(This process is not required but highly recommended)*
+
+2.  Create a new directory `src/main/dto`   
+
+3.  Under `src/main/dto`, create a file `BookStore.dto` and write the following code:   
+
+    ```sh title="BookStore.dto"
+    export org.doc.j.model.BookStore  
+        -> package org.doc.j.model.dto  
+
+    input BookStoreWithLongAssociation {
+        #allScalars(this) 
+        #highlight-next-line 
+        books { // LongAssociation
+            #allScalars(this)
+            -id
+            id(authors) as authorIds 
+        }
+    }
+    ```
+## Generated Code  
+
+After compilation, Jimmer will generate the following code:  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java title="BookStoreWithLongAssociation.java"  
+@GeneratedBy(
+        file = "<yourproject>/src/main/dto/BookStore.dto"  
+)
+public class BookStoreWithLongAssociation implements Input<BookStore> {
+
+    @Nullable
+    private Long id;
+
+    @NotNull
+    private String name;   
+
+    @Nullable
+    private String website;
+
+    @NotNull
+    // highlight-next-line
+    private List<TargetOf_books> books;  
+
+    ...Omit other methods...
+
+    public static class TargetOf_books implements Input<Book> {  
+
+        @NotNull 
+        private String name;
+
+        private int edition;
+
+        @NotNull
+        private BigDecimal price;
+
+        @NotNull
+        private List<Long> authorIds;
+
+        ...Omit other methods...
+    }  
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookStoreWithLongAssociation.kt" 
+@GeneratedBy(
+        file = "<yourproject>/src/main/dto/BookStore.dto"  
+)
+data class BookStoreWithLongAssociation(  
+    val id: Long?
+    val name: String,
+    val website: String?,
+    // highlight-next-line
+    val books: List<TargetOf_books>  
+) : Input<BookStore> {
+    
+    ...Omit other methods...  
+
+    data class TargetOf_authors(  
+        val name: String,
+        val edition: Int, 
+        val price: BigDecimal, 
+        val authorIds: List<Long>
+    )  
+}
+```  
+
+</TabItem>
+</Tabs>  
+
+## Write HTTP Service   
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java title="BookStoreController.java"
+@RestController  
+public class BookStoreController {  
+
+    private final JSqlClient sqlClient;
+
+    public BookController(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient; 
+    }  
+
+    @PutMapping("/bookStore")
+    pubic int saveBookStoreWithLongAssociation(
+        // highlight-next-line
+        @RequestBody BookStoreWithLongAssociation input
+    ) {
+        return sqlClient
+            .save(input)
+            .getTotoalAffectedRowCount();
+    }
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">  
+
+```kotlin title="BookStoreController.java" 
+class BookStoreController(
+    private val sqlClient: KSqlClient   
+) {  
+
+    @PutMapping("/bookStore")  
+    fun saveBookStoreWithLongAssociation(
+        // highlight-next-line
+        @RequestBody input: BookStoreWithLongAssociation  
+    ): Int =
+        sqlClient
+            .save(input)
+            .totoalAffectedRowCount
+}
+```  
+
+</TabItem>
+</Tabs>  
+
+It can be seen that no matter how the Input DTO changes, Jimmer still only needs one method call to complete data saving.

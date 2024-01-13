@@ -435,7 +435,9 @@ public class BookRepository {
         @Nullable String storeName,
         @Nullable String storeWebsite,
         @Nullable String authorName,
+        // highlight-next-line
         @Nullable Gender authorGender,
+        // highlight-next-line
         @Nullable Fetcher<Book> fetcher
     ) {
         BookTable table = Tables.BOOK_TABLE;

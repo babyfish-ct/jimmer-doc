@@ -17,7 +17,7 @@ In actual development, the data to be saved is always submitted by the client an
 
 However, to simplify the discussion here, we directly hard code the object to be saved, so the code for the saved parameters is relatively more.  
 
-- Save simple object  
+-   Save simple object  
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">  
@@ -51,14 +51,14 @@ However, to simplify the discussion here, we directly hard code the object to be
     </Tabs>  
 
     :::note
-    Here, the id attribute of the object to be saved is not specified. Jimmer will determine whether related data exists in the database according to the `name` and `edition` attributes,  
+    Here, the id property of the object to be saved is not specified. Jimmer will determine whether related data exists in the database according to the `name` and `edition` properties,  
     so as to decide whether to `INSERT` or `UPDATE`.  
 
     This is because in the [entity definition](../precondition#book), `Book.name` and `Book.edition` are annotated with `@org.babyfish.jimmer.sql.Key`.  
     This article is just a quick preview and does not go deep into it. Interested parties can view [Mapping Part/Advanced Mapping/Key](../../mapping/advanced/key) and [Mutation Part/Save Command](../../mutation/save-command).
     :::  
 
-- Save data structures formed by multiple objects  
+-   Save data structures formed by multiple objects  
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">  
@@ -129,7 +129,7 @@ Jimmer does not provide configuration `cascade` options for association properti
 
 This absolute flexibility has many wonderful uses. For example, changing the price of book with id 100 to 60, the traditional ORM and Jimmer approaches are different:  
 
-- Traditional ORM (take JPA as an example) adopts find first and then modify, which is intuitive but wastes performance
+-   Traditional ORM (take JPA as an example) adopts find first and then modify, which is intuitive but wastes performance
 
     ```java
     Book book = entityManager.find(Book.class, 100L);
@@ -139,7 +139,7 @@ This absolute flexibility has many wonderful uses. For example, changing the pri
     }
     ```  
 
-- Jimmer's approach, make up a truncated object out of thin air and directly update  
+-   Jimmer's approach, make up a mutilated object and directly update  
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">  
@@ -149,8 +149,8 @@ This absolute flexibility has many wonderful uses. For example, changing the pri
         Objects.createBook(draft -> {
             draft.setId(100L);  
             draft.setPrice(new BigDecimal(60));
-            // No other attributes except `id` and `price` are specified
-            // So no other attributes except `price` will be affected 
+            // No other properties except `id` and `price` are specified
+            // So no other properties except `price` will be affected 
         })  
     ).getTotoalAffectedRowCount() != 0;
     ```  
@@ -163,8 +163,8 @@ This absolute flexibility has many wonderful uses. For example, changing the pri
         new(Book::class).by {
             id = 100L
             price = BigDecimal(60)
-            // No other attributes except `id` and `price` are specified
-            // So no other attributes except `price` will be affected
+            // No other properties except `id` and `price` are specified
+            // So no other properties except `price` will be affected
         } 
     ).totoalAffectedRowCount != 0
     ```
@@ -172,9 +172,10 @@ This absolute flexibility has many wonderful uses. For example, changing the pri
     </TabItem>
     </Tabs>  
 
-## Note: Cannot Expose Directly to the Outside  
+## Note: Cannot Expose Directly
 
-The ability to save data structures of arbitrary shapes is too powerful to expose directly, which will lead to huge security vulnerabilities. For example:   
+The ability to save data structures of arbitrary shapes is too powerful so that it cannot be exposed directly, 
+otherwise, it will lead to huge security vulnerabilities. For example:   
 
 :::warning
 <Tabs groupId="language">
@@ -234,5 +235,5 @@ Even if you try to verify and limit the shape of the `book` parameter, it is sti
 :::warning
 Therefore, the powerful Jimmer data saving capability can only be used as an underlying support internally in the service, and cannot expose this capability directly to remote clients by using dynamic entities as input parameters, because this will result in the security door wide open.
 
-To safely expose Jimmer's data saving capabilities, please continue reading the next article: [Export Functionality](./export)  
+To safely expose Jimmer's data saving capabilities, please continue reading the next article: [Exposing Features](./export)  
 :::

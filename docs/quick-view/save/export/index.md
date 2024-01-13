@@ -1,6 +1,6 @@
 ---  
 sidebar_position: 2
-title: Export Functionality  
+title: Exposing Features
 ---  
 
 In [Save Any Shape/Feature Introduction](../feature), we introduced the powerful data saving capability of Jimmer,  

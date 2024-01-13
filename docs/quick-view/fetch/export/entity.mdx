@@ -295,9 +295,9 @@ This feature is simple. Readers can experiment on their own without elaboration 
 
 ## Flat Associated IDs   
 
-If the associated object has only the `id` attribute, the associated id is better than the associated object. For example:  
+If the associated object has only the `id` property, the associated id is better than the associated object. For example:  
 
--   Using the associated object will lead to a large number of objects with only the id attribute, making the results slightly redundant:  
+-   Using the associated object will lead to a large number of objects with only the id property, making the results slightly redundant:  
 
     ```json 
     {
@@ -334,7 +334,7 @@ If the associated object has only the `id` attribute, the associated id is bette
     }
     ```  
 
-If you choose to directly return entities *(rather than the DTO returns in the [next article](./dto))*, and want to use associated ids, you need to add @IdView attributes to the entities first:  
+If you choose to directly return entities *(rather than the DTO returns in the [next article](./dto))*, and want to use associated ids, you need to add @IdView properties to the entities first:  
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">   
@@ -393,9 +393,9 @@ interface Book {
 
 In the above example:  
 
--   The `storeId` attribute is not a brand new attribute. It is just a view of the `store` attribute, getting the `id` attribute of the associated object represented by the `store` attribute *(or null)*. `storeId` and `store` share the same data.  
+-   The `storeId` property is not a brand new property. It is just a view of the `store` property, getting the `id` property of the associated object represented by the `store` property *(or null)*. `storeId` and `store` share the same data.  
 
--   The `authorIds` attribute is not a brand new attribute either. It is just a view of the `authors` attribute, getting a list of `id` attributes of all associated objects represented by the `authors` attribute. `authorIds` and `authors` share the same data.  
+-   The `authorIds` property is not a brand new property either. It is just a view of the `authors` property, getting a list of `id` properties of all associated objects represented by the `authors` property. `authorIds` and `authors` share the same data.  
 
 Now, write the REST Controller as follows:   
 

@@ -5,7 +5,7 @@ title: Save Arbitrary Shape
 
 The save directive is a very powerful capability of Jimmer. With just one function call, data structures of any shape can be saved.  
 
-Whether the data structure to be saved is simple (such as a single object or even a truncated object) or complex (an aggregate root object holds many associated objects through associative relationships, with unlimited depth and breadth), it can be saved into the database with one function call.
+Whether the data structure to be saved is simple (such as a single object or even a mutilated object) or complex (an aggregate root object holds many associated objects through associative relationships, with unlimited depth and breadth), it can be saved into the database with one function call.
 
 :::tip
 Saving operations for single table records has never been the difficulty of application development. Even without using any ORM framework, it is very easy to achieve with direct use of JDBC.  

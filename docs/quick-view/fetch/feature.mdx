@@ -215,9 +215,9 @@ This is the recommended usage. The Repository is only responsible for filtering,
 
 Next, let's still take the `findBookById` method as an example to show two usage scenarios  
 
-### Query Truncated Objects  
+### Query Mutilated Objects  
 
-Here, we make the returned format simpler than the default object format. That is, return a truncated object that has only part of the properties of the complete object.   
+Here, we make the returned format simpler than the default object format. That is, return a mutilated object that has only part of the properties of the complete object.   
 
 <Tabs groupId="language">  
 <TabItem value="java" label="Java">   
@@ -264,7 +264,7 @@ The result is:
 }
 ```  
 
-In the returned result, the `Book` object has only the `id` and `name` properties, lacking properties such as `edition`, `price` and `store`, which is called a truncated object.  
+In the returned result, the `Book` object has only the `id` and `name` properties, lacking properties such as `edition`, `price` and `store`, which is called a mutilated object.  
 
 ### Query Data Structures Composed of Multiple Objects  
 
@@ -322,7 +322,7 @@ println(
 
 In the above Java code, `Fetchers.BOOK_FETCHER`, `Fetchers.BOOK_STORE_FETCHER`, and `Fetchers.AUTHOR_FETCHER` are code that Jimmer automatically generates at compile time.   
 
-> If you think it is troublesome to frequently write the `Fetchers.` prefix in Java code, you can use static import or simply make the current class directly implement the `Fetchers` interface.  
+> If you think it is troublesome to frequently write the `Fetchers` prefix in Java code, you can use static import or simply make the current class directly implement the `Fetchers` interface.  
 
 This time, we will get a complex data structure with the `Book` object as the aggregate root and the `BookStore` object and `Author` object attached through the association properties.   
 

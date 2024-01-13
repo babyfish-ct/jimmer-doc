@@ -1,4 +1,148 @@
+---  
+sidebar_position: 2
+title: Save Short Associations  
 ---
-sidebar_position: 2 
-title: Save Short Association
----
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ShortAssociation } from '@site/src/components/ShortAssociation';  
+
+## What is Short Association
+
+A short association refers to only changing the association relationship between the current object and other objects, without further modifying the associated object.  
+
+For the UI interface:  
+
+-   Reference association *(one-to-one and many-to-one)* is rendered as a radio menu  
+
+-   Collection association *(one-to-many and many-to-many)* is rendered as a multiple select menu  
+
+For example:
+<ShortAssociation/>  
+
+## Define Input DTO  
+
+1.  Install DTO language Intellij plugin: https://github.com/ClearPlume/jimmer-dto *(This process is not required but highly recommended)*  
+
+2.  Create a new directory `src/main/dto`  
+
+3.  Under `src/main/dto`, create a file `Book.dto` and write the following code:   
+
+    ```sh title="Book.dto"
+    input BookInputWithShortAssociations {
+        #allScalars(this) 
+        #highlight-next-line  
+        id(store) //default alias storeId  
+        #highlight-next-line
+        id(authors) as authorIds
+    }
+    ```  
+
+## Generated Code   
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">  
+
+```java title="BookInputWithShortAssociations.java"  
+@GeneratedBy(
+        file = "<yourproject>/src/main/dto/Book.dto"  
+)
+public class BookInputWithShortAssociations implements Input<Book> {  
+
+    @Nullable
+    private Long id;  
+
+    @NotNull
+    private String name;
+
+    private int edition;
+
+    @NotNull  
+    private BigDecimal price;
+
+    @Nullable
+    // highlight-next-line
+    private Long storeId;
+
+    @NotNull
+    // highlight-next-line 
+    private List<Long> authorIds;
+
+    ...Omit other methods...  
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookInputWithShortAssociations.kt"  
+@GeneratedBy(
+        file = "<yourproject>/src/main/dto/Book.dto"
+)  
+data class BookInputWithShortAssociations(
+    val id: Long?,
+    val name: String,
+    val edition: Int,
+    val price: BigDecimal,
+    // highlight-next-line
+    val storeId: Long? 
+    // highlight-next-line
+    val authorIds: List<Long>  
+) : Input<Book> {
+    ...Omit other methods...   
+}
+```
+
+</TabItem>
+</Tabs>  
+
+## Write HTTP Service  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java title="BookController.java"
+@RestController
+public class BookController {
+
+    private final JSqlClient sqlClient;
+
+    public BookController(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient; 
+    }
+
+    @PutMapping("/book")
+    pubic int saveBookInputWithShortAssociations(
+        // highlight-next-line  
+        @RequestBody BookInputWithShortAssociations input
+    ) {
+        return sqlClient
+            .save(input)
+            .getTotoalAffectedRowCount();
+    } 
+} 
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">  
+
+```kotlin title="BookController.java"  
+class BookController(  
+    private val sqlClient: KSqlClient  
+) {  
+
+    @PutMapping("/book")
+    fun saveBookInputWithShortAssociations( 
+        // highlight-next-line
+        @RequestBody input: BookInputWithShortAssociations
+    ): Int =
+        sqlClient
+            .save(input)
+            .totoalAffectedRowCount  
+}
+```  
+
+</TabItem>
+</Tabs>  
+
+It can be seen that no matter how the Input DTO changes, Jimmer still only needs one method call to complete data saving.

@@ -40,10 +40,12 @@ public interface BaseEntity {
 
     LocalDateTime modifiedTime();
 
+    @Nullable
     @ManyToOne
     @OnDissociate(DissociateAction.SET_NULL)
     User creator();
 
+    @Nullable
     @ManyToOne
     @OnDissociate(DissociateAction.SET_NULL)
     User editor();
@@ -64,11 +66,11 @@ interface BaseEntity {
 
     @ManyToOne
     @OnDissociate(DissociateAction.SET_NULL)
-    val createdBy: User
+    val createdBy: User?
 
     @ManyToOne
     @OnDissociate(DissociateAction.SET_NULL)
-    val modifiedBy: User
+    val modifiedBy: User?
 }
 ```
 

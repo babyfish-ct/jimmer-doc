@@ -6,18 +6,18 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Jimmer, revolutionary ORM for java & kotlin',
+  title: 'Jimmer, a revolutionary integrated solution for java & kotlin, include a revolutionary ORM',
   tagline: 'Not only ORM, but also a complete integrated solution',
   url: 'https://github.com',
   baseUrl: '/jimmer-doc/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'https://raw.githubusercontent.com/babyfish-ct/jimmer/main/logo.png',
+  favicon: 'https://raw.githubusercontent.com/babyfish-ct/jimmer-doc/main/logo.png',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'babyfish-ct', // Usually your GitHub org/user name.
-  projectName: 'jimmer', // Usually your repo name.
+  projectName: 'jimmer-doc', // Usually your repo name.
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -48,7 +48,7 @@ const config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-              'https://github.com/babyfish-ct/jimmer/tree/main/doc/',
+              'https://github.com/babyfish-ct/jimmer-doc/tree/main/',
         },
         // blog: {
         //   showReadingTime: true,
@@ -71,7 +71,7 @@ const config = {
       title: 'Jimmer documentation',
       logo: {
         alt: 'My Site Logo',
-        src: 'https://raw.githubusercontent.com/babyfish-ct/jimmer/main/logo.png',
+        src: 'https://raw.githubusercontent.com/babyfish-ct/jimmer-doc/main/logo.png',
       },
       items: [
         {

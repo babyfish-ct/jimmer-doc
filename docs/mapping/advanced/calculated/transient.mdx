@@ -523,7 +523,7 @@ public class BookStoreNewestBooksResolver implements TransientResolver<Long, Lis
     }
 
     @Override
-    public BigDecimal getDefaultValue() {
+    public List<Long> getDefaultValue() {
         Collections.emptyList(); 
     }
 ```
@@ -544,7 +544,7 @@ class BookStoreNewestBooksResolver : KTransientResolver<Long, List<Long>> { ❶
         ...To be implemented later...
     }
 
-    override fun getDefaultValue(): BigDecimal =
+    override fun getDefaultValue(): List<Long> =
         emptyList()
 }
 ```
@@ -618,7 +618,7 @@ public class BookStoreNewestBooksResolver implements TransientResolver<Long, Lis
     }
     
     @Override
-    public Map<Long, BigDecimal> resolve(Collection<Long> ids) {
+    public Map<Long, List<Long>> resolve(Collection<Long> ids) {
         return Tuple2.toMultiMap(
             sqlClient
                 .createQuery(table)
@@ -663,7 +663,7 @@ class BookStoreNewestBooksResolver(
     private val sqlClient: KSqlClient
 ) : KTransientResolver<Long, List<Long>> {
 
-    override fun resolve(ids: Collection<Long>): Map<Long, BigDecimal> =
+    override fun resolve(ids: Collection<Long>): Map<Long, List<Long>> =
         sqlClient
             .createQuery(Book::class) {
                 where(

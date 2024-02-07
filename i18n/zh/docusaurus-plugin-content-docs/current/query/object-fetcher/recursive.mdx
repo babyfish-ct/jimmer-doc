@@ -110,120 +110,6 @@ insert into tree_node(
 ;
 ```
 
-## 有限深度
-
-自顶向下，抓取两层
-
-<Tabs groupId="language">
-<TabItem value="java" label="Java">
-
-```java
-TreeNodeTable node = Tables.TREE_NODE_TABLE;
-
-List<TreeNode> treeNodes = sqlClient
-    .createQuery(node)
-    .where(node.parentId().isNull())
-    .select(
-        node.fetch(
-            Fetchers.TREE_NODE_FETCHER
-                .name()
-                .childNodes(
-                    Fetchers.TREE_NODE_FETCHER.name(),
-                    // highlight-next-line
-                    it -> it.depth(2)
-            )
-        )
-    )
-    .execute();
-```
-
-</TabItem>
-<TabItem value="kotlin" label="Kotlin">
-
-```kotlin
-val treeNodes = sqlClient
-    .createQuery(TreeNode::class) {
-        where(table.parentId.isNull())
-        select(
-            table.fetchBy {
-                allScalarFields()
-                childNodes({
-                // highlight-next-line
-                    depth(2)
-                }) {
-                    allScalarFields()
-                }
-            }
-        )
-    }
-    .execute()
-```
-
-</TabItem>
-</Tabs>
-
-生成3条SQL
-
-1.  主查询获取根节点（第0层）
-
-    ```sql
-    select
-        tb_1_.NODE_ID,
-        tb_1_.NAME
-    from TREE_NODE as tb_1_
-    where
-    tb_1_.PARENT_ID is null
-    ```
-
-2.  抓取第1层
-
-    ```sql
-    select
-        tb_1_.PARENT_ID,
-        tb_1_.NODE_ID,
-        tb_1_.NAME
-    from TREE_NODE as tb_1_
-    where
-    tb_1_.PARENT_ID in (?)
-    ```
-
-3.  抓取第2层
-
-    ```sql
-    select
-        tb_1_.PARENT_ID,
-        tb_1_.NODE_ID,
-        tb_1_.NAME
-    from TREE_NODE as tb_1_
-    where
-    tb_1_.PARENT_ID in (?, ?)
-    ```
-
-打印的结果如下（原输出是紧凑的，为了方便阅读，这里进行了格式化）:
-```json
-{
-    "id":1,
-    "name":"Home",
-    "childNodes":[
-    {
-        "id":9,
-        "name":"Clothing",
-        "childNodes":[
-            {"id":18,"name":"Man"},
-            {"id":10,"name":"Woman"}
-        ]
-    },{
-        "id":2,
-        "name":"Food",
-        "childNodes":[
-            {"id":6,"name":"Bread"},
-            {"id":3,"name":"Drinks"}
-        ]
-    }
-]
-}
-```
-
 ## 无限递归
 
 自顶向下，抓取无穷层
@@ -232,20 +118,17 @@ val treeNodes = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-TreeNodeTable node = Tables.TREE_NODE_TABLE;
+TreeNodeTable table = Tables.TREE_NODE_TABLE;
 
 List<TreeNode> treeNodes = sqlClient
     .createQuery(node)
-    .where(node.parentId().isNull())
+    .where(table.parentId().isNull())
     .select(
-        node.fetch(
+        table.fetch(
             Fetchers.TREE_NODE_FETCHER
                 .name()
-                .childNodes(
-                    Fetchers.TREE_NODE_FETCHER.name(),
-                    // highlight-next-line
-                    it -> it.recursive()
-                )
+                // highlight-next-line
+                .recursiveChildNodes()
         )
     )
     .execute();
@@ -261,12 +144,8 @@ val treeNodes = sqlClient
         select(
             table.fetchBy {
                 allScalarFields()
-                childNodes({
-                    // highlight-next-line
-                    recursive()
-                }) {
-                    allScalarFields()
-                }
+                // highlight-next-line
+                `childNodes*`()
             }
         )
     }
@@ -276,8 +155,12 @@ val treeNodes = sqlClient
 </TabItem>
 </Tabs>
 
-:::note
-上述代码中`it.recursive()`也可以写作`it.depth(Integer.MAX_VALUE)`，二者完全等价
+:::info
+这里，Java代码中的`recursiveChildNodes`和kotlin代码中的`childNodes*`表示递归查询。
+
+-   Jimmer会自动发现实体中的自关联属性，并在编译时生成这种方法以供用户调用。
+
+-   递归查询无需指定关联对象格式，因为递归查询非常特殊，关联对象格式就是当前对象格式本身。
 :::
 
 生成6条SQL
@@ -341,7 +224,7 @@ val treeNodes = sqlClient
     tb_1_.PARENT_ID in (?, ?, ?, ?, ?, ?, ?, ?)
     ```
 
-6.  抓取第5层
+6.  抓取第5层 *(这个步骤查询不到任何数据，递归结束)*
 
     ```sql
     select
@@ -489,7 +372,128 @@ val treeNodes = sqlClient
 }
 ```
 
-## 开发人员控制每个节点是否递归
+## 有限深度
+
+自顶向下，抓取两层
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = Tables.TREE_NODE_TABLE;
+
+List<TreeNode> treeNodes = sqlClient
+    .createQuery(node)
+    .where(table.parentId().isNull())
+    .select(
+        table.fetch(
+            Fetchers.TREE_NODE_FETCHER
+                .name()
+                .recursiveChildNodes(
+                    // highlight-next-line
+                    it -> it.depth(2)
+                )
+        )
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val treeNodes = sqlClient
+    .createQuery(TreeNode::class) {
+        where(table.parentId.isNull())
+        select(
+            table.fetchBy {
+                allScalarFields()
+                `childNodes*`{
+                    // highlight-next-line
+                    depth(2)
+                }
+            }
+        )
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+生成3条SQL
+
+1.  主查询获取根节点（第0层）
+
+    ```sql
+    select
+        tb_1_.NODE_ID,
+        tb_1_.NAME
+    from TREE_NODE as tb_1_
+    where
+    tb_1_.PARENT_ID is null
+    ```
+
+2.  抓取第1层
+
+    ```sql
+    select
+        tb_1_.PARENT_ID,
+        tb_1_.NODE_ID,
+        tb_1_.NAME
+    from TREE_NODE as tb_1_
+    where
+    tb_1_.PARENT_ID in (?)
+    ```
+
+3.  抓取第2层
+
+    ```sql
+    select
+        tb_1_.PARENT_ID,
+        tb_1_.NODE_ID,
+        tb_1_.NAME
+    from TREE_NODE as tb_1_
+    where
+    tb_1_.PARENT_ID in (?, ?)
+    ```
+
+打印的结果如下（原输出是紧凑的，为了方便阅读，这里进行了格式化）:
+```json
+{
+    "id":1,
+    "name":"Home",
+    "childNodes":[
+        {
+            "id":9,
+            "name":"Clothing",
+            "childNodes":[
+                // highlight-next-line
+                {"id":18,"name":"Man"},
+                // highlight-next-line 
+                {"id":10,"name":"Woman"} 
+            ]
+        },{
+            "id":2,
+            "name":"Food",
+            "childNodes":[
+                // highlight-next-line
+                {"id":6,"name":"Bread"},   
+                // highlight-next-line
+                {"id":3,"name":"Drinks"}
+            ]
+        }
+    ]
+}
+```
+
+:::info
+注意，被标记的4个对象并非表现为`childNodes`属性为`[]`，而是缺少`childNodes`属性。
+
+这表示根本不知道是否有更深的子节点，因为递归过程被人为提前终止。
+:::
+
+## 控制每个节点是否递归
 
 自顶向下，抓取无穷层。但是，对名称为“Clothing”的节点，放弃递归
 
@@ -497,13 +501,13 @@ val treeNodes = sqlClient
 <TabItem value="java" label="Java">
 
 ```java
-TreeNodeTable node = Tables.TREE_NODE_TABLE;
+TreeNodeTable table = Tables.TREE_NODE_TABLE;
 
 List<TreeNode> treeNodes = sqlClient
     .createQuery(node)
-    .where(node.parentId().isNull())
+    .where(table.parentId().isNull())
     .select(
-        node.fetch(
+        table.fetch(
             Fetchers.TREE_NODE_FETCHER
             .name()
             .childNodes(
@@ -651,3 +655,196 @@ val treeNodes = sqlClient
     ]
 }
 ```
+
+:::info
+注意，被标记的对象并非表现为`childNodes`属性为`[]`，而是缺少`childNodes`属性。
+
+这表示根本不知道是否有更深的子节点，因为递归过程被人为提前终止。
+:::
+
+## 多属性递归
+
+Jimmer支持对递归查询多个字关联属性，如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Tree treeNode = sqlClient
+    .findById(
+        Fetchers.TREE_NODE_FETCHER
+                .name()
+                // highlight-next-line
+                .recursiveParent()
+                // highlight-next-line
+                .recursiveChildNodes(),
+        10L
+    );
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val treeNodes = sqlClient
+    .findById(
+        newFetcher(TreeNode::class) {
+            name()
+            // highlight-next-line
+            `parent*`()
+            // highlight-next-line
+            `childNodes*`()
+        }
+    )
+```
+
+</TabItem>
+</Tabs>
+
+这个例子中，对两个关联属性进行递归查询
+
+-   parent: 从当前节点出发，不断向上查询父节点，直到查询到根节点为止
+
+-   childNodes: 从当前节点出发，不断向下查询子节点，直到查询到最深的子节点为止
+
+执行，生成如下6条SQL
+
+1.  查询当前节点
+
+    ```sql
+    select
+        tb_1_.NODE_ID,
+        tb_1_.NAME,
+        tb_1_.PARENT_ID
+    from TREE_NODE tb_1_
+    where
+        tb_1_.NODE_ID = ? /* 10 */
+    ```
+
+2.  向上查询第一层父节点
+
+    ```sql
+    select
+        tb_1_.NODE_ID,
+        tb_1_.NAME,
+        tb_1_.PARENT_ID
+    from TREE_NODE tb_1_
+    where
+        tb_1_.NODE_ID = ? /* 9 */
+    ```
+
+3.  向上查询第二层父节点 *(这个步骤会查询到根节点，向上递归结束)*
+
+    ```sql
+    select
+        tb_1_.NODE_ID,
+        tb_1_.NAME,
+        tb_1_.PARENT_ID
+    from TREE_NODE tb_1_
+    where
+        tb_1_.NODE_ID = ? /* 1 */
+    ```
+
+4.  向下查询第一层子节点
+
+    ```sql
+    select
+        tb_1_.NODE_ID,
+        tb_1_.NAME
+    from TREE_NODE tb_1_
+    where
+        tb_1_.PARENT_ID = ? /* 10 */
+    ```
+
+5.  向下查询第二层子节点
+
+    ```sql
+    select
+        tb_1_.PARENT_ID,
+        tb_1_.NODE_ID,
+        tb_1_.NAME
+    from TREE_NODE tb_1_
+    where
+        tb_1_.PARENT_ID in (
+            ? /* 11 */, ? /* 15 */
+        )
+    ```
+
+6.  向下查询第三层子节点 *(这个步骤查询不到任何数据，向下递归结束)*
+
+    ```sql
+    select
+        tb_1_.PARENT_ID,
+        tb_1_.NODE_ID,
+        tb_1_.NAME
+    from TREE_NODE tb_1_
+    where
+        tb_1_.PARENT_ID in (
+            ? /* 12 */, ? /* 13 */, ? /* 14 */, ? /* 16 */, ? /* 17 */
+        )
+    ```
+
+最终，查询结果为
+
+```json
+{
+    "id":10,
+    "name":"Woman",
+    "parent":{ // 向上递归
+        "id":9,
+        "name":"Clothing",
+        "parent":{
+            "id":1,
+            "name":"Home",
+            "parent":null
+        }
+    },
+    "childNodes":[ // 向下递归
+        {
+            "id":11,
+            "name":"Casual wear",
+            "childNodes":[
+                {
+                    "id":12,
+                    "name":"Dress",
+                    "childNodes":[]
+                },
+                {
+                    "id":13,
+                    "name":"Miniskirt",
+                    "childNodes":[]
+                },
+                {
+                    "id":14,
+                    "name":"Jeans",
+                    "childNodes":[]
+                }
+            ]
+        },
+        {
+            "id":15,
+            "name":"Formal wear",
+            "childNodes":[
+                {
+                    "id":16,
+                    "name":"Suit",
+                    "childNodes":[]
+                },
+                {
+                    "id":17,
+                    "name":"Shirt",
+                    "childNodes":[]
+                }
+            ]
+        }
+    ]
+}
+```
+
+这个例子正确运行了，不难看出，`parent`方向的递归路径和`childNodes`方向的递归路径是完全独立的，向上递归和向下递归不会混合和交替。
+
+因此，我们可以稍微修正一下前面讨论过的为什么递归查询无需指定关联对象格式：
+
+:::info
+关联对象格式 = 当前对象格式中所有没有被递归查询的属性属性 *(无论是否为关联属性)* + 当前被递归查询的属性 *(排除其他被递归查询的属性)*
+:::

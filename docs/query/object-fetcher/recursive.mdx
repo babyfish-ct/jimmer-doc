@@ -114,121 +114,6 @@ insert into tree_node(
 ;
 ```
 
-## Limited Depth
-
-Top-down, fetch two layers:
-
-<Tabs groupId="language">
-<TabItem value="java" label="Java">
-
-```java
-TreeNodeTable node = Tables.TREE_NODE_TABLE;
-
-List<TreeNode> treeNodes = sqlClient
-    .createQuery(node)
-    .where(node.parentId().isNull())
-    .select(
-        node.fetch(
-            Fetchers.TREE_NODE_FETCHER
-                .name()
-                .childNodes(
-                    Fetchers.TREE_NODE_FETCHER.name(),
-                    // highlight-next-line  
-                    it -> it.depth(2)
-            )
-        )
-    )
-    .execute();
-```
-
-</TabItem>  
-<TabItem value="kotlin" label="Kotlin">
-
-```kotlin
-val treeNodes = sqlClient
-    .createQuery(TreeNode::class) {
-        where(table.parentId.isNull())
-        select(
-            table.fetchBy {
-                allScalarFields()
-                childNodes({
-                // highlight-next-line
-                    depth(2)
-                }) {
-                    allScalarFields()
-                }
-            }
-        )
-    }
-    .execute()
-```
-
-</TabItem>
-</Tabs>
-
-3 SQLs are generated:
-
-1.  Main query to fetch root nodes (layer 0)
-
-    ```sql
-    select
-        tb_1_.NODE_ID, 
-        tb_1_.NAME
-    from TREE_NODE as tb_1_ 
-    where
-    tb_1_.PARENT_ID is null
-    ```
-
-2.  Fetch layer 1  
-
-    ```sql
-    select
-        tb_1_.PARENT_ID,
-        tb_1_.NODE_ID, 
-        tb_1_.NAME
-    from TREE_NODE as tb_1_
-    where  
-    tb_1_.PARENT_ID in (?)
-    ```
-
-3.  Fetch layer 2
-
-    ```sql
-    select
-        tb_1_.PARENT_ID,
-        tb_1_.NODE_ID,
-        tb_1_.NAME 
-    from TREE_NODE as tb_1_
-    where
-    tb_1_.PARENT_ID in (?, ?) 
-    ```
-
-    The printed result is (original compact, formatted for readability):
-
-    ```json
-    {
-        "id":1,
-        "name":"Home",
-        "childNodes":[
-        {
-            "id":9,
-            "name":"Clothing",
-            "childNodes":[
-                {"id":18,"name":"Man"},
-                {"id":10,"name":"Woman"}
-            ]
-        },{
-            "id":2,
-            "name":"Food",
-            "childNodes":[
-                {"id":6,"name":"Bread"},
-                {"id":3,"name":"Drinks"}
-            ]
-        }  
-    ]
-    }
-    ```
-
 ## Unlimited Recursion 
 
 Top-down, fetch unlimited layers:
@@ -246,11 +131,8 @@ List<TreeNode> treeNodes = sqlClient
         node.fetch(
             Fetchers.TREE_NODE_FETCHER
                 .name()
-                .childNodes(
-                    Fetchers.TREE_NODE_FETCHER.name(), 
-                    // highlight-next-line
-                    it -> it.recursive()
-                )
+                // highlight-next-line
+                .recursiveChildNodes()
         )
     )
     .execute();
@@ -266,12 +148,8 @@ val treeNodes = sqlClient
         select(
             table.fetchBy {
                 allScalarFields()
-                childNodes({
-                    // highlight-next-line
-                    recursive()
-                }) {
-                    allScalarFields()
-                }
+                // highlight-next-line
+                `childNodes*`()
             }
         )
     }
@@ -281,11 +159,18 @@ val treeNodes = sqlClient
 </TabItem>
 </Tabs>
 
-:::note
-In the code above, `it.recursive()` can also be written as `it.depth(Integer.MAX_VALUE)`, they are equivalent. 
+:::info
+Here, `recursiveChildNodes` in Java code and `childNodes*` in Kotlin code represent recursive queries.
+
+-   Jimmer automatically discovers self-associated properties in entities 
+    and generates such methods at compile time for users to invoke.
+
+-   Recursive queries do not require specifying the shape of associated objects 
+    because recursive queries are very special - 
+    the shape of associated objects is the shape of the current object itself.
 :::
 
-6 SQLs are generated:
+6 SQL statements are generated:
 
 1.  Query root nodes
 
@@ -346,7 +231,7 @@ In the code above, `it.recursive()` can also be written as `it.depth(Integer.MAX
     tb_1_.PARENT_ID in (?, ?, ?, ?, ?, ?, ?, ?)  
     ```
 
-6.  Fetch layer 5
+6.  Fetch layer 5 *(This step does not query any data and the recursive query downstairs ends)*
 
     ```sql
     select
@@ -494,7 +379,130 @@ The printed result is (original compact, formatted for readability):
 }
 ```
 
-## Developer Controls Recursion Per Node
+## Limited Depth
+
+Top-down, fetch two layers:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable node = Tables.TREE_NODE_TABLE;
+
+List<TreeNode> treeNodes = sqlClient
+    .createQuery(node)
+    .where(node.parentId().isNull())
+    .select(
+        node.fetch(
+            Fetchers.TREE_NODE_FETCHER
+                .name()
+                .recursiveChildNodes(
+                    // highlight-next-line  
+                    it -> it.depth(2)
+                )
+        )
+    )
+    .execute();
+```
+
+</TabItem>  
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val treeNodes = sqlClient
+    .createQuery(TreeNode::class) {
+        where(table.parentId.isNull())
+        select(
+            table.fetchBy {
+                allScalarFields()
+                `childNodes*` {
+                    // highlight-next-line
+                    depth(2)
+                }
+            }
+        )
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+3 SQLs are generated:
+
+1.  Main query to fetch root nodes (layer 0)
+
+    ```sql
+    select
+        tb_1_.NODE_ID, 
+        tb_1_.NAME
+    from TREE_NODE as tb_1_ 
+    where
+    tb_1_.PARENT_ID is null
+    ```
+
+2.  Fetch layer 1  
+
+    ```sql
+    select
+        tb_1_.PARENT_ID,
+        tb_1_.NODE_ID, 
+        tb_1_.NAME
+    from TREE_NODE as tb_1_
+    where  
+    tb_1_.PARENT_ID in (?)
+    ```
+
+3.  Fetch layer 2
+
+    ```sql
+    select
+        tb_1_.PARENT_ID,
+        tb_1_.NODE_ID,
+        tb_1_.NAME 
+    from TREE_NODE as tb_1_
+    where
+    tb_1_.PARENT_ID in (?, ?) 
+    ```
+
+The printed result is (original compact, formatted for readability):
+
+```json
+{
+    "id":1,
+    "name":"Home",
+    "childNodes":[
+        {
+            "id":9,
+            "name":"Clothing",
+            "childNodes":[
+                // highlight-next-line
+                {"id":18,"name":"Man"},
+                // highlight-next-line
+                {"id":10,"name":"Woman"}
+            ]
+        },{
+            "id":2,
+            "name":"Food",
+            "childNodes":[
+                // highlight-next-line
+                {"id":6,"name":"Bread"},
+                // highlight-next-line
+                {"id":3,"name":"Drinks"}
+            ]
+        }  
+    ]
+}
+```
+
+:::info 
+Note that the 4 marked objects do not show `childNodes` as `[]`, but lack the `childNodes` property altogether. 
+
+This indicates not knowing at all whether there are deeper child nodes, 
+because the recursive process was prematurely terminated manually. 
+:::
+
+## Control Recursion Per Node
 
 Top-down, fetch unlimited layers. But for the node named "Clothing", stop recursion.
 
@@ -511,8 +519,7 @@ List<TreeNode> treeNodes = sqlClient
         node.fetch(
             Fetchers.TREE_NODE_FETCHER
             .name()
-            .childNodes(
-                Fetchers.TREE_NODE_FETCHER.name(),
+            .recursiveChildNodes(
                 it -> it.recursive(args ->
                     // highlight-next-line
                     !args.getEntity().name().equals("Clothing")
@@ -533,13 +540,11 @@ val treeNodes = sqlClient
         select(
             table.fetchBy {
                 allScalarFields()
-                childNodes({
+                `childNodes*` {
                     recursive {
                         // highlight-next-line
                         entity.name != "Clothing"
                     }
-                }) {
-                    allScalarFields()
                 }
             }
         )
@@ -628,7 +633,7 @@ The printed result is (original compact, formatted for readability):
     "id":1,
     "name":"Home",
     "childNodes":[
-    // highlight-next-line
+        // highlight-next-line
         {"id":9,"name":"Clothing"},
         {
             "id":2,
@@ -654,3 +659,200 @@ The printed result is (original compact, formatted for readability):
     ]
 }
 ```
+
+:::info 
+Note that the marked object does not show `childNodes` as `[]`, but lack the `childNodes` property altogether. 
+
+This indicates not knowing at all whether there are deeper child nodes, 
+because the recursive process was prematurely terminated manually. 
+:::
+
+## Recursion on Multiple Properties
+
+Jimmer supports recursive queries on multiple association properties, as below
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Tree treeNode = sqlClient
+    .findById(
+        Fetchers.TREE_NODE_FETCHER
+                .name()
+                // highlight-next-line
+                .recursiveParent()
+                // highlight-next-line
+                .recursiveChildNodes(),
+        10L
+    );
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val treeNodes = sqlClient
+    .findById(
+        newFetcher(TreeNode::class) {
+            name()
+            // highlight-next-line
+            `parent*`()
+            // highlight-next-line
+            `childNodes*`()
+        }
+    )
+```
+
+</TabItem>
+</Tabs>
+
+This example performs recursive queries on two associated properties:  
+
+- parent: Starting from the current node, keep querying upwards for the parent node until the root node is queried
+
+- childNodes: Starting from the current node, keep querying downwards for child nodes until the deepest child node is queried
+
+When executed, the following 6 SQL statements are generated:  
+
+1.  Query current node
+
+    ```sql
+    select
+        tb_1_.NODE_ID, 
+        tb_1_.NAME,
+        tb_1_.PARENT_ID
+    from TREE_NODE tb_1_ 
+    where
+        tb_1_.NODE_ID = ? /* 10 */
+    ```
+
+2.  Query first layer parent node upstairs  
+
+    ```sql
+    select
+        tb_1_.NODE_ID,
+        tb_1_.NAME, 
+        tb_1_.PARENT_ID
+    from TREE_NODE tb_1_
+    where
+        tb_1_.NODE_ID = ? /* 9 */
+    ```
+
+3.  Query second layer parent node upstairs *(This step will query the root node and the recursive query upstairs ends)*
+
+    ```sql
+    select
+        tb_1_.NODE_ID,
+        tb_1_.NAME,
+        tb_1_.PARENT_ID
+    from TREE_NODE tb_1_
+    where
+        tb_1_.NODE_ID = ? /* 1 */
+    ```
+
+4.  Query first layer child nodes downstairs
+
+    ```sql
+    select
+        tb_1_.NODE_ID, 
+        tb_1_.NAME
+    from TREE_NODE tb_1_
+    where
+        tb_1_.PARENT_ID = ? /* 10 */ 
+    ```
+
+5.  Query second layer child nodes downstairs
+
+    ```sql
+    select
+        tb_1_.PARENT_ID,
+        tb_1_.NODE_ID,
+        tb_1_.NAME
+    from TREE_NODE tb_1_
+    where
+        tb_1_.PARENT_ID in (
+            ? /* 11 */, ? /* 15 */
+        )
+    ```
+
+6.  Query third layer child nodes downstairs *(This step does not query any data and the recursive query downstairs ends)*
+
+    ```sql
+    select
+        tb_1_.PARENT_ID,
+        tb_1_.NODE_ID,
+        tb_1_.NAME
+    from TREE_NODE tb_1_
+    where
+        tb_1_.PARENT_ID in (
+            ? /* 12 */, ? /* 13 */, ? /* 14 */, ? /* 16 */, ? /* 17 */
+        )
+    ```
+            
+Finally, the query result is:
+
+```json  
+{
+    "id":10,
+    "name":"Woman",
+    "parent":{ // Recursive query upstairs  
+        "id":9,
+        "name":"Clothing",
+        "parent":{
+            "id":1, 
+            "name":"Home",
+            "parent":null
+        }
+    },
+    "childNodes":[ // Recursive query downstairs
+        {
+            "id":11,
+            "name":"Casual wear", 
+            "childNodes":[
+                {
+                    "id":12,
+                    "name":"Dress",
+                    "childNodes":[]
+                },
+                {
+                    "id":13, 
+                    "name":"Miniskirt",
+                    "childNodes":[]
+                },
+                {
+                    "id":14,
+                    "name":"Jeans",
+                    "childNodes":[]
+                }
+            ]
+        },
+        {
+            "id":15, 
+            "name":"Formal wear",
+            "childNodes":[
+                {
+                    "id":16,
+                    "name":"Suit",
+                    "childNodes":[]
+                },
+                {
+                    "id":17,
+                    "name":"Shirt",
+                    "childNodes":[] 
+                }
+            ]
+        }
+    ]
+}
+```  
+
+It is not difficult to see from the correct running of this example that the recursive path of the `parent` direction and the recursive path of the `childNodes` direction are completely independent. 
+The recursive query upstairs and downstairs will not be mixed or alternate.  
+
+Therefore, we can slightly correct the previous discussion on why recursive queries do not require specifying the associated object format:
+
+:::info 
+Associated object format = 
+All properties in the current object format that are not recursively queried *(whether associated properties or not)* + 
+The currently recursively queried property *(excluding other recursively queried properties)*
+:::

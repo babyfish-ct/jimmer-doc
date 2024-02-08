@@ -13,10 +13,6 @@ As page numbers increase, pagination query efficiency drops. To solve this, Jimm
 Reverse sorting optimization takes effect only when the following prerequisites are met together:
 
 1.  This feature does not apply to queries that only care about in-page data regardless of total row count before pagination, i.e. `limit(limit, offset)`. It must be queries that care about both in-page data and total count.
-
-    - For Java: `JRepository.Pager.execute` *(with Spring Boot)* or `PagingQueries.execute` *(without Spring Boot)*
-    
-    - For Kotlin: `KConfigurableRootQuery<*, E>.fetchPage`
    
 2.  The template query must have explicit orderBy clause. 
 
@@ -30,36 +26,6 @@ When all above conditions are met, Jimmer flips the sorting of the template quer
 
 Let's look at an example.
 
-The `Page<E>` type in SpringBoot is too complex for demo by printing results here, so we don't use SpringBoot but a custom Page class:
-
-<Tabs groupId="language">
-<TabItem value="java" label="Java">
-
-```java title="Page.java" 
-@lombok.Data
-public class Page<E> {
-    private final int totalRowCount;
-    private final int totalPage;
-    private final List<E> entities;
-}
-```
-
-</TabItem>
-<TabItem value="kotlin" label="Kotlin">
-
-```kotlin title="Page.kt"
-data class Page<E>(
-    val totalRowCount: Int,
-    val totalPage: Int, 
-    val entities: List<E>
-)
-```
-
-</TabItem>
-</Tabs>
-
-The pagination query code:
-
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
@@ -70,21 +36,11 @@ public Page<Book> findBooks(
 ) {
     BookTable table = Tables.BOOK_TABLE;
     
-    return PagingQueries.excute(
-        sqlClient
-            .createQuery(table)
-            .orderBy(table.name().asc(), table.edition().desc())
-            .select(table),
-        pageIndex,
-        pageSize,
-        (entities, totalCount, queryImplementor) -> {
-            return new Page<>(
-                totalCount,
-                (totalCount + pageSize - 1) / pageSize,
-                entities
-            )
-        }
-    );
+    return sqlClient
+        .createQuery(table)
+        .orderBy(table.name().asc(), table.edition().desc())
+        .select(table)
+        .fetchPage(pageIndex, pageSize);
 }
 ```
 
@@ -101,15 +57,7 @@ fun findBooks(
             orderBy(table.name.asc(), table.edition.desc())
             select(table)
         }
-        .fetchPage(
-            pageIndex, pageSize  
-        ) { entities, totalCount, _ ->
-            Page(
-                totalCount,
-                (totalCount + pageSize - 1) / pageSize,
-                entities
-            )
-        }
+        .fetchPage(pageIndex, pageSize)
 ```
 
 </TabItem>
@@ -148,9 +96,7 @@ The result is:
 
 ```json
 {
-    "totalCount":12,
-    "totalPage":6, 
-    "entities":[
+    "rows":[
         {
             "id":11,
             "name":"GraphQL in Action",
@@ -169,7 +115,9 @@ The result is:
                 "id":2
             }
         }
-    ]
+    ],
+    "totalCount":12,
+    "totalPage":6
 }
 ```
 
@@ -198,9 +146,7 @@ The result is:
 
 ```json
 {
-    "totalCount":12,
-    "totalPage":6,
-    "entities":[
+    "rows":[
         {
             "id":3,
             "name":"Learning GraphQL",
@@ -219,6 +165,8 @@ The result is:
                 "id":1
             } 
         }
-    ]
+    ],
+    "totalCount":12,
+    "totalPage":6
 }
 ```

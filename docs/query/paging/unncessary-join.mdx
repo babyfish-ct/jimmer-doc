@@ -83,7 +83,7 @@ ConfigurableRootQuery<BookTable, Book> query = sqlClient
     .orderBy(book.name())
     .select(book);
 
-int rowCount = query.count(); 
+int rowCount = query.fetchUnlimitedCount(); 
 ```
 
 </TabItem>
@@ -103,7 +103,7 @@ val query = sqlClient.createQuery(Book::class) {
     select(table)
 }  
 
-val rowCount = query.count()
+val rowCount = query.fetchUnlimitedCount()
 ```
 
 </TabItem>
@@ -157,7 +157,7 @@ ConfigurableRootQuery<BookTable, Book> query = sqlClient
     .orderBy(book.name()) 
     .select(book);
 
-int rowCount = query.count();
+int rowCount = query.fetchUnlimitedCount();
 ```
 
 </TabItem>
@@ -177,7 +177,7 @@ val query = sqlClient.createQuery(Book::class) {
     select(table)
 }
 
-val rowCount = query.count() 
+val rowCount = query.fetchUnlimitedCount() 
 ```
 
 </TabItem>

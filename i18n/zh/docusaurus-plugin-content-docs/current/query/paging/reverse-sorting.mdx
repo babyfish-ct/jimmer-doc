@@ -14,10 +14,6 @@ import TabItem from '@theme/TabItem';
 
 1.  此功能并不针对只关心页内数据而不关心分页前总行数的的查询，即`limit(limit, offset)`。必须是同时关心页内数据和总行数的查询。
 
-    -   对Java而言：指`JRepository.Pager.execute` *(和Spring Boot配合)* 或`PagingQueries.execute` *(不和Spring Boot配合)*
-
-    -   对Kotlin而言：指`KConfigurableRootQuery<*, E>.fetchPage`
-
 2.  样板查询必须具备明确的orderBy子句。
 
 3.  被查询的那一页的数据在分页前所有数据中偏后。即
@@ -70,21 +66,11 @@ public Page<Book> findBooks(
 ) {
     BookTable table = Tables.BOOK_TABLE;
     
-    return PagingQueries.excute(
-        sqlClient
-            .createQuery(table)
-            .orderBy(table.name().asc(), table.edition().desc())
-            .select(table),
-        pageIndex,
-        pageSize,
-        (entities, totalCount, queryImplementor) -> {
-            return new Page<>(
-                totalCount, 
-                (totalCount + pageSize - 1) / pageSize,
-                entities
-            )
-        }
-    );
+    return sqlClient
+        .createQuery(table)
+        .orderBy(table.name().asc(), table.edition().desc())
+        .select(table)
+        .fetchPage(pageIndex, pageSize);
 }
 ```
 
@@ -101,15 +87,7 @@ fun findBooks(
             orderBy(table.name.asc(), table.edition.desc())
             select(table)
         }
-        .fetchPage(
-            pageIndex, pageSize
-        ) { entities, totalCount, _ ->
-            Page(
-                totalCount, 
-                (totalCount + pageSize - 1) / pageSize,
-                entities
-            )
-        }
+        .fetchPage(pageIndex, pageSize)
 ```
 
 </TabItem>
@@ -147,9 +125,7 @@ offset ? /* 4 */
 得到的结果为
 ```json
 {
-    "totalCount":12,
-    "totalPage":6,
-    "entities":[
+    "rows":[
         {
             "id":11,
             "name":"GraphQL in Action",
@@ -168,7 +144,9 @@ offset ? /* 4 */
                 "id":2
             }
         }
-    ]
+    ],
+    "totalCount":12,
+    "totalPage":6
 }
 ```
 
@@ -196,9 +174,7 @@ offset ? /* 4 */
 得到的结果为
 ```json
 {
-    "totalCount":12,
-    "totalPage":6,
-    "entities":[
+    "rows":[
         {
             "id":3,
             "name":"Learning GraphQL",
@@ -217,7 +193,9 @@ offset ? /* 4 */
                 "id":1
             }
         }
-    ]
+    ],
+    "totalCount":12,
+    "totalPage":6
 }
 ```
 

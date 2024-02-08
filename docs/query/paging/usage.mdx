@@ -30,9 +30,9 @@ Jimmer's feature: The developer only needs to write the `data-query` *(actual `d
 Not only can Jimmer automatically generate `count-query`, it can also optimize `count-query`. This optimization will be discussed in [next article](./unncessary-join).
 :::
 
-## When Used with Spring Boot  
+## When Used with Spring Data  
 
-When used with Spring Boot, developers derive custom Repository interfaces from `JRepository/KRepository`, and there are two options for adding query methods to the custom interfaces:
+When used with Spring Data, developers derive custom Repository interfaces from `JRepository/KRepository`, and there are two options for adding query methods to the custom interfaces:
 
 -   Declare abstract methods according to certain conventions, and let Jimmer automatically implement them.
 
@@ -60,10 +60,9 @@ public interface BookRepository<Book, Long> extends JRepository<Book, Long> {
     default Page<Book> findBooks(
         Pageable pageable,
         @Nullable String name,
-        @Nullable String storeName
+        @Nullable String storeName,
     ) {
-        return pager(pageable).execute( ❶
-            sql()
+        return sql()
                 .createQuery(table)
                 .whereIf(
                     name != null && !name.isEmpty(),
@@ -73,10 +72,13 @@ public interface BookRepository<Book, Long> extends JRepository<Book, Long> {
                     storeName != null && !storeName.isEmpty(),
                     table.store().name().eq(storeName)
                 )
-                .orderBy(SpringOrders.toOrders(table, pageable.getSort())) ❷
+                .orderBy(SpringOrders.toOrders(table, pageable.getSort())) ❶
                 .select(table)
-        ❸
-        );
+                .fetchPage( ❷
+                    pageable.getPageNumber(), 
+                    pageable.getPageSize()
+                    SpringPageFactory.getInstance()
+                );
     }
 }
 ```
@@ -105,34 +107,25 @@ interface BookRepository<Book, Long> : KRepository<Book, Long> {
                 storeName?.takeIf { it.isNotEmpty() }?.let {
                     where(table.store.name eq it)
                 }
-                orderBy(pageable.sort) ①
+                orderBy(pageable.sort) ❶
                 select(table)
             }
-            .fetchPage( ②
-                pageable.pageNumber, 
-                pageable.pageSize
-            )
+            .fetchSpringPage(pageable) ❷
 }
 ```
 
 </TabItem>
 </Tabs>
 
--   ❶ or ②
+-   ❶ Since Spring Data's `Pageable` contains dynamic sorting, dynamic sorting needs to be applied. 
 
-    -   ❶ Java:
-    
-        Call the `pager` method of the super interface to create a helper object, and call the `execute` method of that object to implement paged query.
-        
-        The parameter of `execute` is an unexecuted query, which serves as the template for the `data-query`:
-        
-    -   ② Kotlin:
-        
-        Kotlin API extends `fetchPage` function for `KConfigurableRootQuery<*, E>` type, calling it implements paged query.
-        
--   ❷ or ① Since Spring Data's `Pageable` contains dynamic sorting, dynamic sorting needs to be applied.  
+-   ❷ Pagination query, returns `org.springframework.data.domain.Page<Book>` type of object
 
--   ❸ After `select`, the query itself is not executed, indicating this is an unexecuted query.
+    > Jimmer pagination can use any `Page` object, whether it's Spring Data's `Page`, Jimmer's own `Page`, or even `Page` defined by third parties.
+    >
+    > Here, the Java code uses `SpringPageFactory.getInstance()` to request the current pagination operation to return Spring Data's `Page`.
+    >
+    > In fact, the Kotlin code can also use `SpringPageFactory.getInstance()` for the same purpose, but in Kotlin there is a more convenient extension method `fetchSpringPage()`.
 
 If we execute:  
 
@@ -149,7 +142,7 @@ Page<Book> page = bookRepository.findBooks(
 ```
 
 :::caution
-In SpringData, the page number of `Pageable` starts from 0 instead of 1, so this queries the second page.
+In Spring Data, the page number of `Pageable` starts from 0 instead of 1, so this queries the second page.
 :::
 
 It will generate two SQL statements:
@@ -180,44 +173,41 @@ It will generate two SQL statements:
     limit ? /* 5 */, ? /* 5 */ 
     ```
 
-This example allows us to understand Jimmer's pagination functionality, but Jimmer's Spring API hides some details. Therefore, next we bypass Spring Boot and explain more clearly from a lower level perspective.
+This example allows us to understand Jimmer's pagination functionality, but Jimmer's Spring API hides some details. Therefore, next we bypass Spring Data and explain more clearly from a lower level perspective.
 
-## When Not Using Spring Boot  
+## When Not Using Spring Data  
 
-### Define Your Own Page Class  
+Here is the English translation:
 
-When not using SpringBoot, we need to define some common code.
+### Jimmer's Page object
 
-Obviously when not using SpringBoot, we cannot use `org.springframework.data.domain.Page`.
+Since Spring Data is not used, naturally `org.springframework.data.domain.Page<T>` cannot be used. 
 
-So according to project requirements, define your own reusable `Page` class as follows:
-
-<Tabs groupId="language">
-<TabItem value="java" label="Java">  
+For this, Jimmer defines `org.babyfish.jimmer.Page<T>` with the following definition:
 
 ```java title="Page.java"
-@lombok.Data
-public class Page<E> {
+package org.babyfish.jimmer;
+
+public class Page<T> {
+
+    private final List<T> rows;
+    
     private final int totalRowCount;
-    private final int totalPage;
-    private final List<E> entities;
+    
+    private final int totalPageCount;
+    
+    ...Omit other fields...
+    
 }
 ```
 
-</TabItem>
+It can be seen that Jimmer's own `Page<T>` is much simpler than Spring Data's `Page<T>`, the differences are:
 
-<TabItem value="kotlin" label="Kotlin">
+:::info
+- `org.springframework.data.domain.Page<T>` is designed for server-side paging so that the page must still maintain its previous state after being refreshed. A lot of information *(such as tedious sort information)* needs to be returned verbatim to the client, so it is very complex.
 
-```kotlin title="Page.kt" 
-data class Page<E>(
-    val totalRowCount: Int,
-    val totalPage: Int,
-    val entities: List<E>
-)
-```
-
-</TabItem>
-</Tabs>
+- `org.babyfish.jimmer.Page<T>` is designed for rich client pages. Such client pages are stateful applications themselves, the server only needs to provide pure data services, so returning just the bare necessities is enough, hence very simple. 
+:::
 
 ### Implement Business Logic  
 
@@ -231,8 +221,7 @@ public Page<Book> findBooks(
     @Nullable String name,
     @Nullable String storeName  
 ) {
-  // highlight-next-line
-  return PagingQueries.execute(
+  return
     sqlClient
         .createQuery(table)
         .whereIf(
@@ -244,17 +233,9 @@ public Page<Book> findBooks(
             table.store().name().eq(storeName)
         )
         .orderBy(table.name().asc(), table.edition().desc())
-        .select(table),
-    pageIndex,
-    pageSize, 
-    (entities, totalCount, queryImplementor) ->
-        // highlight-next-line
-        new Page<>(
-            totalCount,
-            (totalCount + pageSize - 1) / pageSize,
-            entities,
-        )
-  );
+        .select(table)
+        // highlight-next-line  
+        .fetchPage(pageIndex, pageSize);
 }
 ```
 
@@ -281,32 +262,17 @@ fun findBooks(
         select(table)
     }
     // highlight-next-line  
-    .fetchPage(
-        pageIndex,
-        pageSize
-    ) { entities, totalCount, _ ->
-        // highlight-next-line
-        Page(
-            totalCount,
-            (totalCount + pageSize - 1) / pageSize,
-            entities,
-        )
-    }
+    .fetchPage(pageIndex, pageSize)
 ```
 
 </TabItem> 
 </Tabs>
 
-The finally generated SQL is the same as the example discussed earlier with SpringBoot, so I won't repeat it here.
+The finally generated SQL is the same as the example discussed earlier with Spring Data, so I won't repeat it here.
 
 ## Internal Mechanism  
 
-In the above examples, we discussed language differences between Java and Kotlin, as well as using or not using SpringBoot. The paged query code in these situations is as follows:
-
-||Using SpringBoot|Not Using SpringBoot|
-|---|---|---|
-|Java|pager(`page-args`).execute(`query`)|PagingQueries.execute(`query`, `page-args`, `page-creator`)|  
-|Kotlin|`query`.fetchPage(`page-args`)|`query`.fetchPage(`page-args`) { `page-creator` }|
+In the above examples, we discussed language differences between Java and Kotlin, as well as using or not using Spring Data.
 
 The underlying logic of these behaviors is the same, taking Java as an example:
 
@@ -326,7 +292,7 @@ ConfigurableRootQuery<Book> query = ❶
     )
     .orderBy(table.name().asc(), table.edition().desc())
 
-int totalCount = query.count(); ❷
+int totalCount = query.fetchUnlimitedCount(); ❷
 int totalPage = (totalCount + pageSize - 1) / pageSize;
 if (pageIndex >= totalPage) {
     return new Page<Book>(totalCount, totalPage, Collections.emptyList()); 
@@ -349,16 +315,16 @@ To simplify the discussion, this pseudocode does not consider [reverse sorting o
 
 -   ❷ Based on the original template query without modification, generate the `count-query`, then execute the `count-query` to get the total number of rows before pagination.
 
-    Here the `count` method is a shortcut API, and its underlying logic is:
+    Here the `fetchUnlimitedCount` method is a shortcut API, and its underlying logic is:
 
     ```java
     public interface ConfigurableRootQuery<T extends Table<?>, R> extends ... {
 
-        default int count() {
+        default int fetchUnlimitedCount() {
             return count(null);
         }
         
-        default int count(Connection con) {
+        default int fetchUnlimitedCount(Connection con) {
             return reselect((q, t) -> q.select(t.count()))
                 .withoutSortingAndPaging()
                 .execute(con)
@@ -416,7 +382,7 @@ Here `limit(limit, offset)` sets the pagination range.
 
 Different databases have vastly different support for pagination queries. So when creating SqlClient, the dialect needs to be specified.
 
--   Spring Boot configuration method:  
+-   Spring Data configuration method:  
 
     Add a configuration in `application.properties` or `application.yml` called `jimmer.dialect` with value as the class name of the dialect class provided by Jimmer:
     
@@ -425,7 +391,7 @@ Different databases have vastly different support for pagination queries. So whe
         dialect: org.babyfish.jimmer.sql.dialect.H2Dialect
     ```
 
--   Non-Spring Boot configuration method:
+-   Non-Spring Data configuration method:
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -547,7 +513,7 @@ The object fetcher defines the shape of the queried object, allowing the queried
 After the paged query is completed, Jimmer launches queries for other association objects, only for objects within a single page.
 :::
 
-Take the Spring Boot mode as an example. Now, let's modify the `BookRepository` we discussed earlier to support object fetchers:
+Take the Spring Data mode as an example. Now, let's modify the `BookRepository` we discussed earlier to support object fetchers:
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -569,24 +535,27 @@ public interface BookRepository<Book, Long> extends JRepository<Book, Long> {
         @Nullable String name,
         @Nullable String storeName
     ) {
-        // highlight-next-line
-        return pager(pageable).execute(
-            sql()
-                .createQuery(table)
-                .whereIf(
-                    name != null && !name.isEmpty(),
-                    table.name().eq(name)
-                )
-                .whereIf(
-                    storeName != null && !storeName.isEmpty(),
-                    table.store().name().eq(storeName)
-                )
-                .orderBy(SpringOrders.toOrders(table, pageable.getSort()))
-                .select(
-                    // highlight-next-line
-                    table.fetch(fetcher)
-                )
-        );
+        return sql()
+            .createQuery(table)
+            .whereIf(
+                name != null && !name.isEmpty(),
+                table.name().eq(name)
+            )
+            .whereIf(
+                storeName != null && !storeName.isEmpty(),
+                table.store().name().eq(storeName)
+            )
+            .orderBy(SpringOrders.toOrders(table, pageable.getSort()))
+            .select(
+                // highlight-next-line
+                table.fetch(fetcher)
+            )
+            // highlight-next-line
+            .fetchPage(
+                pageable.getPageNumber(), 
+                pageable.getPageSize(), 
+                SpringPageFactory.getInstance()
+            );
     }
 }
 ```
@@ -624,10 +593,7 @@ interface BookRepository<Book, Long> : KRepository<Book, Long> {
                 )
             }
             // highlight-next-line
-            .fetchPage(
-                pageable.pageNumber,
-                pageable.pageSize
-            )
+            .fetchSpringPage(pageable)
 }
 ```
 
@@ -749,3 +715,126 @@ It will generate the following 4 SQL statements:
             ? /* 1 */, ? /* 9 */
         )
     ```
+
+Finally, in the obtained pagination, each object conforms to the data structure of the object fetcher.
+
+```json
+{
+    // hightlight-next-line
+    "content":[ // Current page
+        {
+            "id":12,
+            "name":"GraphQL in Action",
+            "edition":3,
+            "price":80,
+            "store":{
+                "id":2,
+                "name":"MANNING",
+                "website":null
+            },
+            "authors":[
+                {
+                    "id":5,
+                    "firstName":"Samer",
+                    "lastName":"Buna",
+                    "gender":"MALE"
+                }
+            ]
+        },
+        {
+            "id":11,
+            "name":"GraphQL in Action",
+            "edition":2,
+            "price":81,
+            "store":{
+                "id":2,
+                "name":"MANNING",
+                "website":null
+            },
+            "authors":[
+                {
+                    "id":5,
+                    "firstName":"Samer",
+                    "lastName":"Buna",
+                    "gender":"MALE"
+                }
+            ]
+        },
+        {
+            "id":10,
+            "name":"GraphQL in Action",
+            "edition":1,
+            "price":82,
+            "store":{
+                "id":2,
+                "name":"MANNING",
+                "website":null
+            },
+            "authors":[
+                {
+                    "id":5,
+                    "firstName":"Samer",
+                    "lastName":"Buna",
+                    "gender":"MALE"
+                }
+            ]
+        },
+        {
+            "id":3,
+            "name":"Learning GraphQL",
+            "edition":3,
+            "price":51,
+            "store":{
+                "id":1,
+                "name":"O'REILLY",
+                "website":null
+            },
+            "authors":[
+                {
+                    "id":2,
+                    "firstName":"Alex",
+                    "lastName":"Banks",
+                    "gender":"MALE"
+                },
+                {
+                    "id":1,
+                    "firstName":"Eve",
+                    "lastName":"Procello",
+                    "gender":"FEMALE"
+                }
+            ]
+        },
+        {
+            "id":2,
+            "name":"Learning GraphQL",
+            "edition":2,
+            "price":55,
+            "store":{
+                "id":1,
+                "name":"O'REILLY",
+                "website":null
+            },
+            "authors":[
+                {
+                    "id":2,
+                    "firstName":"Alex",
+                    "lastName":"Banks",
+                    "gender":"MALE"
+                },
+                {
+                    "id":1,
+                    "firstName":"Eve",
+                    "lastName":"Procello",
+                    "gender":"FEMALE"
+                }
+            ]
+        }
+    ],
+    // hightlight-next-line
+    "totalPages":3, // Total page count is 3
+    // hightlight-next-line
+    "totalElements":12, // Total row count before pagination is 12
+
+    ...Spring Data's Page object has too many properties, ommitted...
+}
+```

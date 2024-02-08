@@ -30,7 +30,7 @@ Jimer分页的特色：开发人员只需编写`data-query`，框架自动生成
 Jimmer不但可以自动生成`count-query`，还可以做到优化`count-query`。这个优化会在[下一篇文章](./unncessary-join)中讨论。
 :::
 
-## 配合SpringBoot使用时
+## 配合Spring Data使用时
 
 配合SpringBoot使用时，开发人员从`JRepository/KRepository`派生自定义的Repository接口，为自定义接口添加查询方法有两种选择：
 
@@ -51,6 +51,7 @@ Jimmer不但可以自动生成`count-query`，还可以做到优化`count-query`
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+org.babyfish.jimmer.spring.repository.support.SpringPageFactory;
 ...省略其他导入...
 
 public interface BookRepository<Book, Long> extends JRepository<Book, Long> {
@@ -62,7 +63,7 @@ public interface BookRepository<Book, Long> extends JRepository<Book, Long> {
         @Nullable String name,
         @Nullable String storeName
     ) {
-        return pager(pageable).excute( ❶
+        return 
             sql()
                 .createQuery(table)
                 .whereIf(
@@ -73,10 +74,13 @@ public interface BookRepository<Book, Long> extends JRepository<Book, Long> {
                     storeName != null && !storeName.isEmpty(),
                     table.store().name().eq(storeName)
                 )
-                .orderBy(SpringOrders.toOrders(table, pageable.getSort())) ❷
+                .orderBy(SpringOrders.toOrders(table, pageable.getSort()))  ❶
                 .select(table)
-                ❸
-        );
+                .fetchPage( ❷
+                    pageable.getPageNumber(), 
+                    pageable.getPageSize()
+                    SpringPageFactory.getInstance()
+                );
     }
 }
 ```
@@ -104,34 +108,25 @@ interface BookRepository<Book, Long> : KRepository<Book, Long> {
                 storeName?.takeIf { it.isNotEmpty() }?.let {
                     where(table.store.name eq it)
                 }
-                orderBy(pageable.sort) ①
+                orderBy(pageable.sort) ❶
                 select(table)
             }
-            .fetchPage( ②
-                pageable.pageNumber, 
-                pageable.pageSize
-            )
+            .fetchSpringPage(pageable) ❷
 }
 ```
 
 </TabItem>
 </Tabs>
 
--   ❶或② 
+-   ❶ 由于Spring Data的`Pageabe`包含了动态排序，所以需要应用动态排序。
 
-    -   ❶ Java: 
-    
-        调用超接口的`pager`方法创建一个辅助对象，并调用该对象的方法`execute`实现分页查询。
+-   ❷ 分页查询，返回`org.springframework.data.domain.Page<Book>`类型的对象
 
-        `execute`的参数是一个未执行的查询，该查询作为`data-query`的模板：
-    
-    -   ② Kotlin:
-
-        Kotlin API为`KConfigurableRootQuery<*, E>`类型扩展了`fetchPage`函数，调用之实现分页查询。
-
--   ❷或① 由于Spring Data的`Pageabe`包含了动态排序，所以需要应用动态排序。
-
--   ❸ `select`之后并没有调用查询本身的`execute`，说明这是一个未执行的查询。
+    > Jimmer分页可以使用任何`Page`对象，无论是Spring Data的`Page`，还是Jimmer自身的`Page`，甚至第三方定义的`Page`。
+    >
+    > 这里，Java代码采用`SpringPageFactory.getInstance()`要求当前分页操作返回Spring Data的`Page`。
+    > 
+    > 事实上，Kotlin代码也可以使用`SpringPageFactory.getInstance()`来时想通目的，但是，kotlin下有更便捷的扩展方法`fetchSpringPage`。
 
 如果我们执行
 
@@ -179,43 +174,35 @@ SpringData中`Pageabe`的页码从0开始，而非从1开始，所以，这里�
     limit ? /* 5 */ offset ? /* 5 */
     ```
 
-这个例子可以让我们明白Jimmer分页功能，但是，Jimmer的Spring API隐藏了一些细节。因此，接下来，我们绕开Spring Boot，从更底层的角度更清晰地阐述。
+这个例子可以让我们明白Jimmer分页功能，但是，Jimmer的Spring API隐藏了一些细节。因此，接下来，我们绕开Spring Data，从更底层的角度更清晰地阐述。
 
-## 不配合SpringBoot使用时
+## 不配合Spring Data使用时
 
-### 定义自己的Page类
+### Jimmer的Page对象
 
-在不使用SpringBoot时，我们需要定义一点通用代码。
+既然不使用Spring Data，那么自然无法使用`org.springframework.data.domain.Page<T>`。
 
-既然不使用SpringBoot，那么自然无法使用`org.springframework.data.domain.Page`。
-
-因此，根据项目要求，定义自己的可重用类`Page`，如下
-
-<Tabs groupId="language">
-<TabItem value="java" label="Java">
+为此，Jimmer定义了`org.babyfish.jimmer.Page<T>`类型，定义如下
 
 ```java title="Page.java"
-@lombok.Data
-public class Page<E> {
+package org.babyfish.jimmer;
+
+public class Page<T> {
+    private final List<T> rows;
     private final int totalRowCount;
-    private final int totalPage;
-    private final List<E> entities;
+    private final int totalPageCount;
+
+    ...省略其他字段...
 }
 ```
 
-</TabItem>
-<TabItem value="kotlin" label="Kotlin">
+可以看出，Jimmer自身的`Page<T>`比Spring Data的`Page<T>`简单得多，二者区别如下
 
-```kotlin title="Page.kt"
-data class Page<E>(
-    val totalRowCount: Int,
-    val totalPage: Int,
-    val entities: List<E>
-)
-```
+:::info
+-   `org.springframework.data.domain.Page<T>`为服务端页面而设计，为了让页面在刷新后仍然能保持之前的状态，大量的信息 *(比如繁琐的排序信息)* 需要被原样返回给客户端，所以非常复杂。
 
-</TabItem>
-</Tabs>
+-   `org.babyfish.jimmer.Page<T>`为前后端独立页面的设计，这种客户端页面自身是一个有状态应用，服务端提供纯数据服务即可，仅返回最必要的信息即可，所以非常简单。
+:::
 
 ### 实现业务代码
 
@@ -228,10 +215,11 @@ public Page<Book> findBooks(
     int pageSize,
     @Nullable String name,
     @Nullable String storeName
+
+    // such as "price desc, name asc"
+    @Nullable String orderCode
 ) {
-    // highlight-next-line
-    return PagingQueries.execute(
-        sqlClient
+    return sqlClient
             .createQuery(table)
             .whereIf(
                 name != null && !name.isEmpty(),
@@ -241,18 +229,10 @@ public Page<Book> findBooks(
                 storeName != null && !storeName.isEmpty(),
                 table.store().name().eq(storeName)
             )
-            .orderBy(table.name().asc(), table.edition().desc)
-            .select(table),
-        pageIndex,
-        pageSize,
-        (entities, totalCount, queryImplementor) ->
+            .orderBy(Order.makeOrders(table, orderCode))
+            .select(table)
             // highlight-next-line
-            new Page<>(
-                    totalCount,
-                    (totalCount + pageSize - 1) / pageSize,
-                    entities,
-            )
-    );
+            .fetchPage();
 }
 ```
 
@@ -264,7 +244,10 @@ fun findBooks(
     pageIndex: Int,
     pageSize: Int,
     name: String? = null,
-    storeName: String? = null
+    storeName: String? = null,
+    
+    // such as "price desc, name asc"
+    orderCode: String? = null
 ): Page<Book> =
     sql
         .createQuery(Book::class) {
@@ -274,36 +257,21 @@ fun findBooks(
             storeName?.takeIf { it.isNotEmpty() }?.let {
                 where(table.store.name eq it)
             }
-            orderBy(table.name.asc(), table.edition.desc())
+            orderBy(table.makeOrders(orderCode))
             select(table)
         }
         // highlight-next-line
-        .fetchPage(
-            pageIndex,
-            pageSize
-        ) { entities, totalCount, _ ->
-            // highlight-next-line
-            Page(
-                totalCount,
-                (totalCount + pageSize - 1) / pageSize,
-                entities,
-            )
-        }
+        .fetchPage()
 ```
 
 </TabItem>
 </Tabs>
 
-最终生成的SQL和前面讨论过的那个给予SpringBoot的例子相同，这里不再赘述。
+最终生成的SQL和前面讨论过的那个给予Spring Data的例子相同，这里不再赘述。
 
 ## 内部机制
 
-在上面的例子中，我们讨论了Java和Kotlin的语言差异，以及是否使用SpringBoot的各种情况。这些情况下的分页查询代码如下：
-
-||使用SpringBoot|不使用SpringBoot|
-|---|---|---|
-|Java|pager(`page-args`).execute(`query`)|PagingQueries.execute(`query`, `page-args`, `page-creator`)|
-|Kotlin|`query`.fetchPage(`page-args`)|`query`.fetchPage(`page-args`) { `page-creator` }|
+在上面的例子中，我们讨论了Java和Kotlin的语言差异，以及是否使用SpringData 的各种情况。
 
 这些行为的底层逻辑是一样的，仅以Java为例
 
@@ -323,7 +291,7 @@ ConfigurableRootQuery<Book> query = ❶
         )
         .orderBy(table.name().asc(), table.edition().desc)
 
-int totalCount = query.count(); ❷
+int totalCount = query.fetchUnlimitedCount(); ❷
 int totalPage = (totalCount + pageSize - 1) / pageSize;
 if (pageIndex >= totalPage) {
     return new Page<Book>(totalCount, totalPage, Collections.emtptyList());
@@ -332,9 +300,9 @@ List<Book> entities = query
     .limit(pageSize, pageIndex * pageSize) ❸
     .execute(); ❹
 return new Page( ❺
+    entities,
     totalCount,
-    totalPage,
-    entities
+    totalPage
 )
 ```
 
@@ -346,16 +314,16 @@ return new Page( ❺
 
 -   ❷ 在不修改原样板查询的基础上，生成`count-query`，再执行`count-query`得到分页前所有数据的行数
 
-    这里的`count`方法是快捷API，其底层逻辑为
+    这里的`fetchUnlimitedCount`方法是快捷API，其底层逻辑为
 
     ```java
     public interface ConfigurableRootQuery<T extends Table<?>, R> extends ... {
 
-        default int count() {
+        default int fetchUnlimitedCount() {
             return count(null);
         }
 
-        default int count(Connection con) {
+        default int fetchUnlimitedCount(Connection con) {
             return reselect((q, t) -> q.select(t.count()))
                 .withoutSortingAndPaging()
                 .execute(con)
@@ -565,24 +533,27 @@ public interface BookRepository<Book, Long> extends JRepository<Book, Long> {
         @Nullable String name,
         @Nullable String storeName
     ) {
-        // highlight-next-line
-        return pager(pageable).excute(
-            sql()
-                .createQuery(table)
-                .whereIf(
-                    name != null && !name.isEmpty(),
-                    table.name().eq(name)
-                )
-                .whereIf(
-                    storeName != null && !storeName.isEmpty(),
-                    table.store().name().eq(storeName)
-                )
-                .orderBy(SpringOrders.toOrders(table, pageable.getSort()))
-                .select(
-                    // highlight-next-line
-                    table.fetch(fetcher)
-                )
-        );
+        return sql()
+            .createQuery(table)
+            .whereIf(
+                name != null && !name.isEmpty(),
+                table.name().eq(name)
+            )
+            .whereIf(
+                storeName != null && !storeName.isEmpty(),
+                table.store().name().eq(storeName)
+            )
+            .orderBy(SpringOrders.toOrders(table, pageable.getSort()))
+            .select(
+                // highlight-next-line
+                table.fetch(fetcher)
+            )
+            // highlight-next-line
+            .fetchPage(
+                pageable.getPageNumber(), 
+                pageable.getPageSize(),
+                SpringPageFactory.getInstance()
+            )
     }
 }
 ```
@@ -619,10 +590,7 @@ interface BookRepository<Book, Long> : KRepository<Book, Long> {
                 )
             }
             // highlight-next-line
-            .fetchPage(
-                pageable.pageNumber,
-                pageable.pageSize
-            )
+            .fetchSpringPage(pageable)
 }
 ```
 
@@ -742,3 +710,126 @@ val page = bookRepository.findBooks(
             ? /* 1 */, ? /* 9 */
         )
     ```
+
+最终，在所得的分页中，每一个都是符合对象抓取器的数据结构。
+
+```json
+{
+    // hightlight-next-line
+    "content":[ // 当前页
+        {
+            "id":12,
+            "name":"GraphQL in Action",
+            "edition":3,
+            "price":80,
+            "store":{
+                "id":2,
+                "name":"MANNING",
+                "website":null
+            },
+            "authors":[
+                {
+                    "id":5,
+                    "firstName":"Samer",
+                    "lastName":"Buna",
+                    "gender":"MALE"
+                }
+            ]
+        },
+        {
+            "id":11,
+            "name":"GraphQL in Action",
+            "edition":2,
+            "price":81,
+            "store":{
+                "id":2,
+                "name":"MANNING",
+                "website":null
+            },
+            "authors":[
+                {
+                    "id":5,
+                    "firstName":"Samer",
+                    "lastName":"Buna",
+                    "gender":"MALE"
+                }
+            ]
+        },
+        {
+            "id":10,
+            "name":"GraphQL in Action",
+            "edition":1,
+            "price":82,
+            "store":{
+                "id":2,
+                "name":"MANNING",
+                "website":null
+            },
+            "authors":[
+                {
+                    "id":5,
+                    "firstName":"Samer",
+                    "lastName":"Buna",
+                    "gender":"MALE"
+                }
+            ]
+        },
+        {
+            "id":3,
+            "name":"Learning GraphQL",
+            "edition":3,
+            "price":51,
+            "store":{
+                "id":1,
+                "name":"O'REILLY",
+                "website":null
+            },
+            "authors":[
+                {
+                    "id":2,
+                    "firstName":"Alex",
+                    "lastName":"Banks",
+                    "gender":"MALE"
+                },
+                {
+                    "id":1,
+                    "firstName":"Eve",
+                    "lastName":"Procello",
+                    "gender":"FEMALE"
+                }
+            ]
+        },
+        {
+            "id":2,
+            "name":"Learning GraphQL",
+            "edition":2,
+            "price":55,
+            "store":{
+                "id":1,
+                "name":"O'REILLY",
+                "website":null
+            },
+            "authors":[
+                {
+                    "id":2,
+                    "firstName":"Alex",
+                    "lastName":"Banks",
+                    "gender":"MALE"
+                },
+                {
+                    "id":1,
+                    "firstName":"Eve",
+                    "lastName":"Procello",
+                    "gender":"FEMALE"
+                }
+            ]
+        }
+    ],
+    // hightlight-next-line
+    "totalPages":3, // 共3页
+    // hightlight-next-line
+    "totalElements":12, // 分页前共12条数据
+
+    ...Spring Data的Page对象属性太多，忽略...
+}
+```

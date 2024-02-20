@@ -1,0 +1,120 @@
+---
+sidebar_position: 3
+title: 3.2 Control Recursion Of Node
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Query Dynamic Entities
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = TreeNodeTable.$;
+
+List<TreeNode> rootNodes = sqlClient
+    .createQuery(table)
+    .where(table.parentId().isNull())
+    .select(
+        table.fetch(
+            TreeNodeFetcher.$
+                .allScalarFields()
+                .recursiveChildNodes(cfg -> {
+                    cfg.recursive(it -> {
+                        // highlight-next-line
+                        return !it.getEntity().name().equals("Clothing");
+                    });
+                })
+        )
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNodes = sqlClient
+    .createQuery(TreeNode::class) {
+        where(table.parentId.isNull())
+        select(
+            table.fetchBy {
+                allScalarFields()
+                `childNodes*` {
+                    recursive {
+                        // highlight-next-line
+                        it.name != "Clothing"
+                    }
+                }
+            }
+        )
+    }
+```
+
+</TabItem>
+</Tabs>
+
+If the name of the current tree node is equal to `Clothing`, terminate the recursion, otherwise continue recursion. The result is as follows:
+
+```json
+[
+    {
+        "id":1,
+        "name":"Home",
+        "childNodes":[
+            {
+                "id":2,
+                "name":"Food",
+                "childNodes":[
+                    {
+                        "id":3,
+                        "name":"Drinks",
+                        "childNodes":[
+                            {
+                                "id":4,
+                                "name":"Coca Cola",
+                                "childNodes":[]
+                            },
+                            {
+                                "id":5,
+                                "name":"Fanta",
+                                "childNodes":[]
+                            }
+                        ]
+                    },
+                    {
+                        "id":6,
+                        "name":"Bread",
+                        "childNodes":[
+                            {
+                                "id":7,
+                                "name":"Baguette",
+                                "childNodes":[]
+                            },
+                            {
+                                "id":8,
+                                "name":"Ciabatta",
+                                "childNodes":[]
+                            }
+                        ]
+                    }
+                ]
+            },
+            // highlight-next-line
+            {"id":9,"name":"Clothing"}
+        ]
+    }
+]
+```
+
+:::info 
+The `Clothing` object does not have the `childNodes` property as `[]`, but does not have the `childNodes` property at all.  
+
+This means whether the `Clothing` object has subordinate objects is unknown, because the recursion process was prematurely terminated due to manual intervention. 
+:::
+
+## Query Static DTO
+
+Controlling whether each node recurses using static DTOs will be provided in later versions, please wait for later versions.

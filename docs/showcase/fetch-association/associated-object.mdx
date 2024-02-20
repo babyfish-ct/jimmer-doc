@@ -1,9 +1,12 @@
 ---
 sidebar_position: 2
-title: 2.1 关联对象
+title: 2.1 Associated Object
 ---
 
-## 基于动态实体
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Query Dynamic Entities
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -53,7 +56,7 @@ val books = sqlClient
 </TabItem>
 </Tabs>
 
-等到的结果为
+The result is
 
 ```json
 [
@@ -123,24 +126,24 @@ val books = sqlClient
 ]
 ```
 
-## 查询静态DTO
+## Query Static DTO
 
-在`src/main/dto`文件夹下新建任何一个扩展名为dto的文件，编辑代码如下
+Create any file with the `dto` extension under the `src/main/dto` folder, and edit the code as follows:
 
 ```sh
 export com.yourcompany.yourproject.model.Book
     -> package com.yourcompany.yourproject.model.dto
 
 BookView {
-    #allScalars
+    #allScalars(this)
     #highlight-next-line
     authors {
-        #allScalars
+        #allScalars(this)
     }
 }
 ```
 
-编译项目，生成Java/Kotlin类型`BookView`
+Compile the project, a java/kotlin class named `BookView` will be automatically generated.
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -176,7 +179,7 @@ val books = sqlClient
 </TabItem>
 </Tabs>
 
-得到如下结果
+The result is
 
 ```json
 [

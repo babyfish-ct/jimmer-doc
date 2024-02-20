@@ -1,4 +1,4 @@
 ---
 sidebar_position: 2
-title: 抓取关联
+title: 2. Fetch Associations
 ---

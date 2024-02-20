@@ -1,0 +1,210 @@
+---
+sidebar_position: 4
+title: 3.4 Multiple Properties
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Query Dynamic Entities
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = TreeNodeTable.$;
+
+TreeNode treeNode = sqlClient
+    .findById(
+        TreeNodeFetcher.$
+                .allScalarFields()
+                .recursiveParent() ❶ 
+                .recursiveChildNodes() ❷,
+        10L
+    );
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val treeNode = sqlClient
+    .findById(
+        newFetcher(Book::class).by {
+            allScalarFields()
+                `parent*`() ❶
+                `childNodes*`() ❷
+        },
+        10L
+    )
+```
+
+</TabItem>
+</Tabs>
+
+The result is
+
+```json
+{
+    "id":10,
+    "name":"Woman",
+    "parent":{ ❶
+        "id":9,
+        "name":"Clothing",
+        "parent":{ ❶
+            "id":1,
+            "name":"Home",
+            "parent":null ❶
+        }
+    },
+    "childNodes":[ ❷
+        {
+            "id":11,
+            "name":"Casual wear",
+            "childNodes":[ ❷
+                {
+                    "id":12,
+                    "name":"Dress",
+                    "childNodes":[] ❷
+                },
+                {
+                    "id":13,
+                    "name":"Miniskirt",
+                    "childNodes":[] ❷
+                },
+                {
+                    "id":14,
+                    "name":"Jeans",
+                    "childNodes":[] ❷
+                }
+            ]
+        },
+        {
+            "id":15,
+            "name":"Formal wear",
+            "childNodes":[ ❷
+                {
+                    "id":16,
+                    "name":"Suit",
+                    "childNodes":[] ❷
+                },
+                {
+                    "id":17,
+                    "name":"Shirt",
+                    "childNodes":[] ❷
+                }
+            ]
+        }
+    ]
+}
+```
+
+## Query Static DTO
+
+Create any file with the `dto` extension under the `src/main/dto` folder, and edit the code as follows:
+
+```sh
+export com.yourcompany.yourproject.model.TreeNode
+    -> package com.yourcompany.yourproject.model.dto
+
+RecursiveTreeNodeView {
+    #allScalars(this)
+    parent* ❶
+    childNodes* ❷
+}
+```
+
+Compile the project, a java/kotlin class named `RecursiveTreeNodeView` will be automatically generated.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = TreeNodeTable.$;
+
+RecursiveTreeNodeView treeNode = sqlClient
+    .findById(
+        RecursiveTreeNodeView.class,
+        10L
+    );
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val treeNode = sqlClient
+    .findById(
+        RecursiveTreeNodeView::class,
+        10L
+    )
+```
+
+</TabItem>
+</Tabs>
+
+The result is
+
+```json
+RecursiveTreeNodeView(
+    id=10, 
+    name=Woman, 
+    parent=RecursiveTreeNodeView( ❶
+        id=9, 
+        name=Clothing, 
+        parent=RecursiveTreeNodeView( ❶
+            id=1, 
+            name=Home, 
+            parent=null, ❶
+            childNodes=null
+        ), 
+        childNodes=null
+    ), 
+    childNodes=[ ❷
+        RecursiveTreeNodeView(
+            id=11, 
+            name=Casual wear, 
+            parent=null, 
+            childNodes=[ ❷
+                RecursiveTreeNodeView(
+                    id=12, 
+                    name=Dress, 
+                    parent=null, 
+                    childNodes=[] ❷
+                ), 
+                RecursiveTreeNodeView(
+                    id=13, 
+                    name=Miniskirt, 
+                    parent=null, 
+                    childNodes=[] ❷
+                ), 
+                RecursiveTreeNodeView(
+                    id=14, 
+                    name=Jeans, 
+                    parent=null, 
+                    childNodes=[] ❷
+                )
+            ]
+        ), 
+        RecursiveTreeNodeView(
+            id=15, 
+            name=Formal wear, 
+            parent=null, 
+            childNodes=[ ❷
+                RecursiveTreeNodeView(
+                    id=16, 
+                    name=Suit, 
+                    parent=null, 
+                    childNodes=[] ❷
+                ), 
+                RecursiveTreeNodeView(
+                    id=17, 
+                    name=Shirt, 
+                    parent=null, 
+                    childNodes=[] ❷
+                )
+            ]
+        )
+    ]
+)
+```

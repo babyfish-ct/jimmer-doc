@@ -1,0 +1,240 @@
+---
+sidebar_position: 6
+title: 6. Paging Query
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Two types of Page objects
+
+Jimmer supports built-in Page objects
+
+-   `org.babyfish.jimmer.Page<T>`
+
+-   `org.springframework.data.domain.Page<T>`
+
+:::note
+In fact, Jimmer allows users to customize any `Page` object. 
+However, this article does not discuss this issue, partly because this article is only a showcase page and does not want to go into depth, and on the other hand, these two built-in `Page` objects are usually sufficient.
+:::
+
+As far as these two built-in Page objects are concerned, the differences are as follows:
+
+-   `org.springframework.data.domain.Page<T>`: 
+    Designed for server-side pages, in order for the page to remain in its previous state after refresh, a lot of information (such as cumbersome sorting information) needs to be returned to the client as is, so it is very complex.
+
+-   `org.babyfish.jimmer.Page<T>`: 
+    For the design of rich client pages, this kind of client page itself is a stateful application, and the server side provide pure data services, and only return the most necessary information, so it is very simple.
+
+## Using the page of Jimmer
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+int pageIndex = ...Omitted...; // 从0开始
+int pageSize = ...Omitted...;
+
+BookTable table = BookTable.$;
+org.babyfish.jimmer.Page<Book> page = sqlClient
+    .createQuery(table)
+    .orderBy(table.name().asc())
+    .orderBy(table.edition().desc())
+    .select(table)
+    // highlight-next-line
+    .fetchPage(pageIndex, pageSize);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val pageIndex: Int = ...Omitted...; // Starts from 0
+val pageSize: Int = ...Omitted...;
+
+val page: org.babyfish.jimmer.Page<Book> = sqlClient
+    .createQuery(Book::class) {
+        orderBy(table.name.asc())
+        orderBy(table.edition().desc())
+        select(table)
+    }
+    // highlight-next-line
+    .fetchPage(pageIndex, pageSize)
+```
+
+</TabItem>
+</Tabs>
+
+If pageIndex is 1 * (page 2) * and pageSize is 5, the result is
+
+```json
+Page{
+    // highlight-next-line
+    rows=[
+        {
+            "id":10,
+            "name":"GraphQL in Action",
+            "edition":1,
+            "price":82.00,
+            "store":{"id":2}
+        }, 
+        {
+            "id":3,
+            "name":"Learning GraphQL",
+            "edition":3,
+            "price":51.00,
+            "store":{"id":1}
+        }, 
+        {
+            "id":2,
+            "name":"Learning GraphQL",
+            "edition":2,
+            "price":55.00,
+            "store":{"id":1}
+        }, 
+        {
+            "id":1,
+            "name":"Learning GraphQL",
+            "edition":1,
+            "price":50.00,
+            "store":{"id":1}
+        }, 
+        {
+            "id":9,
+            "name":"Programming TypeScript",
+            "edition":3,
+            "price":48.00,
+            "store":{"id":1}
+        }
+    ], 
+    // highlight-next-line
+    totalRowCount=12, 
+    // highlight-next-line
+    totalPageCount=3
+}
+```
+
+## Using the page of Spring Data
+
+After importing the dependency 'org.babyfish.jimmer:jimmer-spring-boot-starter:$version'
+
+- Usage supported by both Java and Kotlin: Use `SpringPageFactory.getInstance()` as the third argument to `fetchPage`
+
+- Kotlin-specific usage: Directly call the extension function `fetchSpringPage`.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+int pageIndex = ...Omitted...; // 从0开始
+int pageSize = ...Omitted...;
+
+BookTable table = BookTable.$;
+org.springframework.data.domain.Page<Book> page = sqlClient
+    .createQuery(table)
+    .orderBy(table.name().asc())
+    .orderBy(table.edition().desc())
+    .select(table)
+    .fetchPage(
+        pageIndex, 
+        pageSize,
+        // highlight-next-line 
+        SpringPageFactory.getInstance()
+    );
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val pageIndex: Int = ...Omitted...; // Starts from 0
+val pageSize: Int = ...Omitted...;
+
+val page: org.springframework.data.domain.Page<Book> = sqlClient
+    .createQuery(Book::class) {
+        orderBy(table.name.asc())
+        orderBy(table.edition().desc())
+        select(table)
+    }
+    // highlight-next-line
+    .fetchSpringPage(
+        pageIndex, 
+        pageSize
+    )
+```
+
+</TabItem>
+</Tabs>
+
+If pageIndex is 1 * (page 2) * and pageSize is 5, the result is
+
+```json
+{
+    // highlight-next-line
+    "content":[
+        {
+            "id":10,
+            "name":"GraphQL in Action",
+            "edition":1,
+            "price":82,
+            "store":{"id":2}
+        },
+        {
+            "id":3,
+            "name":"Learning GraphQL",
+            "edition":3,
+            "price":51,
+            "store":{"id":1}
+        },
+        {
+            "id":2,
+            "name":"Learning GraphQL",
+            "edition":2,
+            "price":55,
+            "store":{"id":1}
+        },
+        {
+            "id":1,
+            "name":"Learning GraphQL",
+            "edition":1,
+            "price":50,
+            "store":{"id":1}
+        },
+        {
+            "id":9,
+            "name":"Programming TypeScript",
+            "edition":3,
+            "price":48,
+            "store":{"id":1}
+        }
+    ],
+    "pageable":{
+        "sort":{
+            "unsorted":false,
+            "sorted":true,
+            "empty":false
+        },
+        "pageNumber":1,
+        "pageSize":5,
+        "offset":5,
+        "paged":true,
+        "unpaged":false
+    },
+    // highlight-next-line
+    "totalPages":3,
+    // highlight-next-line
+    "totalElements":12,
+    "last":false,
+    "numberOfElements":5,
+    "first":false,
+    "size":5,
+    "number":1,
+    "sort":{
+        "unsorted":false,
+        "sorted":true,
+        "empty":false
+    },
+    "empty":false
+}
+```

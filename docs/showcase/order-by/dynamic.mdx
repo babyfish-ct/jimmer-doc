@@ -1,0 +1,132 @@
+---
+sidebar_position: 2
+title: 5.2 Dynamic Sorting
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+Dynamic sorting refers to the sorting method being dynamically specified by the client.
+
+## Use Strings Directly
+
+The simplest way for the client to specify sorting is strings. 
+
+The string formats supported by Jimmer are as follows:
+
+`store.name asc, name asc, edition desc`
+or 
+`store.name asc; name asc; edition desc`
+
+Where `store.name` means first inner join the associated object `BookStore` through the `Book.store` property, and then sort by the `name` property of the associated object. 
+
+The path length is unlimited, but the association type along the way needs to be one-to-one or many-to-one.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+String sortCode = ...Omitted...;
+
+BookTable table = BookTable.$;
+List<Book> books = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .orderBy(Order.makeOrders(table, sortCode))
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val sortCode: String = ...Omitted...
+
+val books = sqlClient
+    .createQuery(Book::class) {
+        // highlight-next-line
+        orderBy(table.makeOrders(sortCode))
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+## Transfer via Spring Sort
+
+Sometimes, when developing in combination with Spring Data, `org.springframework.data.domain.Sort` may be used to represent dynamic sorting.
+
+At this point, developers need to perform two steps:
+
+### I. Convert string to `Sort` Object
+
+The easiest uploading way for the client is still the string discussed earlier, like
+`store.name asc, name asc, edition desc` or `store.name asc; name asc; edition desc`.
+
+Therefore, first the string needs to be converted to the `org.springframework.data.domain.Sort` object.
+
+After importing the dependency `org.babyfish.jimmer:jimmer-spring-boot-starter:$version`, the static method 
+`org.babyfish.jimmer.spring.model.SortUtils.toSort` can then be used, as follows:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+String sortCode = ...Omitted...;
+Sort sort = SortUtils.toSort(sortCode);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val sortCode: String = ...Omitted...
+val sort = SortUtils.toSort(sortCode)
+```
+
+</TabItem>
+</Tabs>
+
+### II. Sort using Sort object
+
+After importing the dependency `org.babyfish.jimmer:jimmer-spring-boot-starter:$version`:
+
+- Java: Use the utility method `org.babyfish.jimmer.spring.repository.SpringOrders.toOrders` to convert the `org.springframework.data.domain.Sort` object into a collection of ordering objects accepted by Jimmer. 
+
+- Kotlin: Directly use the `orderBy` extension function that accepts `org.springframework.data.domain.Sort` object.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+org.springframework.data.domain.Sort sort = ...Omitted...;
+
+BookTable table = BookTable.$;
+List<Book> books = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .orderBy(SpringOrders.toOrders(table, sort))
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val sort: org.springframework.data.domain.Sort = ...Omitted...
+
+val books = sqlClient
+    .createQuery(Book::class) {
+        // highlight-next-line
+        orderBy(sort)
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>

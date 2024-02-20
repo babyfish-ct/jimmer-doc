@@ -1,0 +1,120 @@
+---
+sidebar_position: 2
+title: 4.2 Dynamic Conditions
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Using whereIf
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable String name = ...Omitted...;
+@Nullable Integer edition = ...Omitted...;
+
+BookTable table = BookTable.$;
+List<Book> books = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .whereIf(
+        name != null && !name.isEmpty(), 
+        () -> table.name().ilike(name)
+    )
+    // highlight-next-line
+    .whereIf(
+        edition != null, 
+        table.edition().eq(edition)
+    )
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val name: String? = ...Omitted...
+val edition: Int? = ...Omitted...
+
+val books = sqlClient
+    .createQuery(Book::class) {
+        // highlight-next-line
+        name?.takeIf { it.isNotEmpty() }?.let {
+            where(table.name ilike it)
+        }
+        // highlight-next-line
+        edition?.let {
+            where(table.edition eq it)
+        }
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+:::caution 
+
+In the Java code, the first whereIf uses a lambda to pass in the expression. 
+
+This is because in addition to `eq` and `ne` which can accept null values *(translated to `is null` and `is not null`)*,  
+
+other conditions *(such as `ilike` here)* do not accept null and treats it as a bug made by developers. 
+:::
+
+## Using Dynamic Predicate
+
+`whereIf` is not the only way to write dynamic queries. The above code can be replaced with another syntax.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable String name = ...Omitted...;
+@Nullable Integer edition = ...Omitted...;
+
+BookTable table = BookTable.$;
+List<Book> books = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .where(table.name().ilikeIf(name))
+    // highlight-next-line
+    .whereIf(table.edition().eqIf(edition))
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val name: String? = ...Omitted...
+val edition: Int? = ...Omitted...
+
+val books = sqlClient
+    .createQuery(Book::class) {
+        // highlight-next-line
+        where(table.name `ilike?` name)
+        // highlight-next-line
+        where(table.edition `eq?` edition)
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+:::tip 
+Most SQL conditions *(such as `ilike` here)* do not accept null and treat it as a bug made by developers. *(`eq` and `ne` are exceptions, as they render null as `is null` and `not null`)*
+
+However, dynamic predicates *(`ilikeIf` in Java and `ilike?` in Kotlin)* are completely different, they accept null values and understand them as dynamic queries. That is, if the parameter is null or "", the current SQL condition is ignored. 
+:::
+
+## Comparison
+
+Although `whereIf` has good readability, dynamic predicates can adapt to more complex scenarios *(can be used in complex conditions, including multi-layer nested `and`, `not`, `or` structures)*. In the following text, we use dynamic predicates throughout.

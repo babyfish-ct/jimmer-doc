@@ -1,0 +1,97 @@
+---
+sidebar_position: 2
+title: 3.2 Limit Depth
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Query Dynamic Entities
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = TreeNodeTable.$;
+
+List<TreeNode> rootNodes = sqlClient
+    .createQuery(table)
+    .where(table.parentId().isNull())
+    .select(
+        table.fetch(
+            TreeNodeFetcher.$
+                .allScalarFields()
+                .recursiveChildNodes(
+                    // highlight-next-line
+                    cfg -> cfg.depth(2)
+                )
+        )
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNodes = sqlClient
+    .createQuery(TreeNode::class) {
+        where(table.parentId.isNull())
+        select(
+            table.fetchBy {
+                allScalarFields()
+                `childNodes*` {
+                    // highlight-next-line
+                    depth(2)
+                }
+            }
+        )
+    }
+```
+
+</TabItem>
+</Tabs>
+
+The currently queried aggregate roots are defined as the 0th layer. 
+On this basis, query two layers of child objects downwards to obtain the following data:
+
+```json
+[
+    {
+        "id":1,
+        "name":"Home",
+        "childNodes":[
+            {
+                "id":2,
+                "name":"Food",
+                "childNodes":[
+                    // highlight-next-line
+                    {"id":3,"name":"Drinks"},
+                    // highlight-next-line
+                    {"id":6,"name":"Bread"}
+                ]
+            },
+            {
+                "id":9,
+                "name":"Clothing",
+                "childNodes":[
+                    // highlight-next-line
+                    {"id":10,"name":"Woman"},
+                    // highlight-next-line
+                    {"id":18,"name":"Man"}
+                ]
+            }
+        ]
+    }
+]
+```
+
+:::info 
+The deepest 4 objects do not have the `childNodes` property as `[]`, but do not have the `childNodes` property at all. 
+
+This means whether these 4 objects have subordinate objects is unknown, because the recursion process was prematurely terminated due to manual intervention. 
+:::
+
+## Query Static DTO
+
+Restricting recursion depth for static DTOs will be provided in later versions, please wait for later versions.

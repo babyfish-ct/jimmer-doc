@@ -1,0 +1,197 @@
+---
+sidebar_position: 4
+title: 4.4 Dynamic Table Join
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Usage
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable String storeName = ...Omitted...;
+@Nullable String storeWebsite = ...Omitted...;
+
+BookTable table = BookTable.$;
+List<Book> books = sqlClient
+    .createQuery(table)
+    .where(table.store().name().eqIf(storeName)) ❶
+    .where(table.store().website().eqIf(storeWebsite)) ❷
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val storeName: String? = ...Omitted...
+val storeWebsite: String? = ...Omitted...
+
+val books = sqlClient
+    .createQuery(Book::class) {
+        where(table.store.name `eq?` storeName) ❶
+        where(table.store.website `eq?` storeWebsite) ❷
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+:::info 
+In the above code, Java's `table.store()` and Kotlin's `table.store` represent the inner join between the table defined by `Book` and the table defined by `BookStore` through the many-to-one association `Book.store`. 
+
+That is, the following SQL logic is represented:
+
+````sql
+from BOOK b inner join BOOK_STORE s on b.STORE_ID = s.ID
+````
+
+In fact, if the entity model is richer, longer paths can be written, such as `table.store().city().province()`.
+
+Here, just for quick start guide and preview, it is unnecessary to build a richer entity model to demonstrate longer paths. The shortest table chain join path `table.store()` is enough. 
+:::
+
+## Various Situations 
+
+### All table joins do not take effect 
+
+If both `storeName` and `storeWebsite` are null, it will cause the dynamic table joins created at ❶ and ❷ to be unused. Unused table joins will be automatically ignored without rendering any actual SQL joins.
+
+At this time, the following SQL is generated:
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+```
+
+### Some table joins take effect
+
+If `storeName` is specified as non-null while `storeWebsite` remains null, the dynamic table join at ❶ takes effect, while the dynamic table join at ❷ is ignored.
+
+At this time, the following SQL is generated:
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+inner join BOOK_STORE tb_2_
+    on tb_1_.STORE_ID = tb_2_.ID
+where
+    tb_2_.NAME = ? /* MANNING */
+```
+
+### All table joins take effect
+
+If both `storeName` and `storeWebsite` are specified as non-null, the dynamic table joins created at ❶ and ❷ will both take effect.  
+
+:::tip 
+Jimmer can automatically merge conflicting table joins. The two joins will be merged into one. 
+Ultimately, only one SQL join will be rendered 
+:::
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+inner join BOOK_STORE tb_2_
+    on tb_1_.STORE_ID = tb_2_.ID
+where
+        tb_2_.NAME = ? /* MANNING */
+    and
+        tb_2_.WEBSITE = ? /* https://www.manning.com */
+```
+
+## IsNull和外连接
+
+类似Java中`table.store()`或Kotlin`table.store`这样的连接路径，会被渲染成SQL的内连接，而非外连接，这是因为
+
+:::info
+内连接比外链接拥有更好的性能！
+:::
+
+:::caution
+为此，Jimmer不惜通过异常让默认情况下内连接而得到的表对象不支持`isNull`。
+
+如果要对关联对象施加`isNull`，必须明确采用外连接操作，例如
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = TreeNodeTable.$;
+List<TreeNode> rootNodes = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .where(table.parent(JoinType.LEFT).isNull())
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNodes = sqlClient
+    .createQuery(TreeNode::class) {
+        // highlight-next-line
+        where(table.`parent?`.isNull())
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+Java代码中的`.parent(JoinType.LEFT)`和Kotlin代码中的`.parent?`表示左连接。
+
+其实，这种案例更适合[上一文](./associated-id)中的关联id条件
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = TreeNodeTable.$;
+List<TreeNode> rootNodes = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .where(table.parentId().isNull())
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNodes = sqlClient
+    .createQuery(TreeNode::class) {
+        // highlight-next-line
+        where(table.parentId.isNull())
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>

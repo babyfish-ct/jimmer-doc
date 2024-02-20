@@ -1,0 +1,120 @@
+---
+sidebar_position: 3
+title: 3.2 控制节点是否递归
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 查询动态实体
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = TreeNodeTable.$;
+
+List<TreeNode> rootNodes = sqlClient
+    .createQuery(table)
+    .where(table.parentId().isNull())
+    .select(
+        table.fetch(
+            TreeNodeFetcher.$
+                .allScalarFields()
+                .recursiveChildNodes(cfg -> {
+                    cfg.recursive(it -> {
+                        // highlight-next-line
+                        return !it.getEntity().name().equals("Clothing");
+                    });
+                })
+        )
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNodes = sqlClient
+    .createQuery(TreeNode::class) {
+        where(table.parentId.isNull())
+        select(
+            table.fetchBy {
+                allScalarFields()
+                `childNodes*` {
+                    recursive {
+                        // highlight-next-line
+                        it.name != "Clothing"
+                    }
+                }
+            }
+        )
+    }
+```
+
+</TabItem>
+</Tabs>
+
+如果当前树节点的名称等于`Clothing`则终止递归，否则继续递归。得到如下结果
+
+```json
+[
+    {
+        "id":1,
+        "name":"Home",
+        "childNodes":[
+            {
+                "id":2,
+                "name":"Food",
+                "childNodes":[
+                    {
+                        "id":3,
+                        "name":"Drinks",
+                        "childNodes":[
+                            {
+                                "id":4,
+                                "name":"Coca Cola",
+                                "childNodes":[]
+                            },
+                            {
+                                "id":5,
+                                "name":"Fanta",
+                                "childNodes":[]
+                            }
+                        ]
+                    },
+                    {
+                        "id":6,
+                        "name":"Bread",
+                        "childNodes":[
+                            {
+                                "id":7,
+                                "name":"Baguette",
+                                "childNodes":[]
+                            },
+                            {
+                                "id":8,
+                                "name":"Ciabatta",
+                                "childNodes":[]
+                            }
+                        ]
+                    }
+                ]
+            },
+            // highlight-next-line
+            {"id":9,"name":"Clothing"}
+        ]
+    }
+]
+```
+
+:::info
+`Clothing`对象并非表现为`childNodes`属性为`[]`，而是根本没有`childNodes`属性。
+
+这表示，`Clothing`对象是否有下级对象是未知的，因为递归过程因人为干预而被提前终止。
+:::
+
+## 查询静态DTO
+
+利用静态DTO控制每个节点是否递归由后续版本提供，请等待后续版本

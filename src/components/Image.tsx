@@ -121,8 +121,8 @@ export const VsModule: FC = memo(() => {
     return <Image src={Src_VsModule}/>;
 });
 
-export const PublicWechat: FC = memo(() => {
-    return <Image src={Src_PublicWechat}/>;
+export const QQGroup: FC = memo(() => {
+    return <Image src={Src_QQGroup}/>;
 });
 
 let _isWebpSupported: boolean | undefined = undefined;
@@ -160,4 +160,4 @@ const Src_VsCode = require("@site/static/img/vs-code/code.webp").default;
 const Src_VsFamily = require("@site/static/img/vs-code/family.webp").default;
 const Src_VsField = require("@site/static/img/vs-code/field.webp").default;
 const Src_VsModule = require("@site/static/img/vs-code/module.webp").default;
-const Src_PublicWechat = require("@site/static/img/public-wechat.webp").default;
+const Src_QQGroup = require("@site/static/img/qq-group.webp").default;

@@ -1,0 +1,113 @@
+---
+sidebar_position: 2
+title: 更深关联
+---
+
+## 查询动态实体
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookStoreTable table = BookStoreTable.$;
+
+List<BookStore> stores = sqlClient
+    .createQuery(table)
+    .where(table.name().eq("MANNING"))
+    .select(
+        table.fetch(
+            BookStoreFetcher.$
+                .allScalarFields()
+                .books( ❶
+                    BookFetcher.$
+                        .allScalarFields()
+                        .authors( ❷
+                            AuthorFetcher.$
+                                .allScalarFields()
+                        )
+                )
+        )
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = sqlClient
+    .createQuery(BookStore::class) {
+        where(table.name  eq "MANNING")
+        select(
+            table.fetchBy {
+                allScalarFields()
+                books { ❶
+                    allScalarFields()
+                    authors { ❷
+                        allScalarFields()
+                    }
+                }
+            }
+        )
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+得到如下的数据
+
+```json
+[
+    {
+        "id":2,
+        "name":"MANNING",
+        "website":null,
+        "books":[ ❶
+            {
+                "id":12,
+                "name":"GraphQL in Action",
+                "edition":3,
+                "price":80,
+                "authors":[ ❷
+                    {
+                        "id":5,
+                        "firstName":"Samer",
+                        "lastName":"Buna",
+                        "gender":"MALE"
+                    }
+                ]
+            },
+            {
+                "id":11,
+                "name":"GraphQL in Action",
+                "edition":2,
+                "price":81,
+                "authors":[ ❷
+                    {
+                        "id":5,
+                        "firstName":"Samer",
+                        "lastName":"Buna",
+                        "gender":"MALE"
+                    }
+                ]
+            },
+            {
+                "id":10,
+                "name":"GraphQL in Action",
+                "edition":1,
+                "price":82,
+                "authors":[ ❷
+                    {
+                        "id":5,
+                        "firstName":"Samer",
+                        "lastName":"Buna",
+                        "gender":"MALE"
+                    }
+                ]
+            }
+        ]
+    }
+]
+```

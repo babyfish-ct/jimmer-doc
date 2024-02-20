@@ -1,0 +1,196 @@
+---
+sidebar_position: 4
+title: 4.4 动态表连接
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 用法
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable String storeName = ...略...;
+@Nullable String storeWebsite = ...略...;
+
+BookTable table = BookTable.$;
+List<Book> books = sqlClient
+    .createQuery(table)
+    .where(table.store().name().eqIf(storeName)) ❶
+    .where(table.store().website().eqIf(storeWebsite)) ❷
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val storeName: String? = ...略...
+val storeWebsite: String? = ...略...
+
+val books = sqlClient
+    .createQuery(Book::class) {
+        where(table.store.name `eq?` storeName) ❶
+        where(table.store.website `eq?` storeWebsite) ❷
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+上述代码中, Java的`table.store()`和Kotlin的`table.store`表示通过多对一关联`Book.store`内连接`Book`所定义的表和`BookStore`所定义的表。
+
+即，表示如下SQL逻辑
+```sql
+from BOOK b
+inner join BOOK_STORE s on b.STORE_ID = s.ID
+```
+
+事实上，假如实体模型更加丰富，可以书写更长的路径，比如`table.store().city().province()`。
+
+这里，仅仅做入门示范和快速预览，没必要构建更丰富的实体模型以演示更长的路径，最短表链连接路径table.store()足够。
+:::
+
+## 各种情况
+
+### 所有表连接都不生效
+
+如果`storeName`和`storeWebsite`都为null，会导致❶和❷两处创建的动态表连接未被使用，未被使用的表连接会被自动忽略，不会渲染任何真实的SQL连接。
+
+这时，生成如下SQL:
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+```
+
+### 部分表连接生效
+
+将`storeName`指定为非null，而`storeWebsite`仍然为null，❶处的动态表连接生效，而❷的动态表连接被忽略。
+
+这时，生成如下SQL:
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+inner join BOOK_STORE tb_2_
+    on tb_1_.STORE_ID = tb_2_.ID
+where
+    tb_2_.NAME = ? /* MANNING */
+```
+
+### 所有表连接都生效
+
+如果`storeName`和`storeWebsite`都被指定为非null，会导致❶和❷两处创建的动态表连接都生效。
+
+:::tip
+Jimmer能自动合并冲突的连接，两个连接会被合并为一个，最终，只有一个SQL连接被渲染
+:::
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+inner join BOOK_STORE tb_2_
+    on tb_1_.STORE_ID = tb_2_.ID
+where
+        tb_2_.NAME = ? /* MANNING */
+    and
+        tb_2_.WEBSITE = ? /* https://www.manning.com */
+```
+
+## IsNull和外连接
+
+类似Java中`table.store()`或Kotlin`table.store`这样的连接路径，会被渲染成SQL的内连接，而非外连接，这是因为
+
+:::info
+内连接比外链接拥有更好的性能！
+:::
+
+:::caution
+为此，Jimmer不惜通过异常让默认情况下内连接而得到的表对象不支持`isNull`。
+
+如果要对关联对象施加`isNull`，必须明确采用外连接操作，例如
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = TreeNodeTable.$;
+List<TreeNode> rootNodes = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .where(table.parent(JoinType.LEFT).isNull())
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNodes = sqlClient
+    .createQuery(TreeNode::class) {
+        // highlight-next-line
+        where(table.`parent?`.isNull())
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+Java代码中的`.parent(JoinType.LEFT)`和Kotlin代码中的`.parent?`表示左连接。
+
+其实，这种案例更适合[上一文](./associated-id)中的关联id条件
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = TreeNodeTable.$;
+List<TreeNode> rootNodes = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .where(table.parentId().isNull())
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNodes = sqlClient
+    .createQuery(TreeNode::class) {
+        // highlight-next-line
+        where(table.parentId.isNull())
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>

@@ -124,6 +124,7 @@ interface BookRepository : KRepository<BookStore, Long> {
     |方法|返回类型|备注|
     |---|-------|---|
     |execute(本例所示范)|List&lt;T&gt;|返回列表|
+    |fetchPage|Page&lt;E&gt;|分页对象|
     |fetchOne|T(不可能为null)|返回一条数据，如果查询结果没有数据或有多条数据，抛出异常|
     |fetchOneOrNull|T(可能为null)|返回一条数据，如果查询结果有多条数据，抛出异常|
     |fetchOptional(仅Java)|T或null的Optinal包装|返回一条数据，如果查询结果有多条数据，抛出异常|

@@ -195,7 +195,7 @@ Save指令为不同语言和不同的开发模式提供了多个API，但功能�
     Kotlin不需要`saveCommand`方法，它采用了另外一种写法
 
     ```kotlin
-    val store = ...略...;
+    val store = ...略...
     sqlClient.save(store) {
         setPessimisticLock() 
     }
@@ -217,7 +217,7 @@ Save指令为不同语言和不同的开发模式提供了多个API，但功能�
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    val store = ...略...;
+    val store = ...略...
     sqlClient.save(store, SaveMode.INSERT_ONLY)
     ```
 

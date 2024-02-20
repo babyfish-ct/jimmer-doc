@@ -1,0 +1,238 @@
+---
+sidebar_position: 6
+title: 6. 分页查询
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 两种Page对象
+
+Jimmer支持内置的Page对象
+
+-   `org.babyfish.jimmer.Page<T>`
+
+-   `org.springframework.data.domain.Page<T>`
+
+:::note
+事实上，Jimmer支持用户自定义任何Page对象。然而本文不讨论这个问题，一方面是因为本文仅作案例展示，不想深入探讨；另一方面，一般情况下这两种内置的Page对象足够。
+:::
+
+就这两种内置的Page对象而言，它们的区别如下：
+
+-   `org.springframework.data.domain.Page<T>`: 
+    为服务端页面而设计，为了让页面在刷新后仍然能保持之前的状态，大量的信息 (比如繁琐的排序信息) 需要被原样返回给客户端，所以非常复杂。
+
+-   `org.babyfish.jimmer.Page<T>`: 
+    为前后端独立页面的设计，这种客户端页面自身是一个有状态应用，服务端提供纯数据服务即可，仅返回最必要的信息即可，所以非常简单。
+
+## 使用Jimmer的Page对象
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+int pageIndex = ...略...; // 从0开始
+int pageSize = ...略...;
+
+BookTable table = BookTable.$;
+org.babyfish.jimmer.Page<Book> page = sqlClient
+    .createQuery(table)
+    .orderBy(table.name().asc())
+    .orderBy(table.edition().desc())
+    .select(table)
+    // highlight-next-line
+    .fetchPage(pageIndex, pageSize);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val pageIndex: Int = ...略...; // 从0开始
+val pageSize: Int = ...略...;
+
+val page: org.babyfish.jimmer.Page<Book> = sqlClient
+    .createQuery(Book::class) {
+        orderBy(table.name.asc())
+        orderBy(table.edition().desc())
+        select(table)
+    }
+    // highlight-next-line
+    .fetchPage(pageIndex, pageSize)
+```
+
+</TabItem>
+</Tabs>
+
+假设pageIndex为1 *(第2页)*，pageSize为5，得到如下结果
+
+```json
+Page{
+    // highlight-next-line
+    rows=[
+        {
+            "id":10,
+            "name":"GraphQL in Action",
+            "edition":1,
+            "price":82.00,
+            "store":{"id":2}
+        }, 
+        {
+            "id":3,
+            "name":"Learning GraphQL",
+            "edition":3,
+            "price":51.00,
+            "store":{"id":1}
+        }, 
+        {
+            "id":2,
+            "name":"Learning GraphQL",
+            "edition":2,
+            "price":55.00,
+            "store":{"id":1}
+        }, 
+        {
+            "id":1,
+            "name":"Learning GraphQL",
+            "edition":1,
+            "price":50.00,
+            "store":{"id":1}
+        }, 
+        {
+            "id":9,
+            "name":"Programming TypeScript",
+            "edition":3,
+            "price":48.00,
+            "store":{"id":1}
+        }
+    ], 
+    // highlight-next-line
+    totalRowCount=12, 
+    // highlight-next-line
+    totalPageCount=3
+}
+```
+
+## 使用Spring Data的Page对象
+
+导入依赖`org.babyfish.jimmer:jimmer-spring-boot-starter:$version`后
+
+-   Java和Kotlin都支持的用法：使用`SpringPageFactory.getInstance()`作为`fetchPage`的第三个参数
+-   Kotlin特有的用法：直接调用扩展函数fetchSpringPage。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+int pageIndex = ...略...; // 从0开始
+int pageSize = ...略...;
+
+BookTable table = BookTable.$;
+org.springframework.data.domain.Page<Book> page = sqlClient
+    .createQuery(table)
+    .orderBy(table.name().asc())
+    .orderBy(table.edition().desc())
+    .select(table)
+    .fetchPage(
+        pageIndex, 
+        pageSize,
+        // highlight-next-line 
+        SpringPageFactory.getInstance()
+    );
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val pageIndex: Int = ...略...; // 从0开始
+val pageSize: Int = ...略...;
+
+val page: org.springframework.data.domain.Page<Book> = sqlClient
+    .createQuery(Book::class) {
+        orderBy(table.name.asc())
+        orderBy(table.edition().desc())
+        select(table)
+    }
+    // highlight-next-line
+    .fetchSpringPage(
+        pageIndex, 
+        pageSize
+    )
+```
+
+</TabItem>
+</Tabs>
+
+假设pageIndex为1 *(第2页)*，pageSize为5，得到如下结果
+
+```json
+{
+    // highlight-next-line
+    "content":[
+        {
+            "id":10,
+            "name":"GraphQL in Action",
+            "edition":1,
+            "price":82,
+            "store":{"id":2}
+        },
+        {
+            "id":3,
+            "name":"Learning GraphQL",
+            "edition":3,
+            "price":51,
+            "store":{"id":1}
+        },
+        {
+            "id":2,
+            "name":"Learning GraphQL",
+            "edition":2,
+            "price":55,
+            "store":{"id":1}
+        },
+        {
+            "id":1,
+            "name":"Learning GraphQL",
+            "edition":1,
+            "price":50,
+            "store":{"id":1}
+        },
+        {
+            "id":9,
+            "name":"Programming TypeScript",
+            "edition":3,
+            "price":48,
+            "store":{"id":1}
+        }
+    ],
+    "pageable":{
+        "sort":{
+            "unsorted":false,
+            "sorted":true,
+            "empty":false
+        },
+        "pageNumber":1,
+        "pageSize":5,
+        "offset":5,
+        "paged":true,
+        "unpaged":false
+    },
+    // highlight-next-line
+    "totalPages":3,
+    // highlight-next-line
+    "totalElements":12,
+    "last":false,
+    "numberOfElements":5,
+    "first":false,
+    "size":5,
+    "number":1,
+    "sort":{
+        "unsorted":false,
+        "sorted":true,
+        "empty":false
+    },
+    "empty":false
+}
+```

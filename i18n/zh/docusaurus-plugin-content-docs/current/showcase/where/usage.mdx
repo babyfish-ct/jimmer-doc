@@ -1,0 +1,144 @@
+---
+sidebar_position: 1
+title: 4.1 基本用法
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+以下三种写法等价
+
+## 使用多个where
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+String name = ...略...;
+int edition = ...略...;
+
+BookTable table = BookTable.$;
+List<Book> books = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .where(table.name().ilike(name))
+    // highlight-next-line
+    .where(table.edition().eq(edition))
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val name: String = ...略...
+val edition: Int = ...略...
+
+val books = sqlClient
+    .createQuery(Book::class) {
+        // highlight-next-line
+        where(table.name ilike name)
+        // highlight-next-line
+        where(table.edition eq edition)
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+## where带多个参数
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+String name = ...略...;
+int edition = ...略...;
+
+BookTable table = BookTable.$;
+List<Book> books = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .where(
+        table.name().ilike(name),
+        table.edition().eq(edition)
+    )
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val name: String = ...略...
+val edition: Int = ...略...
+
+val books = sqlClient
+    .createQuery(Book::class) {
+        // highlight-next-line
+        where(
+            table.name ilike name,
+            table.edition eq edition
+        )
+        select(table)
+    }
+    .execute();
+```
+
+</TabItem>
+</Tabs>
+
+## 使用逻辑与
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+String name = ...略...;
+int edition = ...略...;
+
+BookTable table = BookTable.$;
+List<Book> books = sqlClient
+    .createQuery(table)
+    .where(
+        // highlight-next-line
+        Predicate.and(
+            table.name().ilike(name),
+            table.edition().eq(edition)
+        )
+    )
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val name: String = ...略...
+val edition: Int = ...略...
+
+val books = sqlClient
+    .createQuery(Book::class) {
+        where(
+            // highlight-next-line
+            and(
+                table.name ilike name,
+                table.edition eq edition
+            )
+        )
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+## 建议
+
+以上三种写法完全等价。然而，毫无疑问，第一种是最简单的，故而推荐。

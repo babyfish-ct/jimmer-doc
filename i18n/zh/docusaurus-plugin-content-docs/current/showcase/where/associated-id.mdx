@@ -1,0 +1,86 @@
+---
+sidebar_position: 3
+title: 4.3 关联id
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## IsNull判断
+
+查询所有`parentId`为null的`TreeNode`，即根节点。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = TreeNodeTable.$;
+List<TreeNode> rootNodes = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .where(table.parentId().isNull())
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNodes = sqlClient
+    .createQuery(TreeNode::class) {
+        // highlight-next-line
+        where(table.parentId.isNull())
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+:::tip
+上述代码中的`parentId`，是Jimmer在编译时根据多对一属性`TreeNode.parent`自动生成的，
+即使开发人员没有配套定义名称为`parentId`的[@IdView属性](../../mapping/advanced/view/id-view)也仍然如此。
+:::
+
+## 任意值得拍断
+
+事实上，`eq`支持null参数，当`eq`的参数为null是，就渲染`is null`
+
+:::caution
+注意：`eqIf`不同，null被认为是动态查询，不会渲染任何SQL条件。
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable Long parentId = ...略...;
+
+TreeNodeTable table = TreeNodeTable.$;
+List<TreeNode> rootNodes = sqlClient
+    .createQuery(table)
+    // highlight-next-line
+    .where(table.parentId().eq(parentId))
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val parentId: Long? = ...略...;
+
+val rootNodes = sqlClient
+    .createQuery(TreeNode::class) {
+        // highlight-next-line
+        where(table.parentId eq parentId)
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>

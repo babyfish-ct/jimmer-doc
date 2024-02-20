@@ -1,0 +1,339 @@
+---
+sidebar_position: 7
+title: 7. 综合查询
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+截止到目前为止，我们快熟展示了如下功能
+
+-   对象抓取器，也就是查询任意形状的数据结构，也就是[抓取关联](./fetch-association)和[递归查询](./recursive-query)中所展示的内容。
+
+-   条件，尤其是[动态表连接](./where/dynamic-join)和[隐式子查询](./where/implicit-subquery)
+
+-   排序，包括动态排序
+
+-   分页查询
+
+现在，我们把以上所有功能综合起来，形成一个相对强大的查询
+
+同样，存在两种开发方式
+
+-   查询动态实体
+
+-   查询静态DTO
+
+## 查询动态实体
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public class BookRepository {
+
+    private static final BookTable T = BookTable.$;
+
+    private final JSqlClient sqlClient;
+
+    public BookRepository(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
+    public Page<Book> findBooks(
+        int pageIndex,
+        int pageSize,
+        @Nullable String sortCode,
+        @Nullable Fetcher<Book> fetcher,
+        @Nullable String name,
+        @Nullable BigDecimal minPrice,
+        @Nullable BigDecimal maxPrice,
+        @Nullable String storeName,
+        @Nullable String storeWebsite,
+        @Nullable String authorName    
+    ) {
+        return sqlClient
+            .createQuery(T)
+            .where(T.name().ilikeIf(name))
+            .where(T.price().betweenIf(minPrice, maxPrice))
+            .where(T.store().name().ilikeIf(storeName))
+            .where(T.store().website().ilikeIf(storeWebsite))
+            .where(
+                T.authors(author ->
+                    Predicate.or(
+                        author.firstName().ilikeIf(authorName),
+                        author.lastName().ilikeIf(authorName)
+                    )
+                )
+            )
+            .orderBy(
+                Order.makeOrders(
+                    T,
+                    sortCode != null ? 
+                        sortCode :
+                        "name asc, edition desc"
+                )
+            )
+            .select(T.fetch(fetcher))
+            .fetchPage(pageIndex, pageSize);
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+class BookRepository(
+    private val sqlClient: KSqlClient
+) {
+    fun findBooks(
+        pageIndex: Int,
+        pageSize: Int = 10,
+        sortCode: String = "name asc, edition desc",
+        fetcher: Fetcher<Book>? = null,
+        name: String? = null,
+        minPrice: BigDecimal? = null,
+        maxPrice: BigDecimal? = null,
+        storeName: String? = null,
+        storeWebsite: String? = null,
+        name: String? = null
+    ): Page<Book> =
+        sqlClient
+            .createQuery(Book::class) {
+                where(table.name `ilike?` name)
+                where(table.price.`between?`(minPrice, maxPrice))
+                where(table.store.name `ilike?` storeName)
+                where(table.store.website `ilike?` storeWebsite)
+                where += table.authors {
+                    or(
+                        firstName `ilike?` authorName,
+                        lastName `ilike?` authorName
+                    )
+                }
+                orderBy(table.makeOrders(sortCode))
+                select(table.fetch(fetcher))
+            }
+            .fetchPage(pageIndex, pageSize)
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+这里，`findBooks`方法的参数很多。这对Kotlin而言无所谓，但是对Java而言可能不是一个好的设计。
+
+如果你的项目是基于Java语言开发的，面对这种情况，你可以选择将所有参数或部分参数提炼成一个参数对象，来减少Java语言下的参数数量。
+
+然而，这样做对这里的例子展示没有实质性的好处，再加上为了保持Java和Kotlin例子的高度一致性，并没有这样做。
+:::
+
+用户可以如此调用 *(考虑到Java没有很好手段来简化对参数较多的方法的调用，仅示范kotlin调用)*
+
+```kotlin
+val bookRepository = ...略...
+
+val page = bookRepository.findBooks(
+    pageIndex = 1,
+    pageSize = 2,
+    name = "GraphQL",
+    maxPrice = BigDecimal(60),
+    authorName = "alex",
+    fetcher = newFetcher(Book::class).by {
+        allScalarFields()
+        store {
+            name()
+        }
+        authors {
+            firstName()
+            lastName()
+        }
+    }
+)
+```
+
+得到如下结果
+
+```json
+Page{
+    rows=[
+        {
+            "id":1,
+            "name":"Learning GraphQL",
+            "edition":1,
+            "price":50.00,
+            "store":{"id":1,"name":"O'REILLY"},
+            "authors":[
+                {"id":2,"firstName":"Alex","lastName":"Banks"},
+                {"id":1,"firstName":"Eve","lastName":"Procello"}
+            ]
+        }
+    ], 
+    totalRowCount=3, 
+    totalPageCount=2
+}
+```
+
+## 查询静态DTO
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public class BookRepository {
+
+    private static final BookTable T = BookTable.$;
+
+    private final JSqlClient sqlClient;
+
+    public BookRepository(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
+    public <V extends View<Book>> Page<V> findBooks(
+        int pageIndex,
+        int pageSize,
+        @Nullable String sortCode,
+        @Nullable Class<V> viewType,
+        @Nullable String name,
+        @Nullable BigDecimal minPrice,
+        @Nullable BigDecimal maxPrice,
+        @Nullable String storeName,
+        @Nullable String storeWebsite,
+        @Nullable String authorName    
+    ) {
+        return sqlClient
+            .createQuery(T)
+            .where(T.name().ilikeIf(name))
+            .where(T.price().betweenIf(minPrice, maxPrice))
+            .where(T.store().name().ilikeIf(storeName))
+            .where(T.store().website().ilikeIf(storeWebsite))
+            .where(
+                T.authors(author ->
+                    Predicate.or(
+                        author.firstName().ilikeIf(authorName),
+                        author.lastName().ilikeIf(authorName)
+                    )
+                )
+            )
+            .orderBy(
+                Order.makeOrders(
+                    T,
+                    sortCode != null ? 
+                        sortCode :
+                        "name asc, edition desc"
+                )
+            )
+            .select(T.fetch(viewType))
+            .fetchPage(pageIndex, pageSize);
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+class BookRepository(
+    private val sqlClient: KSqlClient
+) {
+    fun <V: View<Book>> findBooks(
+        pageIndex: Int,
+        pageSize: Int = 10,
+        sortCode: String = "name asc, edition desc",
+        viewType: KClass<T>,
+        name: String? = null,
+        minPrice: BigDecimal? = null,
+        maxPrice: BigDecimal? = null,
+        storeName: String? = null,
+        storeWebsite: String? = null,
+        name: String? = null
+    ): Page<Book> =
+        sqlClient
+            .createQuery(Book::class) {
+                where(table.name `ilike?` name)
+                where(table.price.`between?`(minPrice, maxPrice))
+                where(table.store.name `ilike?` storeName)
+                where(table.store.website `ilike?` storeWebsite)
+                where += table.authors {
+                    or(
+                        firstName `ilike?` authorName,
+                        lastName `ilike?` authorName
+                    )
+                }
+                orderBy(table.makeOrders(sortCode))
+                select(table.fetch(viewType))
+            }
+            .fetchPage(pageIndex, pageSize)
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+这里，`findBooks`方法的参数很多。这对Kotlin而言无所谓，但是对Java而言可能不是一个好的设计。
+
+如果你的项目是基于Java语言开发的，面对这种情况，你可以选择将所有参数或部分参数提炼成一个参数对象，来减少Java语言下的参数数量。
+
+然而，这样做对这里的例子展示没有实质性的好处，再加上为了保持Java和Kotlin例子的高度一致性，并没有这样做。
+:::
+
+为了演示调用，我们先使用DTO语言自动生成一个实现了`View<Book>`接口的DTO类型。
+
+在`src/main/dto`目录下新建任何扩展名为`dto`的文件，编写如下代码
+
+```sh
+export com.yourcompany.yourproject.model.Book
+    -> package com.yourcompany.yourproject.model.dto
+
+BookView {
+    #allScalars
+    store {
+        id
+        name
+    }
+    authors {
+        id
+        firstName
+        lastName
+    }
+}
+```
+
+编译，自动生成名为`BookView`的Java/Kotlin类。
+
+用户可以如此调用 *(考虑到Java没有很好手段来简化对参数较多的方法的调用，仅示范kotlin调用)*
+
+```kotlin
+val bookRepository = ...略...
+
+val page = bookRepository.findBooks(
+    name = "GraphQL",
+    maxPrice = BigDecimal(60),
+    authorName = "alex",
+    viewType = BookView::class
+)
+```
+
+得到如下结果
+```json
+Page{
+    rows=[
+        BookView(
+            id=1, 
+            name=Learning GraphQL, 
+            edition=1, 
+            price=50.00, 
+            store=BookView.TargetOf_store(id=1, name=O'REILLY), 
+            authors=[
+                BookView.TargetOf_authors(id=2, firstName=Alex, lastName=Banks), 
+                BookView.TargetOf_authors(id=1, firstName=Eve, lastName=Procello)
+            ]
+        )
+    ], 
+    totalRowCount=3, 
+    totalPageCount=2
+}
+```

@@ -191,13 +191,13 @@ public class BookController {
     }
 
     @PutMapping("/book")  
-    pubic int saveBook(
+    public int saveBook(
         // highlight-next-line
         @RequestBody BookInput input  
     ) {
         return sqlClient  
             .save(input)
-            .getTotoalAffectedRowCount(); 
+            .getTotalAffectedRowCount();
     }
 }
 ```  
@@ -434,37 +434,37 @@ public class BookController {
     // highlight-next-line
     @Secured("ADMINISTRATOR")
     @PostMapping("/book")
-    pubic int createBookByAdministrator(  
+    public int createBookByAdministrator(
         // highlight-next-line
         @RequestBody BookAdministratorCreateInput input
     ) {
         return sqlClient
             .insert(input) 
-            .getTotoalAffectedRowCount();
+            .getTotalAffectedRowCount();
     }
 
     // highlight-next-line  
     @Secured("OPERATOR")
     @PutMapping("/book/byOperator")
-    pubic int updateBookByOperator(
+    public int updateBookByOperator(
         // highlight-next-line
         @RequestBody BookOperatorUpdateInput input
     ) {
         return sqlClient
             .update(input)
-            .getTotoalAffectedRowCount(); 
+            .getTotalAffectedRowCount();
     }
 
     // highlight-next-line
     @Secured("ADMINISTRATOR") 
     @PutMapping("/book")
-    pubic int updateBookByAdministrator(
+    public int updateBookByAdministrator(
         // highlight-next-line
         @RequestBody BookAdministratorUpdateInput input
     ) {
         return sqlClient
             .update(input)
-            .getTotoalAffectedRowCount();
+            .getTotalAffectedRowCount();
     }
 }
 ```  
@@ -486,7 +486,7 @@ class BookController(
     ): Int =
         sqlClient
             .insert(input)
-            .totoalAffectedRowCount  
+            .totalAffectedRowCount
 
     // highlight-next-line
     @Secured("OPERATOR")
@@ -497,7 +497,7 @@ class BookController(
     ): Int =  
         sqlClient
             .update(input)
-            .totoalAffectedRowCount
+            .totalAffectedRowCount
 
     // highlight-next-line 
     @Secured("ADMINISTRATOR")  
@@ -508,7 +508,7 @@ class BookController(
     ): Int =
         sqlClient
             .update(input)
-            .totoalAffectedRowCount  
+            .totalAffectedRowCount
 }
 ```  
 

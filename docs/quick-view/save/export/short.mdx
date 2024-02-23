@@ -112,13 +112,13 @@ public class BookController {
     }
 
     @PutMapping("/book")
-    pubic int saveBookInputWithShortAssociations(
+    public int saveBookInputWithShortAssociations(
         // highlight-next-line  
         @RequestBody BookInputWithShortAssociations input
     ) {
         return sqlClient
             .save(input)
-            .getTotoalAffectedRowCount();
+            .getTotalAffectedRowCount();
     } 
 } 
 ```  
@@ -138,7 +138,7 @@ class BookController(
     ): Int =
         sqlClient
             .save(input)
-            .totoalAffectedRowCount  
+            .totalAffectedRowCount
 }
 ```  
 

@@ -134,13 +134,13 @@ public class BookStoreController {
     }  
 
     @PutMapping("/bookStore")
-    pubic int saveBookStoreWithLongAssociation(
+    public int saveBookStoreWithLongAssociation(
         // highlight-next-line
         @RequestBody BookStoreWithLongAssociation input
     ) {
         return sqlClient
             .save(input)
-            .getTotoalAffectedRowCount();
+            .getTotalAffectedRowCount();
     }
 }
 ```  
@@ -160,7 +160,7 @@ class BookStoreController(
     ): Int =
         sqlClient
             .save(input)
-            .totoalAffectedRowCount
+            .totalAffectedRowCount
 }
 ```  
 

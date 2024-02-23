@@ -46,13 +46,13 @@ Jimmer自动实现远程关联数据的自动查询。
         <tr>
             <td rowspan="3">Java</td>
             <td rowspan="3">
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud">
-                    example/java/jimmer-cloud
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud">
+                    jimmer-examples/java/jimmer-cloud
                 </a>
             </td>
             <td>store-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud/store-service/src/main/resources/store.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud/store-service/src/main/resources/store.sql">
                     jimmer-cloud/store-service/src/main/resources/store.sql
                 </a>
             </td>
@@ -60,7 +60,7 @@ Jimmer自动实现远程关联数据的自动查询。
         <tr>
             <td>book-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud/book-service/src/main/resources/book.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud/book-service/src/main/resources/book.sql">
                     jimmer-cloud/book-service/src/main/resources/book.sql
                 </a>
             </td>
@@ -68,7 +68,7 @@ Jimmer自动实现远程关联数据的自动查询。
         <tr>
             <td>author-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud/author-service/src/main/resources/author.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud/author-service/src/main/resources/author.sql">
                     jimmer-cloud/author-service/src/main/resources/author.sql
                 </a>
             </td>
@@ -76,13 +76,13 @@ Jimmer自动实现远程关联数据的自动查询。
         <tr>
             <td rowspan="3">Kotlin</td>
             <td rowspan="3">
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt">
-                    example/kotlin/jimmer-cloud-kt
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt">
+                    jimmer-examples/kotlin/jimmer-cloud-kt
                 </a>
             </td>
             <td>store-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt/store-service/src/main/resources/store.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt/store-service/src/main/resources/store.sql">
                     jimmer-cloud-kt/store-service/src/main/resources/store.sql
                 </a>
             </td>
@@ -90,7 +90,7 @@ Jimmer自动实现远程关联数据的自动查询。
         <tr>
             <td>book-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt/book-service/src/main/resources/book.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt/book-service/src/main/resources/book.sql">
                     jimmer-cloud-kt/book-service/src/main/resources/book.sql
                 </a>
             </td>
@@ -98,7 +98,7 @@ Jimmer自动实现远程关联数据的自动查询。
         <tr>
             <td>author-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt/author-service/src/main/resources/author.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt/author-service/src/main/resources/author.sql">
                     jimmer-cloud-kt/author-service/src/main/resources/author.sql
                 </a>
             </td>
@@ -107,16 +107,16 @@ Jimmer自动实现远程关联数据的自动查询。
 </table>
 
 :::info
-附带的例子[example/java/jimmer-cloud](https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud)
-或[example/kotlin/jimmer-cloud-kt](https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt)
+附带的例子[jimmer-examples/java/jimmer-cloud](https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud)
+或[jimmer-examples/kotlin/jimmer-cloud-kt](https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt)
 使用H2，各服务启动后会自动初始化各自的数据库。
 :::
 
 ## 实体定义
 
 在一个独立的子项目中 *(附带例子为
-[example/java/jimmer-cloud/model](https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-cloud/model)或
-[example/kotin/jimmer-cloud-kt/model](https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-cloud-kt/model)
+[jimmer-examples/java/jimmer-cloud/model](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-cloud/model)或
+[jimmer-examples/kotin/jimmer-cloud-kt/model](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-cloud-kt/model)
 )*，定义所有实体类型。
 
 这些实体类型构成了全局模型，实体类型隶属于不同的微服务。隶属于不同微服务中的实体之间构成了远程关联，其实可以理解成定义在不同微服务之间的实体彼此交互契约。
@@ -263,8 +263,8 @@ interface Author {
 
 微服务应用需要一个注册中心，这是微服务架构的基本特征，本文无需做任何阐述。
 
-附带例子中，为[example/java/jimmer-cloud/registry-center](https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud/registry-center)
-或[example/kotlin/jimmer-cloud-kt/registry-center](https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt/registry-center)
+附带例子中，为[jimmer-examples/java/jimmer-cloud/registry-center](https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud/registry-center)
+或[jimmer-examples/kotlin/jimmer-cloud-kt/registry-center](https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt/registry-center)
 
 ## 实现各服务
 
@@ -273,8 +273,8 @@ interface Author {
 :::note
 虽然本文只讲解`store-service`，但要运行起来体验远程关联的效果，需要把三个服务都实现完。
 
-完整的代码可参见附带的例子[example/java/jimmer-cloud](https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud)
-或[example/kotlin/jimmer-cloud-kt](https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt)。
+完整的代码可参见附带的例子[jimmer-examples/java/jimmer-cloud](https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud)
+或[jimmer-examples/kotlin/jimmer-cloud-kt](https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt)。
 :::
 
 ### 让Jimmer支持微服务

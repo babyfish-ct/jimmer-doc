@@ -35,8 +35,8 @@ Save command require developers to **completely change their thinking pattern**
 
 Calling a save command only takes one line of code, but hides countless details internally that documentation cannot exhaustively enumerate. Therefore, save commands have a dedicated sample project:
 
--   Java: [example/java/save-command](https://github.com/babyfish-ct/jimmer/tree/main/example/java/save-command) 
+-   Java: [jimmer-examples/java/save-command](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/save-command) 
 
--   Kotlin: [example/kotlin/save-command-kt](https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/save-command-kt)
+-   Kotlin: [jimmer-examples/kotlin/save-command-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/save-command-kt)
 
 Simply open either one in an IDE, and run the unit tests.

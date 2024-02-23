@@ -35,8 +35,8 @@ title: 🔥 保存指令
 
 调用保存指令只需要让一行代码，但其内部隐藏了千遍万化的细节，文档难以穷举大量案例。因此，保存指令有独立的示例项目：
 
--   Java: [example/java/save-command](https://github.com/babyfish-ct/jimmer/tree/main/example/java/save-command)
+-   Java: [jimmer-examples/java/save-command](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/save-command)
 
--   Kotlin: [example/kotlin/save-command-kt](https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/save-command-kt)
+-   Kotlin: [jimmer-examples/kotlin/save-command-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/save-command-kt)
 
 用IDE随意打开其中一个，运行单元测试即可。

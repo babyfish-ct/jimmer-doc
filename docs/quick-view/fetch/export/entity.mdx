@@ -427,9 +427,9 @@ public class BookController implements Fetchers {
      * 1. All scalar properties of `Book` itself  
      * 2. All associated ids, not associated objects.  
      */
-    private static final Fetcher<Book> SIMPLE_BOOK =
-            SHALLOW_BOOK
-                    .allScalarFields()  
+    private static final Fetcher<Book> SHALLOW_BOOK =
+            BOOK_FETCHER
+                .allScalarFields()
                     // highlight-next-line
                     .storeId()
                     // highlight-next-line

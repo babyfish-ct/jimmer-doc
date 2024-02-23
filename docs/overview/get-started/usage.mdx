@@ -543,6 +543,7 @@ public class App {
     public static void main(String[] args) {
         ApplicationContext ctx = SpringApplication.run(App.class, args);
         JSqlClient sqlClient = ctx.getBean(JSqlClient.class);
+        BookTable table = Tables.BOOK_TABLE;
         List<Tuple3<Book, Integer, Integer>> tuples = sqlClient
             .createQuery(table)
             .select(
@@ -572,7 +573,7 @@ public class App {
             .execute();
         for (Tuple3<Book, Integer, Integer> tuple : tuples) {
             System.out.printf(
-                "Book object: %o, Global rank: %d, Local rank: %d\n",
+                "Book object: %s, Global rank: %d, Local rank: %d\n",
                 tuple.get_1(),
                 tuple.get_2(),
                 tuple.get_3()

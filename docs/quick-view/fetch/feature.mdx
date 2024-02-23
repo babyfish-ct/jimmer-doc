@@ -36,7 +36,8 @@ pubic class BookRepository {
                     name != null && !name.isEmpty(),  
                     table.name().ilike(name)
                 )
-                .select(table);
+                .select(table)
+                .execute();
     }
 }
 ```
@@ -160,7 +161,8 @@ pubic class BookRepository {
                 .select(  
                     // highlight-next-line
                     table.fetch(fetcher)
-                );
+                )
+                .execute();
     }
 }
 ```

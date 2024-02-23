@@ -25,6 +25,8 @@
     "@mui/material": "^5.9.1",
     "bizcharts": "^4.1.19",
     "clsx": "^1.1.1",
+    "docusaurus-init": "^1.14.7",
+    "global": "^4.4.0",
     "markmap-common": "^0.14.2",
     "markmap-lib": "^0.14.4",
     "markmap-toolbar": "^0.14.4",

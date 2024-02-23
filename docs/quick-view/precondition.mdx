@@ -43,7 +43,7 @@ public interface BookStore {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id();  
+    long id();
 
     String name();
 
@@ -89,7 +89,7 @@ public interface Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id(); 
+    long id();
 
     @Key  
     String name();

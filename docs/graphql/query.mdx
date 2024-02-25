@@ -42,38 +42,45 @@ So far, the GraphQL protocol does not support recursive queries for self-associa
 Therefore, it is not possible to expose functionality like [recursive queries in object fetchers](../query/object-fetcher/recursive) through GraphQL. This is a functionality sacrifice that must currently be accepted when using GraphQL. 
 :::
 
-## Example Code 
+抱歉,我改正了翻译中的代码缩进问题。这里是修正后的翻译:
 
-Jimmer automatically maps entity object association properties and calculated properties to GraphQL fields, so developers only need to implement queries for aggregate roots. The code is very simple, as follows:
+## Implement GraphQL Service 
+
+### 1. Simplest Implementation
 
 <Tabs groupId="language">
-<TabItem value="java" label="Java">  
+<TabItem value="java" label="Java">
 
 ```java title="BookStoreService.java"
 package com.example.business;
 
-import org.springframework.graphql.data.method.annotation.Argument;
+import org.springframework.graphql.data.method.annotation.Argument; 
 // highlight-next-line
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
-...other imports omitted...
+...Omit other imports...
 
-@Controller
+@Controller  
 public class BookStoreService {
 
-    private final BookStoreRepsitory bookStoreRepsitory;
+    private final JSqlClient sqlClient;
 
-    public BookStoreService(BookStoreRepsitory bookStoreRepsitory) {
-        this.bookStoreRepsitory = bookStoreRepsitory;
+    public BookStoreService(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
     }
 
-    // highlight-next-line
+    // highlight-next-line 
     @QueryMapping
     public List<BookStore> bookStores(
             @Argument @Nullable String name
     ) {
-        return bookStoreRepository.findByNameLikeOrderByName(name);
+        BookStoreTable table = Tables.BOOK_STORE_TABLE;
+        return sqlClient
+            .createQuery(table)
+            .where(table.name().ilikeIf(name))
+            .select(table) 
+            .execute();
     }
 }
 ```
@@ -81,68 +88,144 @@ public class BookStoreService {
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin title="BookStoreService.kt" 
+```kotlin title="BookStoreService.kt"  
 package com.example.business
 
 import org.springframework.graphql.data.method.annotation.Argument
 // highlight-next-line
 import org.springframework.graphql.data.method.annotation.QueryMapping
-import org.springframework.stereotype.Controller
+import org.springframework.stereotype.Controller  
 
-...other imports omitted...
+...Omit other imports...
 
 @Controller
-class BookStoreService(
-    private val bookStoreRepository: BookStoreRepsitory
+class BookStoreService(  
+    private val sqlClient: KSqlClient  
 ) {
 
-    // highlight-next-line
+    // highlight-next-line 
     @QueryMapping
     fun bookStores(
-        @Argument name: String?
-    ): List<BookStore> {
-        return bookStoreRepository.findByNameLikeOrderByName(name)
-    }
+        @Argument name: String? 
+    ): List<BookStore> =  
+        sqlClient
+            .createQuery(BookStore::class) {
+                where(table.name `ilike?` name)
+                select(table)
+            }
+            .execute() 
 }
 ```
 
 </TabItem>
 </Tabs>
 
-Where `BookStoreRepository` is defined as follows:
+Unlike previous REST services, this example does **not** use [object fetchers](../query/object-fetcher), returning the simplest orphan objects *(orphan objects contain neither associated properties nor calculated properties)*.  
+
+Although we return orphan objects here, if the client's GraphQL request contains associated objects, Jimmer will still automatically load the required associated properties.
+
+However, there is a problem with this approach: in non-cache mode, unnecessary properties will also be queried, which has performance issues. We will introduce another approach with optimization capability later.
+
+### 2. Optimize Performance  
+
+To avoid querying unnecessary non-associated properties in non-cache mode, Jimmer can create a `Fetcher` object based on `graphql.schema.DataFetchingEnvironment` and use this Fetcher to query the database with the object as a parameter.  
+
+:::tip
+In non-cache mode, not querying unnecessary non-associated properties is the essential difference between Jimmer GraphQL and other GraphQL implementations in the Java ecosystem.  
+:::
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
-```java title="BookStoreRepository.java"  
-public interface BookStoreRepository extends JRepository<BookStore, Long> {
+```java title="BookStoreService.java"  
+package com.example.business;
 
-    List<BookStore> findByNameLikeOrderByName(@Nullable String name);
+import org.springframework.graphql.data.method.annotation.Argument;     
+// highlight-next-line      
+import graphql.schema.DataFetchingEnvironment;
+// highlight-next-line
+import org.babyfish.jimmer.spring.graphql.DataFetchingEnvironments;
+import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.stereotype.Controller;
+
+...Omit other imports...
+
+@Controller  
+public class BookStoreService {
+
+    private final JSqlClient sqlClient;
+
+    public BookStoreService(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
+    @QueryMapping
+    public List<BookStore> bookStores( 
+            @Argument @Nullable String name,
+            // highlight-next-line
+            DataFetchingEnvironment env
+    ) {
+        BookStoreTable table = Tables.BOOK_STORE_TABLE;
+        return sqlClient
+            .createQuery(table) 
+            .where(table.name().ilikeIf(name))
+            .select(
+                table.fetch(  
+                    // highlight-next-line
+                    DataFetchingEnvironments.createQuery(
+                        BookStore.class,
+                        env  
+                    )
+                )
+            )
+            .execute();
+    }
 }
 ```
 
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin title="BookStoreRepository.kt"
-interface BookStoreRepository : KRepository<BookStore, Long> {
+```kotlin title="BookStoreService.kt"   
+package com.example.business  
 
-    fun findByNameLikeOrderByName(name: String?): List<BookStore>
+import org.springframework.graphql.data.method.annotation.Argument  
+// highlight-next-line
+import graphql.schema.DataFetchingEnvironment  
+// highlight-next-line 
+import org.babyfish.jimmer.spring.graphql.toFetcher
+import org.springframework.graphql.data.method.annotation.QueryMapping
+import org.springframework.stereotype.Controller   
+
+...Omit other imports...  
+
+@Controller    
+class BookStoreService(   
+    private val sqlClient: KSqlClient    
+) {
+
+    @QueryMapping
+    fun bookStores(
+        @Argument name: String?,    
+        // highlight-next-line
+        env: DataFetchingEnvironment 
+    ): List<BookStore> =    
+        sqlClient
+            .createQuery(BookStore::class) {
+                where(table.name `ilike?` name) 
+                select(
+                    table.fetch(
+                        // highlight-next-line
+                        env.toFetcher()    
+                    )
+                )
+            }
+            .execute()  
 }
 ```
 
 </TabItem>
 </Tabs>
-
-Unlike previous REST services, this example does **not** use [object fetchers](../query/object-fetcher) and simply returns the simplest standalone objects, which contain neither association properties nor calculated properties.
-
-Here, `BookStoreRepository.findByNameLikeOrderByName` is an abstract method. If declarative queries are used, use the simplest `select(table)` rather than `select(table.fetch(...))`. 
-
-:::tip
-When using Jimmer to implement GraphQL, [object fetchers](../query/object-fetcher) are replaced by GraphQL mechanisms.
-
-Therefore, do **NOT** use object fetchers, just return simple objects directly.
-:::
 
 ## Running Effect
 
@@ -364,9 +447,3 @@ The return result is:
     }
 }
 ```
-
-It is easy to see that the execution effect of GraphQL is very similar to that of [object fetchers](../query/object-fetcher). This is also the reason for the earlier statement "object fetchers are replaced by GraphQL, do not use object fetchers".
-
-:::tip
-In fact, [object fetchers](../query/object-fetcher), which are very useful in non-GraphQL modes, are themselves the result of GraphQLization of ORM frameworks.
-:::

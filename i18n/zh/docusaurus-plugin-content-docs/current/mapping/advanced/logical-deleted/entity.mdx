@@ -1,0 +1,457 @@
+---
+sidebar_position: 1
+title: 实体表
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+想让实体支持逻辑删除，需要添加一个被`org.babyfish.jimmer.sql.LogicalDeleted`的标志属性，以表示该数据是正常的还是已经被删除。
+
+一旦为实体配置了逻辑删除属性
+
+-   默认情况下，开发人员调用API删除某个实体对象时，Jimmer并不会用SQL的`delete`语句真正删除数据，而是使用`update`语句把该实体的逻辑删除属性设置为“已经被删除“
+
+    其他情况：即便实体具备逻辑删除属性，Jimmer也提供API让开发人员通过额外的参数强行真正删除对象。
+
+-   默认情况下，所有针对实体的SQL查询都会被自动加上`where 软删除标志 <> 已经被删除`的条件，从而营造出某些数据已经被删除的假象。
+
+:::info
+本文只介绍逻辑删除标志字段的映射，至于逻辑删除功能的的使用，请参见[全局过滤器/逻辑删除](../../query/global-filter/logical-deleted)。
+:::
+
+## 用法
+
+逻辑删除标志属性可以是如下类型之一
+
+-   boolean：必须非null
+-   int：必须非null
+-   枚举：必须非null
+-   long/Long：null或非null即可
+-   UUID: 必须非null
+-   日期：必须可null
+
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>代码</th>
+<th>删除状态</th>
+<th>初始状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2">boolean</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted("true")
+boolean deleted();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted("true")
+val deleted: Boolean
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>true</td>
+<td>false</td>
+</tr>
+<tr>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted("false")
+val active: Boolean;
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted("false")
+val active: Boolean
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>false</td>
+<td>true</td>
+</tr>
+<tr>
+<td>int</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Default("0")
+@LogicalDeleted("1")
+int state();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Default("0")
+@LogicalDeleted("1")
+val state: Int
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>枚举</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Default("INITIALIZED")
+@LogicalDeleted("DELETED")
+State state();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Default("INITIALIZED")
+@LogicalDeleted("DELETED")
+val state: State
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>DELETED</td>
+<td>INITIALIZED</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+long
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted
+long deletedMillis();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedMillis: Long
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>当前时钟毫秒数</td>
+<td>0L</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+Nullable Long
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted
+Long deletedMillis();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedMillis: Long?
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>当前时钟毫秒数</td>
+<td>null</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+UUID
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted
+UUID deletedData();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedData: UUID
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>随机UUID</td>
+<td>所有字节为0的UUID</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+Nullable UUID
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable
+@LogicalDeleted
+UUID deletedData();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedData: UUID?
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>随机UUID</td>
+<td>null</td>
+</tr>
+<tr>
+<td rowspan="2">
+Nullable LocalDateTime
+</td>
+<td>
+
+✩
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable
+@LogicalDeleted("now")
+UUID deletedTime();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted("now")
+val deletedTime: LocalDateTime?
+```
+
+</TabItem>
+</Tabs>
+
+</td>
+<td>当前时间</td>
+<td>null</td>
+</tr>
+<tr>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable
+@LogicalDeleted("null")
+UUID createdTime();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted("null")
+val createdTime: LocalDateTime?
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>null</td>
+<td>当前时间</td>
+</tr>
+</tbody>
+</table>
+
+其中
+
+-   第一列或第二列中的 ✩ 表示当前配置方法支持下一节即将讨论的多版本数据。
+
+    :::info
+    支持逻辑删除却不考虑多版本数据的问题，是一种成熟不高的考虑，因此建议使用支持多版本的逻辑删除配置。
+    :::
+
+-   `当前时钟毫秒数`，默认行为是`System.currentMillis()`，即使默认的`org.babyfish.jimmer.sql.meta.LogicalDeletedLongGenerator`的行为。
+
+    如果对此行为不满意，可以自定义类实现`LogicalDeletedValueGenerator<Long>`接口，并用如下配置
+
+    -   `@LogicalDeleted(generatedType = YourGenerator.class)`
+
+    -   `@LogicalDeleted(generatedRef = yourGenerator.class)`，这里`generatorRef`表示对象在IOC容器管理框架中的名称
+
+-   `随机UUD`，默认行为是`UUID.randomUUID()`，即使默认的`org.babyfish.jimmer.sql.meta.LogicalDeletedUUIDGenerator`的行为。
+
+    如果对此行为不满意，可以自定义类实现`LogicalDeletedValueGenerator<UUID>`接口，并用如下配置
+
+    -   `@LogicalDeleted(generatedType = YourGenerator.class)`
+
+    -   `@LogicalDeleted(generatedRef = yourGenerator.class)`，这里`generatorRef`表示对象在IOC容器管理框架中的名称
+
+## 多版本问题
+
+逻辑删除并不会导致数据被真正删除，只会导致数据被隐藏，这代表着数据出现多版本问题。此问题在[Key/多版本支持](./key#多版本支持)中也有阐述。
+
+以支持多版本的long类型逻辑删除为例
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Book {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    long id();
+
+    @Key
+    String name();
+
+    @Key
+    int edition();
+
+    // hightlight-next-line
+    @LogicalDeleted
+    long deletedMillis();
+
+    BigDecimal price();
+
+    @ManyToOne
+    BookStore store();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Book {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long
+
+    @Key
+    val name: String
+
+    @Key
+    val edition: String
+
+    // hightlight-next-line
+    @LogicalDeleted
+    val deletedMillis: Long
+
+    val price: BigDecimal
+
+    @ManyToOne
+    val store: BookStore
+}
+```
+
+</TabItem>
+</Tabs>
+
+虽然`Book`对象的Key为`name`和`edition`，但是由于`deletedMillis`属性为逻辑删除标志，所以数据库层面的非主键UNIQUE约束应该为
+
+```sql
+alter table BOOK
+    add constraint uq_key_BOOK
+        unique(NAME, EDITION, DELETED_MILLIS);
+```
+
+假如表格输入如下
+
+|ID|NAME|EDITION|PRICE|STORE_ID|DELETED_MILLIS|
+|---|---|---|---|---|---|
+|1027|SQL in Action|1|49.99|23|0|
+|1026|SQL in Action|1|55.99|22|1708796420956|
+|1025|SQL in Action|1|47.99|23|1708234681901|
+|3131|SQL in Action|2|59.99|23|0|
+|3130|SQL in Action|2|53.99|22|1708722582793|
+|3129|SQL in Action|2|58.99|23|1708664484823|
+
+其中有4条关联数据被隐藏，有效数据只有两条
+
+|ID|NAME|EDITION|PRICE|STORE_ID|DELETED_MILLIS|
+|---|---|---|---|---|---|
+|1027|SQL in Action|1|49.99|23|0|
+|3131|SQL in Action|2|59.99|23|0|
+
+## 对中间表的影响
+
+如果实体被逻辑删除，那么和他相关的基于中间表 *(采用`@JoinTable`的注解)* 的关联会收到何种影响呢？
+
+-   如果中间表也支持逻辑删除，即`@JoinTable`注解的`logicalDeletedFilter`参数被指定，与被逻辑删除实体相关的中间表记录也会被逻辑删除。
+
+    在[下一篇文档](./join-table)中，我们将会详细讨论中间表的逻辑删除。
+
+-   如果`@JoinTable`注解的`deletedWhenEndpointIsLogicallyDeleted`参数被设置为true，与被逻辑删除实体相关的中间表记录会被物理删除。
+
+-   如果以上两个条件都不满足，那么与被逻辑删除实体相关的中间表记录将不会被做出任何处理。

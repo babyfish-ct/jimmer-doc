@@ -1,0 +1,833 @@
+---
+sidebar_position: 9
+title: 中间表过滤器
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 两种用法
+
+Jimmer支持中间表过滤器，有两种用法
+
+### 1. 双边实体类型相同的多个关联
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Shop {
+
+    @Id
+    long id();
+
+    String name();
+
+    @ManyToMany
+    @joinTable(
+        name = "SHOP_CUSTOMER_MAPPING",
+        joinColumnName = "SHOP_ID",
+        inverseColumnName = "CUSTOMER_ID",
+        // highlight-next-line
+        readonly = true
+    )
+    List<Customer> customers();
+
+    @ManyToMany
+    @joinTable(
+        name = "SHOP_CUSTOMER_MAPPING",
+        joinColumnName = "SHOP_ID",
+        inverseColumnName = "CUSTOMER_ID",
+        // highlight-next-line
+        filter = @JoinTable.JoinTableFilter(
+            columnName = "MAPPING_TYPE",
+            type = String.class,
+            values = "VIP"
+        )
+    )
+    List<Customer> vipCustomers();
+
+    @ManyToMany
+    @joinTable(
+        name = "SHOP_CUSTOMER_MAPPING",
+        joinColumnName = "SHOP_ID",
+        inverseColumnName = "CUSTOMER_ID",
+        // highlight-next-line
+        filter = @JoinTable.JoinTableFilter(
+            columnName = "MAPPING_TYPE",
+            type = String.class,
+            values = "ORDINARY"
+        )
+    )
+    List<Customer> ordinaryCustomers();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Shop {
+
+    @Id
+    val id: Long
+
+    val name: String
+
+    @ManyToMany
+    @joinTable(
+        name = "SHOP_CUSTOMER_MAPPING",
+        joinColumnName = "SHOP_ID",
+        inverseColumnName = "CUSTOMER_ID",
+        // highlight-next-line
+        readonly = true
+    )
+    val customers: List<Customer>
+
+    @ManyToMany
+    @joinTable(
+        name = "SHOP_CUSTOMER_MAPPING",
+        joinColumnName = "SHOP_ID",
+        inverseColumnName = "CUSTOMER_ID",
+        // highlight-next-line
+        filter = JoinTable.JoinTableFilter(
+            columnName = "MAPPING_TYPE",
+            type = String.class,
+            values = "VIP"
+        )
+    )
+    val vipCustomers: List<Customer>
+
+    @ManyToMany
+    @joinTable(
+        name = "SHOP_CUSTOMER_MAPPING",
+        joinColumnName = "SHOP_ID",
+        inverseColumnName = "CUSTOMER_ID",
+        // highlight-next-line
+        filter = JoinTable.JoinTableFilter(
+            columnName = "MAPPING_TYPE",
+            type = String.class,
+            values = "ORDINARY"
+        )
+    )
+    val ordinaryCustomers: List<Customer>
+}
+```
+
+</TabItem>
+</Tabs>
+
+这个例子中，`Shop.customers`，`Shop.vipCustomers`和`Shop.ordinaryCustomers`共享一张中间表
+
+```sql
+create table SHOP_CUSTOMER_MAPPING(
+    SHOP_ID bigint not null,
+    CUSTOMER_ID bigint not null,
+    MAPPING_TYPE varchar(8) not null
+);
+
+// 中间表主键是否包含过滤字段，需要具体问题具体分析。
+// 在这个例子中，一个`Shop`和一个`Customer`之间的关联
+// 不能既是"VIP"又是"ORDINARY"，
+// 所以，主键约束不包含`MAPPING_TYPE`
+alter table SHOP_CUSTOMER_MAPPING
+    add constraint pk_SHOP_CUSTOMER_MAPPING
+        primary key(SHOP_ID, CUSTOMER_ID);
+
+alter table SHOP_CUSTOMER_MAPPING
+    add constraint fk_SHOP_CUSTOMER_MAPPING__SHOP
+        foreign key(SHOP_ID)
+            references SHOP(ID);
+
+alter table SHOP_CUSTOMER_MAPPING
+    add constraint fk_SHOP_CUSTOMER_MAPPING__CUSTOMER
+        foreign key(CUSTOMER_ID)
+            references CUSTOMER(ID);
+
+alter table SHOP_CUSTOMER_MAPPING
+    add constraint fk_SHOP_CUSTOMER_MAPPING__MAPPING_TYPE
+        check(MAPPING_TYPE in ('VIP', 'ORDINARY'));
+```
+
+该表以如下方式存储数据
+
+|SHOP_ID|CUSTOMER_ID|MAPPING_TYPE|
+|---|---|---|
+|21|3176|VIP|
+|21|1087|ORDINARY|
+|21|9155|ORDINARY|
+|40|8347|VIP|
+|40|4365|ORDINARY|
+|40|3478|ORDINARY|
+
+其中，`Shop.vipCustomers`对应两条数据，`Shop.ordinaryCustomers`对应4条数据，而`Shop.customers`可以看到所有数据，即可。
+
+```
+Shop.customers = Shop.vipCustomers + Shop.ordinaryCustomers
+```
+
+可见，`Shop.customers`并非原始关联，而是其他多个关联的并集。我们不妨称其为并集关联。
+
+:::caution
+并集关联不能被直接修改，因此必须声明`readonly = true`。
+:::
+
+其实，并集关联`Shop.customers`还有另外一种等价的写法
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@ManyToMany
+@joinTable(
+    ...省略其他参数...,
+    filter = @JoinTable.JoinTableFilter(
+        columnName = "MAPPING_TYPE",
+        type = String.class,
+        // highlight-next-line
+        values = {"VIP", "ORDINARY"}
+    )
+)
+List<Customer> customers();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@ManyToMany
+@joinTable(
+    ...省略其他参数...,
+    filter = @JoinTable.JoinTableFilter(
+        columnName = "MAPPING_TYPE",
+        type = String.class,
+        // highlight-next-line
+        values = {"VIP", "ORDINARY"}
+    )
+)
+val customers: List<Customer>
+```
+
+</TabItem>
+</Tabs>
+
+最后，让我们看看这三个关联的JOIN行为的差异
+
+-   `Shop.customers`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    ShopTable table = Tables.SHOP_TABLE;
+
+    List<Long> shopIds = sqlClient
+        .create(table)
+        .where(
+            table
+                .asTableEx()
+                // highlight-next-line
+                .customers()
+                .name().eq("Smith")
+        )
+        .select(table.id())
+        .distinct()
+        .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val shopIds = sqlClient
+        .create(Shop::class) {
+            where(
+                table
+                    .asTableEx()
+                    // highlight-next-line
+                    .customers
+                    .name eq "Smith"
+            )
+            select(table.id())
+        }
+        .distinct()
+        .execute();
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    最终生成的SQL为
+
+    ```sql
+    select distinct tb_1_.ID, tb_1_.NAME
+    from SHOP tb_1_
+    inner join SHOP_CUSTOMER_MAPPING tb_2_ 
+        /* highlight-next-line */
+        on tb_1_.ID = tb_2_.SHOP_ID
+    inner join CUSTOMER tb_3_ 
+        on tb_2_.CUSTOMER_ID = tb_3_.ID
+    where tb_3_.NAME = ? /* Smith */
+    ```
+
+-   `Shop.vipCustomers`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    ShopTable table = Tables.SHOP_TABLE;
+
+    List<Long> shopIds = sqlClient
+        .create(table)
+        .where(
+            table
+                .asTableEx()
+                // highlight-next-line
+                .vipCustomers()
+                .name().eq("Smith")
+        )
+        .select(table.id())
+        .distinct()
+        .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val shopIds = sqlClient
+        .create(Shop::class) {
+            where(
+                table
+                    .asTableEx()
+                    // highlight-next-line
+                    .vipCustomers
+                    .name eq "Smith"
+            )
+            select(table.id())
+        }
+        .distinct()
+        .execute();
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    最终生成的SQL为
+
+    ```sql
+    select distinct tb_1_.ID, tb_1_.NAME
+    from SHOP tb_1_
+    inner join SHOP_CUSTOMER_MAPPING tb_2_ 
+        /* highlight-next-line */
+        on tb_1_.ID = tb_2_.SHOP_ID
+        /* highlight-next-line */
+        and tb_2_.MAPPING_TYPE = ? /* VIP */
+    and
+        tb_2_.type = ?
+    inner join CUSTOMER tb_3_ 
+        on tb_2_.CUSTOMER_ID = tb_3_.ID
+    where tb_3_.NAME = ? /* Smith */
+    ```
+
+-   `Shop.ordinaryCustomers`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    ShopTable table = Tables.SHOP_TABLE;
+
+    List<Long> shopIds = sqlClient
+        .create(table)
+        .where(
+            table
+                .asTableEx()
+                // highlight-next-line
+                .ordinaryCustomers()
+                .name().eq("Smith")
+        )
+        .select(table.id())
+        .distinct()
+        .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val shopIds = sqlClient
+        .create(Shop::class) {
+            where(
+                table
+                    .asTableEx()
+                    // highlight-next-line
+                    .ordinaryCustomers
+                    .name eq "Smith"
+            )
+            select(table.id())
+        }
+        .distinct()
+        .execute();
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    最终生成的SQL为
+
+    ```sql
+    select distinct tb_1_.ID, tb_1_.NAME
+    from SHOP tb_1_
+    inner join SHOP_CUSTOMER_MAPPING tb_2_ 
+        /* highlight-next-line */
+        on tb_1_.ID = tb_2_.SHOP_ID
+        /* highlight-next-line */
+        and tb_2_.MAPPING_TYPE = ? /* ORDINARY */
+    and
+        tb_2_.type = ?
+    inner join CUSTOMER tb_3_ 
+        on tb_2_.CUSTOMER_ID = tb_3_.ID
+    where tb_3_.NAME = ? /* Smith */
+    ```
+
+### 2. 双边实体类型不同的多个关联
+
+有一种常见的案例，项目中有很多种不同的数据，每一种数据都可以标记多个Tag。
+
+-   `Tag`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    @Entity
+    public interface Tag {
+
+        @Id
+        long id();
+
+        String name();
+
+        ...省略其他属性...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    @Entity
+    interface Tag {
+
+        @Id
+        val id: Long
+
+        val name: String
+
+        ...省略其他属性...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   `BookStore`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    @Entity
+    public interface BookStore {
+
+        @ManyToMany
+        @JoinTable(
+            name = "SOURCE_TAG_MAPPING",
+            joinColumns = @joinColumn(
+                name = "SOURCE_ID",
+                foreignKeyType = ForeignKeyType.FAKE
+            ),
+            inverseColumnName = "TAG_ID",
+            filter = @JoinTable.JoinTableFilter(
+                columnName = "SOURCE_TYPE",
+                type = String.class,
+                values = "BOOK_STORE",
+            )
+        )
+        List<Tag> tags();
+        
+        ...省略其他属性...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    @Entity
+    interface BookStore {
+
+        @ManyToMany
+        @JoinTable(
+            name = "SOURCE_TAG_MAPPING",
+            joinColumns = @joinColumn(
+                name = "SOURCE_ID",
+                foreignKeyType = ForeignKeyType.FAKE
+            ),
+            inverseColumnName = "TAG_ID",
+            filter = JoinTable.JoinTableFilter(
+                columnName = "SOURCE_TYPE",
+                type = String.class,
+                values = "BOOK_STORE",
+            )
+        )
+        val tags: List<Tag>
+        
+        ...省略其他属性...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   `Book`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    @Entity
+    public interface Book {
+
+        @ManyToMany
+        @JoinTable(
+            name = "SOURCE_TAG_MAPPING",
+            joinColumns = @joinColumn(
+                name = "SOURCE_ID",
+                foreignKeyType = ForeignKeyType.FAKE
+            ),
+            inverseColumnName = "TAG_ID",
+            filter = @JoinTable.JoinTableFilter(
+                columnName = "SOURCE_TYPE",
+                type = String.class,
+                values = "BOOK",
+            )
+        )
+        List<Tag> tags();
+        
+        ...省略其他属性...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    @Entity
+    interface Book {
+
+        @ManyToMany
+        @JoinTable(
+            name = "SOURCE_TAG_MAPPING",
+            joinColumns = @joinColumn(
+                name = "SOURCE_ID",
+                foreignKeyType = ForeignKeyType.FAKE
+            ),
+            inverseColumnName = "TAG_ID",
+            filter = JoinTable.JoinTableFilter(
+                columnName = "SOURCE_TYPE",
+                type = String.class,
+                values = "BOOK",
+            )
+        )
+        val tags: List<Tag>
+        
+        ...省略其他属性...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   `Author`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    @Entity
+    public interface Author {
+
+        @ManyToMany
+        @JoinTable(
+            name = "SOURCE_TAG_MAPPING",
+            joinColumns = @joinColumn(
+                name = "SOURCE_ID",
+                foreignKeyType = ForeignKeyType.FAKE
+            ),
+            inverseColumnName = "TAG_ID",
+            filter = JoinTable.JoinTableFilter(
+                columnName = "SOURCE_TYPE",
+                type = String.class,
+                values = "AUTHOR",
+            )
+        )
+        List<Tag> tags();
+        
+        ...省略其他属性...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    @Entity
+    interface Author {
+
+        @ManyToMany
+        @JoinTable(
+            name = "SOURCE_TAG_MAPPING",
+            joinColumns = @joinColumn(
+                name = "SOURCE_ID",
+                foreignKeyType = ForeignKeyType.FAKE
+            ),
+            inverseColumnName = "TAG_ID",
+            filter = @JoinTable.JoinTableFilter(
+                columnName = "SOURCE_TYPE",
+                type = String.class,
+                values = "AUTHOR",
+            )
+        )
+        val tags: List<Tag>
+        
+        ...省略其他属性...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+对于中间表`SOURCE_TAG_MAPPING`而言，虽然其外键`TAG_ID`指向TAG表，但是另外一个外键`SOURCE_ID`却没有固定的目标，`BOOK_STORE`、`BOOK`和`AUTHOR`都有可能是其目标表。
+
+因此，我们无法为`SOURCE_ID`添加外键约束。
+
+```sql
+create table SOURCE_TAG_MAPPING(
+    SOURCE_ID bigint not null,
+    TAG_ID bigint not null,
+    SOURCE_TYPE varchar(10) not null
+);
+
+// 中间表主键是否包含过滤字段，需要具体问题具体分析。
+// 在这个例子中，不能类型的`SOURCE_ID`可能相等，
+// 所以，主键约束需要包含`SOURCE_TYPE`
+alter table SOURCE_TAG_MAPPING
+    add constraint pk_SHOP_CUSTOMER_MAPPING
+        primary key(SOURCE_ID, TAG_ID, SOURCE_TYPE);
+
+// highlight-next-line
+// `SOURCE_ID`可能引用`BOOK_STORE`、`BOOK`和`AUTHOR`表，
+// highlight-next-line
+// 由于没有固定的行为，故而无法为建立外键约束
+
+alter table SOURCE_TAG_MAPPING
+    add constraint fk_SOURCE_TAG_MAPPING__TAG
+        primary key(TAG_ID)
+            references TAG(ID);
+
+alter table SOURCE_TAG_MAPPING
+    add constraint ck_SOURCE_TAG_MAPPING__SOURCE_TYPE
+        check(SOURCE_TYPE in ('BOOK_STORE', 'BOOK', 'AUTHOR'));
+```
+
+`SOURCE_ID`无法建立外键约束，所以，这是一个[伪外键](../base/foreignkey)，所以，即，上述代码中的
+
+```java
+@JoinTable(
+    joinColumns = @joinColumn(
+        name = "SOURCE_ID",
+        // highlight-next-line
+        foreignKeyType = ForeignKeyType.FAKE
+    ),
+    ...省略其他参数...
+)
+```
+
+该表数据看起来如夏
+
+|SOURCE_ID|TARGET_ID|SOURCE_TYPE|
+|---|---|---|
+|9|2|BOOK_STORE|
+|9|4|BOOK_STORE|
+|86|3|BOOK|
+|86|4|BOOK|
+|781|1|AUTHOR|
+|781|3|AUTHOR|
+
+## 混合和多对一和多对多
+
+多对一和多对多都可以给予中间表映射，所以，可以利用这个技巧把二者的中间表合并成一张表。但是，请注意
+
+:::caution
+强烈建议仅在数据库支持条件索引时，才使用此用法。
+
+即，不要在以MySQL为代表的不支持条件索引的数据库中使用此用法。
+:::
+
+### 定义关联
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Book {
+
+    @ManyToMany
+    @JoinTable(
+        name = "BOOK_AUTHOR_MAPPING",
+        joinColumnName = "BOOK_ID",
+        inverseColumnName = "AUTHOR_ID",
+        readonly = true
+    )
+    List<Author> authors();
+
+    @Nullable
+    @ManyToOne
+    @JoinTable(
+        name = "BOOK_AUTHOR_MAPPING",
+        joinColumnName = "BOOK_ID",
+        inverseColumnName = "AUTHOR_ID",
+        filter = @JoinTable.JoinTableFilter(
+            columnName = "MAPPING_TYPE",
+            type = String.class,
+            values = "PRIMARY"
+        )
+    )
+    Author primaryAuthor();
+
+    @ManyToMany
+    @JoinTable(
+        name = "BOOK_AUTHOR_MAPPING",
+        joinColumnName = "BOOK_ID",
+        inverseColumnName = "AUTHOR_ID",
+        filter = @JoinTable.JoinTableFilter(
+            columnName = "MAPPING_TYPE",
+            type = String.class,
+            values = "SECONDARY"
+        )
+    )
+    List<Author> secondaryAuthors();
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Book {
+
+    @ManyToMany
+    @JoinTable(
+        name = "BOOK_AUTHOR_MAPPING",
+        joinColumnName = "BOOK_ID",
+        inverseColumnName = "AUTHOR_ID",
+        readonly = true
+    )
+    val authors: List<Author>
+
+    @Nullable
+    @ManyToOne
+    @JoinTable(
+        name = "BOOK_AUTHOR_MAPPING",
+        joinColumnName = "BOOK_ID",
+        inverseColumnName = "AUTHOR_ID",
+        filter = JoinTable.JoinTableFilter(
+            columnName = "MAPPING_TYPE",
+            type = String.class,
+            values = "PRIMARY"
+        )
+    )
+    val primaryAuthor: Author?
+
+    @ManyToMany
+    @JoinTable(
+        name = "BOOK_AUTHOR_MAPPING",
+        joinColumnName = "BOOK_ID",
+        inverseColumnName = "AUTHOR_ID",
+        filter = @JoinTable.JoinTableFilter(
+            columnName = "MAPPING_TYPE",
+            type = String.class,
+            values = "SECONDARY"
+        )
+    )
+    val secondaryAuthors: List<Author>
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+</Tabs>
+
+很明显
+
+`authors` *(many-to-many)* = `primaryAuthor` *(many-to-one)* + `secondaryAuthors` *(many-to-many)*
+
+### 条件索引
+
+```sql
+create table BOOK_AUTHOR_MAPPING(
+    BOOK_ID bigint not null,
+    AUTHOR_ID bigint not null,
+    MAPPING_TYPE varchar(9) not null
+);
+
+// 中间表主键是否包含过滤字段，需要具体问题具体分析。
+// 在这个例子中，一个`Author`和一个`Book`之间的关联
+// 不能既是"PRIMARY"又是"SECONDARY"，
+// 所以，主键约束不包含`MAPPING_TYPE`
+alter table BOOK_AUTHOR_MAPPING
+    add constraint pk_BOOK_AUTHOR_MAPPING
+        primary key(BOOK_ID, AUTHOR_ID);
+
+alter table BOOK_AUTHOR_MAPPING
+    add constraint fk_BOOK_AUTHOR_MAPPING__BOOK
+        foreign key(BOOK_ID)
+            references BOOK(ID);
+
+alter table BOOK_AUTHOR_MAPPING
+    add constraint fk_BOOK_AUTHOR_MAPPING__BOOK
+        foreign key(AUTHOR_ID)
+            references AUTHOR(ID);
+
+alter table BOOK_AUTHOR_MAPPING
+    add constraint ck_BOOK_AUTHOR_MAPPING__MAPPING_TYPE
+        check(MAPPING_TYPE in ('PRIMARY', 'SECONDARY'));
+
+// highlight-start
+// 不同数据库的条件索引的语法可能有少量差异，
+// 这里以Postgres为例
+create unique index BOOK_AUTHOR_MAPPING__PRIMARY_INDEX 
+    on BOOK_AUTHOR_MAPPING(AUTHOR_ID)
+    when MAPPING_TYPE = 'PRIMARY';
+// highlight-end
+```
+
+其中`when`语句非常重要，表示该索引时条件索引。
+
+不同数据库的条件索引的语法可能有少量差异，这里以Postgres为例。更多详情请参考https://www.postgresql.org/docs/current/indexes-partial.html
+
+-   当`MAPPING_TYPE`为"PRIMARY"时，为`AUTHOR_ID`外键添加一个唯一索引，保证每个`Book`最多只能有一个primary `Author`。
+    即，保证`Book.primaryAuthor`为多对一关联。
+
+-   否则，没有唯一性约束，每个`Book`可以有任意数量的secondary `Author`。
+    即，`Book.secondaryAuthors`仍然为多对多关联。

@@ -1,12 +1,10 @@
 ---
-sidebar_position: 3
-title: Logical Deletion
+sidebar_position: 1
+title: Entity Table
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-
-Logical deletion, also known as soft deletion, means data is not actually deleted. Instead, data is hidden to give the illusion of deletion. This leaves room for recovering from accidental operations.
 
 To enable logical deletion support for an entity, add a flag property annotated with `org.babyfish.jimmer.sql.LogicalDeleted` to indicate whether the data is normal or already deleted.
 

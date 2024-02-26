@@ -3,5 +3,435 @@ sidebar_position: 6
 title: JSON Converter
 ---
 
-Jimmer实体并非POJO，但靠`org.babyish.jimmmer.jackson.ImmutableModule`支持Jackson序列化。
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
+Jimmer实体并非POJO，但可以靠`org.babyish.jimmmer.jackson.ImmutableModule`支持Jackson序列化。
+
+:::tip
+如果使用Jimmer的Spring Boot Starter，该`ImmutableModule`会被自动注册，无需用户关注。
+:::
+
+然而有的时候，我们需要对某些属性的Jackson序列化行为进行定制，我们以两种情况来举例。
+
+-   雪花ID
+
+-   字段敏感
+
+## 1. 雪花ID
+
+雪花id会导致数值很大的int64类型，遗憾的是，JavaScript的数字类型无法表达其他语言中的int64大数字。因此我们不得不让这类id属性被序列化为字符串。
+
+### 用法
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+@public interface Book {
+
+    @Id
+    @GeneratedValue(generatorType = SnowflakeIdGenerator.class)
+    // highlight-next-line
+    @JsonConverter(LongToStringConverter.class)
+    long id();
+
+    String name();
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+@public interface Book {
+
+    @Id
+    @GeneratedValue(generatorType = SnowflakeIdGenerator.class)
+    // highlight-next-line
+    @JsonConverter(LongToStringConverter.class)
+    long id();
+
+    String name();
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+</Tabs>
+
+其中`SnowflakIdGenerator`是用户提供的分布式雪花id生成器实现，不是我们讨论的重点。
+
+这里，我们讨论被标记的那行代码：
+
+-   `@org.babyfish.jimmer.jackson.JsonConverter`表示自定义`Book.id`属性的Jackson序列化/反序列化行为。
+
+-   `org.babyfish.jimmer.jackson.LongToStringConverter`表示将long类型的值按照String来序列化/反序列化。
+
+    `LongToStringConveter`是Jimmer内置的Converter，这里展示一下其源代码，我们就可以快熟了解如何自定义`Converter`。
+
+    ```java
+    package org.babyfish.jimmer.jackson;
+
+    public class LongToStringConverter implements Converter<Long, String> {
+
+        // 如何序列化
+        @Override
+        public String output(Long value) {
+            return Long.toString(value);
+        }
+
+        // 如何反序列化
+        @Override
+        public Long input(String jsonValue) {
+            return Long.parseLong(jsonValue);
+        }
+    }
+    ```
+
+:::tip
+注意，
+
+-   这里使用的是Jimmer的注解而非Jackson注解，原因在于：这不仅仅是序列化框架Jackson的行为调整问题，还有
+
+    -   [前后端自动对接](../../client)的问题
+    
+    -   [DTO语言](../../object/view/dto-language)的问题。
+
+-   无需在Converter内部考虑null值，null值永远不会作为`Converter`的任何方法的参数。
+:::
+
+这里，我们绕过ORM，通过模拟数据展示效果。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Objects.createBook(draft -> {
+    draft.setId(1546434604146774987L);
+    draft.setName("SQL in Action");
+});
+System.out.println(book);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = new(Book::class).by {
+    id = 1546434604146774987L
+    name = "SQL in Action"
+}
+println(book)
+```
+
+</TabItem>
+</Tabs>
+
+由于Jimmer实体的toString就是Jackson序列化，所以，我们可以直接打印并观察Jackson序列化的结果：
+
+```json
+{
+    // highlight-next-line
+    "id": "1546434604146774987",
+    "name": "SQL in Action"
+}
+```
+
+可见，序列化后的id是字符串，而非数字，这样，就避开了JavaScript客户端无法解析大数字的问题。
+
+### 自动应用于IdView属性
+
+:::info
+[@IdView属性](../advanced/view/id-view)是进阶映射才会讲解的内容，读者也可以先跳过本节，以后再回来看。
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Author {
+
+    @ManyToMany(mappedBy = "authors")
+    List<Book> books();
+
+    @IdView("authors")
+    // highlight-next-line
+    List<Long> bookIds();
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Author {
+
+    @ManyToMany(mappedBy = "authors")
+    val books: List<Book>
+
+    @IdView("authors")
+    // highlight-next-line
+    val bookIds: List<Long>
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+</Tabs>
+
+这里，`bookIds`属性并非普通的`List<Long>`集合，而是所有关联的`Book`对象的id的集合。
+
+由于`Book.id`属性已经被注解`@JsonConverter`修饰，所以，无需为这里的`bookIds`属性指定任何注解，该属性也有这种能力。
+
+同样，绕过ORM，通过模拟数据展示效果。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Author author = Objects.createAuthor(draft -> {
+    draft.setBookIds(
+        Arrays.asList(
+            1546434604146774987L,
+            1546434604146774988L
+        )
+    );
+});
+System.out.println(book);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = new(Book::class).by {
+    bookIds = listOf(
+        1546434604146774987L,
+        1546434604146774988L
+    )
+    
+}
+println(book)
+```
+
+</TabItem>
+</Tabs>
+
+由于Jimmer实体的toString就是Jackson序列化，所以，我们可以直接打印并观察Jackson序列化的结果：
+
+```json
+{
+    "bookIds": [
+        // highlight-next-line
+        "1546434604146774987",
+        // highlight-next-line
+        "1546434604146774988"
+    ]
+}
+```
+
+可见，序列化后的`bookIds`属性的所有元素都是字符串，而非数字，这样，就避开了JavaScript客户端无法解析大数字的问题。
+
+### 自动应用于DTO
+
+:::info
+[DTO](../../object/view/dto-language)是进阶映射才会讲解的内容，读者也可以先跳过本节，以后再回来看。
+:::
+
+在`src/main/dto`目录下新建任何一个扩展名为`dto`的文件，编辑其代码如下
+
+```sh
+export com.yourcompany.yourproject.model.Book
+    -> package com.yourcompany.yourproject.model.dto
+
+BookView {
+    id
+    name
+}
+```
+
+编译项目，生成的Java/Kotlin类型如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@GeneratedBy(file = "<yourproject>/src/main/dto/Book.dto")
+public class BookView {
+
+    // highlight-next-line
+    private String id;
+
+    private String name;
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@GeneratedBy(file = "<yourproject>/src/main/dto/Book.dto")
+class BookView(
+    // highlight-next-line
+    val id: String,
+    val name: String
+) {
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+</Tabs>
+
+可见，编译后自动生成的DTO类型中id属性的类型为String，而非long。
+
+最后，我们验证一下将实体转化为DTO对象，如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Objects.createBook(draft -> {
+    draft.setId(1546434604146774987L);
+    draft.setName("SQL in Action");
+});
+System.out.println(new BookView(book));
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = new(Book::class).by {
+    id = 1546434604146774987L
+    name = "SQL in Action"
+}
+println(BookView(book))
+```
+
+</TabItem>
+</Tabs>
+
+输出如下
+
+```json
+BookView(
+    // highlight-next-line
+    id = "1546434604146774987",
+    name = "SQL in Action"
+)
+```
+
+## 2. 脱敏
+
+### 用法
+
+假如`User`实体具备`phone`属性，表示用户的电话号码，我们现在为该属性进行脱敏处理。
+
+比如，手机号显示为`135****6792`。
+
+:::info
+脱敏并不是一个单纯页面渲染问题，必须保证HTTP请求本身不返回敏感的数据
+:::
+
+对于这个需求，没有内置的Converter可用，我们必须自定义Converter，编写`UserPhoneConverter`，如下:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public class UserPhoneConverter implements Converter<String, String> {
+
+    @Override
+    public String output(String value) {
+        return value.substring(0, 3) + "****" + value.substring(7);
+    }    
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+class UserPhoneConverter : Converter<String, String> {
+
+    override fun output(value: String): String =
+        "${value.substring(0,3)}****${value.substring(7)}"
+}
+```
+
+</TabItem>
+</Tabs>
+
+然后，简单修改`User`实体即可
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface User {
+
+    // highlight-next-line
+    @JsonConverter(UserPhoneConverter.class)
+    String phone();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface User {
+
+    // highlight-next-line
+    @JsonConverter(UserPhoneConverter.class)
+    val phone: String
+}
+```
+
+</TabItem>
+</Tabs>
+
+### 兼顾输入
+
+在上面的例子中，`UserPhoneConverter`只覆盖了`output`方法，没有覆盖`input`方法。
+
+由于`input`方法的默认实现是抛出`UnsupportedOperationException`异常，因此，无法支持反序列化。
+
+然而，实际项目中，可以会基于实体对象生成`Input DTO`以完成数据录入，而且这种情况下，客户端应该录入精确的手机号，因此，我们可以如此覆盖`input`方法。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Override
+public String input(String value) {
+    retur value;
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+override fun input(value: String): String =
+    value
+```
+
+</TabItem>
+</Tabs>

@@ -510,19 +510,19 @@ val authors: List<Author>
 
     如果对此行为不满意，可以自定义类实现`LogicalDeletedValueGenerator<Long>`接口，并用如下配置
 
-    -   `@LogicalDeleted(generatedType = YourGenerator.class)`
+    -   `@JoinTable.LogicalDeletedFilter(generatedType = YourGenerator.class)`
 
-    -   `@LogicalDeleted(generatedRef = yourGenerator.class)`，这里`generatorRef`表示对象在IOC容器管理框架中的名称
+    -   `@JoinTable.LogicalDeletedFilter(generatedRef = yourGenerator.class)`，这里`generatorRef`表示对象在IOC容器管理框架中的名称
 
 -   `随机UUD`，默认行为是`UUID.randomUUID()`，即使默认的`org.babyfish.jimmer.sql.meta.LogicalDeletedUUIDGenerator`的行为。
 
     如果对此行为不满意，可以自定义类实现`LogicalDeletedValueGenerator<UUID>`接口，并用如下配置
 
-    -   `@LogicalDeleted(generatedType = YourGenerator.class)`
+    -   `@JoinTable.LogicalDeletedFilter(generatedType = YourGenerator.class)`
 
-    -   `@LogicalDeleted(generatedRef = yourGenerator.class)`，这里`generatorRef`表示对象在IOC容器管理框架中的名称
+    -   `@JoinTable.LogicalDeletedFilter(generatedRef = yourGenerator.class)`，这里`generatorRef`表示对象在IOC容器管理框架中的名称
 
-## 多版本问题
+## 多版本数据
 
 逻辑删除并不会导致数据被真正删除，只会导致数据被隐藏，这代表着数据出现多版本问题。
 

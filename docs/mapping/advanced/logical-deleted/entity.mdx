@@ -27,277 +27,431 @@ The logical deletion flag property can be one of the following types:
 -   boolean: must be non-null
 -   int: must be non-null  
 -   enum: must be non-null
+-   long/Long：either null or non-null
+-   UUID: either null or non-null
 -   date: must be nullable
 
-### boolean type
-
--   Use true to represent deleted
-
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-    
-    ```java title="Book.java"
-    @Entity
-    public interface Book {
-
-        // highlight-next-line 
-        @LogicalDeleted("true")
-        boolean isDeleted();
-        
-        ...other code omitted...
-    }
-    ```
-    
-    </TabItem>
-    
-    <TabItem value="kotlin" label="Kotlin">
-    
-    ```kotlin title="Book.kt"
-    @Entity
-    interface Book {
-    
-        // highlight-next-line
-        @LogicalDeleted("true")
-        val isDeleted: Boolean
-        
-        ...other code omitted...
-    }
-    ```
-    
-    </TabItem>
-    </Tabs>
-
--   Use false to represent deleted 
-
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-    
-    ```java title="Book.java"
-    @Entity
-    public interface Book {
-
-        // highlight-next-line
-        @LogicalDeleted("false")
-        boolean isEnabled();
-
-        ...other code omitted...
-    }
-    ```
-    
-    </TabItem>
-    
-    <TabItem value="kotlin" label="Kotlin">
-    
-    ```kotlin title="Book.kt"
-    @Entity
-    interface Book {
-
-        // highlight-next-line
-        @LogicalDeleted("false")
-        val isEnabled: Boolean
-
-        ...other code omitted...
-    }
-    ```
-    
-    </TabItem>
-    </Tabs>
-
-### int type
-
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Code</th>
+<th>Deleted State</th>
+<th>Initialized State</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2">boolean</td>
+<td>
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
-```java title="Book.java" 
-@Entity
-public interface Book {
-
-    // highlight-next-line
-    @LogicalDeleted("4")
-    int state();
-
-    ...other code omitted...
-}
+```java
+@LogicalDeleted("true")
+boolean deleted();
 ```
 
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin title="Book.kt"
-@Entity
-interface Book {
+```kotlin
+@LogicalDeleted("true")
+val deleted: Boolean
+```
 
-    // highlight-next-line
-    @LogicalDeleted("4")
-    val state: Int
+</TabItem>
+</Tabs>
+</td>
+<td>true</td>
+<td>false</td>
+</tr>
+<tr>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
 
-    ...other code omitted...
-}
+```java
+@LogicalDeleted("false")
+val active: Boolean;
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted("false")
+val active: Boolean
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>false</td>
+<td>true</td>
+</tr>
+<tr>
+<td>int</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Default("0")
+@LogicalDeleted("1")
+int state();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Default("0")
+@LogicalDeleted("1")
+val state: Int
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Enum</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Default("INITIALIZED")
+@LogicalDeleted("DELETED")
+State state();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Default("INITIALIZED")
+@LogicalDeleted("DELETED")
+val state: State
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>DELETED</td>
+<td>INITIALIZED</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+long
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted
+long deletedMillis();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedMillis: Long
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Current milliseconds</td>
+<td>0L</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+Nullable Long
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted
+Long deletedMillis();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedMillis: Long?
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Current milliseconds</td>
+<td>null</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+UUID
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted
+UUID deletedData();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedData: UUID
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Random UUID</td>
+<td>UUID with all bytes as 0</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+Nullable UUID
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable
+@LogicalDeleted
+UUID deletedData();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedData: UUID?
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Random UUID</td>
+<td>null</td>
+</tr>
+<tr>
+<td rowspan="2">
+Nullable LocalDateTime
+</td>
+<td>
+
+✩
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable
+@LogicalDeleted("now")
+UUID deletedTime();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted("now")
+val deletedTime: LocalDateTime?
 ```
 
 </TabItem>
 </Tabs>
 
-### enum type
-
-First, define an enum type to represent the data state:
-
+</td>
+<td>Current time</td>
+<td>null</td>
+</tr>
+<tr>
+<td>
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
-```java title="BookState.java"
-public enum BookState {
-    INTIALIZED, 
-    FROZEN,
-    PUBLISHED,
-    DELETED  
-}
+```java
+@Nullable
+@LogicalDeleted("null")
+UUID createdTime();
 ```
 
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin title="BookState.kt"  
-enum class BookState {
-    INTIALIZED,
-    FROZEN,
-    PUBLISHED,
-    DELETED
-}
+```kotlin
+@LogicalDeleted("null")
+val createdTime: LocalDateTime?
 ```
 
 </TabItem>
 </Tabs>
+</td>
+<td>null</td>
+<td>Current time</td>
+</tr>
+</tbody>
+</table>
+
+Where
+
+-   ✩ in the first or second column indicates that the current configuration method supports multi-version data to be discussed in the next section.
+
+    :::info  
+    Supporting logical deletion but not considering multi-version data issues is a less mature consideration. Therefore, it is recommended to use the logical deletion configuration that supports multi-version data.
+    :::
+
+-   `Current milliseconds`, the default behavior is `System.currentMillis()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedLongGenerator`.  
+
+    If this behavior is unsatisfactory, a custom class can be implemented that implements the `LogicalDeletedValueGenerator<Long>` interface, and configured with:
+
+    -   `@LogicalDeleted(generatedType = YourGenerator.class)`  
+
+    -   `@LogicalDeleted(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework
+
+- `Random UUID`, the default behavior is `UUID.randomUUID()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedUUIDGenerator`.
+
+    If this behavior is unsatisfactory, a custom class can be implemented that implements the `LogicalDeletedValueGenerator<UUID>` interface, and configured with:
+
+    - `@LogicalDeleted(generatedType = YourGenerator.class)`
+
+    - `@LogicalDeleted(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework  
+
+## Multi-Version Data  
+
+Logical deletion does not actually delete data, it only hides the data. This means that data appears in multiple versions. This issue is also described in [Key / Multi-version Support](./key#multi-version-support).  
+
+Take the example of long type logical deletion that supports multiple versions  
 
 <Tabs groupId="language">
-<TabItem value="java" label="Java">
+<TabItem value="java" label="Java">  
 
-```java title="Book.java"
-@Entity
-public interface Book {
-
-    // highlight-next-line
-    @LogicalDeleted("DELETED")
-    BookState state();
-
-    ...other code omitted...
-}
-```
-
-</TabItem>
-<TabItem value="kotlin" label="Kotlin">
-
-```kotlin title="Book.kt"
+```java
 @Entity  
-interface Book {
+public interface Book {   
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  
+    long id();  
 
-    // highlight-next-line
-    @LogicalDeleted("DELETED")
-    val state: BookState
+    @Key
+    String name();   
 
-    ...other code omitted...
+    @Key 
+    int edition();
+
+    // hightlight-next-line
+    @LogicalDeleted    
+    long deletedMillis();
+
+    BigDecimal price();  
+
+    @ManyToOne
+    BookStore store();
 }
-```
+```  
 
 </TabItem>
-</Tabs>
+<TabItem value="kotlin" label="Kotlin">   
 
-:::info
-For how Jimmer saves enum properties, see [Enum Mapping](./enum).
-:::
+```kotlin   
+@Entity
+interface Book {
 
-### date type
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long  
 
--   Use non-null to represent deleted, null for non-deleted
+    @Key 
+    val name: String   
 
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-    
-    ```java title="Book.java"
-    @Entity
-    public interface Book {
-    
-        // highlight-next-line
-        @LogicalDeleted("now") 
-        @Nullable
-        LocalDateTime deletedTime();
-    
-        ...other code omitted...
-    }
-    ```
-    
-    </TabItem>
-    
-    <TabItem value="kotlin" label="Kotlin">
-    
-    ```kotlin title="Book.kt"
-    @Entity
-    interface Book {
-    
-        // highlight-next-line
-        @LogicalDeleted("now")
-        val deletedTime: LocalDateTime?
-    
-        ...other code omitted...
-    }
-    ```
-    
-    </TabItem>
-    </Tabs>
-    
-    :::info
-    `"now"` here means the `deletedTime` property will be automatically set to the current JVM time when the data is logically deleted.
-    :::
-  
--   Use null to represent deleted, non-null for non-deleted
+    @Key
+    val edition: String 
 
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-    
-    ```java title="Book.java"
-    @Entity
-    public interface Book {
-    
-        // highlight-next-line
-        @LogicalDeleted("null")
-        @Nullable
-        LocalDateTime createdTime();
-    
-        ...other code omitted...
-    }
-    ```
-    
-    </TabItem>
-    
-    <TabItem value="kotlin" label="Kotlin">
-    
-    ```kotlin title="Book.kt"
-    @Entity
-    interface Book {
-    
-        // highlight-next-line
-        @LogicalDeleted("null") 
-        val createdTime: LocalDateTime?
-    
-        ...other code omitted...
-    }
-    ```
-    
-    </TabItem>
-    </Tabs>
-    
-    :::info
-    `"null"` here means the `createdTime` property will be automatically set to null when the data is logically deleted.
-    :::
+    // hightlight-next-line
+    @LogicalDeleted
+    val deletedMillis: Long  
 
-## Multi-versioning Issues  
+    val price: BigDecimal
 
-Logical deletion does not truly delete data from the database. It only hides the data. This means there are now multiple versions of the data.
+    @ManyToOne
+    val store: BookStore 
+}
+```  
 
-Therefore, it is recommended that the id uses auto-generation strategy instead of being specified by users. Logically deleted data still exists in the database, so data with the same id can no longer be successfully inserted.
+</TabItem>
+</Tabs>   
 
-Once the id uses auto-generation strategy, it loses business meaning. So developers should establish uniqueness constraints/indices based on other fields instead of the primary key constraint to ensure uniqueness at the business level.
+Although the Key of the `Book` object is `name` and `edition`, because the `deletedMillis` property is the logical deletion flag, the non-primary key `UNIQUE` constraint at the database level should be:  
 
-Obviously, data multi-versioning increases the complexity for users to define uniqueness constraints/indices. 
+```sql  
+alter table BOOK
+    add constraint uq_key_BOOK
+        unique(NAME, EDITION, DELETED_MILLIS);  
+```  
 
-This doc focuses on the mapping configuration of logical deletion, so it only points out this issue without further discussion. For an in-depth look at this problem, see [Key / Multi-version Support](./key#multi-version-support).
+If the table input is as follows:  
+
+|ID|NAME|EDITION|PRICE|STORE_ID|DELETED_MILLIS|  
+|---|---|---|---|---|---|
+|1027|SQL in Action|1|49.99|23|0|  
+|1026|SQL in Action|1|55.99|22|1708796420956|
+|1025|SQL in Action|1|47.99|23|1708234681901|  
+|3131|SQL in Action|2|59.99|23|0|
+|3130|SQL in Action|2|53.99|22|1708722582793|
+|3129|SQL in Action|2|58.99|23|1708664484823|
+
+There are 4 associated data records hidden, leaving only two valid data records:  
+
+|ID|NAME|EDITION|PRICE|STORE_ID|DELETED_MILLIS|
+|---|---|---|---|---|---|  
+|1027|SQL in Action|1|49.99|23|0|
+|3131|SQL in Action|2|59.99|23|0|   
+
+## Effects on Middle Tables  
+
+If an entity is logically deleted, what effect does it have on associations based on middle tables *(using the `@JoinTable` annotation)*?
+
+-   If the middle table also supports logical deletion, that is, the `logicalDeletedFilter` of the `@JoinTable` annotation is specified, the middle table records related to the logically deleted entity will also be logically deleted.  
+
+    In [the next document] (./join-table), we will discuss in detail the logical deletion of middle tables.
+
+-   If the `deletedWhenEndpointIsLogicallyDeleted` of the `@JoinTable` annotation is set to true, the middle table records related to the logically deleted entity will be physically deleted.  
+
+-   If neither of the above two conditions is met, the middle table records related to the logically deleted entity will not be processed at all.

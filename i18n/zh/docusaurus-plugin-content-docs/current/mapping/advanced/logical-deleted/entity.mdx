@@ -27,8 +27,8 @@ import TabItem from '@theme/TabItem';
 -   boolean：必须非null
 -   int：必须非null
 -   枚举：必须非null
--   long/Long：null或非null即可
--   UUID: 必须非null
+-   long/Long：null或非null皆可
+-   UUID: null或非null皆可
 -   日期：必须可null
 
 <table>
@@ -353,7 +353,7 @@ val createdTime: LocalDateTime?
 
     -   `@LogicalDeleted(generatedRef = yourGenerator.class)`，这里`generatorRef`表示对象在IOC容器管理框架中的名称
 
-## 多版本问题
+## 多版本数据
 
 逻辑删除并不会导致数据被真正删除，只会导致数据被隐藏，这代表着数据出现多版本问题。此问题在[Key/多版本支持](./key#多版本支持)中也有阐述。
 

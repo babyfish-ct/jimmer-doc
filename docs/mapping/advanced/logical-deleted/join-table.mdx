@@ -2,3 +2,597 @@
 sidebar_position: 2
 title: Join Table
 ---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+To enable logical deletion for the middle table, the property needs to be specified for the `org.babyfish.jimmer.sql.JoinTable` annotation to indicate whether the data is normal or has been deleted.
+
+- Once a logical deletion attribute is configured for the middle table, when any entity on either end is logically deleted, all related middle table records will be logically deleted.
+
+- All JOIN operations for the current association will be automatically added with the condition `and logical deletion flag <> already deleted` to give the illusion that some associations have been deleted.  
+
+## Usage
+
+The logical deletion flag attribute can be one of the following types:  
+
+- boolean: must be non-null  
+- int: must be non-null
+- enum: must be non-null 
+- long/Long: can be null or non-null  
+- UUID: must be non-null
+- Date: must be nullable  
+
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Code</th>
+<th>Deleted State</th>
+<th>Initialized State</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2">boolean</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED",
+            type = boolean.class,
+            value = "true"
+        )
+)
+List<Author> authors();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED",
+            type = boolean.class,
+            value = "true"
+        )
+)
+val authors: List<Author>
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>true</td>
+<td>false</td>
+</tr>
+<tr>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "ACTIVE",
+            type = boolean.class,
+            value = "false"
+        )
+)
+List<Author> authors();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        JoinTable.LogicalDeletedFilter(
+            columnName = "ACTIVE",
+            type = boolean.class,
+            value = "false"
+        )
+)
+val authors: List<Author>
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>false</td>
+<td>true</td>
+</tr>
+<tr>
+<td>int</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "STATE",
+            type = int.class,
+            value = "1",
+            intializedValue = "0"
+        )
+)
+List<Author> authors();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        JoinTable.LogicalDeletedFilter(
+            columnName = "STATE",
+            type = int.class,
+            value = "1",
+            intializedValue = "0"
+        )
+)
+val authors: List<Author>
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Enum</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "STATE",
+            type = State.class,
+            value = "DELETED",
+            intializedValue = "INITIALIZED"
+        )
+)
+List<Author> authors();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        JoinTable.LogicalDeletedFilter(
+            columnName = "STATE",
+            type = State.class,
+            value = "DELETED",
+            intializedValue = "INITIALIZED"
+        )
+)
+val authors: List<Author>
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>DELETED</td>
+<td>INITIALIZED</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+long
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED_MILLIS",
+            type = long.class
+        )
+)
+List<Author> authors();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED_MILLIS",
+            type = long.class
+        )
+)
+val authors: List<Author>
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Current milliseconds</td>
+<td>0L</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+Nullable Long
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED_MILLIS",
+            type = Long.class,
+            nullable = true
+        )
+)
+List<Author> authors();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED_MILLIS",
+            type = Long.class,
+            nullable = true
+        )
+)
+val authors: List<Author>
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Current milliseconds</td>
+<td>null</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+UUID
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED_DATA",
+            type = UUID.class
+        )
+)
+List<Author> authors();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED_DATA",
+            type = UUID.class
+        )
+)
+val authors: List<Author>
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Random UUID</td>
+<td>UUID with all bytes as 0</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+Nullable UUID
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED_DATA",
+            type = UUID.class,
+            nullable = true
+        )
+)
+List<Author> authors();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED_DATA",
+            type = UUID.class,
+            nullable = true
+        )
+)
+val authors: List<Author>
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Random UUID</td>
+<td>null</td>
+</tr>
+<tr>
+<td rowspan="2">
+Nullable LocalDateTime
+</td>
+<td>
+
+✩
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED_TIME",
+            type = LocalDateTime.class,
+            nullable = true,
+            value = "now"
+        )
+)
+List<Author> authors();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED_TIME",
+            type = LocalDateTime.class,
+            nullable = true,
+            value = "now"
+        )
+)
+val authors: List<Author>
+```
+
+</TabItem>
+</Tabs>
+
+</td>
+<td>Current Time</td>
+<td>null</td>
+</tr>
+<tr>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "CREATED_TIME",
+            type = LocalDateTime.class,
+            nullable = true,
+            value = "null"
+        )
+)
+List<Author> authors();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@ManyToMany
+@JoinTable(
+    ...Omit other arguments...,
+    logicalDeletedFilter = 
+        JoinTable.LogicalDeletedFilter(
+            columnName = "CREATED_TIME",
+            type = LocalDateTime.class,
+            nullable = true,
+            value = "null"
+        )
+)
+val authors: List<Author>
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>null</td>
+<td>Current Time</td>
+</tr>
+</tbody>
+</table>
+
+Where  
+
+-   ✩ in the first or second column indicates that the current configuration method supports multi-version data to be discussed in the next section.  
+
+    :::info
+    Supporting logical deletion without considering multi-version data issues is less mature. Therefore, it is recommended to use the logical deletion configuration that supports multi-version data.
+    :::
+
+-   `Current milliseconds`, the default behavior is `System.currentMillis()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedLongGenerator`.
+
+    If this behavior is unsatisfactory, a custom class can be implemented that implements the `LogicalDeletedValueGenerator<Long>` interface, and configured with:  
+
+    - `@JoinTable.LogicalDeletedFilter(generatedType = YourGenerator.class)`
+
+    - `@JoinTable.LogicalDeletedFilter(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework  
+
+- `Random UUID`, the default behavior is `UUID.randomUUID()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedUUIDGenerator`.  
+
+    If this behavior is unsatisfactory, a custom class can be implemented that implements the `LogicalDeletedValueGenerator<UUID>` interface, and configured with:  
+
+    - `@JoinTable.LogicalDeletedFilter(generatedType = YourGenerator.class)`  
+
+    - `@JoinTable.LogicalDeletedFilter(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework  
+
+## Multi-Version Data
+
+Logical deletion does not actually delete data, it only hides it. This means that data appears in multiple versions.  
+
+Take the configuration that supports multi-version data as an example:  
+
+<Tabs groupId="language">  
+<TabItem value="java" label="Java">   
+
+```java 
+@ManyToMany
+@JoinTable(
+    name = "BOOK_AUTHOR_MAPPING",
+    joinColumnName = "BOOK_ID",
+    inverseColumnName = "AUTHOR_ID", 
+    logicalDeletedFilter = 
+        @JoinTable.LogicalDeletedFilter(
+            columnName = "DELETED_MILLIS",
+            type = long.class  
+        )  
+)  
+List<Author> authors(); 
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">  
+
+```kotlin   
+@ManyToMany
+@JoinTable(
+    name = "BOOK_AUTHOR_MAPPING",  
+    joinColumnName = "BOOK_ID",
+    inverseColumnName = "AUTHOR_ID",|
+    logicalDeletedFilter =  
+        @JoinTable.LogicalDeletedFilter(  
+            columnName = "DELETED_MILLIS",
+            type = long.class  
+        )
+)  
+val authors: List<Author>  
+```  
+
+</TabItem>  
+</Tabs>   
+
+For example, the `BOOK_AUTHOR_MAPPING` table has three columns, all as part of the primary key  
+
+```sql   
+alter table BOOK_AUTHOR_MAPPING
+    add pk_BOOK_AUTHOR_MAPPING  
+        primary key(  
+            BOOK_ID,   
+            AUTHOR_ID,  
+            DELETED_MILLIS
+        );  
+```  
+
+If the table input is as follows:   
+
+|BOOK_ID|AUTHOR_ID|DELETED_MILLIS|  
+|---|---|---|  
+|97|23|0|  
+|97|23|1708796420956|   
+|97|23|1708234681901|   
+|249|11|0|   
+|249|11|1708722582793|  
+|249|11|1708664484823|   
+
+There are 4 associated data records hidden, leaving only two valid data records:  
+
+|BOOK_ID|AUTHOR_ID|DELETED_MILLIS|  
+|---|---|---|   
+|97|23|0|
+|249|11|0|

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 8
-title: 🔥 Smart Paging
+title: Smart Paging
 ---
 
 Here is the English translation:

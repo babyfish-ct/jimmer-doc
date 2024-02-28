@@ -1,0 +1,486 @@
+---
+sidebar_position: 5
+title: Final Usage
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ViewMore } from '@site/src/components/ViewMore';
+
+Jimmer's Two Usages  
+
+- Use Jimmer's Spring Boot Starter
+
+- Directly use the underlying SqlClient   
+
+Jimmer has complete sample projects. For how to use Jimmer's Spring Boot Starter, please refer to the examples. This article discusses using the underlying sqlClient directly without Spring.  
+
+## SqlClient
+
+`SqlClient` is the lowest-level API in Jimmer  
+
+<table>
+    <tr>
+        <td>Java</td> 
+        <td>org.babyfish.jimmer.sql.JSqlClient</td>
+    </tr>
+    <tr>
+        <td>Kotlin</td>
+        <td>org.babyfish.jimmer.sql.kt.KSqlClient</td> 
+    </tr>
+</table>
+
+<Tabs groupId="language"> 
+<TabItem value="java" label="Java">  
+
+```java
+public class JimmerUtils {
+
+    // highlight-next-line
+    public static final JSqlClient SQL_CLIENT =  
+        JSqlClient
+            .newBuilder()
+            .setDialect(new PostgresDialect()) 
+            ...other config omitted...
+            .build();
+
+    // This method has no actual use, just to unify naming style  
+    // and make the Java and Kotlin code here as consistent as possible
+    public static JSqlClient sqlClient() {
+        return SQL_CLIENT;
+    }  
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin 
+// highlight-next-line
+object JimmerUtils {
+
+    val sqlClient: KSqlClient =  
+        newKSqlClient {
+            setDialect(new PostgresDialect())
+            ...other config omitted...
+        }  
+}
+```
+
+</TabItem> 
+</Tabs>
+
+This global variable is the API entry point for all Jimmer ORM behaviors   
+
+## Query
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">  
+
+```java  
+package com.example.model.repository;  
+
+import org.babyfish.jimmer.sql.JSqlClient;
+import org.babyfish.jimmer.sql.fetcher.Fetcher;
+import org.babyfish.jimmer.Page;  
+
+import com.example.model.Book;
+import com.example.model.BookTable;  
+
+public class BookRepository {
+
+    private static final BookTable T = BookTable.$;
+
+    public Page<Book> findBooks(  
+
+            int pageIndex, // Starts from 0
+            int pageSize,
+            
+            @Nullable Fetcher<Book> fetcher,
+
+            // e.g. "name asc, edtion desc"
+            @Nullable String sortCode, 
+            
+            @Nullable String name,
+            @Nullable BigDecimal minPrice,
+            @Nullable BigDecimal maxPrice, 
+            @Nullable String storeName,
+            @Nullable String storeWebsite,
+            @Nullable String authorName
+    ) {
+        return JimmerUtils
+                .sqlClient()
+                .createQuery(T)
+                .where(T.name().ilikeIf(name)) 
+                .where(T.price().betweenIf(minPrice, maxPrice))
+                .where(T.store().name().ilikeIf(storeName))
+                .where(T.store().website().ilikeIf(storeWebsite))
+                .where(
+                        T.authors(author -> 
+                                Predicate.or(
+                                        author.firstName().ilikeIf(authorName),  
+                                        author.lastName().ilikeIf(authorName)
+                                )
+                        )
+                )
+                .where(T.authors(author -> author.gender().eqIf(authorGender)))
+                .orderBy(
+                        Order.makeOrders(
+                                T,
+                                sortCode != null ?  
+                                        sortCode :  
+                                        "name asc, edition desc"
+                        )
+                )
+                .select(
+                    T.fetch(fetcher)
+                )
+                .fetchPage(pageIndex, pageSize);
+    }
+} 
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">  
+
+```kotlin
+package com.example.model.repository  
+
+import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.fetcher.Fetcher 
+import org.babyfish.jimmer.Page  
+
+import com.example.model.*  
+
+class BookRepository {
+
+    fun findBooks(
+        
+        pageIndex: Int, // Starts from 0 
+        pageSize: Int = 10, 
+
+        fetcher: Fetcher<Book>? = null,
+
+        sortCode: String = "name asc, edition desc", 
+
+        name: String? = null,
+        minPrice: BigDecimal? = null, 
+        maxPrice: BigDecimal? = null,
+        storeName: String? = null, 
+        storeWebsite: String? = null,
+        authorName: String? = null, 
+        authorGender: Gender? = null  
+    ): Page<Book> =
+        JimmerUtils
+            .sqlClient
+            .createQuery(Book::class) {
+                where(table.name `ilike?` name)
+                where(table.price.`between?`(minPrice, maxPrice))
+                where(table.store.name `ilike?` storeName)
+                where(table.store.website `ilike?` storeWebsite)
+                where += table.authors {  
+                    or(  
+                        firstName `ilike?` authorName,  
+                        lastName `ilike?` authorName  
+                    )
+                }
+                where += table.authors { gender `eq?` authorGender }  
+            }
+            .orderBy(table.makeOrders(sortCode))
+            .select( 
+                table.fetch(fetcher)
+            )
+            .fetchPage(pageIndex, pageSize) 
+}
+```
+
+</TabItem>
+</Tabs>  
+
+Users can create `BookRepository` objects and combine the parameters in various ways to test:  
+
+- Dynamic queries *(including dynamic joins, implicit subqueries)*  
+- Dynamic sorting
+- Paged queries
+
+Details omitted here.  
+
+## Save  
+
+### Save Short Associations  
+
+In the `src/main/dto` directory, create any file with extension `dto` and edit its code:
+
+```sh  
+export com.example.model.Book
+    -> package com.example.model.dto  
+
+input BookInput {
+    #allScalars(this) 
+    id(store) // as storeId
+    id(authors) as authorIds  
+}
+```
+
+Compile to generate the Java/Kotlin DTO type `com.example.model.dto.BookInput`:  
+
+<ViewMore buttonText="View Generated Code" title="Generated BookInput">
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java 
+package package com.example.model.dto;  
+
+public class BookInput implements Input<Book> {  
+
+    @Nullable
+    private Long id;
+
+    private String name;   
+
+    private int edition;
+
+    private BigDecimal price;
+
+    @Nullable  
+    private Long storeId;
+
+    private List<Long> authorIds;  
+
+    ...other members omitted...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+class BookInput(
+    val id: Long? = null, 
+    val name: String,
+    val edition: Int,
+    val price: BigDecimal,
+    val storeId: Long? = null,
+    val authorIds: List<Long> = emptyList()  
+) : Input<Book> {
+    ...other members omitted... 
+}
+```
+
+</TabItem>
+</Tabs>  
+
+:::info
+`Book.id` on entities cannot be null, but `BookInput.id` on DTOs here is allowed to be null.  
+See [DTO Language/3.2. Input-specific functionalities](../../object/view/dto-language#32-input-specific-functionalities)
+:::
+
+</ViewMore>  
+
+Then modify the `BookRepository`:  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">  
+
+```java
+public class BookRepository {
+
+    ...other members omitted...
+
+    public long saveBook(BookInput input) {
+        return JimmerUtils
+            .sqlClient()
+            .save(input) 
+            .execute()
+            .getModifiedEntity()  
+            // Return auto-generated id if `input.id` is null
+            .getId(); 
+    }  
+}
+```
+
+</TabItem>  
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+class BookRepository {
+
+    ...other members omitted...  
+
+    fun saveBook(input: BookInput): Long =  
+        JimmerUtils
+            .sqlClient 
+            .save(input)
+            .execute() 
+            .modifiedEntity
+            // Return auto-generated id if `input.id` is null
+            .id
+}
+```
+
+</TabItem>
+</Tabs>  
+
+### Save Long Associations  
+
+In the `src/main/dto` directory, create any file with extension `dto` and edit its code: 
+
+```sh
+export com.example.model.BookStore 
+    -> package com.example.model.dto  
+
+input CompositeBookStoreInput {
+    #allScalars(this)
+    books { 
+        #allScalars(this)
+        -id
+    }  
+} 
+```
+
+Compile to generate the Java/Kotlin DTO type `com.example.model.dto.CompositeBookStoreInput`:  
+
+<ViewMore buttonText="View Generated Code" title="Generated CompositeBookStoreInput">
+<Tabs groupId="language">  
+<TabItem value="java" label="Java">
+
+```java  
+package package com.example.model.dto;
+
+public class CompositeBookStoreInput implements Input<BookStore> {
+
+    @Nullable
+    private Long id;
+
+    private String name;  
+
+    @Nullable
+    private String website;
+
+    private List<TargetOf_books> books;
+
+    ...other members omitted...
+
+    public static class TargetOf_books implements Input<Book> {
+
+        private String name;
+
+        private int edition;
+
+        private BigPrice price;  
+
+        ...other members omitted...
+    }
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">  
+
+```kotlin 
+class CompositeBookStoreInput(
+    val id: Long? = null,
+    val name: String, 
+    val website: String? = null,
+    val books: List<TargetOf_books> = emptyList() 
+) : Input<BookStore> {
+    ...other members omitted...
+
+    class TargetOf_books(
+        val name: String,
+        val edition: Int, 
+        val price: BigDecimal 
+    ) : Input<Book> {
+        ...other members omitted...
+    }
+}
+```
+
+</TabItem>
+</Tabs>   
+
+:::info
+`BookStore.id` on entities cannot be null, but `CompositeBookStoreInput.id` on DTOs here is allowed to be null.  
+See [DTO Language/3.2. Input-specific functionalities](../../object/view/dto-language#32-input-specific-functionalities)
+:::
+
+</ViewMore>  
+
+Then create the `BookStoreRepository`:  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java 
+public class BookStoreRepository {
+
+    public long saveBookStore(CompositeBookStoreInput input) {
+        return JimmerUtils
+            .sqlClient()
+            .save(input)
+            .execute()
+            .getModifiedEntity()  
+            // Return auto-generated id if `input.id` is null
+            .getId();
+    }
+} 
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin  
+class BookStoreRepository {
+
+    fun saveBookStore(input: CompositeBookStoreInput): Long =
+        JimmerUtils
+            .sqlClient
+            .save(input) 
+            .execute()
+            .modifiedEntity  
+            // Return auto-generated id if `input.id` is null
+            .id  
+}
+```
+
+</TabItem>  
+</Tabs>
+
+## Delete  
+
+Modify the `BookRepository`:  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java  
+public class BookRepository {
+
+    ...other members omitted...
+
+    public void deleteBook(long id) {
+        JimmerUtils
+            .sqlClient()
+            .deleteById(Book.class, id);
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+class BookRepository {
+
+    ...other members omitted...
+
+    fun deleteBook(id: Long) {
+        JimmerUtils
+            .sqlClient
+            .deleteById(Book::class, id) 
+    }  
+}
+```
+
+</TabItem>
+</Tabs>

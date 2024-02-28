@@ -1,22 +1,27 @@
 ---
-sidebar_position: 3
-title: 例子(最快学习方法)
+sidebar_position: 6
+title: 标准例子
 ---
 
 import {ViewMore} from '@site/src/components/ViewMore';
 import {CacheConsistencyPanel} from '@site/src/components/HomepageFeatures/CacheConsistency';
 import {SwaggerAuthorize, GraphiqlHeaders} from '@site/src/components/Image';
 
+通过前面的章节
+
+-   我们知道了Jimmer最核心的三大功能点，对其有了基本印象，
+
+-   也通过一个简单的项目了解了Jimmer的基本用法，包括其Annotation Processor*(Java)*/KSP*(Kotlin)*的使用方法。
+
+然而，对于一个综合性的解决方案，有丰富的例子更好。Jimmer提供了一系列[标准例子](https://github.com/babyfish-ct/jimmer-examples)
+
 :::tip
-直接运行框架附带的例子，是熟悉Jimmer最高效的方法。
+结合附带的例子，会事半功倍，是熟悉Jimmer最高效的方法。
 :::
 
 ## 事先需知
 
-和[JOOQ](https://www.jooq.org/)，[JPA2.0 Criteria](https://docs.oracle.com/javaee/6/tutorial/doc/gjitv.html)，[QueryDSL](http://querydsl.com/)，[MyBatis-Flex](https://github.com/mybatis-flex/mybatis-flex)，[Fluent-MyBatis](https://github.com/atool/fluent-mybatis)等强类型SQL DSL实现一样, Jimmer需要根据用户代码生成更多的源代码。
-
--   对于Java而言，就是annotation processor
--   对于kotlin而言，就是ksp
+由于Jimmer高度依赖Annotation Processor*(Java)*/KSP*(Kotlin)*，有一个问题需要注意。
 
 当用户第一次使用IDE（比如Intellij）打开项目配套的例子时，会发现一些本该被自动生成的类不存在。
 
@@ -28,7 +33,7 @@ import {SwaggerAuthorize, GraphiqlHeaders} from '@site/src/components/Image';
 
 Jimmer提供的配套示例，对快速掌握Jimmer非常有帮助
 
-所有例子的总目录：https://github.com/babyfish-ct/jimmer/tree/main/example
+所有例子的总目录：https://github.com/babyfish-ct/jimmer-examples
 
 该项目提供5个例子，每个例子都有Java和Kotlin两个版本，共计10个例子。
 

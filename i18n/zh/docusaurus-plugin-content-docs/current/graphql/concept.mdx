@@ -64,13 +64,13 @@ dependencies {
 :::info
 如果Jimmer实体类型也定义在GraphQL项目中，而并未独立形成另外一个项目，那么预编译器 *(对Java而言，是Annottion Processor；对Kotlin而言，是KSP)* 也配置在构建脚本中。
 
-这部分内容已经在[生成代码](../overview/get-started/generate-code)一文中被详细论述过，本文不再重复。
+这部分内容已经在[生成代码](../quick-view/get-started/generate-code)一文中被详细论述过，本文不再重复。
 :::
 
 [Spring GraphQL](https://spring.io/projects/spring-graphql)是Schema-First方案，而非Code-First方案，
 因此，开发人员需要为项目创建文件`src/main/resources/graphql/schema.graphqls`，并在其中定义GraphQL Schema。
 
-这个文件是[Spring GraphQL](https://spring.io/projects/spring-graphql)的要求，其内容GraphQL schema是一种标准的语言，它们都和Jimmer无关，本文不做解释，可参考[附带例子的GraphQL Schema](https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-sql-graphql/src/main/resources/graphql/schema.graphqls)。
+这个文件是[Spring GraphQL](https://spring.io/projects/spring-graphql)的要求，其内容GraphQL schema是一种标准的语言，它们都和Jimmer无关，本文不做解释，可参考[附带例子的GraphQL Schema](https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-sql-graphql/service/src/main/resources/graphql/schema.graphqls)。
 
 ## 注意事项
 

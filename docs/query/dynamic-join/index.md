@@ -1,6 +1,6 @@
 ---
 sidebar_position: 4
-title: 🔥 Dynamic JOIN
+title: Dynamic JOIN
 ---
 
 We will introduce the following contents:

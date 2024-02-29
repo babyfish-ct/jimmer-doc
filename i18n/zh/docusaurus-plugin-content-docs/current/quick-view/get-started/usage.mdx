@@ -1,0 +1,482 @@
+---
+sidebar_position: 5
+title: 最终使用
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ViewMore } from '@site/src/components/ViewMore';
+
+Jimmer的两种用法
+
+-   使用Jimmer的Spring Boot Starter
+
+-   直接使用底层的SqlClient
+
+Jimmer具备完善的配套例子项目，关于Jimmer之Spring Boot Starter的用法，请参考例子；本文讨论在不使用Spring的前提下，直接使用底层的sqlClient。
+
+## SqlClient
+
+`SqlClient`是Jimmer中最底层的API
+
+<table>
+    <tr>
+        <td>Java</td>
+        <td>org.babyfish.jimmer.sql.JSqlClient</td>
+    </tr>
+    <tr>
+        <td>Kotlin</td>
+        <td>org.babyfish.jimmer.sql.kt.KSqlClient</td>
+    </tr>
+</table>
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public class JimmerUtils {
+
+    // highlight-next-line
+    public static final JSqlClient SQL_CLIENT =
+        JSqlClient
+            .newBuilder()
+            .setDialect(new PostgresDialect())
+            ...省略其他配置...
+            .build();
+
+    // 这个方法没什么实际用途，只是为了统一命名风格，
+    // 尽可能让本文的Java代码和Kotlin代码风格一致
+    public static JSqlClient sqlClient() {
+        return SQL_CLIENT;
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+// highlight-next-line
+object JimmerUtils {
+
+    val sqlClient: KSqlClient =
+        newKSqlClient {
+            setDialect(new PostgresDialect())
+            ...省略其他配置...
+        }
+}
+```
+
+</TabItem>
+</Tabs>
+
+这个全局变量是Jimmer所有ORM行为的Api入口
+
+## 查询
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+package com.example.model.repository;
+
+import org.babyfish.jimmer.sql.JSqlClient;
+import org.babyfish.jimmer.sql.fetcher.Fetcher;
+import org.babyfish.jimmer.Page;
+
+import com.example.model.Book;
+import com.example.model.BookTable;
+
+public class BookRepository {
+
+    private static final BookTable T = BookTable.$;
+
+    public Page<Book> findBooks(
+
+            int pageIndex, // 从0开始
+            int pageSize,
+            
+            @Nullable Fetcher<Book> fetcher,
+
+            // 例如: "name asc, edtion desc"
+            @Nullable String sortCode,
+            
+            @Nullable String name,
+            @Nullable BigDecimal minPrice,
+            @Nullable BigDecimal maxPrice,
+            @Nullable String storeName,
+            @Nullable String storeWebsite,
+            @Nullable String authorName
+    ) {
+        return JimmerUtils
+                .sqlClient()
+                .createQuery(T)
+                .where(T.name().ilikeIf(name))
+                .where(T.price().betweenIf(minPrice, maxPrice))
+                .where(T.store().name().ilikeIf(storeName))
+                .where(T.store().website().ilikeIf(storeWebsite))
+                .where(
+                        T.authors(author ->
+                                Predicate.or(
+                                        author.firstName().ilikeIf(authorName),
+                                        author.lastName().ilikeIf(authorName)
+                                )
+                        )
+                )
+                .where(T.authors(author -> author.gender().eqIf(authorGender)))
+                .orderBy(
+                        Order.makeOrders(
+                                T,
+                                sortCode != null ?
+                                        sortCode :
+                                        "name asc, edition desc"
+                        )
+                )
+                .select(
+                    T.fetch(fetcher)
+                )
+                .fetchPage(pageIndex, pageSize);
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+package com.example.model.repository
+
+import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.fetcher.Fetcher
+import org.babyfish.jimmer.Page
+
+import com.example.model.*
+
+class BookRepository {
+
+    fun findBooks(
+        
+        pageIndex: Int, // 从0开始
+        pageSize: Int = 10,
+
+        fetcher: Fetcher<Book>? = null,
+
+        sortCode: String = "name asc, edition desc",
+
+        name: String? = null,
+        minPrice: BigDecimal? = null,
+        maxPrice: BigDecimal? = null,
+        storeName: String? = null,
+        storeWebsite: String? = null,
+        authorName: String? = null,
+        authorGender: Gender? = null
+    ): Page<Book> =
+        JimmerUtils
+            .sqlClient
+            .createQuery(Book::class) {
+                where(table.name `ilike?` name)
+                where(table.price.`between?`(minPrice, maxPrice))
+                where(table.store.name `ilike?` storeName)
+                where(table.store.website `ilike?` storeWebsite)
+                where += table.authors {
+                    or(
+                        firstName `ilike?` authorName,
+                        lastName `ilike?` authorName 
+                    )
+                }
+                where += table.authors { gender `eq?` authorGender }
+            }
+            .orderBy(table.makeOrders(sortCode))
+            .select(
+                table.fetch(fetcher)
+            )
+            .fetchPage(pageIndex, pageSize)
+}
+```
+
+</TabItem>
+</Tabs>
+
+用户可以自行创建`BookRepository`类型的对象，利用各种参数的排列组合，验证
+
+-   动态查询 *(包括动态表连接，隐式子查询)*
+-   动态排序
+-   分页查询
+
+这里不再赘述。
+
+## 保存
+
+### 保存短关联
+
+在`src/main/dto`目录下创建任意扩展名为`dto`的文件，编辑其代码如下
+
+```sh
+export com.example.model.Book
+    -> package com.example.model.dto
+
+input BookInput {
+    #allScalars(this)
+    id(store) // as storeId
+    id(authors) as authorIds
+}
+```
+
+编译，生成基于Java/Kotlin定义的DTO类型`com.example.model.dto.BookInput`
+<ViewMore buttonText="查看生成的代码" title="编译后生成的BookInput">
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+package package com.example.model.dto;
+
+public class BookInput implements Input<Book> {
+
+    @Nullable
+    private Long id;
+
+    private String name;
+
+    private int edition;
+
+    private BigDecimal price;
+
+    @Nullable
+    private Long storeId;
+
+    private List<Long> authorIds;
+
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+class BookInput(
+    val id: Long? = null,
+    val name: String,
+    val edition: Int,
+    val price: BigDecimal,
+    val storeId: Long? = null,
+    val authorIds: List<Long> = emptyList()
+) : Input<Book> {
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+实体中的`Book.id`不允许为null，但是，这里DTO类型中的`BookInput.id`却被允许为null，
+请参考[DTO语言/3.2. Input特有功能](../../object/view/dto-language#32-input特有功能)
+:::
+
+</ViewMore>
+，然后修改`BookRepository`
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public class BookRepository {
+
+    ...省略其他成员...
+
+    public long saveBook(BookInput input) {
+        return JimmerUtils
+            .sqlClient()
+            .save(input)
+            .execute()
+            .getModifiedEntity()
+            // 如果`input.id`为null，返回自动分配的id
+            .getId();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+class BookRepository {
+
+    ...省略其他成员...
+
+    fun saveBook(input: BookInput): Long =
+        JimmerUtils
+            .sqlClient
+            .save(input)
+            .execute()
+            .modifiedEntity
+            // 如果`input.id`为null，返回自动分配的id
+            .id
+}
+```
+
+</TabItem>
+</Tabs>
+
+### 保存长关联
+
+在`src/main/dto`目录下创建任意扩展名为`dto`的文件，编辑其代码如下
+
+```sh
+export com.example.model.BookStore
+    -> package com.example.model.dto
+
+input CompositeBookStoreInput {
+    #allScalars(this)
+    books {
+        #allScalars(this)
+        -id
+    }
+}
+```
+
+编译，生成基于Java/Kotlin定义的DTO类型`com.example.model.dto.CompositeBookStoreInput`
+<ViewMore buttonText="查看生成的代码" title="编译后生成的CompositeBookStoreInput">
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+package package com.example.model.dto;
+
+public class CompositeBookStoreInput implements Input<BookStore> {
+
+    @Nullable
+    private Long id;
+
+    private String name;
+
+    @Nullable
+    private String website;
+
+    private List<TargetOf_books> books;
+
+    ...省略其他成员...
+
+    public static class TargetOf_books implements Input<Book> {
+
+        private String name;
+
+        private int edition;
+
+        private BigPrice price;
+
+        ...省略其他成员...
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+class CompositeBookStoreInput(
+    val id: Long? = null,
+    val name: String,
+    val website: String? = null,
+    val books: List<TargetOf_books> = emptyList()
+) : Input<BookStore> {
+    ...省略其他成员...
+
+    class TargetOf_books(
+        val name: String,
+        val edition: Int,
+        val price: BigDecimal
+    ) : Input<Book> {
+        ...省略其他成员...
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+实体中的`BookStore.id`不允许为null，但是，这里DTO类型中的`CompositeBookStoreInput.id`却被允许为null，
+请参考[DTO语言/3.2. Input特有功能](../../object/view/dto-language#32-input特有功能)
+:::
+
+</ViewMore>
+，然后创建`BookStoreRepository`
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public class BookStoreRepository {
+
+    public long saveBookStore(CompositeBookStoreInput input) {
+        return JimmerUtils
+            .sqlClient()
+            .save(input)
+            .execute()
+            .getModifiedEntity()
+            // 如果`input.id`为null，返回自动分配的id
+            .getId();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+class BookStoreRepository {
+
+    fun saveBookStore(input: CompositeBookStoreInput): Long =
+        JimmerUtils
+            .sqlClient
+            .save(input)
+            .execute()
+            .modifiedEntity
+            // 如果`input.id`为null，返回自动分配的id
+            .id
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 删除
+
+修改`BookRepository`
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public class BookRepository {
+
+    ...省略其他成员...
+
+    public void deleteBook(long id) {
+        JimmerUtils
+            .sqlClient()
+            .deleteById(Book.class, id);
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+class BookRepository {
+
+    ...省略其他成员...
+
+    fun deleteBook(id: Long) {
+        JimmerUtils
+            .sqlClient
+            .deleteById(Book::class, id)
+    }
+}
+```
+
+</TabItem>
+</Tabs>

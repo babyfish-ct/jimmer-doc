@@ -1,0 +1,112 @@
+---
+sidebar_position: 8
+title: 8. 其他查询
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 标准子查询
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable book = BookTable.$;
+
+List<Book> newestBooks = sqlClient
+    .createQuery(book)
+    .where(
+        Expression.tuple(
+            book.name(),
+            book.edition()
+        ).in(sqlClient
+            .createSubQuery(book)
+            .groupBy(book.name())
+            .select(
+                book.name(),
+                book.edition().max()
+            )
+        )
+    )
+    .select(book)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val newestBooks = sqlClient
+    .createQuery(Book::class) {
+        where( 
+            tuple(
+                table.name, 
+                table.edition
+            ) valueIn subQuery(Book::class) {
+                groupBy(table.name)
+                select(
+                    table.name,
+                    max(table.edition).asNonNull()
+                )
+            }
+        )
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+## Native SQL
+
+为了支持特有数据库产品特有的能力，Jimmer的SQL DSL支持潜入Native SQL表达式。以正则表达式查询为例。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+AuthorTable table = Tables.AUTHOR_TABLE;
+
+List<Author> authors = sqlClient
+    .createQuery(table)
+    .where(
+        Predicate.sql(
+            "regexp_like(%e, %v)",
+            it -> it
+                .expression(table.firstName())
+                .value("^Ste(v|ph)en$")
+        )
+    )
+    .select(table)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val authors = sqlClient
+    .createQuery(Author::class) {
+        where(
+            sql(Boolean::class, "regexp_like(%e, %v)") {
+                expression(table.firstName)
+                value("^Ste(v|ph)en$")
+            }
+        )
+        select(table)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+-   Native SQL片段中的`%e`表示可以嵌入一个强类型的Jimmer DSL表达式。
+
+    Lambda中的`expression(...)`指定用于替换`%e`的表达式。
+
+-   Native SQL片段中的`%v`表示可以嵌入一个字面量。
+
+    Lambda中的`value(...)`指定用于替换`%v`的字面量。

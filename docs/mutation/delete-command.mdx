@@ -154,23 +154,23 @@ Necessary Explanations:
 
     -   `AUTO`: Does not explicitly specify whether the current operation is logical delete or physical delete
 
-        -   If the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted), perform logical delete.
+        -   If the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted/entity), perform logical delete.
         
         -   Otherwise, perform physical delete.
 
     -   `LOGICAL`: Explicitly specifies that the current operation is logical delete
 
-        -   If the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted), perform logical delete.
+        -   If the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted/entity), perform logical delete.
         
         -   Otherwise, throw an exception indicating that the current entity does not support logical delete.
 
     -   `PHYSICAL`: Explicitly specifies that the current operation is physical delete
   
-        Regardless of whether the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted), perform physical delete.
+        Regardless of whether the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted/entity), perform physical delete.
 
 ## Logical Delete  
 
-Assuming the entity has a [logical delete field](../mapping/advanced/logical-deleted), for example:
+Assuming the entity has a [logical delete field](../mapping/advanced/logical-deleted/entity), for example:
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -222,7 +222,7 @@ where ID in(?/* 1L*/)
 
 ## Physical Delete  
 
-If the entity does not have a [logical delete field](../mapping/advanced/logical-deleted), or the delete mode is explicitly specified as `DeleteMode.PHYSICAL`, physical delete is performed. 
+If the entity does not have a [logical delete field](../mapping/advanced/logical-deleted/entity), or the delete mode is explicitly specified as `DeleteMode.PHYSICAL`, physical delete is performed. 
 
 ### Basic Usage
 

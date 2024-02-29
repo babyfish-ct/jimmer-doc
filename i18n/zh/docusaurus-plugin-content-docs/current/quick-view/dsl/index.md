@@ -1,6 +1,6 @@
 ---
 sidebar_position: 4
-title: 任意动态查询
+title: 3. 任意动态查询
 ---
 
 Jimmer支持强类型SQL DSL。

@@ -1,0 +1,457 @@
+---
+sidebar_position: 1
+title: Entity Table
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+To enable logical deletion support for an entity, add a flag property annotated with `org.babyfish.jimmer.sql.LogicalDeleted` to indicate whether the data is normal or already deleted.
+
+Once a logical deletion property is configured for an entity:
+
+-   By default, when developers call APIs to delete an entity object, Jimmer will NOT actually delete the data with SQL `delete` statements. Instead, it will use `update` statements to set the logical deletion property of the entity to "already deleted".
+
+    Other cases: Even if an entity has a logical deletion property, Jimmer also provides APIs for developers to forcibly truly delete objects by passing additional parameters.
+  
+-   By default, all SQL queries against the entity will be automatically appended with a `where logicalDeleteFlag <> already deleted` condition to create the illusion that some data has been deleted. 
+
+:::info
+This doc only covers the mapping configuration of the logical deletion flag field. For how to use the logical deletion functionality, see [Global Filters / Logical Deletion](../../query/global-filter/logical-deleted).
+:::
+
+## Usage
+
+The logical deletion flag property can be one of the following types:
+
+-   boolean: must be non-null
+-   int: must be non-null  
+-   enum: must be non-null
+-   long/Long：either null or non-null
+-   UUID: either null or non-null
+-   date: must be nullable
+
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Code</th>
+<th>Deleted State</th>
+<th>Initialized State</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2">boolean</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted("true")
+boolean deleted();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted("true")
+val deleted: Boolean
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>true</td>
+<td>false</td>
+</tr>
+<tr>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted("false")
+val active: Boolean;
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted("false")
+val active: Boolean
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>false</td>
+<td>true</td>
+</tr>
+<tr>
+<td>int</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Default("0")
+@LogicalDeleted("1")
+int state();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Default("0")
+@LogicalDeleted("1")
+val state: Int
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Enum</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Default("INITIALIZED")
+@LogicalDeleted("DELETED")
+State state();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Default("INITIALIZED")
+@LogicalDeleted("DELETED")
+val state: State
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>DELETED</td>
+<td>INITIALIZED</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+long
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted
+long deletedMillis();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedMillis: Long
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Current milliseconds</td>
+<td>0L</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+Nullable Long
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted
+Long deletedMillis();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedMillis: Long?
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Current milliseconds</td>
+<td>null</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+UUID
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@LogicalDeleted
+UUID deletedData();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedData: UUID
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Random UUID</td>
+<td>UUID with all bytes as 0</td>
+</tr>
+<tr>
+<td>
+
+✩
+
+Nullable UUID
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable
+@LogicalDeleted
+UUID deletedData();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted
+val deletedData: UUID?
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>Random UUID</td>
+<td>null</td>
+</tr>
+<tr>
+<td rowspan="2">
+Nullable LocalDateTime
+</td>
+<td>
+
+✩
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable
+@LogicalDeleted("now")
+UUID deletedTime();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted("now")
+val deletedTime: LocalDateTime?
+```
+
+</TabItem>
+</Tabs>
+
+</td>
+<td>Current time</td>
+<td>null</td>
+</tr>
+<tr>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Nullable
+@LogicalDeleted("null")
+UUID createdTime();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@LogicalDeleted("null")
+val createdTime: LocalDateTime?
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>null</td>
+<td>Current time</td>
+</tr>
+</tbody>
+</table>
+
+Where
+
+-   ✩ in the first or second column indicates that the current configuration method supports multi-version data to be discussed in the next section.
+
+    :::info  
+    Supporting logical deletion but not considering multi-version data issues is a less mature consideration. Therefore, it is recommended to use the logical deletion configuration that supports multi-version data.
+    :::
+
+-   `Current milliseconds`, the default behavior is `System.currentMillis()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedLongGenerator`.  
+
+    If this behavior is unsatisfactory, a custom class can be implemented that implements the `LogicalDeletedValueGenerator<Long>` interface, and configured with:
+
+    -   `@LogicalDeleted(generatedType = YourGenerator.class)`  
+
+    -   `@LogicalDeleted(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework
+
+- `Random UUID`, the default behavior is `UUID.randomUUID()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedUUIDGenerator`.
+
+    If this behavior is unsatisfactory, a custom class can be implemented that implements the `LogicalDeletedValueGenerator<UUID>` interface, and configured with:
+
+    - `@LogicalDeleted(generatedType = YourGenerator.class)`
+
+    - `@LogicalDeleted(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework  
+
+## Multi-Version Data  
+
+Logical deletion does not actually delete data, it only hides the data. This means that data appears in multiple versions. This issue is also described in [Key / Multi-version Support](./key#multi-version-support).  
+
+Take the example of long type logical deletion that supports multiple versions  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">  
+
+```java
+@Entity  
+public interface Book {   
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  
+    long id();  
+
+    @Key
+    String name();   
+
+    @Key 
+    int edition();
+
+    // hightlight-next-line
+    @LogicalDeleted    
+    long deletedMillis();
+
+    BigDecimal price();  
+
+    @ManyToOne
+    BookStore store();
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">   
+
+```kotlin   
+@Entity
+interface Book {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long  
+
+    @Key 
+    val name: String   
+
+    @Key
+    val edition: String 
+
+    // hightlight-next-line
+    @LogicalDeleted
+    val deletedMillis: Long  
+
+    val price: BigDecimal
+
+    @ManyToOne
+    val store: BookStore 
+}
+```  
+
+</TabItem>
+</Tabs>   
+
+Although the Key of the `Book` object is `name` and `edition`, because the `deletedMillis` property is the logical deletion flag, the non-primary key `UNIQUE` constraint at the database level should be:  
+
+```sql  
+alter table BOOK
+    add constraint uq_key_BOOK
+        unique(NAME, EDITION, DELETED_MILLIS);  
+```  
+
+If the table input is as follows:  
+
+|ID|NAME|EDITION|PRICE|STORE_ID|DELETED_MILLIS|  
+|---|---|---|---|---|---|
+|1027|SQL in Action|1|49.99|23|0|  
+|1026|SQL in Action|1|55.99|22|1708796420956|
+|1025|SQL in Action|1|47.99|23|1708234681901|  
+|3131|SQL in Action|2|59.99|23|0|
+|3130|SQL in Action|2|53.99|22|1708722582793|
+|3129|SQL in Action|2|58.99|23|1708664484823|
+
+There are 4 associated data records hidden, leaving only two valid data records:  
+
+|ID|NAME|EDITION|PRICE|STORE_ID|DELETED_MILLIS|
+|---|---|---|---|---|---|  
+|1027|SQL in Action|1|49.99|23|0|
+|3131|SQL in Action|2|59.99|23|0|   
+
+## Effects on Middle Tables  
+
+If an entity is logically deleted, what effect does it have on associations based on middle tables *(using the `@JoinTable` annotation)*?
+
+-   If the middle table also supports logical deletion, that is, the `logicalDeletedFilter` of the `@JoinTable` annotation is specified, the middle table records related to the logically deleted entity will also be logically deleted.  
+
+    In [the next document] (./join-table), we will discuss in detail the logical deletion of middle tables.
+
+-   If the `deletedWhenEndpointIsLogicallyDeleted` of the `@JoinTable` annotation is set to true, the middle table records related to the logically deleted entity will be physically deleted.  
+
+-   If neither of the above two conditions is met, the middle table records related to the logically deleted entity will not be processed at all.

@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: 🔥 DTO Language
+title: DTO Language
 ---
 
 import Tabs from '@theme/Tabs';
@@ -73,7 +73,7 @@ Multiple dto files can be defined under the `src/main/dto` directory, with each 
 
 Assuming there is a Jimmer entity type whose full type name is `com.yourcompany.yourproject.Book`, and this class is decorated with `@org.babyfish.jimmer.sql.Entity` *(DTO language only supports Entity types)*, there are two ways to create dto files.
 
-1.  When `export` statement is not used
+1.  Not using `export` statement
 
     In this case, the dto file directory needs to correspond to the original entity package, and the name needs to correspond to the original entity name:
 
@@ -81,21 +81,25 @@ Assuming there is a Jimmer entity type whose full type name is `com.yourcompany.
 
     2.  In the directory created in the previous step, create a new file `Book.dto`. This file must have the same name as the class and have the extension `dto`
 
-2.  When `export` statement is used
+2.  Using `export` statement
 
-    In this case, the dto file directory and name are arbitrary, because we will use the `export` statement inside the file to define which original entity the dto file corresponds to.
+    The `export`statement is important, so we will explain it separately in a chapter.
 
-    -   Since there is no requirement for the dto file directory, it is recommended to create the dto file directly under `src/main/dto`
+### 2.2 Export statement
 
-    -   Although there is no requirement for the dto file name either, for the maintainability of the project, it is still recommended that the file name adopts the name of the original entity, which is `Book.dto` in this case
+In this case, the dto file directory and name are arbitrary, because we will use the `export` statement inside the file to define which original entity the dto file corresponds to.
 
-    -   The first line of code in the dto file is the `export` statement
+-   Since there is no requirement for the dto file directory, it is recommended to create the dto file directly under `src/main/dto`
 
-        ```sh
-        export com.yourcompany.yourproject.Book
+-   Although there is no requirement for the dto file name either, for the maintainability of the project, it is still recommended that the file name adopts the name of the original entity, which is `Book.dto` in this case
 
-        ...subsequent code...
-        ```
+-   The first line of code in the dto file is the `export` statement
+
+    ```sh
+    export com.yourcompany.yourproject.Book
+
+    ...subsequent code...
+    ```
 
 After the DTO file is compiled, more Java/Kotlin types will be generated automatically. Their default package name is: `entity package name` + `.dto`.  
 
@@ -155,7 +159,7 @@ data class BookView(
 </TabItem>
 </Tabs>
 
-### 2.2. Notes  
+### 2.3. Notes  
 
 :::warning
 - For Java projects *(Kotlin developers please ignore)*:
@@ -281,6 +285,39 @@ val anotherEntity: Book = dto.toEntity()
 Compared with Output DTO, Input DTO has the following differences:
 
 -   If the entity ID property is configured with auto-increment strategy, the id property in the input DTO is nullable.
+
+    Here is the translation into English:
+
+    :::info
+    The reason for this design is that saving the object does not necessarily require the id property when the entity's id property has an auto-increment strategy. 
+
+    > However, this does not mean Jimmer will simply assume like other ORMs such as JPA that lacking an id property means an insert operation 
+    while having an id property means an update operation. 
+    > 
+    > Jimmer has smarter strategies in this regard, please refer to [Save Commands/Save Modes](../../mutation/save-command/save-mode). This article will not repeat the details. 
+    
+    If the developer does not accept this default behavior, there are two ways to write the DTO code: 
+    
+    -   Make the DTO type have no id property at all 
+        
+        ```sh
+        input BookInput { 
+            #allScalars(this) 
+            #highlight-next-line 
+            -id 
+        }
+        ``` 
+        
+    -   Make the DTO type's id property non-nullable 
+    
+        ```sh
+        input BookInput { 
+            #allScalars(this) 
+            #highlight-next-line 
+            id! 
+        } 
+        ``` 
+    :::
 
 -   The input DTO can only define savable properties, such as simple properties, ordinary ORM associations, and id-view properties. Unsavable properties such as transient properties, formula properties, computed properties, and remote associations cannot be defined, otherwise it will cause compilation errors.
 
@@ -899,78 +936,14 @@ TreeNodeView {
 
 ### 10.3. id Function  
 
-For <ViewMore buttonText="short associations"><ShortAssociation/></ViewMore>, we certainly choose to define [@IdView](../../mapping/advanced/view/id-view) properties in entities, for example:
+Here is the translation into English:
 
-<Tabs groupId="language">
-<TabItem value="java" label="Java">  
+For <ViewMore buttonText="short associations"><ShortAssociation/></ViewMore>, 
+while of course we can choose to define [@IdView](../../mapping/advanced/view/id-view) properties on the entities and 
+simply reference them in DTOs, we can't always rely on entity types having declared [@IdView](../../mapping/advanced/view/id-view) properties. 
+A better approach should not make that assumption. 
 
-```java title="Book.java"
-@Entity
-public interface Book {
-
-    @Nullable
-    @ManyToOne  
-    BookStore store();
-
-    @ManyToMany
-    val authors: List<Author>
-
-    // highlight-next-line
-    @IdView    
-    Long storeId();
-
-    // highlight-next-line
-    @IdView("authors")
-    List<Long> authorIds();
-}
-```
-
-</TabItem>
-<TabItem value="kotlin" label="Kotlin">
-
-```kotlin title="Book.kt" 
-@Entity
-interface Book {
-
-    @ManyToOne
-    val store: BookStore?
-
-    @ManyToMany
-    val authors: List<Author>
-    
-    // highlight-next-line
-    @IdView     
-    val storeId: Long?
-
-    // highlight-next-line
-    @IdView("authors")
-    val authorIds: List<Long>
-}
-``` 
-
-</TabItem>
-</Tabs>
-
-In cases where the entity has already defined [@IdView](../../mapping/advanced/view/id-view) properties, you only need to simply reference them in the DTO language:
-
-```sh title="Book.dto"
-BookView {
-
-    // highlight-next-line
-    storeId
-
-    // highlight-next-line
-    authorIds
-
-    ...omitted...
-} 
-```
-
-:::tip  
-However, we cannot always rely on entity types to declare [@IdView](../../mapping/advanced/view/id-view) properties. A better solution should not have this assumption. 
-
-Therefore, the DTO language supports calling the `id` function on association properties to achieve the same purpose.
-:::
+Therefore, the DTO language supports the `id` function on associated properties to achieve the same purpose:
 
 ```sh title="Book.dto"
 BookView {

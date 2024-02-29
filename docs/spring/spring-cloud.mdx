@@ -46,13 +46,13 @@ To simplify the discussion, the database initialization scripts for the three se
         <tr>
             <td rowspan="3">Java</td>
             <td rowspan="3">
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud">
-                    example/java/jimmer-cloud
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud">
+                    jimmer-examples/java/jimmer-cloud
                 </a>
             </td>
             <td>store-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud/store-service/src/main/resources/store.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud/store-service/src/main/resources/store.sql">
                     jimmer-cloud/store-service/src/main/resources/store.sql
                 </a>
             </td>
@@ -60,7 +60,7 @@ To simplify the discussion, the database initialization scripts for the three se
         <tr>
             <td>book-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud/book-service/src/main/resources/book.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud/book-service/src/main/resources/book.sql">
                     jimmer-cloud/book-service/src/main/resources/book.sql
                 </a>
             </td>
@@ -68,7 +68,7 @@ To simplify the discussion, the database initialization scripts for the three se
         <tr>
             <td>author-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud/author-service/src/main/resources/author.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud/author-service/src/main/resources/author.sql">
                     jimmer-cloud/author-service/src/main/resources/author.sql
                 </a>
             </td>
@@ -76,13 +76,13 @@ To simplify the discussion, the database initialization scripts for the three se
         <tr>
             <td rowspan="3">Kotlin</td>
             <td rowspan="3">
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt">
-                    example/kotlin/jimmer-cloud-kt
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt">
+                    jimmer-examples/kotlin/jimmer-cloud-kt
                 </a>
             </td>
             <td>store-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt/store-service/src/main/resources/store.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt/store-service/src/main/resources/store.sql">
                     jimmer-cloud-kt/store-service/src/main/resources/store.sql
                 </a>
             </td>
@@ -90,7 +90,7 @@ To simplify the discussion, the database initialization scripts for the three se
         <tr>
             <td>book-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt/book-service/src/main/resources/book.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt/book-service/src/main/resources/book.sql">
                     jimmer-cloud-kt/book-service/src/main/resources/book.sql
                 </a>
             </td>
@@ -98,7 +98,7 @@ To simplify the discussion, the database initialization scripts for the three se
         <tr>
             <td>author-service</td>
             <td>
-                <a href="https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt/author-service/src/main/resources/author.sql">
+                <a href="https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt/author-service/src/main/resources/author.sql">
                     jimmer-cloud-kt/author-service/src/main/resources/author.sql
                 </a>
             </td>
@@ -107,16 +107,16 @@ To simplify the discussion, the database initialization scripts for the three se
 </table>
 
 :::info
-The accompanying examples [example/java/jimmer-cloud](https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud) 
-or [example/kotlin/jimmer-cloud-kt](https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt)
+The accompanying examples [jimmer-examples/java/jimmer-cloud](https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud) 
+or [jimmer-examples/kotlin/jimmer-cloud-kt](https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt)
 use H2, each service will automatically initialize its own database after startup.
 :::
 
 ## Entity Definition 
 
 In a separate subproject *(the accompanying examples are
-[example/java/jimmer-cloud/model](https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-cloud/model) or
-[example/kotin/jimmer-cloud-kt/model](https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-cloud-kt/model))*, define all entity types.
+[jimmer-examples/java/jimmer-cloud/model](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-cloud/model) or
+[jimmer-examples/kotin/jimmer-cloud-kt/model](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-cloud-kt/model))*, define all entity types.
 
 These entity types constitute the global model. Entity types belong to different microservices. Entities between different microservices constitute remote associations, which can actually be understood as the interaction contracts between entities belonging to different microservices.
 
@@ -262,8 +262,8 @@ interface Author {
 
 Microservice applications need a registry center, which is a basic feature of microservice architecture, no explanation is needed in this article.
 
-In the accompanying examples, it is [example/java/jimmer-cloud/registry-center](https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud/registry-center)
-or [example/kotlin/jimmer-cloud-kt/registry-center](https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt/registry-center)
+In the accompanying examples, it is [jimmer-examples/java/jimmer-cloud/registry-center](https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud/registry-center)
+or [jimmer-examples/kotlin/jimmer-cloud-kt/registry-center](https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt/registry-center)
 
 ## Implementing Services 
 
@@ -272,8 +272,8 @@ Since the implementations of the microservices `store-service`, `book-service` a
 :::note
 Although this document only explains `store-service`, to experience the effect of remote associations, all three services need to be fully implemented.
 
-Complete code can be found in the accompanying examples [example/java/jimmer-cloud](https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-cloud)
-or [example/kotlin/jimmer-cloud-kt](https://github.com/babyfish-ct/jimmer/blob/main/example/kotlin/jimmer-cloud-kt). 
+Complete code can be found in the accompanying examples [jimmer-examples/java/jimmer-cloud](https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-cloud)
+or [jimmer-examples/kotlin/jimmer-cloud-kt](https://github.com/babyfish-ct/jimmer-examples/blob/main/kotlin/jimmer-cloud-kt). 
 :::
 
 ### Enable Microservice Support in Jimmer

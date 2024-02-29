@@ -154,23 +154,23 @@ import DissociateMode from '../_shared/dissociate-mode.md';
 
     -   `AUTO`: 不明确指定当前操作是逻辑删除还是物理删除
     
-        -   如果被删除的实体类型具备[逻辑删除字段](../mapping/advanced/logical-deleted)，则执行逻辑删除
+        -   如果被删除的实体类型具备[逻辑删除字段](../mapping/advanced/logical-deleted/entity)，则执行逻辑删除
 
         -   否则，执行物理删除
 
     -   `LOGICAL`: 明确指定当前操作是逻辑删除
 
-        -   如果被删除的实体类型具备[逻辑删除字段](../mapping/advanced/logical-deleted)，则执行逻辑删除
+        -   如果被删除的实体类型具备[逻辑删除字段](../mapping/advanced/logical-deleted/entity)，则执行逻辑删除
 
         -   否则，抛出异常，说明当前实体不支持逻辑删除
 
     -   `PHYSICAL`: 明确指定当前操作是物理删除
     
-        无论被删除的实体类型是否具备[逻辑删除字段](../mapping/advanced/logical-deleted)，都执行物理删除
+        无论被删除的实体类型是否具备[逻辑删除字段](../mapping/advanced/logical-deleted/entity)，都执行物理删除
 
 ## 逻辑删除
 
-假设实体具备[逻辑删除字段](../mapping/advanced/logical-deleted)，例如
+假设实体具备[逻辑删除字段](../mapping/advanced/logical-deleted/entity)，例如
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -221,7 +221,7 @@ where ID in(?/* 1L*/)
 
 ## 物理删除
 
-如果实体不具备[逻辑删除字段](../mapping/advanced/logical-deleted)，或删除模式被抢行指定为`DeleteMode.PHYSICAL`，则执行物理删除。
+如果实体不具备[逻辑删除字段](../mapping/advanced/logical-deleted/entity)，或删除模式被抢行指定为`DeleteMode.PHYSICAL`，则执行物理删除。
 
 ### 基本用法
 

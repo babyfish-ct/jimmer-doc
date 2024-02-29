@@ -149,58 +149,49 @@ The result is
 RecursiveTreeNodeView(
     id=10, 
     name=Woman, 
-    parent=RecursiveTreeNodeView( ❶
+    parent=RecursiveTreeNodeView.TargetOf_parent( ❶
         id=9, 
         name=Clothing, 
-        parent=RecursiveTreeNodeView( ❶
+        parent=RecursiveTreeNodeView.TargetOf_parent( ❶
             id=1, 
             name=Home, 
-            parent=null, ❶
-            childNodes=null
-        ), 
-        childNodes=null
+            parent=null ❶
+        )
     ), 
     childNodes=[ ❷
-        RecursiveTreeNodeView(
+        RecursiveTreeNodeView.TargetOf_childNodes(
             id=11, 
             name=Casual wear, 
-            parent=null, 
             childNodes=[ ❷
-                RecursiveTreeNodeView(
+                RecursiveTreeNodeView.TargetOf_childNodes(
                     id=12, 
                     name=Dress, 
-                    parent=null, 
                     childNodes=[] ❷
                 ), 
-                RecursiveTreeNodeView(
+                RecursiveTreeNodeView.TargetOf_childNodes(
                     id=13, 
                     name=Miniskirt, 
-                    parent=null, 
                     childNodes=[] ❷
                 ), 
-                RecursiveTreeNodeView(
+                RecursiveTreeNodeView.TargetOf_childNodes(
                     id=14, 
                     name=Jeans, 
-                    parent=null, 
                     childNodes=[] ❷
                 )
             ]
         ), 
-        RecursiveTreeNodeView(
+        RecursiveTreeNodeView.TargetOf_childNodes(
             id=15, 
             name=Formal wear, 
-            parent=null, 
             childNodes=[ ❷
-                RecursiveTreeNodeView(
+                RecursiveTreeNodeView.TargetOf_childNodes(
                     id=16, 
                     name=Suit, 
-                    parent=null, 
                     childNodes=[] ❷
                 ), 
-                RecursiveTreeNodeView(
+                RecursiveTreeNodeView.TargetOf_childNodes(
                     id=17, 
                     name=Shirt, 
-                    parent=null, 
                     childNodes=[] ❷
                 )
             ]

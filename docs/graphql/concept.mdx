@@ -64,13 +64,13 @@ dependencies {
 :::info
 If the Jimmer entity types are also defined in the GraphQL project rather than in a separate project, the preprocessor (Annotation Processor for Java, KSP for Kotlin) should also be configured in the build script.
 
-This has already been discussed in detail in the [Generate Code](../overview/get-started/generate-code) article and will not be repeated here.
+This has already been discussed in detail in the [Generate Code](../quick-view/get-started/generate-code) article and will not be repeated here.
 :::
 
 [Spring GraphQL](https://spring.io/projects/spring-graphql) is a Schema-First rather than Code-First approach. 
 Therefore, developers need to create the file `src/main/resources/graphql/schema.graphqls` in the project and define the GraphQL schema in it.
 
-This file is a requirement of [Spring GraphQL](https://spring.io/projects/spring-graphql). The GraphQL schema content is a standard language that is unrelated to Jimmer, so this article will not explain it. Please refer to the [GraphQL Schema in the example](https://github.com/babyfish-ct/jimmer/blob/main/example/java/jimmer-sql-graphql/src/main/resources/graphql/schema.graphqls). 
+This file is a requirement of [Spring GraphQL](https://spring.io/projects/spring-graphql). The GraphQL schema content is a standard language that is unrelated to Jimmer, so this article will not explain it. Please refer to the [GraphQL Schema in the example](https://github.com/babyfish-ct/jimmer-examples/blob/main/java/jimmer-sql-graphql/service/src/main/resources/graphql/schema.graphqls). 
 
 ## Notes
 

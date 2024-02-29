@@ -1,14 +1,22 @@
 ---
-sidebar_position: 3
-title: Example(Fastest learning way)  
+sidebar_position: 6
+title: Standard Examples  
 ---
 
 import {ViewMore} from '@site/src/components/ViewMore';
 import {CacheConsistencyPanel} from '@site/src/components/HomepageFeatures/CacheConsistency';
 import {SwaggerAuthorize, GraphiqlHeaders} from '@site/src/components/Image';
 
-:::tip
-Running the examples that come with the framework is the most efficient way to get familiar with Jimmer.  
+Through the previous chapters:
+
+- We learned about the three core functionalities of Jimmer and got a basic impression of it.  
+
+- We also went through a simple project to understand the basics of using Jimmer, including how to use its Annotation Processor *(Java)* / KSP *(Kotlin)*.  
+
+However, for a comprehensive solution, having rich examples is better. Jimmer provides a series [standard examples](https://github.com/babyfish-ct/jimmer-examples): 
+
+:::tip 
+Combining the accompanying examples is the most efficient way to get familiar with Jimmer.
 :::
 
 ## Prerequisites
@@ -28,7 +36,7 @@ Don't panic, click the run button and all errors will disappear automatically.
 
 The accompanying examples of Jimmer are very helpful for quickly mastering Jimmer.
 
-The root directory of all examples: https://github.com/babyfish-ct/jimmer/tree/main/example
+The root directory of all examples: https://github.com/babyfish-ct/jimmer-examples
 
 This project provides 5 examples, each with Java and Kotlin versions, for a total of 10 projects.
 
@@ -42,15 +50,15 @@ This project provides 5 examples, each with Java and Kotlin versions, for a tota
     </thead>
     <tbody>
         <tr>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-core">java/jimmer-core</a></td>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-core-kt">java/jimmer-core-kt</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-core">java/jimmer-core</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-core-kt">java/jimmer-core-kt</a></td>
             <td>ORM-unrelated example demonstrating <a href="https://github.com/immerjs/immer">immer</a>-style immutable objects</td>
             <td>Run main method</td>
             <td>★★★★</td>
         </tr>
         <tr>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-sql">java/jimmer-sql</a></td>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-sql-kt">java/jimmer-sql-kt</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql">java/jimmer-sql</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-kt">java/jimmer-sql-kt</a></td>
             <td>Use Jimmer to quickly build REST services. This example demonstrates most of Jimmer's capabilities and is the most important and fundamental example.</td>
             <td>
                 <ol>
@@ -68,8 +76,8 @@ This project provides 5 examples, each with Java and Kotlin versions, for a tota
             <td>★★★★★</td> 
         </tr>
         <tr>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-sql-graphql">java/jimmer-sql-graphql</a></td>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-sql-graphql-kt">java/jimmer-sql-graphql-kt</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql-graphql">java/jimmer-sql-graphql</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-graphql-kt">java/jimmer-sql-graphql-kt</a></td>
             <td>Use Jimmer to quickly build GraphQL services</td>
             <td>
                 <ol>
@@ -86,8 +94,8 @@ This project provides 5 examples, each with Java and Kotlin versions, for a tota
             <td>★★</td>
         </tr>
         <tr>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-cloud">java/jimmer-cloud</a></td>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-cloud-kt">java/jimmer-cloud-kt</a></td> 
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-cloud">java/jimmer-cloud</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-cloud-kt">java/jimmer-cloud-kt</a></td> 
             <td>Microservice project based on Spring Cloud, demonstrating Jimmer's remote associations</td>
             <td>
                 <ol>
@@ -107,8 +115,8 @@ This project provides 5 examples, each with Java and Kotlin versions, for a tota
             <td>★</td>
         </tr>
         <tr>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/java/save-command">java/save-command</a></td>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/save-command-kt">kotlin/save-command-kt</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/java/save-command">java/save-command</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/save-command-kt">kotlin/save-command-kt</a></td>
             <td>Dedicated example for save commands</td>
             <td>Run all unit tests</td> 
             <td>★★★</td>
@@ -121,11 +129,11 @@ When getting started, the most important examples are `jimer-sql` and `jimmer-sq
 
 - Java
 
-  [example/java/jimmer-sql](https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-sql)
+  [jimmer-examples/java/jimmer-sql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql)
   
 - Kotlin
 
-  [example/kotlin/jimmer-sql-kt](https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-sql-kt)
+  [jimmer-examples/kotlin/jimmer-sql-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-kt)
 :::
 
 ## Non-Cache Mode 
@@ -140,11 +148,11 @@ As you can see, non-cache mode is very simple and ideal for quickly getting fami
 
 As introduced above, there are 10 accompanying examples, 4 of which can demonstrate Jimmer's caching and cache consistency.
 
-- [java/jimmer-sql](https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-sql) and
-  [kotlin/jimmer-sql-kt](https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-sql-kt)
+- [java/jimmer-sql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql) and
+  [kotlin/jimmer-sql-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-kt)
   
-- [java/jimmer-sql-graphql](https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-sql-graphql) and
-  [kotlin/jimmer-sql-graphql-kt](https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-sql-graphql-kt)
+- [java/jimmer-sql-graphql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql-graphql) and
+  [kotlin/jimmer-sql-graphql-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-graphql-kt)
   
 By default, caching is not used, and they run on embedded in-memory databases with automatic database initialization. This ensures no external environment installation is required. Just click the run button to demonstrate.
 
@@ -181,7 +189,7 @@ Enabling cache mode requires building an external environment.
 
 Although [Maxwell](https://maxwells-daemon.io/) only supports MySQL, it is the simplest of all database change push technologies. So it has demonstrational value.
 
-Open the command line, enter the local directory corresponding to [example/env-with-cache/maxwell](https://github.com/babyfish-ct/jimmer/blob/main/example/env-with-cache/maxwell), and execute
+Open the command line, enter the local directory corresponding to [jimmer-examples/env-with-cache/maxwell](https://github.com/babyfish-ct/jimmer-examples/blob/main/env-with-cache/maxwell), and execute
 ```
 bash ./install.sh 
 ```
@@ -205,7 +213,7 @@ After installation, docker host port usage is enabled as follows
 Postgres is a great open source database. If your project is brand new without any historical baggage, consider trying Postgres. This is why Jimmer's examples use Debezium to support Postgres.
 :::
 
-Open the command line, enter the local directory corresponding to [example/env-with-cache/debezium](https://github.com/babyfish-ct/jimmer/blob/main/example/env-with-cache/debezium), and execute
+Open the command line, enter the local directory corresponding to [jimmer-examples/env-with-cache/debezium](https://github.com/babyfish-ct/jimmer-examples/blob/main/env-with-cache/debezium), and execute
 ```
 bash ./install.sh
 ```

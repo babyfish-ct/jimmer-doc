@@ -1,0 +1,437 @@
+---
+sidebar_position: 6 
+title: JSON Converter
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+Although Jimmer entities are not POJOs, Jackson serialization can be supported by `org.babyish.jimmmer.jackson.ImmutableModule`.  
+
+:::tip
+If using the Jimmer Spring Boot Starter, this `ImmutableModule` will be automatically registered without user intervention.
+:::
+
+However, sometimes we need to customize the Jackson serialization behavior of certain properties. We give two examples here.
+
+-   Snowflake ID
+
+-   Data Masking
+
+## 1. Snowflake ID  
+
+Snowflake IDs lead to very large int64 values that unfortunately cannot be represented by JavaScript's number type. Therefore, we have no choice but to serialize such id properties as strings.
+
+### Usage  
+
+<Tabs groupId="language"> 
+<TabItem value="java" label="Java">
+
+```java 
+@Entity
+@public interface Book {
+
+    @Id 
+    @GeneratedValue(generatorType = SnowflakeIdGenerator.class)
+    // highlight-next-line
+    @JsonConverter(LongToStringConverter.class) 
+    long id();
+
+    String name();
+
+    ...Omit other properties...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity 
+@public interface Book {
+
+    @Id
+    @GeneratedValue(generatorType = SnowflakeIdGenerator.class) 
+    // highlight-next-line
+    @JsonConverter(LongToStringConverter.class)
+    long id();
+
+    String name();
+
+    ...Omit other properties... 
+}
+```
+
+</TabItem>
+</Tabs>
+
+Where `SnowflakIdGenerator` is a user-provided distributed snowflake ID generator implementation, which is not the focus of our discussion.   
+
+Here, we discuss the highlighted line:  
+
+-   `@org.babyfish.jimmer.jackson.JsonConverter` indicates custom Jackson serialization/deserialization behavior for the `Book.id` property.
+
+-   `org.babyfish.jimmer.jackson.LongToStringConverter` means serialize/deserialize the long value as a String.
+
+    `LongToStringConveter` is a built-in Converter in Jimmer. Here we show its source code to quickly understand how to customize `Converter`.
+
+    ```java
+    package org.babyfish.jimmer.jackson;
+
+    public class LongToStringConverter implements Converter<Long, String> { 
+
+        // How to serialize
+        @Override 
+        public String output(Long value) {
+            return Long.toString(value);
+        }
+
+        // How to deserialize 
+        @Override
+        public Long input(String jsonValue) {
+            return Long.parseLong(jsonValue);
+        }
+    }
+    ```
+
+:::tip
+Note:  
+
+-   Jimmer annotations rather than Jackson annotations are used here, because:  This is not only an adjustment of the serialization framework Jackson, but also a useful adjustment of
+
+    - [Automatic client/server integration](../../client)
+    
+    - [DTO language](../../object/view/dto-language)
+    
+-   No need to consider null values ​​inside Converter, null values ​​will never be passed as an argument to any Converter method.
+:::  
+
+Here, bypassing ORM, we demonstrate the effect by simulating data.  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">  
+
+```java  
+Book book = Objects.createBook(draft -> {
+    draft.setId(1546434604146774987L); 
+    draft.setName("SQL in Action");  
+});
+System.out.println(book);
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin  
+val book = new(Book::class).by {
+    id = 1546434604146774987L  
+    name = "SQL in Action" 
+}
+println(book) 
+```
+
+</TabItem>
+</Tabs>
+
+Since the `toString` of Jimmer entities is Jackson serialization, we can print directly and observe the results of Jackson serialization:  
+
+```json 
+{
+    // highlight-next-line
+    "id": "1546434604146774987",
+    "name": "SQL in Action"
+}
+```
+
+We can see that the serialized id is a string rather than a number, thus avoiding the problem that JavaScript clients cannot parse large numbers.
+
+### Automatically Applied to IdView Properties  
+
+:::info
+[@IdView properties](../advanced/view/id-view) is advanced mapping content that will be explained later. Readers can skip this section for now and come back later.  
+:::  
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">  
+
+```java  
+@Entity
+public interface Author {
+
+    @ManyToMany(mappedBy = "authors") 
+    List<Book> books();
+
+    @IdView("authors")
+    // highlight-next-line 
+    List<Long> bookIds();
+
+    ...Omit other properties...  
+}
+```
+
+</TabItem> 
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity  
+interface Author {
+
+    @ManyToMany(mappedBy = "authors")
+    val books: List<Book>
+
+    @IdView("authors")
+    // highlight-next-line
+    val bookIds: List<Long> 
+
+    ...Omit other properties...
+}
+```  
+
+</TabItem>
+</Tabs>  
+
+Here, the `bookIds` property is not an ordinary `List <Long>` collection, but the collection of ids of all associated `Book` objects.   
+
+Because the `Book.id` property has already been annotated with `@JsonConverter`, there is no need to specify any annotations for the `bookIds` property here to give it this capability.   
+
+Similarly, bypassing ORM, demonstrate the effect through simulated data.
+
+<Tabs groupId="language"> 
+<TabItem value="java" label="Java">  
+
+```java   
+Author author = Objects.createAuthor(draft -> {
+    draft.setBookIds(
+        Arrays.asList(
+            1546434604146774987L,
+            1546434604146774988L
+        )
+    );  
+});
+System.out.println(book);
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">  
+
+```kotlin 
+val book = new(Book::class).by {
+    bookIds = listOf(
+        1546434604146774987L,
+        1546434604146774988L
+    )
+    
+}  
+println(book)
+```
+
+</TabItem>  
+</Tabs>  
+
+Since the toString of Jimmer entities is Jackson serialization, we can print directly and observe the results of Jackson serialization:   
+
+```json
+{
+    "bookIds": [
+        // highlight-next-line 
+        "1546434604146774987",  
+        // highlight-next-line
+        "1546434604146774988"
+    ]
+}  
+```
+
+We can see that all elements of the serialized `bookIds` property are strings rather than numbers, thus avoiding the problem that JavaScript clients cannot parse large numbers.  
+
+### Automatically Applied to DTO  
+
+:::info  
+[DTO](../../object/view/dto-language) is advanced mapping content that will be explained later. Readers can skip this section for now and come back later.
+:::  
+
+In the `src/main/dto` directory, create any file with the extension `.dto` and edit its code as follows  
+
+```sh  
+export com.yourcompany.yourproject.model.Book
+    -> package com.yourcompany.yourproject.model.dto  
+
+BookView {
+    id  
+    name  
+}  
+```  
+
+After compiling the project, the generated Java/Kotlin type is:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">   
+
+```java  
+@GeneratedBy(file = "<yourproject>/src/main/dto/Book.dto")
+public class BookView {
+
+    // highlight-next-line  
+    private String id;
+
+    private String name;  
+
+    ...Omit other properties...  
+}
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin  
+@GeneratedBy(file = "<yourproject>/src/main/dto/Book.dto")  
+class BookView(
+    // highlight-next-line
+    val id: String, 
+    val name: String
+) {
+    ...Omit other properties... 
+}
+```  
+
+</TabItem>
+</Tabs>  
+
+We can see that the type of the id property in the automatically generated DTO type is String instead of long.  
+
+Finally, we verify the conversion from entity to DTO object as follows  
+
+<Tabs groupId="language">  
+<TabItem value="java" label="Java">  
+
+```java
+Book book = Objects.createBook(draft -> {
+    draft.setId(1546434604146774987L);    
+    draft.setName("SQL in Action");  
+}); 
+System.out.println(new BookView(book));
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin  
+val book = new(Book::class).by {  
+    id = 1546434604146774987L  
+    name = "SQL in Action"
+}  
+println(BookView(book))  
+```
+
+</TabItem>  
+</Tabs>  
+
+The output is as follows  
+
+```json 
+BookView(
+    // highlight-next-line
+    id = "1546434604146774987",
+    name = "SQL in Action" 
+)
+```  
+
+## 2. Data Masking  
+
+### Usage
+
+Assume the `User` entity has a `phone` property representing the user's phone number. We now perform data masking on this property.
+
+For example, displaying the phone number as `135****6792`.  
+
+:::info
+Data masking is not simply a page rendering feature. It must ensure that real data is not returned in the HTTP requests themselves.
+:::  
+
+There is no built-in Converter available for this requirement. We need to customize the Converter as follows:   
+
+<Tabs groupId="language">  
+<TabItem value="java" label="Java">   
+
+```java  
+public class UserPhoneConverter implements Converter<String, String> {
+
+    @Override
+    public String output(String value) {
+        return value.substring(0, 3) + "****" + value.substring(7);  
+    }    
+} 
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">    
+
+```kotlin  
+class UserPhoneConverter : Converter<String, String> {
+
+    override fun output(value: String): String =  
+        "${value.substring(0,3)}****${value.substring(7)}"  
+}
+```  
+
+</TabItem>  
+</Tabs>  
+
+Then modify the `User` entity simply  
+
+<Tabs groupId="language">   
+<TabItem value="java" label="Java">   
+
+```java
+@Entity 
+public interface User {
+
+    // highlight-next-line  
+    @JsonConverter(UserPhoneConverter.class)
+    String phone();
+}
+```   
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">  
+
+```kotlin   
+@Entity 
+interface User {
+
+    // highlight-next-line
+    @JsonConverter(UserPhoneConverter.class)
+    val phone: String  
+}
+```  
+
+</TabItem>  
+</Tabs>
+
+### Support Input  
+
+In the above example, the `UserPhoneConverter` only overrides the `output` method without overriding the `input` method.   
+
+Because the default implementation of the `input` method is to throw an `UnsupportedOperationException` exception, deserialization is not supported.   
+
+However, in actual projects, `Input DTO` can be generated based on entity objects to complete data entry. In this case, the client should enter the exact phone number. Therefore, we can override the `input` method as follows.   
+
+<Tabs groupId="language">   
+<TabItem value="java" label="Java">   
+
+```java  
+@Override  
+public String input(String value) {
+    retur value;  
+}  
+```  
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">   
+
+```kotlin   
+override fun input(value: String): String =  
+    value  
+```  
+
+</TabItem>  
+</Tabs>

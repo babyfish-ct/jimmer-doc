@@ -1,22 +1,27 @@
 ---
-sidebar_position: 3
-title: 例子(最快学习方法)
+sidebar_position: 6
+title: 标准例子
 ---
 
 import {ViewMore} from '@site/src/components/ViewMore';
 import {CacheConsistencyPanel} from '@site/src/components/HomepageFeatures/CacheConsistency';
 import {SwaggerAuthorize, GraphiqlHeaders} from '@site/src/components/Image';
 
+通过前面的章节
+
+-   我们知道了Jimmer最核心的三大功能点，对其有了基本印象，
+
+-   也通过一个简单的项目了解了Jimmer的基本用法，包括其Annotation Processor*(Java)*/KSP*(Kotlin)*的使用方法。
+
+然而，对于一个综合性的解决方案，有丰富的例子更好。Jimmer提供了一系列[标准例子](https://github.com/babyfish-ct/jimmer-examples)
+
 :::tip
-直接运行框架附带的例子，是熟悉Jimmer最高效的方法。
+结合附带的例子，会事半功倍，是熟悉Jimmer最高效的方法。
 :::
 
 ## 事先需知
 
-和[JOOQ](https://www.jooq.org/)，[JPA2.0 Criteria](https://docs.oracle.com/javaee/6/tutorial/doc/gjitv.html)，[QueryDSL](http://querydsl.com/)，[MyBatis-Flex](https://github.com/mybatis-flex/mybatis-flex)，[Fluent-MyBatis](https://github.com/atool/fluent-mybatis)等强类型SQL DSL实现一样, Jimmer需要根据用户代码生成更多的源代码。
-
--   对于Java而言，就是annotation processor
--   对于kotlin而言，就是ksp
+由于Jimmer高度依赖Annotation Processor*(Java)*/KSP*(Kotlin)*，有一个问题需要注意。
 
 当用户第一次使用IDE（比如Intellij）打开项目配套的例子时，会发现一些本该被自动生成的类不存在。
 
@@ -28,7 +33,7 @@ import {SwaggerAuthorize, GraphiqlHeaders} from '@site/src/components/Image';
 
 Jimmer提供的配套示例，对快速掌握Jimmer非常有帮助
 
-所有例子的总目录：https://github.com/babyfish-ct/jimmer/tree/main/example
+所有例子的总目录：https://github.com/babyfish-ct/jimmer-examples
 
 该项目提供5个例子，每个例子都有Java和Kotlin两个版本，共计10个例子。
 
@@ -42,15 +47,15 @@ Jimmer提供的配套示例，对快速掌握Jimmer非常有帮助
     </thead>
     <tbody>
         <tr>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-core">java/jimmer-core</a></td>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-core-kt">java/jimmer-core-kt</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-core">java/jimmer-core</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-core-kt">java/jimmer-core-kt</a></td>
             <td>ORM无关示例，展示<a href="https://github.com/immerjs/immer">immer</a>风格的不可变对象</td>
             <td>运行main方法</td>
             <td>★★★★</td>
         </tr>
         <tr>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-sql">java/jimmer-sql</a></td>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-sql-kt">java/jimmer-sql-kt</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql">java/jimmer-sql</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-kt">java/jimmer-sql-kt</a></td>
             <td>利用Jimmer快速构建REST服务。这个例子展示了大部分Jimmer的功能，是最重要的最基础的例子</td>
             <td>
                 <ol>
@@ -68,8 +73,8 @@ Jimmer提供的配套示例，对快速掌握Jimmer非常有帮助
             <td>★★★★★</td>
         </tr>
         <tr>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-sql-graphql">java/jimmer-sql-graphql</a></td>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-sql-graphql-kt">java/jimmer-sql-graphql-kt</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql-graphql">java/jimmer-sql-graphql</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-graphql-kt">java/jimmer-sql-graphql-kt</a></td>
             <td>利用Jimmer快速构建GraphQL服务</td>
             <td>
                 <ol>
@@ -86,8 +91,8 @@ Jimmer提供的配套示例，对快速掌握Jimmer非常有帮助
             <td>★★</td>
         </tr>
         <tr>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-cloud">java/jimmer-cloud</a></td>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-cloud-kt">java/jimmer-cloud-kt</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-cloud">java/jimmer-cloud</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-cloud-kt">java/jimmer-cloud-kt</a></td>
             <td>基于Spring Cloud的微服务项目，展示Jimmer的远程关联</td>
             <td>
                 <ol>
@@ -107,8 +112,8 @@ Jimmer提供的配套示例，对快速掌握Jimmer非常有帮助
             <td>★</td>
         </tr>
         <tr>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/java/save-command">java/save-command</a></td>
-            <td><a href="https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/save-command-kt">kotlin/save-command-kt</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/java/save-command">java/save-command</a></td>
+            <td><a href="https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/save-command-kt">kotlin/save-command-kt</a></td>
             <td>针对保存指令的专项例子</td>
             <td>运行所有单元测试</td>
             <td>★★★</td>
@@ -121,11 +126,11 @@ Jimmer提供的配套示例，对快速掌握Jimmer非常有帮助
 
 -   Java
 
-    [example/java/jimmer-sql](https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-sql)
+    [jimmer-examples/java/jimmer-sql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql)
 
 -   Kotlin
 
-    [example/join/jimmer-sql-kt](https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-sql-kt)
+    [jimmer-examples/join/jimmer-sql-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-kt)
 :::
 
 ## 非缓存模式
@@ -140,11 +145,11 @@ Jimmer提供的配套示例，对快速掌握Jimmer非常有帮助
 
 上文介绍了10个附带例子，其中有4个例子可以演示Jimmer的缓存及其一致性保证。
 
--   [java/jimmer-sql](https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-sql)和
-    [kotlin/jimmer-sql-kt](https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-sql-kt)
+-   [java/jimmer-sql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql)和
+    [kotlin/jimmer-sql-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-kt)
 
--   [java/jimmer-sql-graphql](https://github.com/babyfish-ct/jimmer/tree/main/example/java/jimmer-sql-graphql)和
-    [kotlin/jimmer-sql-graphql-kt](https://github.com/babyfish-ct/jimmer/tree/main/example/kotlin/jimmer-sql-graphql-kt)
+-   [java/jimmer-sql-graphql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql-graphql)和
+    [kotlin/jimmer-sql-graphql-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-graphql-kt)
 
 默认情况下，它们不使用缓存，基于内嵌的内存数据库运行且自动初始化数据库，这保证了无需安装任何外部环境，单击运行按钮即可示范。
 
@@ -181,7 +186,7 @@ Jimmer提供的配套示例，对快速掌握Jimmer非常有帮助
 
 虽然[Maxwell](https://maxwells-daemon.io/)只支持MySQL，但它是所有数据库变更推送技术中最简单的。因此，有示范价值。
 
-打开命令行，进入[example/env-with-cache/maxwell](https://github.com/babyfish-ct/jimmer/blob/main/example/env-with-cache/maxwell)所对应的本地目录，执行
+打开命令行，进入[jimmer-examples/env-with-cache/maxwell](https://github.com/babyfish-ct/jimmer-examples/blob/main/env-with-cache/maxwell)所对应的本地目录，执行
 ```
 bash ./install.sh
 ```
@@ -205,7 +210,7 @@ bash ./install.sh
 Postgres是一个非常优秀的开源数据库。如果你的项目是全新的，没有任何历史包袱，可以考虑尝试使用Postgres。这也是Jimmer的例子使用Debezium支持Postgres的原因。
 :::
 
-打开命令行，进入[example/env-with-cache/debezium](https://github.com/babyfish-ct/jimmer/blob/main/example/env-with-cache/debezium)所对应的本地目录，执行
+打开命令行，进入[jimmer-examples/env-with-cache/debezium](https://github.com/babyfish-ct/jimmer-examples/blob/main/env-with-cache/debezium)所对应的本地目录，执行
 ```
 bash ./install.sh
 ```

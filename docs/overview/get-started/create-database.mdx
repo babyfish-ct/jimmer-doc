@@ -46,8 +46,8 @@ create table author(
    first_name varchar(25) not null,
    last_name varchar(25) not null,
    gender char(1) not null, 
-   created_time datetime not null,
-   modified_time datetime not null
+   created_time datetime not null default NOW(),
+   modified_time datetime not null default NOW()
 ) engine=innodb;
 
 ...

@@ -149,7 +149,7 @@ public interface Author {
 
     @Id  
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    UUID id();   
+    long id();
 
     @Key
     String firstName();  

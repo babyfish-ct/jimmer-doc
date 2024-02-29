@@ -83,7 +83,7 @@ List<Book> books = sqlClient
     // highlight-next-line
     .where(table.name().ilikeIf(name))
     // highlight-next-line
-    .whereIf(table.edition().eqIf(edition))
+    .where(table.edition().eqIf(edition))
     .select(table)
     .execute();
 ```

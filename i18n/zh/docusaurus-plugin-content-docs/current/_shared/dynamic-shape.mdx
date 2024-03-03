@@ -1,184 +1,242 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import {Shape} from '@site/src/components/Image';
 
-Jimmer将RDBMS抽象为图数据库，**以任意形状的数据结构作为基本操作单元**。其中
+## 1. 较少属性
 
--   查询任意形状的数据结构：可以理解成ORM的GraphQL化
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
 
--   保存任意形状的数据结构：快速实现复杂表单保存业务
+```java
+Book book = Objects.createBook(book -> {
+    book.setName("Learning GraphQL");
+});
+```
 
-让我们来看一个实际的例子
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
 
-<Shape/>
+```kotlin
+val book = new(Book::class).by {
+    name = "Learning GraphQL"
+}
+```
 
-图中，我们列画三个业务视角作为例子，对于任何一个业务视角而言，都可以自由决定每个业务视角是否关注某些实体、关联、甚至属性。
+</TabItem>
+</Tabs>
 
-要实现这种精确到属性的数据结构形状裁切，唯一的办法是让实体对象支持动态性。
+这时，`book`对象对应的JSON如下
 
-:::info
-Jimmer实体的动态性，并非动态语言那种放弃拼写检查和类型安全的动态性。它只是[Hibernate中@Basic注解的`fetch = FetchType.LAZY`](https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#BytecodeEnhancement)被拓展到任何属性的结果。
+```json
+{"name": "Learning GraphQL"}
+```
 
-所以，Jimmer实体是100%强类型的，具备拼写安全、类型安全、甚至空安全(限Kotlin)。它只是允许对象的任何属性缺失。
-:::
+## 2. 较多属性
 
-让我们来看如下几个例子。
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
 
+```java
+Book book = Objects.createBook(book -> {
+    book.setName("Learning GraphQL");
+    book.setEdition(1);
+    book.setPrice(new BigDecimal("49.99"));
+});
+```
 
--   不完整对象
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
 
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
+```kotlin
+val book = new(Book::class).by {
+    name = "Learning GraphQL"
+    edition = 1
+    price = BigDecimal("49.99")
+}
+```
 
-    ```java
-    Book book = Objects.createBook(book -> {
-        book.setName("Learning GraphQL");
+</TabItem>
+</Tabs>
+
+这时，`book`对象对应的JSON如下
+
+```json
+{
+    "name": "Learning GraphQL",
+    "edition": 1,
+    "price": 49.99
+}
+```
+
+## 3. 包含关联
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Objects.createBook(book -> {
+    book.setName("Learning GraphQL");
+    book.setEdition(1);
+    book.setPrice(new BigDecimal("49.99"));
+    book.applyStore(store -> {
+        store.setName("O'REILLY");
+        store.setWebsite("https://www.oreilly.com/");
     });
-    ```
+});
+```
 
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
 
-    ```kotlin
-    val book = new(Book::class).by {
-        name = "Learning GraphQL"
+```kotlin
+val book = new(Book::class).by {
+    name = "Learning GraphQL"
+    edition = 1
+    price = BigDecimal("49.99")
+    store().apply {
+        name = "O'REILLY"
+        website = "https://www.oreilly.com/"
     }
-    ```
+}
+```
 
-    </TabItem>
-    </Tabs>
+</TabItem>
+</Tabs>
 
-    这时，`book`对象对应的JSON如下
+这时，`book`对象对应的JSON如下
 
-    ```json
-    {"name": "Learning GraphQL"}
-    ```
+```json
+{
+    "name": "Learning GraphQL",
+    "edition": 1,
+    "price": 49.99,
+    "store": {
+        "name": "O'REILLY",
+        "website": "https://www.oreilly.com/"
+    }
+}
+```
 
--   完整但孤单的对象
+## 4. 更多关联 (更大广度)
 
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
 
-    ```java
-    Book book = Objects.createBook(book -> {
-        book.setName("Learning GraphQL");
-        book.setEdition(1);
-        book.setPrice(new BigDecimal("49.99"));
+```java
+Book book = Objects.createBook(book -> {
+    book.setName("Learning GraphQL");
+    book.setEdition(1);
+    book.setPrice(new BigDecimal("49.99"));
+    book.applyStore(store -> {
+        store.setName("O'REILLY");
+        store.setWebsite("https://www.oreilly.com/");
     });
-    ```
-
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
-
-    ```kotlin
-    val book = new(Book::class).by {
-        name = "Learning GraphQL"
-        edition = 1
-        price = BigDecimal("49.99")
-    }
-    ```
-
-    </TabItem>
-    </Tabs>
-
-    这时，`book`对象对应的JSON如下
-
-    ```json
-    {
-        "name": "Learning GraphQL",
-        "edition": 1,
-        "price": 49.99
-    }
-    ```
-
--   附带关联的对象
-
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-
-    ```java
-    Book book = Objects.createBook(book -> {
-        book.setName("Learning GraphQL");
-        book.setEdition(1);
-        book.setPrice(new BigDecimal("49.99"));
-        book.applyStore(store -> {
-            store.setName("O'REILLY");
-            store.setWebsite("https://www.oreilly.com/");
-        });
+    book.addIntoAuthors(author -> { 
+        author.setFirstName("Eve");
+        author.setLastName("Procello");
+        author.setGender(Gender.FEMALE);
     });
-    ```
+    book.addIntoAuthors(author -> { 
+        author.setFirstName("Alex");
+        author.setLastName("Banks");
+        author.setGender(Gender.MALE);
+    });
+});
+```
 
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
 
-    ```kotlin
-    val book = new(Book::class).by {
-        name = "Learning GraphQL"
-        edition = 1
-        price = BigDecimal("49.99")
-        store().apply {
-            name = "O'REILLY"
-            website = "https://www.oreilly.com/"
+```kotlin
+val book = new(Book::class).by {
+    name = "Learning GraphQL"
+    edition = 1
+    price = BigDecimal("49.99")
+    store().apply {
+        name = "O'REILLY"
+        website = "https://www.oreilly.com/"
+    }
+    authors().addBy {
+        firstName = "Eve"
+        setLastName = "Procello"
+        gender = Gender.FEMALE
+    }
+    authors().addBy {
+        firstName = "Alex"
+        lastName = "Banks"
+        gender = Gender.MALE
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+这时，`book`对象对应的JSON如下
+
+```json
+{
+    "name": "Learning GraphQL",
+    "edition": 1,
+    "price": 49.99,
+    "store": {
+        "name": "O'REILLY",
+        "website": "https://www.oreilly.com/"
+    },
+    "authors": [
+        {
+            "firstName": "Eve",
+            "lastName": "Procello",
+            "gender:" "FEMALE"
+        },
+        {
+            "firstName": "Alex",
+            "lastName": "Banks",
+            "gender:" "MALE"
         }
-    }
-    ```
+    ]
+}
+```
 
-    </TabItem>
-    </Tabs>
+### 5. 更深关联 (更大深度)
 
-    这时，`book`对象对应的JSON如下
+和前面的例子不同，这里，我们选择用`BookStore`作为数据结构的聚合根，而非`Book`。
 
-    ```json
-    {
-        "name": "Learning GraphQL",
-        "edition": 1,
-        "price": 49.99,
-        "store": {
-            "name": "O'REILLY",
-            "website": "https://www.oreilly.com/"
-        }
-    }
-    ```
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
 
--   附带更多的关联
-
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-
-    ```java
-    Book book = Objects.createBook(book -> {
+```java
+BookStore store = Objects.createBookStore(draft -> {
+    draft.setName("O'REILLY");
+    draft.setWebsite("https://www.oreilly.com/");
+    draft.addIntoBooks(book -> {
         book.setName("Learning GraphQL");
         book.setEdition(1);
         book.setPrice(new BigDecimal("49.99"));
-        book.applyStore(store -> {
-            store.setName("O'REILLY");
-            store.setWebsite("https://www.oreilly.com/");
-        });
-        book.addIntoAutors(author -> { 
+        book.addIntoAuthors(author -> { 
             author.setFirstName("Eve");
             author.setLastName("Procello");
             author.setGender(Gender.FEMALE);
         });
-        book.addIntoAutors(author -> { 
+        book.addIntoAuthors(author -> { 
             author.setFirstName("Alex");
             author.setLastName("Banks");
             author.setGender(Gender.MALE);
         });
     });
-    ```
+});
+```
 
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
 
-    ```kotlin
-    val book = new(Book::class).by {
+```kotlin
+val store = new(BookStore::class).by {
+    name = "O'REILLY"
+    website = "https://www.oreilly.com/"
+    books().addBy {
         name = "Learning GraphQL"
         edition = 1
         price = BigDecimal("49.99")
-        store().apply {
-            name = "O'REILLY"
-            website = "https://www.oreilly.com/"
-        }
         authors().addBy {
             firstName = "Eve"
             setLastName = "Procello"
@@ -190,106 +248,36 @@ Jimmer实体的动态性，并非动态语言那种放弃拼写检查和类型�
             gender = Gender.MALE
         }
     }
-    ```
+}
+```
 
-    </TabItem>
-    </Tabs>
+</TabItem>
+</Tabs>
 
-    这时，`book`对象对应的JSON如下
+这时，`store`对象对应的JSON如下
 
-    ```json
-    {
-        "name": "Learning GraphQL",
-        "edition": 1,
-        "price": 49.99,
-        "store": {
-            "name": "O'REILLY",
-            "website": "https://www.oreilly.com/"
-        },
-        "authors": [
-            {
-                "firstName": "Eve",
-                "lastName": "Procello",
-                "gender:" "FEMALE"
-            },
-            {
-                "firstName": "Alex",
-                "lastName": "Banks",
-                "gender:" "MALE"
-            }
-        ]
-    }
-    ```
-
--   附带更深的关联
-
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-
-    ```java
-    Book book = Objects.createBook(book -> {
-        book.setName("Learning GraphQL");
-        book.setEdition(1);
-        book.setPrice(new BigDecimal("49.99"));
-        book.applyStore(store -> {
-            store.setName("O'REILLY");
-            store.setWebsite("https://www.oreilly.com/");
-            store.applyAddress(address -> {
-                address.setCity("Sevastopol");
-                address.setState("California");
-            });
-        });
-    });
-    ```
-
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
-
-    ```kotlin
-    val book = new(Book::class).by {
-        name = "Learning GraphQL"
-        edition = 1
-        price = BigDecimal("49.99")
-        store().apply {
-            name = "O'REILLY"
-            website = "https://www.oreilly.com/"
-            address().apply {
-                city = "Sevastopol"
-                state = "California"
-            }
+```json
+{
+    "name": "O'REILLY",
+    "website": "https://www.oreilly.com/",
+    "books": [
+        {
+            "name": "Learning GraphQL",
+            "edition": 1,
+            "price": 49.99,
+            "authors": [
+                {
+                    "firstName": "Eve",
+                    "lastName": "Procello",
+                    "gender:" "FEMALE"
+                },
+                {
+                    "firstName": "Alex",
+                    "lastName": "Banks",
+                    "gender:" "MALE"
+                }
+            ]
         }
-    }
-    ```
-
-    </TabItem>
-    </Tabs>
-
-    这时，`book`对象对应的JSON如下
-
-    ```json
-    {
-        "name": "Learning GraphQL",
-        "edition": 1,
-        "price": 49.99,
-        "store": {
-            "name": "O'REILLY",
-            "website": "https://www.oreilly.com/",
-            "address": {
-                "city": "Sevastopol",
-                "state": "California"
-            }
-        }
-    }
-    ```
-
-Jimmer对象这种无处不在动态性，可以轻松表达任意形状的数据结构，最终为Jimmer项目带来了如下重要特性：
-
-:::tip
-开发人员使用统一的实体模型来表达任何业务所需的数据格式，并利用Jimmer的能力将数据结构作为一个整体和数据库交互；
-而非为每一个业务场景所需的数据格式定义DTO，并自己肩负起沉重的DTO和数据库的交互工作。
-
-这是Jimmer既能避免传统ORM那种灵活性的缺失又能避免MyBatis那种重复劳动的关键所在。
-
-*虽然保存指令为了安全性要求使用[Input DTO](../mutation/save-command/input-dto)并为此支持了[DTO语言](../object/view/dto-language)，
-但是Jimmer的DTO只是为兼容JVM现有生态的而创建的极其廉价的装饰物，并非系统核心，对开发成本的影响可以忽略不计。*
-:::
+    ]
+}
+```

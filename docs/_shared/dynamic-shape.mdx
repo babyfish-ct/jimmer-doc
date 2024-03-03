@@ -1,184 +1,244 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
-import {Shape} from '@site/src/components/Image';
 
-Jimmer abstracts RDBMS as a graph database, **taking data structures of any shape as the basic operating unit**. Among them
+## 1. A few properties
 
-- Querying data structures of arbitrary shapes: can be understood as the GraphQLization of ORM
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
 
-- Saving data structures of arbitrary shapes: quickly implement complex form submission business logic
+```java
+Book book = Objects.createBook(book -> {
+    book.setName("Learning GraphQL");
+});
+```
 
-Let's take a look at a real example
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
 
-<Shape/>
+```kotlin
+val book = new(Book::class).by {
+    name = "Learning GraphQL"
+}
+```
 
-In the figure, we list three business perspectives as examples. For any business perspective, it can freely decide whether each business perspective cares about certain entities, associations, or even properties.
+</TabItem>
+</Tabs>
 
-To achieve this kind of data structure shape tailoring that is accurate to properties, the only way is to make entity objects support dynamism. 
+In this case, the JSON for the `books` object would be like follows
 
-:::info
-The dynamism of Jimmer entities is not the kind of dynamism that gives up spell checking and type safety like dynamic languages. It is just that [the `fetch = FetchType.LAZY` of the @Basic annotation in Hibernate](https://docs.jboss.org/hibernate/orm/6.2/userguide/html_single/Hibernate_User_Guide.html#BytecodeEnhancement) is extended to any properties. 
+```json
+{"name": "Learning GraphQL"}
+```
 
-So Jimmer entities are 100% strongly typed, with spell safety, type safety, and even null safety (limited to Kotlin). It just allows any property of an object to be missing.
-:::
+## 2. More Properties
 
-Let's look at the following examples.
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
 
+```java
+Book book = Objects.createBook(book -> {
+    book.setName("Learning GraphQL");
+    book.setEdition(1);
+    book.setPrice(new BigDecimal("49.99"));
+});
+```
 
--   Incomplete object
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
 
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
+```kotlin
+val book = new(Book::class).by {
+    name = "Learning GraphQL"
+    edition = 1
+    price = BigDecimal("49.99")
+}
+```
 
-    ```java 
-    Book book = Objects.createBook(book -> {
-        book.setName("Learning GraphQL");
+</TabItem>
+</Tabs>
+
+In this case, the JSON for the `books` object would be like follows
+
+```json
+{
+    "name": "Learning GraphQL",
+    "edition": 1,
+    "price": 49.99
+}
+```
+
+## 3. Include Association
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Objects.createBook(book -> {
+    book.setName("Learning GraphQL");
+    book.setEdition(1);
+    book.setPrice(new BigDecimal("49.99"));
+    book.applyStore(store -> {
+        store.setName("O'REILLY");
+        store.setWebsite("https://www.oreilly.com/");
     });
-    ```
-    
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
+});
+```
 
-    ```kotlin
-    val book = new(Book::class).by {
-        name = "Learning GraphQL" 
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = new(Book::class).by {
+    name = "Learning GraphQL"
+    edition = 1
+    price = BigDecimal("49.99")
+    store().apply {
+        name = "O'REILLY"
+        website = "https://www.oreilly.com/"
     }
-    ```
+}
+```
 
-    </TabItem>
-    </Tabs>
+</TabItem>
+</Tabs>
 
-    At this point, the JSON corresponding to the `book` object is:
+In this case, the JSON for the `books` object would be like follows
 
-    ```json
-    {"name": "Learning GraphQL"}
-    ```
+```json
+{
+    "name": "Learning GraphQL",
+    "edition": 1,
+    "price": 49.99,
+    "store": {
+        "name": "O'REILLY",
+        "website": "https://www.oreilly.com/"
+    }
+}
+```
 
--   Complete but solitary object
+## 4. More Associations (Larger Breadth)
 
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
 
-    ```java
-    Book book = Objects.createBook(book -> {
-        book.setName("Learning GraphQL");
-        book.setEdition(1); 
-        book.setPrice(new BigDecimal("49.99"));
+```java
+Book book = Objects.createBook(book -> {
+    book.setName("Learning GraphQL");
+    book.setEdition(1);
+    book.setPrice(new BigDecimal("49.99"));
+    book.applyStore(store -> {
+        store.setName("O'REILLY");
+        store.setWebsite("https://www.oreilly.com/");
     });
-    ```
+    book.addIntoAuthors(author -> { 
+        author.setFirstName("Eve");
+        author.setLastName("Procello");
+        author.setGender(Gender.FEMALE);
+    });
+    book.addIntoAuthors(author -> { 
+        author.setFirstName("Alex");
+        author.setLastName("Banks");
+        author.setGender(Gender.MALE);
+    });
+});
+```
 
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
 
-    ```kotlin
-    val book = new(Book::class).by {
-        name = "Learning GraphQL"
-        edition = 1
-        price = BigDecimal("49.99")
+```kotlin
+val book = new(Book::class).by {
+    name = "Learning GraphQL"
+    edition = 1
+    price = BigDecimal("49.99")
+    store().apply {
+        name = "O'REILLY"
+        website = "https://www.oreilly.com/"
     }
-    ```
-
-    </TabItem>
-    </Tabs>
-
-    At this point, the JSON corresponding to the `book` object is:
-
-    ```json 
-    {
-        "name": "Learning GraphQL",
-        "edition": 1,
-        "price": 49.99
+    authors().addBy {
+        firstName = "Eve"
+        setLastName = "Procello"
+        gender = Gender.FEMALE
     }
-    ```
+    authors().addBy {
+        firstName = "Alex"
+        lastName = "Banks"
+        gender = Gender.MALE
+    }
+}
+```
 
--   Object with associated objects
+</TabItem>
+</Tabs>
 
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
+In this case, the JSON for the `books` object would be like follows
 
-    ```java
-    Book book = Objects.createBook(book -> {
+```json
+{
+    "name": "Learning GraphQL",
+    "edition": 1,
+    "price": 49.99,
+    "store": {
+        "name": "O'REILLY",
+        "website": "https://www.oreilly.com/"
+    },
+    "authors": [
+        {
+            "firstName": "Eve",
+            "lastName": "Procello",
+            "gender:" "FEMALE"
+        },
+        {
+            "firstName": "Alex",
+            "lastName": "Banks",
+            "gender:" "MALE"
+        }
+    ]
+}
+```
+
+### 5. Deeper Associations (Larger Depth)
+
+Here is the translation to English:
+
+Unlike the previous examples, here we choose `BookStore` as the aggregate root for the data structure, rather than `Book`.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookStore store = Objects.createBookStore(draft -> {
+    draft.setName("O'REILLY");
+    draft.setWebsite("https://www.oreilly.com/");
+    draft.addIntoBooks(book -> {
         book.setName("Learning GraphQL");
         book.setEdition(1);
-        book.setPrice(new BigDecimal("49.99")); 
-        book.applyStore(store -> {
-            store.setName("O'REILLY");
-            store.setWebsite("https://www.oreilly.com/"); 
-        });
-    });
-    ```
-
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
-
-    ```kotlin
-    val book = new(Book::class).by {
-        name = "Learning GraphQL"
-        edition = 1 
-        price = BigDecimal("49.99")
-        store().apply {
-            name = "O'REILLY"
-            website = "https://www.oreilly.com/"
-        }
-    }
-    ```
-
-    </TabItem>
-    </Tabs>
-
-    At this point, the JSON corresponding to the `book` object is:
-
-    ```json
-    {
-        "name": "Learning GraphQL", 
-        "edition": 1,
-        "price": 49.99,
-        "store": {
-            "name": "O'REILLY",
-            "website": "https://www.oreilly.com/" 
-        }
-    }
-    ```
-
--   With more associations
-
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-
-    ```java
-    Book book = Objects.createBook(book -> {
-        book.setName("Learning GraphQL");
-        book.setEdition(1);
         book.setPrice(new BigDecimal("49.99"));
-        book.applyStore(store -> {
-            store.setName("O'REILLY");
-            store.setWebsite("https://www.oreilly.com/");
-        });
-        book.addIntoAutors(author -> {
+        book.addIntoAuthors(author -> { 
             author.setFirstName("Eve");
             author.setLastName("Procello");
-            author.setGender(Gender.FEMALE); 
+            author.setGender(Gender.FEMALE);
         });
-        book.addIntoAutors(author -> {
+        book.addIntoAuthors(author -> { 
             author.setFirstName("Alex");
             author.setLastName("Banks");
             author.setGender(Gender.MALE);
         });
     });
-    ```
+});
+```
 
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
 
-    ```kotlin
-    val book = new(Book::class).by {
+```kotlin
+val store = new(BookStore::class).by {
+    name = "O'REILLY"
+    website = "https://www.oreilly.com/"
+    books().addBy {
         name = "Learning GraphQL"
         edition = 1
-        price = BigDecimal("49.99") 
-        store().apply {
-            name = "O'REILLY"
-            website = "https://www.oreilly.com/"
-        }
+        price = BigDecimal("49.99")
         authors().addBy {
             firstName = "Eve"
             setLastName = "Procello"
@@ -190,110 +250,36 @@ Let's look at the following examples.
             gender = Gender.MALE
         }
     }
-    ```
+}
+```
 
-    </TabItem>
-    </Tabs>
+</TabItem>
+</Tabs>
 
-    At this point, the JSON corresponding to the `book` object is:
+In this case, the JSON for the `store` object would be like follows
 
-    ```json
-    {
-        "name": "Learning GraphQL",
-        "edition": 1,
-        "price": 49.99, 
-        "store": {
-            "name": "O'REILLY",
-            "website": "https://www.oreilly.com/"
-        },
-        "authors": [
-            {
-                "firstName": "Eve",
-                "lastName": "Procello", 
-                "gender:" "FEMALE"
-            },
-            {
-                "firstName": "Alex",
-                "lastName": "Banks",
-                "gender:" "MALE"
-            }
-        ]
-    }
-    ```
-
--   With deeper associations
-
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-
-    ```java
-    Book book = Objects.createBook(book -> {
-        book.setName("Learning GraphQL");
-        book.setEdition(1);
-        book.setPrice(new BigDecimal("49.99"));
-        book.applyStore(store -> {
-            store.setName("O'REILLY");
-            store.setWebsite("https://www.oreilly.com/");
-            store.applyAddress(address -> {
-                address.setCity("Sevastopol");
-                address.setState("California");
-            });
-        }); 
-    });
-    ```
-
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
-
-    ```kotlin
-    val book = new(Book::class).by {
-        name = "Learning GraphQL"
-        edition = 1
-        price = BigDecimal("49.99")
-        store().apply {
-            name = "O'REILLY"
-            website = "https://www.oreilly.com/"
-            address().apply {
-                city = "Sevastopol"
-                state = "California" 
-            }
+```json
+{
+    "name": "O'REILLY",
+    "website": "https://www.oreilly.com/",
+    "books": [
+        {
+            "name": "Learning GraphQL",
+            "edition": 1,
+            "price": 49.99,
+            "authors": [
+                {
+                    "firstName": "Eve",
+                    "lastName": "Procello",
+                    "gender:" "FEMALE"
+                },
+                {
+                    "firstName": "Alex",
+                    "lastName": "Banks",
+                    "gender:" "MALE"
+                }
+            ]
         }
-    }
-    ```
-
-    </TabItem>
-    </Tabs>
-
-    At this point, the JSON corresponding to the `book` object is:
-
-    ```json
-    {
-        "name": "Learning GraphQL",
-        "edition": 1,
-        "price": 49.99,
-        "store": {
-            "name": "O'REILLY", 
-            "website": "https://www.oreilly.com/",
-            "address": {
-                "city": "Sevastopol",
-                "state": "California"
-            }
-        }
-    }
-    ```
-
-The ubiquitous dynamism of Jimmer objects can easily express data structures of any shape, which ultimately brings the following important characteristics to the Jimmer project:
-
-:::tip
-Developers use a unified entity model to express any data format required by the business, 
-and utilize Jimmer's capabilities to interact with the data structure as a whole with the database; 
-Rather than defining DTOs for each data format required by business scenarios, 
-and taking on the heavy work of interacting DTOs with the database yourself. 
-
-This is the key for Jimmer to avoid both the lack of flexibility of traditional ORMs and the repetitive labor of MyBatis. 
-
-*Although the save instruction requires [Input DTO](../mutation/save-command/input-dto) for safety and 
-supports [DTO language](../object/view/dto-language) for this purpose, 
-Jimmer's DTO is just an extremely cheap decoration created for compatibility with the existing JVM ecosystem, 
-not the core of the system, and its impact on development costs can be ignored.* 
-:::
+    ]
+}
+```

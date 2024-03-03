@@ -3,473 +3,173 @@ sidebar_position: 1
 title: 项目介绍
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 import { ViewMore } from '@site/src/components/ViewMore';
-import { MindMap } from '@site/src/components/MindMap';
-import { LongAssociation } from '@site/src/components/LongAssociation';
-import { ObjectFetcher } from '@site/src/components/HomepageFeatures/ObjectFetcher';
-import { SaveCommand } from '@site/src/components/HomepageFeatures/SaveCommand';
-import { CacheConsistencyPanel } from '@site/src/components/HomepageFeatures/CacheConsistency';
-import { DynamicJoinProblemPanel } from '@site/src/components/HomepageFeatures/DynamicJoinProblem';
-import { Communication } from '@site/src/components/HomepageFeatures/Communication';
-import Button from "@mui/material/Button";
 import { DtoExplosion, ObjectCache, AssociationCache, CalculatedCache, MultiViewCache } from "@site/src/components/Image";
+import DynamicShape from '../_shared/dynamic-shape.mdx';
+import ImmutableStep from '../_shared/immutable-step.mdx';
+import Entity from './_entity.mdx';
 
-## 项目定位
+## 1. 概述
 
-Jimmer是一个针对Java和Kotlin的革命性ORM，以及一套基于它的完整的集成方案 *(包含一套强大的缓存管理机制)*。
+Jimmer是一个Java/Kotlin双语框架
 
-目前，有很多基于Java的关系型数据库上层技术方案，包括ORM风格和非ORM风格的。Jimmer不想做简单的重复，而是实现两个重要目标：
+-   包含一个革命性的ORM
 
-### 1. ORM内部的变革
+-   以此ORM为基础打造了一套综合性方案解决方案，包括
 
--   传统ORM提供了OOP编程模型，显得非常便捷，但缺乏灵活性。
+    -   DTO语言
+    -   更全面更强大的缓存机制，以及缓存一致性的全自动维护
+    -   更强大客户端文档和代码生成能力，包括Jimmer独创的远程异常
+    -   快速创建GraphQL服务
+    -   跨越微服务的远程实体关联
 
--   非ORM的轻量级SQL模版类方案对SQL控制粒度细，显得非常灵活，但工作量巨大。
+## 2. ORM部分
 
-Jimmer用让人耳目一新的方法去解决这对看似无法调和的矛盾，做到鱼和熊掌兼得。
+或许有人认为，访问关系型数据库技术栈已经固化多年，不会有什么变动。即使有新解决方案出现，也是重新制造轮子。所以，只需关注一些当前时髦的新技术体系即可，并坚信这个领域不会再有突破。
 
-### 2. 整个开发架构的变革
+### 现有痛点
 
-事实上，对数据库完成CRUD访问只是实际项目中最基础最简单的一部分工作，还有其他一些痛点一直困扰着开发人员。
+然而，事实上，当前技术生态下，访问关系型数据库技术体系存在很大缺陷，请看下图。
 
-所以，Jimmer是一套集成解决方案，ORM只是Jimmer的切入点，而非全部。
+![mirror](@site/static/img/cmp.svg)
 
-Jimmer改变整个开发思维：
+1.  以JPA为代表的静态语言ORM
 
-**针对用户需求，建立全局实体关联模型，是开发人员唯一需要关心的重点！** 
+    -   优点：便捷，代码安全*(本身基于强类型语言，大部分代码是安全的。如果结合QueryDSL使用，则可以保证所有代码都是安全的)*
 
-其它任何事情都是不重要的、廉价的、甚至透明的，因为Jimmer可以帮你做如下工作：
+    -   缺点：缺乏灵活性
 
--   轻松应对需求变更
+        -   即使JPA从2.1开始支持EntityGraph，查询的灵活度仍然非常有限。该方案粒度仍然太粗，控制能力远没GraphQL这类技术的细腻。
 
--   复杂数据结构一键查询
+        -   保存对象时，细节行为受普通属性的`insertable`、`updateable`和关联属性的`cascade`配置的控制，这类配置在实体类型中被硬编码固化，被保存的数据结构的格式无法变化，没有灵活性。
 
--   复杂数据结构一键保存
+        -   如果要发挥ORM的优势，就必须查询很多属性；如果只想查询一部分属性，就必须放弃对象型查询，丧失ORM本该有的便捷性和核心价值。
 
--   全自动的的多级缓存，包括一致性维护
+2.  以为ActiveRecord *(Ruby)* 为代表的动态语言ORM
 
--   从多个微服务中查询并组装数据
+    -   优点：基于动态语言的ORM，只需将动态语言对象结构的灵活性和ORM的实现结合起来，就能兼顾便捷和灵活。
 
--   生成高开发体验的客户端代码
+    -   缺点：动态语言虽然既然便捷又灵活，但是代码缺乏可维护性且不利于多人协同开发是众所周知的缺点。
 
-这一系列强大的功能，能剔除大量低价值业务代码，显著提升生产效率，能留下来的业务代码是高价值和高质量的。
+        现代软件往往是复杂的，需要团队协作来完成，是否利于团队成员之间协同，远比个人对编程的认知重要。
 
-## 痛点
+        这里，不想过多地讨论动静之争，但是有一点需要指出：既然选择了静态语言Java/Kotlin，就应该以静态语言的方式使用它们，
+        而不是使用以jFinal为代表的将静态语言当成动态语言用的方案，甚至在应用中频繁地使用`java.util.Map`来代替数据对象。
+        这类做法违背了选择Java/Kotlin的初衷，如果一定要怎么做，为什么不直接选动态语言呢？
 
-前面提到，对数据库完成CRUD访问只是实际项目中最基础最简单的一部分工作，还有其他一些痛点一直困扰着开发人员。这里列举一些常见的痛点：
+3.  以MyBatis为代表的轻量级SQL Builder/Mapper
 
-1.  DTO爆炸问题
+    -   优点：直接编写SQL，随意且灵活；本身是强类型框架，具有代码安全性 *(MyBatis生态也有SQL DSL扩展，可以解决Native SQL字符串导致的代码不安全问题)*
 
-    即便对于同一种数据类型 *(聚合根)* 而言，不同业务功能期望查询的数据格式也不同，这往往导致项目需要定义大量的DTO类型，形成<ViewMore buttonText="DTO爆炸问题"><DtoExplosion/></ViewMore>。
+    -   缺点：便捷性的严重缺失，重复劳动量极大。 
+
+        MyBatis没有统一实体的概念，而是直接处理查询结果和各业务场景DTO。由于业务场景多，各DTO类型之间相似却不同，冗余度很高，导致重复劳动量极高。
+        
+        除了主要针对孤单对象的原生SQL的基本CRUD外，对多个对象彼此关联而成的复杂数据结构缺乏更多必要抽象，导致太多繁重的任务被推卸给开发人员 
+        *(不少开发人员长期被这类繁重的任务所累，但自己一直没察觉)*。
 
     :::info
-    DTO类型数量庞大，彼此之间虽然不同但往往具备高度相似性的，冗余度很高。
-    
-    特别是针对手机设备的应用，由于受限于屏幕尺寸而导致UI界面碎片化严重，即便对于同一种数据类型 *(聚合根)*，不同UI界面也会有不同的侧重，进一步恶化了这种情况。
+    最后，这个派别最引以为豪的观点是："直接书写SQL会带来更直接的控制力，这种直接控制力的优于任何ORM"。在这个领域长期的技术停滞中，不少开发人员对此深信不疑。
+    然而，本文的后续内容专门对此为此准备一个惊喜，来改变这个根深蒂固的认知。
     :::
 
-    冗余度很高的DTO种类繁多，仅仅是定义这些类型，已经可以让系统臃肿难以维护了。在业务代码实现层面，还会导致传统方案 *(无论是ORM流派还是非ORM流派)* 处理起来很不方便，比如：
+### 根本原因
 
-    -   传统ORM方案
-    
-        这类方案虽然具备很好的便捷但缺乏灵活性。
-        
-        即使考虑JPA2.1的[Entity Graph](https://www.baeldung.com/jpa-entity-graph)，灵活性也终归有限，尤其是业务场景只需要某些实体对象的部分标量属性时。
-        
-        最后，为了应对千变万化灵活性，尤其是只需要对象的一部分属性这种灵活性，开发人员往往选择只查询对象的一部分属性并手动转化为DTO类型，这种方式会违背ORM追求便捷性的初衷，无法体现ORM的价值。
+上文中，我们阐述了关系型数据库领域的三种常见方案，但无论如何选者，我们都无法兼顾便捷性、灵活性和代码安全性。为什么会导致这样呢？
 
-        :::info
-        为了弥补传统ORM灵活度的不足，开发人员往往需要想办法做一些变通，这些努力反过来破坏ORM的初衷：便捷性。
-        :::
+就JVM生态而言，POJO是导致这个问题的根本原因。POJO*(也可以叫结构体)*缺乏必要的灵活性和表达力，却被几乎被所有的JVM框架作为数据模型和核心，严重限制了JVM生态的技术创新。
 
-        :::note
-        这是反对ORM的人士常见的抨击理由之一，认为ORM企图代SQL但并没有达到目的，这种观点有正确和合理的一面。
-        :::
+因此，在Jimmer中，ORM实体对象并非POJO。这种神秘的实体对象撑起了Jimmer所有上层重大的变革，是整个框架的基石。
 
-    -   以MyBatis为代表的非ORM方案
-    
-        这类方法灵活但重复劳动问题严重。
-        
-        在这类技方案中，面对形形色色的DTO类型的查询， 开发人员往往需要定义大量的相似却不同的`Result Mapper`，甚至必要时还需要一些手动的数据拼接操作，这代表着非常繁重的工作量。
+:::info
+事实上，Jimmer实体度对象不仅可以应用在ORM领域，它几乎可以用在任何以结构化数据维护为目的的场景提升各种技术栈的表达力。
+目前，Jimmer实体仅在关系型数据库访问领域发挥作用只是因为笔者的精力不够所致。
+:::
 
-        :::info
-        这种解决方案具有绝对的灵活性和控制力*(它可以为你做的工作很少，很多时候都是开发人员自己编写的代码完成功能，当然灵活了)*，但代价是工作量大。团队的研发能力被直接体现成了人数规模和沟通成本。
-        :::
+## 3. 完整的功能
+
+在本开开头我们提到了，革命性的ORM只是Jimmer的一部分，Jimmer实际的能力范围早已超越了一个ORM。
+
+现在，我们给出Jimmer的功能示意图，并逐个讲解
+
+![mirror](@site/static/img/features.svg)
+
+### 3.1. Business Model
+
+在信息类系统中，存在两种对象。
+
+-   实体：实体对象是全局统一的，对象之间的存在丰富彼此关联。
+
+    实体对象往往和数据库非常接近，具备极高的稳定性。
+
+-   DTO：针对特定业务的输入/输出对象，通常是从全局实体关系网上撕下来的一个局部碎片，该碎片的大小和形状非常灵活。
+
+    因此DTO类型数量庞大，每一种的格式都是千变万化，彼此可能相似但有不同，具备明显的<ViewMore buttonText="类型爆炸问题" title="DTO爆炸"><DtoExplosion/></ViewMore>。而且易受到需求变化的影响，不稳定。
+
+:::tip
+Entity类型集全局统一，不易被需求变更影响，相对稳定，被视为高价值信息。而DTO类型集作为每个业务输入/输出，相对凌乱，容易因需求变动而不稳定，被视为低价值信息。
+
+Jimmer要求开发人员把绝大部分精力集中在高价值的实体设计上；对于低价值的DTO类型，有时并不需要，即使需要，也可以用极其廉价的方式自动生成。因此，基于Jimmer构建的项目明显的抗需求变动的能力。
+:::
+
+#### 3.1.1. Jimmer Entity
+
+Jimmer实体定义和JPA实体很接近。<ViewMore buttonText="查看实体定义" title="实体定义"><Entity/></ViewMore>
+
+之前讨论过，Jimmer实体并非POJO，所以，被声明为`interface`，而非`class`。
+
+那么，谁负责实现此接口呢？是上图中的`Jimmer Precompiler`
+*(对于Java而言，就是[APT](https://www.jetbrains.com/help/idea/annotation-processors-support.html)；
+对于Kotlin而言，就是[KSP](https://kotlinlang.org/docs/ksp-overview.html))*
+
+Jimmer实体支持两个重要特征，动态性和不可变性
+
+-   动态性
+
+    Jimmer对象在静态语言和动态语言之间寻求最佳平衡，把二者的有点结合起来：
+
+    -   静态语言数据对象的高性能、拼写安全、类型安全、甚至空安全*(如果使用Kotlin的话)*
+
+    -   动态语言数据对象的灵活性，Jimmer对象的每个属性都可以缺失
+
+        > 对Jimmer而言，对象缺少某个属性 *(其值未知)* 和 对象的某个属性为null *(其值已知)* 是完全不同的两回事。  
 
     :::tip
-    通过创新，彻底释放ORM的灵活性，形成一个兼具ORM的便捷性和MyBatis的灵活性的新方案，是Jimmer的核心价值之一。
+    这种平衡设计，可以在享受静态语言好处的同时，为数据结构赋予<ViewMore buttonText="极大的灵活性" title="Jimmer实体的灵活性"><DynamicShape/></ViewMore>。
+
+    这种绝对的灵活性，既可用于表达查询业务的输出格式，也可用于表达保存业务的输入格式。
+    
+    这导致Jimmer拥有全新的定位：一个为任意形状数据结构设计的ORM，其所有功能都是为了操作任意复杂的数据结构，而非具体的某个实体对象。
     :::
 
-    为此，Jimmer给出的解决方案是查询任意形状的数据结构 <ObjectFetcher/>
+-   不可变性
 
-2.  复杂表单问题
+    Jimmer对象是不可变对象。不可变对象的好处的多方面的，相关文章和论述非常多，本文不做重复性讨论。
 
-    很多时候，客户端需要保存的数据结构并非扁平对象，而是<ViewMore buttonText="有一定复杂性的数据结构"><LongAssociation/></ViewMore>，如果要开发人员自己对比客户端数据结构和现有数据的差异并执行适当的增、删、改行为，那会非常繁琐。
+    :::tip
+    Jimmer选择不可变对象是为了让数据结构绝不包含[循环引用](https://en.wikipedia.org/wiki/Circular_reference)。
     
-    而且，应该和查询功能类似，不同业务功能能对同一个聚合根类型保存的数据结构的格式应该多样化，不应在ORM层面通过配置固化。
+    这可以保证数据结构一定能够被直接Jackson序列化，并不需要使用诡异的序列化技巧为JSON植入任何特殊的额外信息，任何编程语言都可以轻松理解。
+    :::
 
-    为此，Jimmer给出的解决方案是保存任意形状的数据结构 <SaveCommand/>
+    然而，不可变对象也存在缺点。如果现有的一个很深的数据结构，那么基于它按照一些修改的愿望创建出新的数据结构会很困难，难度随着深度的变大急剧增加。
 
-3.  缓存
+    -   ORM和很深的数据结构打交道，而Java的record和Kotlin的data class不适合处理很深数据结构。
 
-    -   是否使用缓存应该对开发人员绝对透明，缓存的引入不应该增加业务代码的复杂度、降低代码质量和可维护性，应该和纯SQL项目一样简单。
+    -   JVM生态下没有既同时适用于Java和Kotlin又善于基于复杂结构按照一些修改的愿望创建出新的数据结构的方案。
 
-    -   缓存不应该仅有最简单的对象缓存，还应有<ViewMore buttonText="关联缓存"><AssociationCache/></ViewMore>和<ViewMore buttonText="计算缓存"><CalculatedCache/></ViewMore>。
-
-    -   以权限系统为代表的全局过滤能力常常让不同用户看到不同的数据，因此，也应该<ViewMore buttonText="让不同用户看到不同缓存"><MultiViewCache/></ViewMore>
-
-    -   缓存的一致性维护这个最头疼的问题<ViewMore buttonText="应该被底层方案解决" title="自动维护缓存一致性"><CacheConsistencyPanel/></ViewMore>，尽可能做到全自动的，而非穿透到业务代码中由开发人员解决。
-
-4.  动态表连接
-
-    传统的数据库访问技术只关注动态where条件，不专注动态表join，这导致复杂的动态查询<ViewMore buttonText="难以书写" title="缺失动态表连接的问题"><DynamicJoinProblemPanel/></ViewMore>
-
-5.  客户端自动对接
-
-    -   服务端服务应该自动为客户端 *(比如Web前端)* 生成客户端代码 *(比如TypeScript)*。
-
-    -   服务端是生产者，开发人员希望看到简化后的API和编程模型，因为这意味着自己需要实现的工作少；客户端是消费者，开发人员希望看到完整的API和编程模型，因为这意味着自己用起来舒服。传统方案让服务端和客户端的API和编程模型完全一致的做法需要被改变。
-
-6.  微服务数据拼接
-
-    在微型服务体系中，数据库是碎片化的。先从不同的微服务中查询数据的不同部分，然后拼接起来作为一个整体返回，这个操作既繁琐又高频，应该由底层方案隐藏和自动化。
-
-## 革命性功能点
-
-为了解决这些痛点，Jimmer提供了很多颠覆性的功能。
-
-### 1. 查询任意形状的数据结构
-
-GraphQL那种必须通过HTTP远程访问才能得到灵活性，变成了无所不在的普适的本地代码行为，可以认为这个功能是ORM的GraphQL化。
-
-这个功能也解决GraphQL的一个缺陷：不支持自关联字段的递归查询。
-
-<ObjectFetcher/>&nbsp;<Button href="../query/object-fetcher" size="small">前往看看</Button>
-
-### 2. 保存任意形状的数据结构
-
--   被保存数据结构的形状应该由开发人员随心所欲地制定，而非如同传统ORM一样在实体上使用固定配置 *(比如JPA中`@OneToMany`注解的cascade参数)*
-
--   应该如同Web领域的<a href="https://react.dev/learn">React</a>或<a href="https://vuejs.org/">Vue</a>一样，开发人员给出要覆盖的数据结构即可，由框架自行寻找`DIFF`并执行SQL操作。
-
-<SaveCommand/>&nbsp;<Button href="../mutation/save-command" size="small">前往看看</Button>
-
-### 3. 缓存任意形状的数据结构
-
-这是Jimmer一个非常重要的功能，其缓存机制非常强大，且对业务代码完全透明。
-
-:::note
-在长期从事技术管理工作的实践中，我发现大部分开发团队保证纯数据库项目的代码的简洁性和可维护性。然而，一旦引入缓存系统，项目的可维护性急剧降低。
-
-因此，Jimmer引入了这套既强大又对业务代码0侵入的缓存管理机制，在充分享受缓存机制的同时，让业务代码和纯数据库项目一样简单一样好维护。
-:::
-
-这套缓存机制支持如下的重要概念
-
--   <ViewMore buttonText="对象缓存"><ObjectCache/></ViewMore>、<ViewMore buttonText="关联缓存"><AssociationCache/></ViewMore>和<ViewMore buttonText="计算缓存"><CalculatedCache/></ViewMore>
-
--   <ViewMore buttonText="多视图缓存"><MultiViewCache/></ViewMore>，不同用户看到不同的缓存，往往和权限系统结合使用
-
--   <ViewMore buttonText="自动维护缓存一致性"><CacheConsistencyPanel/></ViewMore>
-
-<Button href="../cache" size="small">前往看看</Button>
-
-### 4. 动态表连接
-
-Jimmer的DSL并非是对SQL的机械翻译，其独创的`动态表连接`，填补了行业空白，无论多么复杂的动态查询都可以轻松书写。
-
-:::note
-`动态表连接`的缺失，是行业空白，也是Jimmer项目得以立项的导火索。
-:::
-
-<ViewMore buttonText="简要了解" title="缺失动态表连接的问题"><DynamicJoinProblemPanel/></ViewMore>&nbsp;<Button href="../query/dynamic-join" size="small">前往看看</Button>
-
-### 5. 前后端对接
-
-对于REST服务而言，为客户端 (比如Web前端) 生成客户端代码 (比如TypeScript)。
-
-注意，和其他自动生成客户端代码的技术方案不同，服务端和客户端的编程模型不同。
-
--   服务端作为生产者，其编程模型经过了简化(消除了DTO爆炸)，大幅降低实现成本
-
--   客户端作为消费者，采用完整的编程模型(重现了DTO爆炸)，使用起来具有良好的开发体验
-
-这样，服务端和客户端都得到最适合自己的编程模型
-
-<Communication/>&nbsp;<Button href="../client" size="small">前往看看</Button>
-
-### 6. 智能分页
-
--   简单至极
-
-    开发人员只需编写查询分页前所有数据的查询，查询数据总行数和查询页类数据的查询会被自动生成。所以，Jimmer的分页查询会让你感到前所未有的简单。
-
--   充分优化
-
-    Jimmer会在SQL层面充分优化分页查询
-
-<Button href="../query/paging" size="small">前往看看</Button>
-
-### 7. DTO语言
-
-DTO语言是Jimmer自带的一种简单语言。
-
-即使某些特殊场景下，我们无法直接使用统一的ORM实体，不得不使用DTO对象，开发代价也仅仅是使用DTO语言定义这些DTO的形状而已，
-剩下的所有工作
-
--   DTO相关Java/Kotlin定义
-
--   实体和DTO之间的数据转化逻辑
-
--   查询DTO的逻辑
-
-都是全自动的，完全感觉不到传统技术方案中因DTO爆炸带来的痛苦。
-
-<Button href="../object/view/dto-language" size="small">前往看看</Button>
-
-### 8. 远程关联
-
-在微型服务体系中，数据库是碎片化的。先从不同的微服务中查询数据的不同部分，然后拼接起来作为一个整体返回，这个操作既繁琐又高频，应该由底层方案隐藏和自动化。
-
-<Button href="../spring/spring-cloud" size="small">前往看看</Button>
-
-## 脑图
-
-<MindMap initialExpandLevel={1}/>
-
-## 路线图
-
-### 已经完成的工作
-
-```
-2022-05 --+-- `0.0.0`
-          |   完成规划，发布首个版本
-          |
-2023-02 --+-- `0.6.x`
-          |   完成最重要的一系列功能，并提供简陋的文档
-          |
-          |   部分用户开始接触和学习
-          |
-2023-05 --+-- `0.7.x`
-          |   部分用户开始在项目中使用
-          |
-          |   启动高质量文档编写计划，以取代之前的简陋文档 
-          |
-2023-09   +   `0.8.x`
-          |   功能相对完善，更多用户在项目中使用
-          |
-          |   完成高质量文档(9-22)。     
-          |
-Feature   +   未来的工作
-          |
-         ...
-```
-
-### 短期的工作 *(1.0.0)*
-
--   提供Open API3生成能力
-
-    Jimmer让服务端和客户端采用不同的编程模型，让双方采用各自最喜欢的开发方式。
-
-    然而，目前这个功能仅用于生成TypeScript和Java两种客户端代码，还未生成Open API3文档，导致swagger展示不正确的元数据。
-
-    生成Open API3文档是接下来工作之一。
-
--   支持实体之间的继承
-
-    目前，`@Entity`类型可以从`@MappedSuperclass`类型继承，但无法从`@Entity`继承。
-
-    接下来，会实现这个功能，就如同JPA所做的那样。
-
--   整合sharding-sphere
-
-    现在，Jimmer采用触发器 *(不是指数据库的触发器，而是Jimmer感知数据库变化的能力)* 实现缓存清理。
+    幸运的是，`JavaScript/TypeScript`领域存在一个足够强大的方案: [immer](https://github.com/immerjs/immer)，可以完美解决这个问题。该方案工作方式如下
     
-    Jimmer支持两种触发器，其中，BinLog触发器是推荐的缓存清理技术。
+    1.  为现有不可变数据结构开启一个临时作用域。
 
-    当使用sharding-jdbc时，BinLog触发器得到的事件通知中的表名是物理表的名称，需要按照sharding-jdbc的配置将之映射为逻辑表名，才能用于Jimmer的缓存一致性。
+    2.  在这个作用域内，开发人人员可得到一个draft数据结构，该数据结构的形状和初始值和原数据结构完全一致，且可以被随意修改任意深的对象。
+    
+    3.  作用域结束后，draft数据结构会利用收集到的修改行为创建另外一个新的数据结构。其中，未被修改的局部会被优化处理，复用以前的旧对象。
 
--   支持Microsoft SQL server
+    此方案完美结合了不可变对象和可变对象的有点，代码简单，执行效率高，因此Jimmer选者移植immer，项目名称也是对其致敬。<ViewMore buttonText="查看例子" title="从immer移植而来的不可变对象"><ImmutableStep/></ViewMore>
 
-    多列`in`表达式 *(`where (column1, column2) in ((1, 10), (2, 20))`)* 是目前Jimmer在很多地方都在使用的SQL特性。
-
-    然而，开发了很久才发现Microsoft SQL server不支持这个功能，现在采取的办法是暂时不支持Microsoft SQL server。
-
-    接下来，对Microsoft SQL server进行特殊处理，最终支持它。
-
--   去除运行时的antlr依赖。
-
-    目前，Jimmer运行时依赖antlr *(远程关联需要它)*，antlr包含一个非常巨大的jar文件`icu4j.jar`。
-
-    接下来，去掉运行时对`antlr`的依赖 *(编译时依赖仍然保留)*，这样，最终所打的包会更小。
-
-### 长远的遐想
-
-现在，Jimmer实体的远程关联属性 *(跨越不同微服务的关联)* 仅仅用于自动从多个服务查询数据并拼接最终结果。
-
-以后，有可能
-
--   在SQL DSL中支持远程关联的JOIN *(可能需要用以HBASE为代表的宽表技术作为冗余数据)*
-
--   在保存指令中保存含有远程关联的数据结构
-
-## 方案类比
-
-Jimmer是一个全面的解决方案，有很多强大的功能。其中有一部分功能是Jimmer独创的，还有一部分和某些其他技术体系有相似性，可以通过类比来帮助用相关经验的用户理解。
-
-可和其他相似技术体系类比的功能点有：
-
-<table>
-<thead>
-<tr>
-<th>Jimmer功能点</th>
-<th>类似方案</th>
-<th>必要说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-
-[查询任意形状的数据结构](../query/object-fetcher)
-
-</td>
-<td><a href="https://graphql.org/">GraphQL</a></td>
-<td>
-
--   和GraphQL作为协议仅用于HTTP接口暴露不同，Jimmer将此能力拓展成了ORM的API，即无处不在的本地代码调用。*(当然，你也可以选择利用Jimmer的能力快速暴露GraphQL)*
-
--   Jimmer可以对自关联属性进行递归查询
-
-</td>
-</tr>
-<tr>
-<td>
-
-[保存任意形状的数据结构](../mutation/save-command)
-
-</td>
-<td><a href="https://react.dev/learn">React</a>或<a href="https://vuejs.org/">Vue</a>的Virtual DOM diff</td>
-<td>
-
-Save指令和其他ORM框架的save方法之间存在本质差异。
-
-以JPA/Hibernate为例，对象的普通属性是否需要被保存通过[Column.insertable](https://docs.oracle.com/javaee/7/api/javax/persistence/Column.html#insertable--)和[Column.updatable](https://docs.oracle.com/javaee/7/api/javax/persistence/Column.html#updatable--)控制，
-关联属性是否需要被保存通过[OneToOne.cascade](https://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html#cascade--)、[ManyToOne.cascade](https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#cascade--)、[OneToMany.cascade](https://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html#cascade--)和[ManyToMany.cascade](https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html#cascade--)控制。然而，无论如何开发人员如何配置，JPA/Hibernate能够为你保存的数据结构的形状是固定的。
-
-Jimmer采用完全不同方法，被保存的Jimmer对象具备[动态性](../object/dynamic)，被设置的属性会被保存，而未被设置的属性会被忽略，这样，就可以保存任意形状的数据结构。
-
-</td>
-</tr>
-<tr>
-<td>
-
-[DTO语言](../object/view/dto-language)
-
-</td>
-<td><a href="https://mapstruct.org/">MapStruct</a></td>
-<td>
-
-和MapStruct侧重于技术中立不同，DTO语言为Jimmer量身定制，侧重于极高的开发效率。
-
-即使某些特殊场景下，我们无法直接使用统一的ORM实体，不得不使用DTO对象，开发代价也仅仅是定义这些DTO的形状而已，剩下的所有工作 *(DTO相关Java/Kotlin定义、和实体之间的彼此转化逻辑、和数据库的交互逻辑)* 都是全自动的，完全感觉不到传统技术方案中因DTO爆炸带来的痛苦。
-
-</td>
-</tr>
-<tr>
-<td>
-
-[复杂计算属性](../mapping/advanced/calculated/transient)
-
-</td>
-<td><a href="https://github.com/graphql/dataloader">DataLoader</a></td>
-<td>
-
--   计算属性没有没有[N + 1](https://stackoverflow.com/questions/97197/what-is-the-n1-selects-problem-in-orm-object-relational-mapping)问题
-
--   计算规则和ORM解耦，可以使用任何信息（比如身份权限信息）用做计算，也可以使用关系型库以外的技术进行计算
-
-</td>
-</tr>
-<tr>
-<td>
-
-[远程关联属性](../spring/spring-cloud)
-
-</td>
-<td><a href="https://www.apollographql.com/docs/federation/">Apollo Federation</a></td>
-<td>
-
--   跨越微服务的实体关系，关联双方实体隶属于不同的微服务（也表示，隶属于不同数据库）
-
--   如果被查询的数据结构的形状包含远程关联，将会自动使用远程数据访问完成跨服务数据访问，对开发人员透明
-
--   将不同微服务的关系型数据库模型，合并成一个全局的关系模型
-
-</td>
-</tr>
-<tr>
-<td>
-
-[事务内触发器](../mutation/trigger#触发器分类)
-
-</td>
-<td><a href="https://seata.io/zh-cn/docs/dev/mode/at-mode.html">Seata的AT模式</a></td>
-<td>
-
--   相似点：在修改数据库时植入额外的查询SQL，以捕获数据库的变更
-
--   不同点：和seata会进行更多操作不同，Jimmer事务内触发器仅仅发送事件通知用户；另外不需要如同[Seata的AT模式](https://seata.io/zh-cn/docs/dev/mode/at-mode.html)一样代理JDBC连接池。
-
-:::note
-若条件允许，应优先使用binlog触发器，而非事务内触发器
-:::
-
-</td>
-</tr>
-<tr>
-<td>
-
-[不可变对象](../object/immutable)
-
-</td>
-<td><a href="https://github.com/immerjs/immer">immer</a></td>
-<td>
-
-和传统ORM不同，Jimmer中所有实体对象都是不可变对象。
-
-这非常重要，如果用可变对象作为实体对象，其实就是纵容开发人员随意构建`循环引用`，这会是一个后患无穷的问题。
-
-不可变对象保证实体对象之间只有单向关联，无需任何处理，可以直接参与JSON序列化和HTTP交互，并为其他任何编程语言所理解。
-
-不幸的是，java record和kotilin data class的copy函数为简单不可变对象而设计，难以简洁地处理复杂的深层次不可变对象的复制构造问题，而深层次复杂数据结构恰恰是ORM框架要面对的。
-
-所以，Jimmer为java/kotlin移植了[immer](https://github.com/immerjs/immer)，这是一个足够强大的不可变对象方案。本框架命名为Jimmer，即致敬[immer](https://github.com/immerjs/immer)
-
-</td>
-</tr>
-</tbody>
-</table>
-
-## 关于Reactive/R2DBC
-
-需要说明的是，`Reactive/R2DBC`自一开始就并非Jimmer的设计目标，这是两个原因导致的：
-
--   Jimmer项目被创建的时候，离Java21发布不远，和事先预计的一样，Jimmer相对完善时Java21已经发布。
-
-    在虚拟线程的帮助下，异步编程生态不再具备必要性。甚至，我们应该终止使用异步编程风格。
-
-    -   从Java21开始，异步生态对Java社区而言是有害的，因为这会导致生态割裂。
-
-    -   异步生态可观测性差，难以调试和分析，异常信息没有有价值的stacktrace信息，这对已经发布的系统的异常排查工作极为不利。
-
-        :::note
-        如果使用kotlin协程 *(`suspend`关键字)*，我们又可以使用编程语言的自身的流程控制语句了，不用再使用晦涩的reactive API了。看起来问题似乎被解决了。
-        
-        然而，kotlin协程同样解决不了可观测性差的问题，难以调试，异常没有合理的stacktrace信息。
-        
-        其实，不仅仅是kotlin协程，任何语言为异步编程加入的编译器魔法，只能让代码变得容易书写，但无法解决调试和线上异常排查难的问题。
-        :::
-
--   Jimmer应该把时间资源投入到高度实用的方面，增加更多的创新功能，简化和颠覆更多的开发模式，去落实Jimmer真正想实现的理想。
+#### 3.2.2. Generated DTO Type
 

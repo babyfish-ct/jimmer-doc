@@ -1,0 +1,203 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+接下来，我们会用三个步骤展示移植自[immer](https://github.com/immerjs/immer)的不可变对象的强大。
+
+1.  定义不可变类型
+
+2.  从头创建一个不可变数据结构
+
+3.  基于已有的数据结构，按照一些修改愿望，创建新的不可变数据结构。
+
+    > 最后这步是[immer](https://github.com/immerjs/immer)核心价值所在，请注意观察。
+
+## 1. 定义不可变类型
+
+演示此功能无需ORM实体的`@Entity`注解，非ORM的`@Immutable`足够。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="TreeNode.java"
+package yourpackage;
+
+import java.util.List;
+import org.babyfish.jimmer.Immutable;
+
+@Immutable 
+public interface TreeNode {
+    
+    String name();
+
+    List<TreeNode> childNodes();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="TreeNode.kt"
+package yourpackage
+
+import org.babyfish.jimmer.Immutable
+
+@Immutable
+interface TreeNode {
+
+    val name: String
+
+    val childNodes: List<TreeNode>
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 2. 从头构建全新的数据
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNode treeNode = Objects.createTreeNode(root -> {
+    root.setName("Root").addIntoChildNodes(food -> {
+        food
+            .setName("Food")
+            .addIntoChildNodes(drink -> {
+                drink
+                    .setName("Drink")
+                    .addIntoChildNodes(cococola -> {
+                        cococola.setName("Cococola");
+                    })
+                    .addIntoChildNodes(fanta -> {
+                        fanta.setName("Fanta");
+                    });
+                ;
+            });
+        ;
+    });
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val treeNode = new(TreeNode::class).by {
+    name = "Root"
+    childNodes().addBy {
+        name = "Food"
+        childNodes().addBy {
+            name = "Drinks"
+            childNodes().addBy {
+                name = "Cococola"
+            }
+            childNodes().addBy {
+                name = "Fanta"
+            }
+        }
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 3. 基于现有数据创建新数据
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNode newTreeNode = Objects.createTreeNode(
+        // highlight-next-line
+        treeNode, // existing data
+        root -> {
+            root
+                .childNodes(false).get(0) // Food
+                .childNodes(false).get(0) // Drink
+                .childNodes(false).get(0) // Cococola
+                .setName("Cococola plus");
+        }
+);
+
+// 展示`newTreeNode`体现了开发人员的修改愿望
+// 注意，这不会对已有的`treeNode`造成任何影响
+
+System.out.println("treeNode:" + treeNode);
+System.out.println("newTreeNode:" + newTreeNode);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+/*
+ * val newTreeNode = treeNode.copy {
+ *     ...
+ * }
+ * 其实是
+ * val newTreeNode = new(TreeNode::class).by(treeNode) {
+ *     ... 
+ * }
+ * 的简写方式
+ */
+val newTreeNode = treeNode.copy {
+    childNodes()[0] // Food
+        .childNodes()[0] // Drinks
+        .childNodes()[0] // Cococola
+        .name += " plus"
+}
+
+// 展示`newTreeNode`体现了开发人员的修改愿望
+// 注意，这不会对已有的`treeNode`造成任何影响
+
+println("treeNode: $treeNode")
+println("newTreeNode: $newTreeNode")
+```
+
+</TabItem>
+</Tabs>
+
+输出结果（实际打印结果是紧凑的，但为了方便阅读，这里进行了格式化）
+
+```javascript
+treeNode: {
+    "name":"Root",
+    "childNodes":[
+        {
+            "name":"Food",
+            "childNodes":[
+                {
+                    "name":"Drink",
+                    "childNodes":[
+                        // highlight-next-line
+                        {"name":"Coco Cola"},
+                        {"name":"Fanta"}
+                    ]
+                }
+            ]
+        }
+    ]
+}
+newTreeNode: {
+    "name":"Root",
+    "childNodes":[
+        {
+            "name":"Food",
+            "childNodes":[
+                {
+                    "name":"Drink",
+                    "childNodes":[
+                        // highlight-next-line
+                        {"name":"Coco Cola plus"},
+                        {"name":"Fanta"}
+                    ]
+                }
+            ]
+        }
+    ]
+}
+```
+
+可见，`treeNode`没有受任何影响，`newTreeNode`体现了用户的修改愿望。

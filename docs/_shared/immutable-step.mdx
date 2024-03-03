@@ -1,0 +1,204 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+Next, we will demonstrate the power of immutable objects transplanted from [immer](https://github.com/immerjs/immer) in three steps:
+
+1.  Define immutable types 
+
+2.  Create an immutable data structure from scratch
+
+3.  Based on an existing data structure, create a new data structure according to some desired modifications. 
+
+    > This last step is where the core value of [immer](https://github.com/immerjs/immer) lies. Please pay close attention.
+
+## 1. Define immutable type
+
+To demonstrate this feature, there is no need for the `@Entity` annotation on ORM entities, the non-ORM `@Immutable` is sufficient.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="TreeNode.java"
+package yourpackage;
+
+import java.util.List;
+import org.babyfish.jimmer.Immutable;
+
+@Immutable 
+public interface TreeNode {
+    
+    String name();
+
+    List<TreeNode> childNodes();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="TreeNode.kt"
+package yourpackage
+
+import org.babyfish.jimmer.Immutable
+
+@Immutable
+interface TreeNode {
+
+    val name: String
+
+    val childNodes: List<TreeNode>
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 2. Create data structure from scratch
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNode treeNode = Objects.createTreeNode(root -> {
+    root.setName("Root").addIntoChildNodes(food -> {
+        food
+            .setName("Food")
+            .addIntoChildNodes(drink -> {
+                drink
+                    .setName("Drink")
+                    .addIntoChildNodes(cococola -> {
+                        cococola.setName("Cococola");
+                    })
+                    .addIntoChildNodes(fanta -> {
+                        fanta.setName("Fanta");
+                    });
+                ;
+            });
+        ;
+    });
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val treeNode = new(TreeNode::class).by {
+    name = "Root"
+    childNodes().addBy {
+        name = "Food"
+        childNodes().addBy {
+            name = "Drinks"
+            childNodes().addBy {
+                name = "Cococola"
+            }
+            childNodes().addBy {
+                name = "Fanta"
+            }
+        }
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 3. Create new data based on existing data
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNode newTreeNode = Objects.createTreeNode(
+        // highlight-next-line
+        treeNode, // existing data
+        root -> {
+            root
+                .childNodes(false).get(0) // Food
+                .childNodes(false).get(0) // Drink
+                .childNodes(false).get(0) // Cococola
+                .setName("Cococola plus");
+        }
+);
+
+// Show that `newTreeNode` reflects the developer's desired modifications
+// Note that this does not affect the existing `treeNode` at all
+
+System.out.println("treeNode:" + treeNode);
+System.out.println("newTreeNode:" + newTreeNode);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+/*
+ * val newTreeNode = treeNode.copy {
+ *     ...
+ * }
+ *
+ * is actually shorthand for 
+ * 
+ * val newTreeNode = new(TreeNode::class).by(treeNode) {
+ *     ...
+ * }
+ */
+val newTreeNode = treeNode.copy {
+    childNodes()[0] // Food
+        .childNodes()[0] // Drinks
+        .childNodes()[0] // Cococola
+        .name += " plus"
+}
+
+// Show that `newTreeNode` reflects the developer's desired modifications
+// Note that this does not affect the existing `treeNode` at all
+
+println("treeNode: $treeNode")
+println("newTreeNode: $newTreeNode")
+```
+
+</TabItem>
+</Tabs>
+
+Output (the actual printed output is compact, but is formatted here for readability)
+
+```javascript
+treeNode: {
+    "name":"Root",
+    "childNodes":[
+        {
+            "name":"Food",
+            "childNodes":[
+                {
+                    "name":"Drink",
+                    "childNodes":[
+                        // highlight-next-line
+                        {"name":"Coco Cola"},
+                        {"name":"Fanta"}
+                    ]
+                }
+            ]
+        }
+    ]
+}
+newTreeNode: {
+    "name":"Root",
+    "childNodes":[
+        {
+            "name":"Food",
+            "childNodes":[
+                {
+                    "name":"Drink",
+                    "childNodes":[
+                        // highlight-next-line
+                        {"name":"Coco Cola plus"},
+                        {"name":"Fanta"}
+                    ]
+                }
+            ]
+        }
+    ]
+}
+```
+
+As you can see, `treeNode` is unaffected, and `newTreeNode` reflects the user's desired modifications.

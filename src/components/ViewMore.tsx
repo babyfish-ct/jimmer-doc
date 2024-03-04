@@ -1,14 +1,17 @@
 import React, { FC, memo, MouseEvent, PropsWithChildren, useCallback, useState } from "react";
 import Button  from "@mui/material/Button";
 import { ViewDialog } from "./ViewDialog";
+import { Breakpoint } from "@mui/material";
 
 export const ViewMore: FC<
     PropsWithChildren<{
         readonly buttonText: string,
         readonly fullScreen?: boolean,
-        readonly title?: string
+        readonly title?: string,
+        readonly variant?: 'text' | 'outlined' | 'contained'
+        readonly maxWidth?: Breakpoint
     }>
-> = memo(({buttonText, fullScreen = false, title = buttonText, children}) => {
+> = memo(({buttonText, fullScreen = false, title = buttonText, variant='outlined', maxWidth, children}) => {
     
     const [open, setOpen] = useState(false);
 
@@ -27,8 +30,8 @@ export const ViewMore: FC<
 
     return (
         <>
-            <Button data-is-view-more-button="true" onClick={onButtonClick} variant="outlined" size="small">{buttonText}</Button>
-            <ViewDialog open={open} onClose={onClose} title={title} fullScreen={fullScreen}>
+            <Button data-is-view-more-button="true" onClick={onButtonClick} variant={variant} size="small">{buttonText}</Button>
+            <ViewDialog open={open} onClose={onClose} title={title} maxWidth={maxWidth} fullScreen={fullScreen}>
                 {children}
             </ViewDialog>
         </>

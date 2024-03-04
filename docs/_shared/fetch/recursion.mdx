@@ -1,0 +1,234 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<table>
+<thead>
+<tr>
+<th>Usage1: Query Entity Objects</th>
+<th>Usage2: Query DTOs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2">
+
+**Query Code**
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNode rootNode = sqlClient
+    .findById(
+        Fetchers.TREE_NODE_FETCHER
+                .allScalarFields()
+                // Recursion upwards
+                // highlight-next-line
+                .recursiveParent() ❶
+                // Recursion downward
+                // highlight-next-line
+                .recursiveChildNodes() ❷
+        10L
+    );
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNode = sqlClient
+    .findById(
+        newFetcher(TreeNode::class).by {
+            allScalarFields()
+            // Recursion upwards
+            // highlight-next-line
+            `parent*`() ❶
+            // Recursion downward
+            // highlight-next-line
+            `childNodes*`() ❷
+        }
+    )
+```
+
+</TabItem>
+</Tabs>
+</td>
+<td>
+
+**DTO代码**
+
+```sh
+export yourpackage.TreeNode 
+    -> package yourpackage.dto;
+
+RecurisveTreeNodeView {
+    id
+    // Recursion upwards
+    // highlight-next-line
+    parent* ❶
+    // Recursion downward
+    // highlight-next-line
+    childNodes* ❷
+}
+```
+
+After compilation, Java/Kotlin type `RecurisveTreeNodeView` will be automatically generated.
+
+</td>
+</tr>
+<tr>
+<td>
+
+**Query Code**
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+RecurisveTreeNodeView rootNode = sqlClient
+    .findById(
+        RecurisveTreeNodeView.class,
+        10L
+    );
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNode = sqlClient
+    .findById(
+        RecurisveTreeNodeView::class,
+        10L
+    );
+```
+
+</TabItem>
+</Tabs>
+</td>
+</tr>
+
+<tr>
+<td>
+
+**Output Result**
+
+```json
+{
+    "id": 10,
+    "name": "Woman",
+    "parent": { ❶
+        "id": 9,
+        "name": "Clothing", ❶
+        "parent": {
+            "id": 1,
+            "name": "Home",
+            "parent": null ❶
+        }
+    },
+    "childNodes": [ ❷
+        {
+            "id": 11,
+            "name": "Casual wear",
+            "childNodes": [ ❷
+                {
+                    "id": 12,
+                    "name": "Dress",
+                    "childNodes": [] ❷
+                },
+                {
+                    "id": 13,
+                    "name": "Miniskirt",
+                    "childNodes": [] ❷
+                },
+                {
+                    "id": 14,
+                    "name": "Jeans",
+                    "childNodes": [] ❷
+                }
+            ]
+        },
+        {
+            "id": 15,
+            "name": "Formal wear",
+            "childNodes": [ ❷
+                {
+                    "id": 16,
+                    "name": "Suit",
+                    "childNodes": [] ❷
+                },
+                {
+                    "id": 17,
+                    "name": "Shirt",
+                    "childNodes": [] ❷
+                }
+            ]
+        }
+    ]
+}
+```
+
+</td>
+<td>
+
+**Output Result**
+
+```json
+RecursiveTreeNodeView(
+    id=10, 
+    name=Woman, 
+    parent=RecursiveTreeNodeView.TargetOf_parent( ❶
+        id=9, 
+        name=Clothing, 
+        parent=RecursiveTreeNodeView.TargetOf_parent( ❶
+            id=1, 
+            name=Home, 
+            parent=null ❶
+        )
+    ), 
+    childNodes=[ ❷
+        RecursiveTreeNodeView.TargetOf_childNodes(
+            id=11, 
+            name=Casual wear, 
+            childNodes=[ ❷
+                RecursiveTreeNodeView.TargetOf_childNodes(
+                    id=12, 
+                    name=Dress, 
+                    childNodes=[] ❷
+                ), 
+                RecursiveTreeNodeView.TargetOf_childNodes(
+                    id=13, 
+                    name=Miniskirt, 
+                    childNodes=[] ❷
+                ), 
+                RecursiveTreeNodeView.TargetOf_childNodes(
+                    id=14, 
+                    name=Jeans, 
+                    childNodes=[] ❷
+                )
+            ]
+        ), 
+        RecursiveTreeNodeView.TargetOf_childNodes(
+            id=15, 
+            name=Formal wear, 
+            childNodes=[ ❷
+                RecursiveTreeNodeView.TargetOf_childNodes(
+                    id=16, 
+                    name=Suit, 
+                    childNodes=[] ❷
+                ), 
+                RecursiveTreeNodeView.TargetOf_childNodes(
+                    id=17, 
+                    name=Shirt, 
+                    childNodes=[] ❷
+                )
+            ]
+        )
+    ]
+)
+```
+
+</td>
+</tr>
+</tbody>
+</table>

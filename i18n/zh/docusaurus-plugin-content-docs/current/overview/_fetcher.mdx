@@ -1,0 +1,37 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+import FetchPartial from '../_shared/fetch/partial.mdx';
+import FetchAssociation from '../_shared/fetch/association.mdx';
+import FetchRecursion from '../_shared/fetch/recursion.mdx'; 
+
+<Tabs groupId="language">
+<TabItem value="fetch_partial" label="1. 查询残缺对象">
+
+:::info
+所谓残缺对象，就是指指查询对象的部分属性，其信息量还不如一个孤单对象丰富。
+:::
+
+<FetchPartial/>
+</TabItem>
+<TabItem value="fetch_association" label="2. 附带关联对象">
+
+:::info
+选定一个实体作为聚合根，不但要查询聚合根对象，还要查询其关联对象，且深度和广度都不受限制。
+
+> 这种格式控制能力的细腻程度和GraphQL一样。
+:::
+
+<FetchAssociation/>
+</TabItem>
+<TabItem value="fetch_recursion" label="3. 递归查询">
+
+:::info
+如果实体包含自关联属性，可以进行递归查询。
+
+> 截止到目前为止，GraphQL协议并不支持递归查询。
+:::
+
+<FetchRecursion/>
+</TabItem>
+</Tabs>

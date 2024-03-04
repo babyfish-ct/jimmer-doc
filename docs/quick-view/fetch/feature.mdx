@@ -4,9 +4,58 @@ title: Feature Introduction
 ---
 
 import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';  
+import TabItem from '@theme/TabItem';
+import FetchPartial from '../../_shared/fetch/partial.mdx';
+import FetchAssociation from '../../_shared/fetch/association.mdx';
+import FetchRecursion from '../../_shared/fetch/recursion.mdx'; 
 
-## The Simplest Repository  
+Here is the English translation of the file, with the code indentation preserved:
+
+## Basic Usage
+
+Jimmer can query data structures of any shape, with control over the queried data structure as fine-grained as GraphQL.
+
+Next, we will demonstrate its usage in three scenarios.
+
+### 1. Query Partial Objects
+
+:::info
+A partial object refers to querying only part of an object's properties, with less information than an isolated object.
+:::
+
+<FetchPartial/>
+
+### 2. Include Associated Objects
+
+:::info
+Select an entity as the aggregate root, and query not only the aggregate root object but also its associated objects, with no restrictions on depth or breadth.
+
+> This level of control over the format is as fine-grained as GraphQL.
+:::
+
+<FetchAssociation/>
+
+### 3. Recursive Query
+
+:::info
+If an entity contains Self-correlation properties, you can perform a recursive query.
+
+> As of now, the GraphQL protocol does not support recursive queries.
+:::
+
+<FetchRecursion/>
+
+## Repository Code Style
+
+The above code is only intended to demonstrate Jimmer's powerful control over the format of the queried data through three scenarios and does not organize the code structure.
+
+In actual development, we must organize the code in some way, with data operation-level code placed in the `Repository`.
+
+:::caution
+The previous examples showed two usages: querying entity objects and querying DTO objects. To control the complexity of this document, the following sections will only discuss how to organize code for querying entity objects.
+:::
+
+### The Simplest Repository  
 
 Now let's write a BookRepository for querying Book  
 
@@ -116,7 +165,7 @@ The output result is as follows:
 
 The output format is fixed and does not match the topic “Query Any Data Structure Shape” we are discussing now, so we need to improve `BookRepository`.  
 
-## Improved Repository  
+### Improved Repository  
 
 Let's make some minor improvements to the previous `BookRepository` class  
 
@@ -212,149 +261,3 @@ In this example, we add a parameter of type `Fetcher<Book>` for each query metho
 :::tip
 This is the recommended usage. The Repository is only responsible for filtering, sorting, paging and other operations, but does not control the format of the returned data. Instead, it exposes the control of the data format through the `Fetcher<E>` parameter to Let the upper layer business logic decide.  
 :::  
-
-## Usage  
-
-Next, let's still take the `findBookById` method as an example to show two usage scenarios  
-
-### Query Mutilated Objects  
-
-Here, we make the returned format simpler than the default object format. That is, return a mutilated object that has only part of the properties of the complete object.   
-
-<Tabs groupId="language">  
-<TabItem value="java" label="Java">   
-
-```java  
-System.out.println(
-    bookRepository.findBookById(  
-        1L,
-        // highlight-next-line
-        Fetchers.BOOK_FETCHER  
-            .name()  
-    )  
-);
-```   
-
-</TabItem>
-<TabItem value="kotlin" label="Kotlin">   
-
-```kotlin  
-println(
-    bookRepository.findBookById(  
-        1L,
-        // highlight-next-line 
-        newFetcher(Book::class).by {
-            name()   
-        }  
-    )  
-);  
-```
-
-</TabItem>  
-</Tabs>   
-
-In the Java code, `Fetchers.BOOK_FETCHER` is code that Jimmer automatically generates at compile time.   
-
-In this example, we let the returned `Book` object have only two properties: `id` and `name` *(although only `name` is specified in the code, the `id` property is implicit and will always be queried)*.  
-
-The result is:  
-
-```json 
-{
-    "id" : 1,
-    "name" : "Learning GraphQL"  
-}
-```  
-
-In the returned result, the `Book` object has only the `id` and `name` properties, lacking properties such as `edition`, `price` and `store`, which is called a mutilated object.  
-
-### Query Data Structures Composed of Multiple Objects  
-
-Here, we make the returned format more complex than the default object format, including  
-
--   All non-associated properties of the current object
-
--   Get the associated object `BookStore` through the many-to-one association `Book.store`, and let the associated object have all non-associated properties  
-
--   Get all associated objects `Author` through the many-to-many association `Book.authors`, and let each associated object have all non-associated properties  
-
-<Tabs groupId="language">  
-<TabItem value="java" label="Java">   
-
-```java   
-System.out.println(
-    bookRepository.findBookById( 
-        1L, 
-        Fetchers.BOOK_FETCHER  
-            .allScalarFields()  
-            .store(
-                Fetchers.BOOK_STORE_FETCHER   
-                    .allScalarFields()
-            )
-            .authors(
-                Fetchers.AUTHOR_FETCHER    
-                    .allScalarFields()
-            )  
-    )  
-);
-```  
-
-</TabItem>  
-<TabItem value="kotlin" label="Kotlin">   
-
-```kotlin  
-println(  
-    bookRepository.findBookById(
-        1L,   
-        newFetcher(Book::class).by {  
-            allScalarFields()  
-            store {
-                allScalarFields()   
-            }  
-            authors {   
-                allScalarFields() 
-            }
-        }  
-    )
-);
-```  
-
-</TabItem>  
-</Tabs>  
-
-In the above Java code, `Fetchers.BOOK_FETCHER`, `Fetchers.BOOK_STORE_FETCHER`, and `Fetchers.AUTHOR_FETCHER` are code that Jimmer automatically generates at compile time.   
-
-> If you think it is troublesome to frequently write the `Fetchers` prefix in Java code, you can use static import or simply make the current class directly implement the `Fetchers` interface.  
-
-This time, we will get a complex data structure with the `Book` object as the aggregate root and the `BookStore` object and `Author` object attached through the association properties.   
-
-```json
-{
-    "id" : 1,
-    "name" : "Learning GraphQL",
-    "edition" : 1,
-    "price" : 50.00,  
-    // highlight-next-line
-    "store" : {   
-        "id" : 1,  
-        "name" : "O'REILLY",
-        "website" : null  
-    },  
-    // highlight-next-line
-    "authors" : [{  
-        "id" : 1,  
-        "firstName" : "Eve",  
-        "lastName" : "Procello",
-        "gender" : "FEMALE" 
-    }, {
-        "id" : 2,   
-        "firstName" : "Alex",
-        "lastName" : "Banks",  
-        "gender" : "MALE"
-    }]  
-}  
-```  
-
-Users can control whether any ordinary properties and associated properties are queried without limit in depth and breadth in this way.   
-
-Finally, we can directly obtain capabilities comparable to GraphQL in any code without building any HTTP services.  

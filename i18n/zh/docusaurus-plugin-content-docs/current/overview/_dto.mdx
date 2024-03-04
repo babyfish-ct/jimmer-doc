@@ -1,0 +1,356 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<table>
+<thead>
+<tr>
+<th>DTO代码</th>
+<th>生成的DTO类型定义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+
+**较少属性**
+
+```sh
+export yourpackage.Book
+    -> package yourpackage.dto
+
+BookView {
+    id
+    name
+}
+```
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@GeneratedBy(file = "<yourproject>/yourpackage/Book.dto")
+public class BookView implemenets View<Book> {
+
+    private long id;
+    
+    private String name;
+
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@GeneratedBy(file = "<yourproject>/yourpackage/Book.dto")
+open class BookView(
+    val id: Long
+    val name: String
+): View<Book> {
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+</Tabs>
+</td>
+</tr>
+<tr>
+<td>
+
+**较多属性**
+
+```sh
+export yourpackage.Book
+    -> package yourpackage.dto
+
+BookView {
+    #allScalars
+}
+```
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@GeneratedBy(file = "<yourproject>/yourpackage/Book.dto")
+public class BookView implemenets View<Book> {
+
+    private long id;
+    
+    private String name;
+
+    private int edition;
+
+    private BigPrice price;
+
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@GeneratedBy(file = "<yourproject>/yourpackage/Book.dto")
+open class BookView(
+    val id: Long
+    val name: String,
+    val edition: Int,
+    val price: BigDecimal
+): View<Book> {
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+</Tabs>
+</td>
+</tr>
+<tr>
+<td>
+
+**关联id**
+
+```sh
+export yourpackage.Book
+    -> package yourpackage.dto
+
+BookView {
+    #allScalars
+    #highlight-next-line
+    id(store)
+    #highlight-next-line
+    id(authors) as authorIds
+}
+```
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@GeneratedBy(file = "<yourproject>/yourpackage/Book.dto")
+public class BookView implemenets View<Book> {
+
+    private long id;
+    
+    private String name;
+
+    private int edition;
+
+    private BigPrice price;
+
+    @Nullable
+    //highlight-next-line
+    private Long storeId;
+
+    //highlight-next-line
+    private List<Long> authorIds;
+
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@GeneratedBy(file = "<yourproject>/yourpackage/Book.dto")
+open class BookView(
+    val id: Long
+    val name: String,
+    val edition: Int,
+    val price: BigDecimal,
+    //highlight-next-line
+    val storeId: Long? = null,
+    //highlight-next-line
+    val authorIds: List<Long> = emptyList()
+): View<Book> {
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+</Tabs>
+</td>
+</tr>
+<tr>
+<td>
+
+**关联对象**
+
+```sh
+export yourpackage.Book
+    -> package yourpackage.dto
+
+BookView {
+    #allScalars
+    #highlight-next-line
+    store {
+        #allScalars
+        -id
+    }
+    #highlight-next-line
+    authors {
+        #allScalars
+        -id
+    }
+}
+```
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@GeneratedBy(file = "<yourproject>/yourpackage/Book.dto")
+public class BookView implemenets View<Book> {
+
+    private long id;
+    
+    private String name;
+
+    private int edition;
+
+    private BigPrice price;
+
+    @Nullable
+    //highlight-next-line
+    private TargetOf_store store;
+
+    //highlight-next-line
+    private List<TargetOf_authors> authors;
+
+    ...省略其他成员...
+
+    public static class TargetOf_store implemenets View<BookStore> {
+
+        private String name;
+
+        @Nullable
+        private String website;
+
+        ...省略其他成员...
+    }
+
+    public static class TargetOf_authors implemenets View<Author> {
+
+        private String firstName;
+
+        private String lastName;
+
+        private Gender gender;
+
+        ...省略其他成员... 
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@GeneratedBy(file = "<yourproject>/yourpackage/Book.dto")
+open class BookView(
+    val id: Long
+    val name: String,
+    val edition: Int,
+    val price: BigDecimal,
+    //highlight-next-line
+    val store: LonTargetOf_storeg? = null,
+    //highlight-next-line
+    val authors: List<TargetOf_authors> = emptyList()
+): View<Book> {
+    
+    ...省略其他成员...
+
+    class TargetOf_store(
+        val name: String,
+        val website: String? = null
+    ): View<BookStore> {
+
+        ...省略其他成员...
+    }
+
+    class TargetOf_authors(
+        val firstName: String,
+        val lastName: String,
+        val gender: Gender
+    ): View<Author> {
+
+        ...省略其他成员...
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+</td>
+</tr>
+<tr>
+<td>
+
+**递归关联**
+
+```sh
+export yourpackage.Tree
+    -> package yourpackage.dto
+
+RecurisveTreeView {
+    #allScalars
+    #highlight-next-line
+    childNodes*
+}
+```
+
+</td>
+<td>
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@GeneratedBy(file = "<yourproject>/yourpackage/RecurisveTreeView.dto")
+public class RecurisveTreeView implemenets View<TreeNode> {
+
+    private long id;
+    
+    private String name;
+
+    @Nullable
+    //highlight-next-line
+    private List<RecurisveTreeView> childNodes;
+
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@GeneratedBy(file = "<yourproject>/yourpackage/Book.dto")
+open class RecurisveTreeView(
+    val id: Long
+    val name: String,
+    //highlight-next-line
+    val childNodes: List<RecurisveTreeView>? = null
+): View<TreeNode> {
+    
+    ...省略其他成员...
+}
+```
+
+</TabItem>
+</Tabs>
+</td>
+</tr>
+</tbody>
+</table>

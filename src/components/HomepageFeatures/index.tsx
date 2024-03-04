@@ -123,7 +123,7 @@ const FEATURE_LIST_ZH: FeatureItem[] = [
     title: <Grid container>
     <Grid item flex={1}>方便成熟的工程配套</Grid>
     <Grid item>
-      <ViewMore buttonText="快速预览" title="客户端代码生成示范">
+      <ViewMore buttonText="快速预览" title="即使服务端不用DTO，也可以为客户端生成DTO">
         <CommunicationPanel/>
       </ViewMore>
     </Grid>

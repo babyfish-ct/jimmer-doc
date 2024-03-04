@@ -7,8 +7,8 @@ import TabItem from '@theme/TabItem';
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(book -> {
-    book.setName("Learning GraphQL");
+Book book = Objects.createBook(draft -> {
+    draft.setName("Learning GraphQL");
 });
 ```
 
@@ -36,10 +36,10 @@ val book = new(Book::class).by {
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(book -> {
-    book.setName("Learning GraphQL");
-    book.setEdition(1);
-    book.setPrice(new BigDecimal("49.99"));
+Book book = Objects.createBook(draft -> {
+    draft.setName("Learning GraphQL");
+    draft.setEdition(1);
+    draft.setPrice(new BigDecimal("49.99"));
 });
 ```
 
@@ -73,11 +73,11 @@ val book = new(Book::class).by {
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(book -> {
-    book.setName("Learning GraphQL");
-    book.setEdition(1);
-    book.setPrice(new BigDecimal("49.99"));
-    book.applyStore(store -> {
+Book book = Objects.createBook(draft -> {
+    draft.setName("Learning GraphQL");
+    draft.setEdition(1);
+    draft.setPrice(new BigDecimal("49.99"));
+    draft.applyStore(store -> {
         store.setName("O'REILLY");
         store.setWebsite("https://www.oreilly.com/");
     });
@@ -122,20 +122,20 @@ val book = new(Book::class).by {
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(book -> {
-    book.setName("Learning GraphQL");
-    book.setEdition(1);
-    book.setPrice(new BigDecimal("49.99"));
-    book.applyStore(store -> {
+Book book = Objects.createBook(draft -> {
+    draft.setName("Learning GraphQL");
+    draft.setEdition(1);
+    draft.setPrice(new BigDecimal("49.99"));
+    draft.applyStore(store -> {
         store.setName("O'REILLY");
         store.setWebsite("https://www.oreilly.com/");
     });
-    book.addIntoAuthors(author -> { 
+    draft.addIntoAuthors(author -> { 
         author.setFirstName("Eve");
         author.setLastName("Procello");
         author.setGender(Gender.FEMALE);
     });
-    book.addIntoAuthors(author -> { 
+    draft.addIntoAuthors(author -> { 
         author.setFirstName("Alex");
         author.setLastName("Banks");
         author.setGender(Gender.MALE);

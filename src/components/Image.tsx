@@ -125,6 +125,16 @@ export const QQGroup: FC = memo(() => {
     return <Image src={Src_QQGroup}/>;
 });
 
+export const OpenApi: FC = memo(() => {
+    return <Image src={Src_OpenApi}/>;
+});
+export const OpenApiSimple: FC = memo(() => {
+    return <Image src={Src_OpenApiSimple}/>;
+});
+export const OpenApiComplex: FC = memo(() => {
+    return <Image src={Src_OpenApiComplex}/>;
+});
+
 let _isWebpSupported: boolean | undefined = undefined;
 
 function isWebpSupported(): boolean {
@@ -161,3 +171,6 @@ const Src_VsFamily = require("@site/static/img/vs-code/family.webp").default;
 const Src_VsField = require("@site/static/img/vs-code/field.webp").default;
 const Src_VsModule = require("@site/static/img/vs-code/module.webp").default;
 const Src_QQGroup = require("@site/static/img/qq-group.webp").default;
+const Src_OpenApi = require("@site/static/img/openapi/openapi.webp").default;
+const Src_OpenApiSimple = require("@site/static/img/openapi/simple.webp").default;
+const Src_OpenApiComplex = require("@site/static/img/openapi/complex.webp").default;

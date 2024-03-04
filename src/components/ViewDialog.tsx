@@ -10,15 +10,17 @@ import IconButton from '@mui/material/IconButton';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import CloseFullscreenIcon from '@mui/icons-material/CloseFullscreen';
 import CloseIcon from '@mui/icons-material/Close';
+import { Breakpoint } from "@mui/material";
 
 export const ViewDialog: FC<
     PropsWithChildren<{
         readonly open: boolean,
         readonly fullScreen?: boolean,
         readonly title: string,
+        readonly maxWidth?: Breakpoint,
         readonly onClose: () => void
     }>
-> = memo(({open, fullScreen = false, title, onClose, children}) => {
+> = memo(({open, fullScreen = false, title, maxWidth = "md", onClose, children}) => {
 
     const [maximize, setMaximize] = useState(fullScreen);
     const onResize = useCallback(() => {
@@ -31,7 +33,7 @@ export const ViewDialog: FC<
         onClose={onClose} 
         fullScreen={maximize} 
         TransitionComponent={Transition}
-        maxWidth="md">
+        maxWidth={maxWidth}>
             <AppBar sx={{ position: 'relative' }}>
                 <Toolbar>
                     <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">

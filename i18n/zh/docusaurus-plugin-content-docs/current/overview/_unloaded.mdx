@@ -1,0 +1,37 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Objects.createBook(draft -> {
+    draft.setName("SQL in Action");
+    draft.setEdition(1);
+});
+// highlight-next-line
+System.out.println(book.price());
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = new(Book::class).by {
+    name = "SQL in Action"
+    edition = 1
+}
+// highlight-next-line
+println(book.price)
+```
+
+</TabItem>
+</Tabs>
+
+这里，Book对象具备`name`和`edition`属性，但是，被标记处企图访问不存在的`price`属性，这会导致如下异常:
+
+```
+Exception in thread "main" org.babyfish.jimmer.UnloadedException: The property "yourpackage.Book.price" is unloaded
+	at yourpackage.BookDraft$Producer$Impl.price(BookDraft.java:285)
+	at yourpackage.App.main(App.java:10)
+```

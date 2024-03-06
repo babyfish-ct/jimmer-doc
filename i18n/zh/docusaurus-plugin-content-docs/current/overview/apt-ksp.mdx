@@ -1,0 +1,300 @@
+---
+sidebar_position: 2
+title: APT/KSP
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Precompiler from '../_shared/precompiler.mdx';
+
+## 基本概念
+
+Jimmer高度依赖于JVM生态的预编译技术：
+
+-   对于Java而言，就是APT，即[Annotation Processor](https://www.jetbrains.com/help/idea/annotation-processors-support.html)
+
+-   Kotlin而言，就是KSP，即[Kotlin Symbol Processing](https://kotlinlang.org/docs/ksp-overview.html)
+
+:::info
+使用APT/KSP自动生成的一些代码，是使用Jimmer所必须的。
+
+因此，如果使用Intellij打开[官方例子](https://github.com/babyfish-ct/jimmer-examples)中的任何一个Java/Kotlin项目，都会发现一些本该被自动生成代码并不存在的问题。对此，可以选择以下任何一种方法：
+
+-   先用命令行在要打开的项目目录下执行`./mvnw install`*(仅Java例子提供)*或`./gradlew build`命令完成代码生成，再用Intellij打开项目。
+
+-   直接用Intelilj代开项目，暂时无视IDE的错误，依赖下载完毕后，直接运行项目的main方法或单元测试 *(save-command/save-command-kt以单元测试演示功能)*，所有IDE错误将会自动消失，应用也会被正确启动。
+:::
+
+## 如何使用
+
+<Precompiler/>
+
+对于[官方例子](https://github.com/babyfish-ct/jimmer-examples)中的所有项目而言
+
+-   所有Java例子都具备`pom.xml`和`build.gradle`，即，maven/gradle双支持。
+
+    首次打开这种项目时，Intellij会询问以何种方式打开，做出选择即可。
+
+    如果要切换打开方式，退出Intellij，删除项目下的隐藏目录`.idea`，再用Intellij打开，重新选择即可。
+
+-   所有的Kotlin例子，只具备`build.gradle.kts`文件，即，只支持gradle。前面已经解释原因。
+
+Intellij对通过maven引入的annotation processor的整合存在一些轻率的过度优化措施，导致gradle和IDE配合的开发体验优于maven。
+
+## 在哪使用
+
+业务项目很少是一个单项目，更多时候是借助于Maven和Gradle这类构建工具分割成多个子项目。
+
+那么？我们应在哪些子项目中使用前面讲过的配置呢？
+
+|子项目类型|使用目的|注意事项|
+|--------|-------|-----------------|
+|定义实体的项目|根据实体定义生成必要的代码，例如Draft，SQL DSL, Fetcher||
+|在`src/main/dto`目录下定义DTO文件的项目|根据DTO语言的代码生成DTO类型|对于Java而言，除非当前子项目有实体定义，否则需要随便找个类用`@EnableDtoGeneration`修饰|
+|使用Spring Web注解的项目|自动生成Openapi文档和TypeScript代码，将Web Api的Java/Kotlin文档注释写入文档和客户端代码中；支持远程异常||
+
+## Java代码的两种风格
+
+和Kotlin API不同，Java API做不到自动生成的类型不出现在用户代码中。请看如下对比
+
+<table>
+<thead>
+<th>功能</th>
+<th>Java</th>
+<th>Kotlin</th>
+</thead>
+<tbody>
+<tr>
+<td rowspan="2">Draft</td>
+<td>使用生成的类型`BookDraft`</td>
+<td>使用原实体类型`Book`</td>
+</tr>
+<tr>
+<td>
+
+```java
+Book book = 
+    // highlight-next-line
+    BookDraft.$.produce(b -> {
+        b.setName("SQL");
+        b.addIntoAuthors(a -> {
+            a.setName("Jessica");
+        });
+        b.addIntoAuthors(a -> {
+            a.setName("Bob");
+        });
+    });
+```
+
+</td>
+<td>
+
+```kotlin
+val book =
+    // highlight-next-line
+    new(Book::class).by {
+        name = "SQL in Action"
+        authors().addBy {
+            name = "Jessica"
+        }
+        authors().addBy {
+            name = "Bob"
+        }
+    }
+```
+
+</td>
+</tr>
+<tr>
+<td rowspan="2">SQL DSL</td>
+<td>使用生成的类型`BookTable`</td>
+<td>使用原实体类型`Book`</td>
+</tr>
+<tr>
+<td>
+
+```java
+// highlight-next-line
+BookTable table = BookTable.$;
+
+List<Book> books = sqlClient
+    .createQuery(table)
+    .where(table.storeId().isNull())
+    .orderBy(table.name())
+    .select(table)
+    .execute();
+```
+
+</td>
+<td>
+
+```kotlin
+List<Book> books = sqlClient
+    // highlight-next-line
+    .createQuery(Book::class) {
+        where(table.storeId.isNull())
+        orderBy(table.name)
+        select(table)
+    }
+    .execute()
+```
+
+</td>
+</tr>
+<tr>
+<td rowspan="2">Fetcher</td>
+<td>使用生成的类型`BookFetcher`, `BookStoreFetcher`和`AuthorFetcher`</td>
+<td>使用原实体类型`Book`</td>
+</tr>
+<tr>
+<td>
+
+```java
+Fetcher<Book> fetcher =
+    // highlight-next-line
+    BookFetcher.$
+        .allScalarFields()
+        .store(
+            // highlight-next-line
+            BookStoreFetcher.$
+                .allScalarFields()
+        )
+        .authors(
+            // highlight-next-line
+            AuthorFetcher.$
+                .allScalarFields()
+        )
+```
+
+</td>
+<td>
+
+```kotlin
+val fetcher = 
+    // highlight-next-line
+    newFetcher(Book::class).by {
+        allScalarFields()
+        store {
+            allScalarFields()
+        }
+        authors {
+            allScalarFields()
+        }
+    }
+```
+
+</td>
+</tr>
+</tbody>
+</table>
+
+可以看到，Java和Kotlin的抽象能力不同，导致API设计能达到的效果不同：
+
+-   对于Kotlin而言，无论何种场景，都只需使用原实体类型`Book`。
+
+-   对于Java而言，不得不使用由Annotation Processor自动生成的类型，例如`BookDraft`, `BookTable`, `BookFetcher`等。
+
+    上述Java代码中频繁出现`.$`，`$`这些类的静态只读字段。
+
+其实，使用`$`是最简单的使用方式。然而，考虑到部分Java开发人员对`$`存在主观偏见，对定义实体类型的Java子项目而言，
+Jimmer的Annotations还是生成4个汇总类型:
+
+-   `Objects`类
+
+-   `Tables`接口
+
+-   `TableExes`接口
+
+-   `Fetchers`接口
+
+这4个类型所在的包，为所有实体的公共包。
+
+这4个类型通过定义静态常量为Java代码提供另外一种代码风格，两种风格对比如下
+
+|接受`$`的风格|不接受`$`的风格|
+|---|----|
+|BookDraft.$.produce|Objects.createBook|
+|BookTable.$|Tables.BOOK_TABLE|
+|BookTableEx.$|TableExes.BOOK_TABLE_EX|
+|BookFetcher.$|Fetchers.BOOK_FETCHER|
+
+另外，`Tables`, `TableExes`和`Fetchers`是接口，可以使用imlements语句来进一步简化代码 *(由于Intellij对静态导入支持不友好，实现定义常量的接口仍然是值得推荐的技巧)*，例如
+
+```java
+public interface FetcherConstants
+// highlight-next-line
+implements Fetchers {
+    
+    Fetcher<Book> BOOK_DETAIL_FETCHER =
+        BOOK_FETCHER
+            .allScalarFields()
+            .store(
+                BOOK_STORE_FETCHER
+                    .allScalarFields()
+            )
+            .authors {
+                AUTHOR_FETCHER
+                    .allScalarFields()
+            };
+}
+```
+
+## 和Lombok配合
+
+Java项目常常和Lombok配合使用使用。
+
+默认情况下，如果项目除了lomboka外没有其他APT，只需导入lombok的依赖即可。
+
+然而，一旦引入了其他APT配置*(不一定是Jimmer的APT，任何其他APT)*，则必须明确配置lombok的APT。
+
+<Tabs groupId="buildTool">
+<TabItem value="java_maven" label="Java(Maven)">
+
+```xml title="pom.xml"
+...省略其他代码...
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.10.1</version>
+            <configuration>
+                <annotationProcessorPaths>
+                    <!--highlight-start-->
+                    <path>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                        <version>${lombok.version}</version>
+                    </path>
+                    <!--highlight-end-->
+                    <path>
+                        <groupId>org.babyfish.jimmer</groupId>
+                        <artifactId>jimmer-apt</artifactId>
+                        <version>${jimmer.version}</version>
+                    </path>
+                </annotationProcessorPaths>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+
+...省略其他代码...
+```
+
+</TabItem>
+<TabItem value="java_gradle" label="Java(Gradle)">
+
+```groovy title="build.gradle"
+dependencies {
+    
+    ...省略其他依赖...
+
+    // highlight-next-line
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}"
+}
+```
+
+</TabItem>
+</Tabs>

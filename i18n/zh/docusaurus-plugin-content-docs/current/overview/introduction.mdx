@@ -195,6 +195,8 @@ Jimmer实体支持两个重要特征，动态性和不可变性
 
     Immer完美结合了不可变对象和可变对象的优点，代码简单、功能强大、性能卓越。因此，Jimmer选择为JVM生态移植了immer，项目名称也是对其致敬。<ViewMore buttonText="查看快捷示范" title="从immer移植而来的不可变对象"><ImmutableStep/></ViewMore>
 
+参考链接: [动态性](../object/dynamic)，[不可变性](../object/immutable)
+
 #### 3.1.2. Generated DTO Type
 
 前文谈到，Jimmer实体在静态语言数据对象和动态语言数据对象之间寻找最佳平衡，其中动态性带来了极大的灵活性，并以此决定了整个框架的定位。
@@ -236,6 +238,8 @@ Jimmer对象允许某些属性缺失，对象缺少某个属性 *(其值未知)*
     廉价地方自动生成各种DTO类型。<ViewMore buttonText="查看快捷示范" title="DTO语言展示"><DTO/></ViewMore>
 
     这种以极低成本快速生成的DTO类型可以和Jimmer实体对象彼此转换；因此，任何两种DTO类型都可以以Jimmer实体为中间媒介彼此转换。
+
+参考链接：[DTO语言](../object/view/dto-language)
 
 ### 3.2. Fetcher
 
@@ -294,17 +298,20 @@ Jimmer为查询任意形状的数据结构而设计，能像[GraphQL](https://gr
 
     然而，基于Jimmer实现GraphQL是非常容易的，因为ORM本身已经有了和GraphQL类似的能力，开发人员只需为GraphQL查询API实现聚合根对象的查询即可，GraphQL对象之间丰富的关联由Jimmer自动实现。
 
-参考连接
+<details>
+<summary>参考连接</summary>
 
 |连接|描述|
 |---|---|
-|[快速预览/查询任意形状](../quick-view/fetch)|Fetcher功能点概述|
+|[快速预览/查询任意形状](../quick-view/fetch)|快速预览：查询任意形状|
 |[jimmer-examples/tree/main/java/jimmer-sql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql)|例子项目，使用Java和Jimmer构建REST服务|
 |[jimmer-examples/tree/main/kotlin/jimmer-sql-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-kt)|例子项目，使用Kotlin和Jimmer构建REST服务|
 |[jimmer-examples/tree/main/java/jimmer-sql-graphql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql-graphql)|例子项目，使用Java和Jimmer构建GraphQL服务|
 |[jimmer-examples/tree/main/kotlin/jimmer-sql-graphql-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-graphql-kt)|例子项目，使用Kotlin和Jimmer构建GraphQL服务|
 |[jimmer-examples/tree/main/java/jimmer-cloud](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-cloud)|例子项目，使用Java和Jimmer支持跨越微服务边界的ORM远程关联|
 |[jimmer-examples/tree/main/kotlin/jimmer-cloud-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-cloud-kt)|例子项目，使用Kotlin和Jimmer支持跨越微服务边界的ORM远程关联|
+
+</details>
 
 ### 3.3. Save Command
 
@@ -344,6 +351,21 @@ Save Command，是Jimmer三个最基础的核心功能之一 *(另外两个是Fe
 
 4.  递归保存树形结构 <ViewMore buttonText="查看快捷示范" title="递归保存树形结构"><SaveRecursiveTree/></ViewMore>
 
+<details>
+<summary>参考连接</summary>
+
+|连接|描述|
+|---|---|
+|[快速预览/查询任意形状](../quick-view/save)|快速预览：保存任意形状|
+|[jimmer-examples/tree/main/java/save-command](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/save-command)|例子项目，使用Java和Jimmer展示Save Command的各种场景|
+|[jimmer-examples/tree/main/kotlin/save-command-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/save-command-kt)|例子项目，使用Kotlin和Jimmer展示Save Command的各种场景|
+|[jimmer-examples/tree/main/java/jimmer-sql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql)|例子项目，使用Java和Jimmer构建REST服务|
+|[jimmer-examples/tree/main/kotlin/jimmer-sql-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-kt)|例子项目，使用Kotlin和Jimmer构建REST服务|
+|[jimmer-examples/tree/main/java/jimmer-sql-graphql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql-graphql)|例子项目，使用Java和Jimmer构建GraphQL服务|
+|[jimmer-examples/tree/main/kotlin/jimmer-sql-graphql-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-graphql-kt)|例子项目，使用Kotlin和Jimmer构建GraphQL服务|
+
+</details>
+
 ### 3.4. SQL DSL
 
 :::tip
@@ -381,8 +403,25 @@ Jimmer SQL DSL为任意复杂的动态SQL而设计。
 :::tip
 事实上，用户还可以利用DTO语言的编写specification DTO，让Jimmer自动生成查询条件参数，以及你在上面看到的所有动态查询行为。
 
-这个更为便捷的功能叫Super QBE，限于篇幅，本文不再讨论。
+这个更为便捷的功能叫`超级QBE`，限于篇幅，本文不再讨论。
 :::
+
+<details>
+<summary>参考链接</summary>
+
+|连接|描述|
+|---|---|
+|[快速预览/查询任意形状](../quick-view/dsl)|快速预览：任意动态查询|
+|[动态表连接](../query/dynamic-table)|-|
+|[隐式子查询](../query/implicit-subquery)|-|
+|[智能分页](../query/paging)|本文未展示|
+|[Native表达式](../query/native-sql)|本文未展示，如何在强类型SQL DSL中插入原生SQL片段|
+|[动态排序](../query/dynamic-order)|本文未展示|
+|[超级QBE](../query/super_qbe)|本文未展示|
+
+这里，并未给出相关例子的链接，因为所有例子都在使用SQL DSL。
+
+</details>
 
 ### 3.5 Trigger
 
@@ -437,6 +476,8 @@ Jimmer支持两种各不同类型的触发器: BinLog触发器和Transaction触�
 </tbody>
 </table>
 
+参考链接：[触发器](../mutation/trigger)
+
 ### 3.6. Cache
 
 Jimmer的缓存功能非常强大，具备一下3个特点
@@ -479,17 +520,23 @@ Jimmer的缓存功能非常强大，具备一下3个特点
 
     <ViewMore buttonText="查看缓存一致性的效果" title="高度自动化的缓存一致性"><CacheConsistencyPanel/></ViewMore>
 
+参考链接: [缓存篇](../cache)
+
 ### 3.7. Global Filter
 
 全局过滤器，在SQL DSL体系之外以插件的方式为实体添加固有的SQL过滤条件。最常见的适用场景为基于行的权限管理。
 
 全局过滤器非常灵活，很容易和任何IOC框架*(比如Spring)*结合，从而自由地访问业务上下文的信息，从而实现和业务高度紧密结合的过滤逻辑。
 
+参考链接：[全局过滤器](../query/global-filter)
+
 ### 3.8. Draft Interceptor
 
 Draft Interceptor类似于数据库的前置触发器，在数据库变更发生前，给予用户最后一次机会调整即将保存的数据。
 
 Draft Interceptor非常灵活，很容易和任何IOC框架*(比如Spring)*结合，从而自由地访问业务上下文的信息，从而实现和业务高度紧密结合的数据调整逻辑。
+
+参考链接：[拦截器](../mutation/draft-interceptor)
 
 ### 3.9. Logical Deletion
 
@@ -498,6 +545,8 @@ Draft Interceptor非常灵活，很容易和任何IOC框架*(比如Spring)*结�
 逻辑删除也提供一个内置的Global Filter，该过滤器会导致被标注为“已删除”得数据不会被任何查询获得，也不会被任何修改语句影响。
 
 Jimmer的逻辑删除，既支持实体表，也支持中间关联表。
+
+参考链接：[实体表的逻辑删除](../mapping/advanced/logical-deleted/entity)，[中间表的逻辑删除](../mapping/advanced/logical-deleted/join-table)
 
 ### 3.10. Remote Associations
 
@@ -510,6 +559,8 @@ Remote Associations只是在有限时间内为微服务体系开发的首个功�
 
 等Jimmer逐渐完善发布1.0正式版本后，将会在微服务技术体系添加更多的功能，为该体系下更多的繁琐的细节进行抽象和简化。
 :::
+
+参考链接：[远程关联映射](../mapping/advanced/remote)，[远程关联支持](../spring/spring-cloud)
 
 ## 4. 生态
 

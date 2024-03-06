@@ -1,0 +1,83 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="buildTool">
+<TabItem value="java_maven" label="Java(Maven)">
+
+```xml title="pom.xml"
+...省略其他代码...
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.10.1</version>
+            <configuration>
+                <!-- highlight-next-line -->
+                <annotationProcessorPaths>
+                    <path>
+                        <groupId>org.babyfish.jimmer</groupId>
+                        <!-- highlight-next-line -->
+                        <artifactId>jimmer-apt</artifactId>
+                        <version>${jimmer.version}</version>
+                    </path>
+                </annotationProcessorPaths>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+
+...省略其他代码...
+```
+
+</TabItem>
+<TabItem value="java_gradle" label="Java(Gradle)">
+
+```groovy title="build.gradle"
+dependencies {
+    
+    ...省略其他依赖...
+
+    annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}"
+}
+```
+
+</TabItem>
+<TabItem value="kotin_gralde" label="Kotlin(Gradle.kts)">
+
+```kotlin title="build.gradle.kts"
+plugins {
+    // 添加ksp插件
+    id("com.google.devtools.ksp") version "1.7.10-1.0.6"
+
+    ...省略其他插件...
+}
+dependencies {
+    
+    // 应用jimmer的ksp代码生成器
+    // highlight-next-line
+    ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
+
+    ...省略其他依赖...
+}
+
+// 将生成的代码添加到编译路径中。
+// 没有这个配置，gradle命令仍然可以正常执行，
+// 但是, Intellij无法找到生成的源码。
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+[KSP](https://kotlinlang.org/docs/ksp-overview.html)官方只支持gradle，
+经过实践验证，KSP的第三方Maven插件支持跟不上`kotlin/KSP`本身的版本迭代，往往在升级过程中遇到很多问题。
+
+最终Jimmer放弃了对Kotlin的Maven支持，请Kotlin开发人员使用Gradle.
+:::

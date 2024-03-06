@@ -29,6 +29,7 @@ import SaveRecursiveTree from './_save/recursion.mdx';
 import DynamicWhere from './_dsl/dynamic-where.mdx';
 import DynamicJoin from './_dsl/dynamic-join.mdx';
 import ImplicitSubquery from './_dsl/implicit-subquery.mdx';
+import SuperQBE from './_dsl/super-qbe.mdx';
 
 ## 1. Overview
 
@@ -337,7 +338,9 @@ Next, we will demonstrate the basic usage of the Save Command through four cases
     For the UI, the forms can be diverse, with nested sub-tables being the most common *(one-to-many)*
     : <ViewMore buttonText="Common UI for Long Association"><LongAssociation/></ViewMore> <ViewMore buttonText="View quick demo" title="Save Long Association"><SaveLongAssociation/></ViewMore>
 
-4.  Recursively save tree structures <ViewMore buttonText="View quick demo" title="Recursively Save Tree Structures"><SaveRecursiveTree/></ViewMore>
+4.  Recursively save tree structures 
+
+    This example is a bit different, requiring a slight modification of the root node's data before saving. <ViewMore buttonText="View quick demo" title="Recursively Save Tree Structures"><SaveRecursiveTree/></ViewMore>
 
 <details>
 <summary>Reference links</summary>
@@ -391,7 +394,7 @@ Due to space limitations, this article only discusses the first point above. Let
 :::tip
 In fact, users can also leverage the DTO language to write specification DTOs, allowing Jimmer to automatically generate query condition parameters and all the dynamic query behaviors you've seen above.
 
-This more convenient feature is called `Super QBE`, but due to space limitations, it will not be discussed in this article.
+This more convenient feature is called `Super QBE`, Here, we adopt this feature to replace all the features introduced above. <ViewMore buttonText="View quick demo" title="Super QBE"><SuperQBE/></ViewMore>
 :::
 
 <details>
@@ -400,12 +403,12 @@ This more convenient feature is called `Super QBE`, but due to space limitations
 |Link|Description|
 |---|---|
 |[Quick Preview/Query Any Shape](../quick-view/dsl)|Quick preview: Arbitrary dynamic queries|
-|[Dynamic Table Join](../query/dynamic-table)|-|
-|[Implicit Subquery](../query/implicit-subquery)|-|
+|[Dynamic Table Join](../query/dynamic-table)||
+|[Implicit Subquery](../query/implicit-subquery)||
 |[Intelligent Paging](../query/paging)|Not shown in this article|
 |[Native Expression](../query/native-sql)|Not shown in this article, how to embed native SQL fragments in a strongly-typed SQL DSL|
 |[Dynamic Ordering](../query/dynamic-order)|Not shown in this article|
-|[Super QBE](../query/super_qbe)|Not shown in this article|
+|[Super QBE](../query/super_qbe)||
 
 Here, no links to relevant examples are provided because all examples involve using the SQL DSL.
 </details>

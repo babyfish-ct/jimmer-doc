@@ -29,6 +29,7 @@ import SaveRecursiveTree from './_save/recursion.mdx';
 import DynamicWhere from './_dsl/dynamic-where.mdx';
 import DynamicJoin from './_dsl/dynamic-join.mdx';
 import ImplicitSubquery from './_dsl/implicit-subquery.mdx';
+import SuperQBE from './_dsl/super-qbe.mdx';
 
 ## 1. 概述
 
@@ -349,7 +350,9 @@ Save Command，是Jimmer三个最基础的核心功能之一 *(另外两个是Fe
     对于UI界面而言，形式多样，以表单内嵌子表最为常见 *(一对多)*
     ：<ViewMore buttonText="长关联常见UI"><LongAssociation/></ViewMore> <ViewMore buttonText="查看快捷示范" title="保存长关联"><SaveLongAssociation/></ViewMore>
 
-4.  递归保存树形结构 <ViewMore buttonText="查看快捷示范" title="递归保存树形结构"><SaveRecursiveTree/></ViewMore>
+4.  递归保存树形结构 
+
+    这个例子稍有不同，需要在保存之前稍微需改一下根节点的数据。<ViewMore buttonText="查看快捷示范" title="递归保存树形结构"><SaveRecursiveTree/></ViewMore>
 
 <details>
 <summary>参考连接</summary>
@@ -403,7 +406,7 @@ Jimmer SQL DSL为任意复杂的动态SQL而设计。
 :::tip
 事实上，用户还可以利用DTO语言的编写specification DTO，让Jimmer自动生成查询条件参数，以及你在上面看到的所有动态查询行为。
 
-这个更为便捷的功能叫`超级QBE`，限于篇幅，本文不再讨论。
+这个更为便捷的功能叫`超级QBE`。这里，我们采用这个功能来替代上面介绍过的所有功能。<ViewMore buttonText="查看快捷示范" title="超级QBE"><SuperQBE/></ViewMore>
 :::
 
 <details>
@@ -412,12 +415,12 @@ Jimmer SQL DSL为任意复杂的动态SQL而设计。
 |连接|描述|
 |---|---|
 |[快速预览/查询任意形状](../quick-view/dsl)|快速预览：任意动态查询|
-|[动态表连接](../query/dynamic-table)|-|
-|[隐式子查询](../query/implicit-subquery)|-|
+|[动态表连接](../query/dynamic-table)||
+|[隐式子查询](../query/implicit-subquery)||
 |[智能分页](../query/paging)|本文未展示|
 |[Native表达式](../query/native-sql)|本文未展示，如何在强类型SQL DSL中插入原生SQL片段|
 |[动态排序](../query/dynamic-order)|本文未展示|
-|[超级QBE](../query/super_qbe)|本文未展示|
+|[超级QBE](../query/super_qbe)||
 
 这里，并未给出相关例子的链接，因为所有例子都在使用SQL DSL。
 

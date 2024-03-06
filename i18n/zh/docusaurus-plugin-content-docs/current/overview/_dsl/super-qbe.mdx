@@ -1,0 +1,133 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 1. DTO代码
+
+```sh title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+// Specification DTO, 既非Output DTO也非Input DTO
+#highlight-next-line
+specification BookSpecification {
+    like/i(name)
+    ge(price) // Default alias: minPrice
+    le(price) // Default alias: maxPrice
+    flat(store) {
+        as(^ -> store) {
+            like/i(name)
+            like/i(website)
+        }
+    }
+    flat(authors) {
+        like/i(firstName, lastName) as authorName
+        gender as authorGender
+    }
+}
+...Ommit other DTO definitions...
+```
+
+编译后生成Java/Kotlin类型`BookSpecification`
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookSpecification.java"
+// DTO语言编译自动生成，并非开发人员提供
+// highlight-next-line
+@GeneratedBy(file = "<yourproject>/src/main/dto/Book.dto")
+public class BookSpecification 
+implements JSpecification<Book, BookTable> { 
+
+    @Nullable
+    private String name;
+
+    @Nullable
+    private BigDecimal minPrice;
+
+    @Nullable
+    private BigDecimal maxPrice;
+
+    @Nullable
+    private String storeName;
+
+    @Nullable
+    private String storeWebsite;
+
+    @Nullable
+    private String authorName;
+
+    @Nullable
+    private Gender authorGender;
+
+    @Override
+    public void applyTo(SpecificationArgs<Book, BookTable> args) {
+        ...Omit complex dynamic query logic...
+    }
+
+    ...Omit other members...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookSpecification.kt"
+@GeneratedBy(file = "<yourproject>/src/main/dto/Book.dto")
+data class BookSpecification(
+    val name: String? = null,
+    val minPrice: BigDecimal? = null,
+    val maxPrice: BigDecimal? = null,
+    val storeName: String? = null,
+    val storeWebsite: String? = null,
+    val authorName: String? = null,
+    val authorGender: Gender? = null
+) : KSpecification<Book> {
+
+    ...Omit other members...
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 2. 查询代码
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@GetMapping("/books")
+public List<Book> findBooks(
+    BookSpecification specification,
+) {
+    BookTable table = BookTable.$;
+    return sqlClient
+        .createQuery(table)
+        // highlight-next-line
+        .where(specification)
+        .select(table)
+        .execute();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@GetMapping("/books")
+fun findBooks(
+    specification: BookSpecification
+): List<Book> =
+    sqlClient
+        .createQuery(Book::class) {
+            .createQuery(table)
+            // highlight-next-line
+            .where(specification)
+            .select(table)
+        }
+        .execute()
+```
+
+</TabItem>
+</Tabs>

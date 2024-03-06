@@ -6,6 +6,7 @@ title: 标准例子
 import {ViewMore} from '@site/src/components/ViewMore';
 import {CacheConsistencyPanel} from '@site/src/components/HomepageFeatures/CacheConsistency';
 import {SwaggerAuthorize, GraphiqlHeaders} from '@site/src/components/Image';
+import Admonition from "@theme/Admonition";
 
 通过前面的章节
 
@@ -108,6 +109,11 @@ Jimmer提供的配套示例，对快速掌握Jimmer非常有帮助
                         </ul>
                     </li>
                 </ol>
+                <Admonition type="note">
+                    本机启动所有项目后，如果微服务彼此通讯有故障且等待一段时间仍如此，
+                    请访问http://localhost:7000打开eureka注册中心,
+                    将其中各服务注册的机器名添加到本机hosts文件中。
+                </Admonition>
             </td>
             <td>★</td>
         </tr>

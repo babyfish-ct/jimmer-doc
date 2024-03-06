@@ -1,0 +1,185 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 1. DTO代码
+
+```sh
+export yourpackage.TreeNode
+    -> yourpackage.dto
+
+input RecursiveTreeInput {
+    name
+    #highlight-next-line
+    childNodes*
+}
+```
+
+编译后，将会自动生成Java/Kotlin类型`RecursiveTreeInput`
+
+## 2. Key
+
+`RecursiveTreeInput`代表一颗树。如上代码所示，所有节点对象都没有id属性。
+
+:::note
+很多ORM是这样设计的，在对象有id属性时执行`update`操作；在对象没有id属性时执行`insert`操作。
+
+Jimmer并没有这样设计，采用了更智能处理方式: @Key
+:::
+
+假如原实体`TreeNode`定义如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface TreeNode {
+
+    @Id
+    @GeneratedValue(stragegy = GenerationType.IDENTITY)
+    long id();
+
+    // highlight-next-line
+    @Key
+    String name();
+
+    // highlight-next-line
+    @Key
+    @Nullable
+    @ManyToOne
+    TreeNode parent();
+
+    @OneToMany(mappedBy = "parent")
+    List<TreeNode> childNodes();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface TreeNode {
+
+    @Id
+    @GeneratedValue(stragegy = GenerationType.IDENTITY)
+    val id: Long
+
+    // highlight-next-line
+    @Key
+    val name: String
+
+    // highlight-next-line
+    @Key
+    @ManyToOne
+    val parent: TreeNode?
+
+    @OneToMany(mappedBy = "parent")
+    val childNodes: List<TreeNode>
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+这里`TreeNode.name`和`TreeNode.parent`属性被`@Key`修饰。这个两个属性对应于数据库中`BOOK`表的普通字段`NAME`和外键字段`PARENT_ID`。
+
+这表示，如果`TreeNode.id`属性没有被指定 *(任何被指定了自动分配策略的`id`属性都可以缺失)*，那么，默认情况下，Jimmer将基于`NAME`和`PARENT_ID`字段查询数据库中是否存在已有数据，最终决定应该执行插入操作还是更新操作。
+:::
+
+请看一个具体的DTO对象树
+
+```json
+RecursiveTreeInput(
+    name=Animal
+    childNodes=[
+        RecursiveTreeInput(
+            name=Mammal,
+            childNodes=[
+                RecursiveTreeInput(
+                    name=Dog
+                    childNodes=[
+                        RecursiveTreeInput(
+                            name=Huskies
+                            childNodes=[]
+                        ),
+                        RecursiveTreeInput(
+                            name=Chihuahua,
+                            childNodes=[]
+                        ),
+                        RecursiveTreeInput(
+                            name=Bulldog
+                            childNodes=[]
+                        )
+                    ]
+                ),
+                RecursiveTreeInput(
+                    name=Dolphin
+                    childNodes=[]
+                ),
+                RecursiveTreeInput(
+                    name=Bat,
+                    childNodes=[]
+                )
+            ]
+        ),
+        RecursiveTreeInput(
+            name=Birds,
+            childNodes=[]
+        )
+    ]
+)
+```
+
+DTO类型`RecursiveTreeInput`只有向下递归的能力，所以没有映射`parent`属性；`parent`属性是`@Key`的一部分，该怎么办呢 *(如果id属性未指定，则必须指定key属性)*？
+
+事实上，对于一对多关联 *(比如，这里的`childNodes`)* 而言，Jimmer有一个自动处理过程：一旦父对象因为被保存而有了确定的`id`值，其子对象的逆向多对一关联属性 *(比如，这里的`parent`)* 将会被自动设置。
+
+可见，除了根对象外，其余对象的`parent`属性都会在保存过程中被自动设置。
+
+:::info
+因此，后续的保存代码需要调整用户上传的数据，为根对象指定`parent`属性。
+:::
+
+## 3. 保存代码
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@PutMapping
+public int saveTree(RecursiveTreeInput input) {
+    TreeNode treeNode = TreeNodeDraft.$
+        .produce(input.toEntity(), draft -> {
+            // 前文已经讨论了：保存前需要为根节点
+            // 设置parent属性，这里不再赘述
+            // highlight-next-line
+            draft.setParent(null);
+        });
+    return sqlClient
+        .save(treeNode)
+        .getTotalAffectedRowCount();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@PutMapping
+fun saveTree(input: RecursiveTreeInput): Int 
+    sqlClient
+        .save(
+            input.toEntity().copy {
+                // 前文已经讨论了：保存前需要为根节点
+                // 设置parent属性，这里不再赘述
+                // highlight-next-line
+                parent = null
+            }
+        )
+        .totalAffectedRowCount
+```
+
+</TabItem>
+</Tabs>

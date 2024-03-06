@@ -287,7 +287,7 @@ const DATA_ZH = `
 
     -   强类型SQL DSL
 
-        -   Jimmer独创的隐式动态table join，填补行业空白 [👁](#dynamic-join-problem) [→](@site/query/dynamic-join)
+        -   Jimmer独创的隐式动态table join，填补JVM生态的空白 [👁](#dynamic-join-problem) [→](@site/query/dynamic-join)
 
         -   可混入NativeSQL片段，不再惧怕通用DSL无法使用特定数据库特的非通用功能 [→](@site/query/native-sql)
 
@@ -397,7 +397,7 @@ const DATA_EN = `
 
     -   Strongly-typed SQL DSL
 
-        -   Jimmer's innovative implicit dynamic table join, filling an industry gap [👁](#dynamic-join-problem) [→](@site/query/dynamic-join)
+        -   Jimmer's innovative implicit dynamic table join, filling an gap in the JVM ecosystem [👁](#dynamic-join-problem) [→](@site/query/dynamic-join)
 
         -   NativeSQL fragments can be mixed, no longer fear generic DSLs lacking non-generic functionality specific to certain databases [→](@site/query/native-sql)
 

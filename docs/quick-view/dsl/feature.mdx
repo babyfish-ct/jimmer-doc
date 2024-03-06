@@ -107,7 +107,7 @@ Where the meaning of the `fetcher` parameter has been introduced in [Quick Tour/
 
 Now let's see the effects:
 
-- When all three parameters are null:  
+-   When all three parameters are null:  
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -145,7 +145,7 @@ Now let's see the effects:
     // No SQL predicates
     ```
 
-- When all three parameters are not null:   
+-   When all three parameters are not null:   
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -173,7 +173,7 @@ Now let's see the effects:
     </TabItem>
     </Tabs>
 
-    The SQL is:  
+    All where conditions will be generated and the SQL is:  
 
     ```sql
     select
@@ -283,6 +283,10 @@ from BOOK b
     inner join BOOK_STORE s on b.STORE_ID = s.ID
 ```
 
+Here is the translation to English:
+
+You can also use outer join. The Java code is `table.store(JoinType.LEFT)`, and the Kotlin code is <code>table.`storeId?`</code>.
+
 In fact, if the entity model is richer, you can write a longer path, 
 such as 'table.store().city().province()'.
 
@@ -336,6 +340,8 @@ That is, although a table join is created, it is not used.
 
 :::tip
 If a table join is created in the DSL but is not actually used, the table join will be automatically ignored and there will be no corresponding SQL join in the generated SQL statement.
+
+> Note: Jimmer does not have the concept of `join fetch` like `JPA`. The only purpose of a join is to be referenced by other SQL expressions, so any unused join objects will be ignored.
 :::
 
 The generated SQL statement is as follows
@@ -441,10 +447,10 @@ public class BookRepository {
         @Nullable BigDecimal maxPrice,
         @Nullable String storeName,
         @Nullable String storeWebsite,
+        // highlight-next-line
         @Nullable String authorName,
         // highlight-next-line
         @Nullable Gender authorGender, 
-        // highlight-next-line
         @Nullable Fetcher<Book> fetcher
     ) {
         BookTable table = Tables.BOOK_TABLE;
@@ -489,7 +495,9 @@ class BookRepository(
         maxPrice: BigDecimal? = null,
         storeName: String? = null, 
         storeWebsite: String? = null,
+        // highlight-next-line
         authorName: String? = null,
+        // highlight-next-line
         authorGender: String? = null,
         fetcher: Fetcher<Book>? = null
     ): List<Book> =

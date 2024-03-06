@@ -1,0 +1,187 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 1. DTO Code
+
+```sh
+export yourpackage.TreeNode
+    -> yourpackage.dto
+
+input RecursiveTreeInput {
+    name
+    #highlight-next-line
+    childNodes*
+}
+```
+
+After compilation, Java/Kotlin type `RecursiveTreeInput` will be automatically generated.
+
+## 2. Key
+
+`RecursiveTreeInput` represents a tree. As shown in the code above, none of the node objects have an id property. 
+
+:::note
+Many ORMs are designed this way: perform an `update` operation when the object has an id property; perform an `insert` operation when the object doesn't have an id property. Jimmer is not designed this way, but rather uses a more intelligent approach: @Key
+:::
+
+Assuming the original entity `TreeNode` is defined as follows:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface TreeNode {
+
+    @Id
+    @GeneratedValue(stragegy = GenerationType.IDENTITY)
+    long id();
+
+    // highlight-next-line
+    @Key
+    String name();
+
+    // highlight-next-line
+    @Key
+    @Nullable
+    @ManyToOne
+    TreeNode parent();
+
+    @OneToMany(mappedBy = "parent")
+    List<TreeNode> childNodes();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface TreeNode {
+
+    @Id
+    @GeneratedValue(stragegy = GenerationType.IDENTITY)
+    val id: Long
+
+    // highlight-next-line
+    @Key
+    val name: String
+
+    // highlight-next-line
+    @Key
+    @ManyToOne
+    val parent: TreeNode?
+
+    @OneToMany(mappedBy = "parent")
+    val childNodes: List<TreeNode>
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+Here, the `TreeNode.name` and `TreeNode.parent` properties are annotated with `@Key`. These two properties correspond to the regular column `NAME` and the foreign key column `PARENT_ID` in the database table `BOOK`.
+
+This means that if the `TreeNode.id` property is not specified (any `id` property with an auto-allocation strategy assigned can be omitted), then by default, Jimmer will query the database based on the `NAME` and `PARENT_ID` columns to determine whether existing data exists, and ultimately decide whether to perform an insert or update operation.
+:::
+
+Let's look at a concrete DTO object tree.
+
+```json
+RecursiveTreeInput(
+    name=Animal
+    childNodes=[
+        RecursiveTreeInput(
+            name=Mammal,
+            childNodes=[
+                RecursiveTreeInput(
+                    name=Dog
+                    childNodes=[
+                        RecursiveTreeInput(
+                            name=Huskies
+                            childNodes=[]
+                        ),
+                        RecursiveTreeInput(
+                            name=Chihuahua,
+                            childNodes=[]
+                        ),
+                        RecursiveTreeInput(
+                            name=Bulldog
+                            childNodes=[]
+                        )
+                    ]
+                ),
+                RecursiveTreeInput(
+                    name=Dolphin
+                    childNodes=[]
+                ),
+                RecursiveTreeInput(
+                    name=Bat,
+                    childNodes=[]
+                )
+            ]
+        ),
+        RecursiveTreeInput(
+            name=Birds,
+            childNodes=[]
+        )
+    ]
+)
+```
+
+The DTO type `RecursiveTreeInput` only has the ability to recurse downwards, so it does not map the `parent` property; `parent` is part of `@Key`, so what should be done (if the id property is not specified, the key properties must be specified)?
+
+In fact, for a one-to-many association (such as `childNodes` here), Jimmer has an automatic handling process: once the parent object has a definite `id` value because it has been saved, the inverse many-to-one associated property of its child objects (such as `parent` here) will be automatically set.
+
+As you can see, except for the root object, the `parent` property of all other objects will be automatically set during the saving process.
+
+:::info
+Therefore, the subsequent save code needs to adjust the data uploaded by the user to set the `parent` property for the root object.
+:::
+
+## 3. Code for saving
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@PutMapping
+public int saveTree(RecursiveTreeInput input) {
+    TreeNode treeNode = TreeNodeDraft.$
+        .produce(input.toEntity(), draft -> {
+            // As discussed earlier: before saving, 
+            // the parent property needs to be set 
+            // for the root node, so no further 
+            // elaboration is needed here.
+            // highlight-next-line
+            draft.setParent(null);
+        });
+    return sqlClient
+        .save(treeNode)
+        .getTotalAffectedRowCount();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@PutMapping
+fun saveTree(input: RecursiveTreeInput): Int 
+    sqlClient
+        .save(
+            input.toEntity().copy {
+                // As discussed earlier: before saving, 
+                // the parent property needs to be set 
+                // for the root node, so no further 
+                // elaboration is needed here.
+                // highlight-next-line
+                parent = null
+            }
+        )
+        .totalAffectedRowCount
+```
+
+</TabItem>
+</Tabs>

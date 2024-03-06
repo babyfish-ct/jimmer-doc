@@ -515,3 +515,61 @@ System.out.println(book);
 
 即，使用Jackson序列化时，被直接抓取的属性会被序列化，未被直接抓取的属性会被忽略。
 :::
+
+## 请勿滥用
+
+:::caution
+不借助DTO，希望实体本身能表达关联id，是唯一适合采用`@IdView`的场景。
+
+其他功能并不对关联属性是否有对应的`@IdView`属性做任何假设。
+:::
+
+-   在SQL DSL中使用关联id
+
+    即使实体的某个一对一或多对一关联属性没有对应的`@IdView`属性，也可以在SQL DSL中使用关联id表达式，例如
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    where(table.storeId().eq(2L));
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    where(table.storeId eq 2L)
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    > 当然，如果你对SQL DSL自动生成的关联id名称 *(比如，这里的`storeId`)* 并不满意，就可以提供`@IdView`属性改变其名称。
+
+-   在DTO语言中使用关联id
+
+    DTO语言根本不需要`@IdView`属性。即使实体的某个关联属性已经具备了对应的`@IdView`属性，也不建议在DTO语言中使用它，因为这是一个脆弱的假设，一旦那个`@IdView`属性被删除，DTO代码在同步修改前无法被正确编译。
+
+    DTO语言应该直接使用关联属性，例如
+
+    ```sh
+    export yourpackage.Book
+        -> package yourpackage.dto
+
+    input BookInput {
+        allScalarFields()
+        #highlight-next-line
+        id(store) // as storeId
+        #highlight-next-line
+        id(authors) as authorIds
+    }
+
+    specification BookSpecication {
+        like/i(name)
+        #highlight-next-line
+        associatedIdIn(store) as storeIds
+        #highlight-next-line
+        associatedIdNotIn(store) as excludedStoreIds
+    }
+    ```

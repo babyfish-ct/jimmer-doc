@@ -8,10 +8,10 @@ import Admonition from "@theme/Admonition";
 export const DynamicJoinProblem: FC = memo(() => {
     const zh = useZh();
     return zh ? 
-        <ViewMore buttonText='行业空白' title='Jimmer DSL弥补行业空白'>
+        <ViewMore buttonText='JVM生态的空白' title='Jimmer DSL弥补JVM生态的空白'>
             {INDUSTRY_GRAP_ZH}
         </ViewMore> :
-        <ViewMore buttonText='industry gap' title='Jimmer DSL fills gap of industry'>
+        <ViewMore buttonText='gap in the JVM ecosystem' title='Jimmer DSL fills gap of industry'>
             {INDUSTRY_GRAP_EN}
         </ViewMore>;
 });
@@ -22,7 +22,7 @@ export const DynamicJoinProblemDialog: FC<{
 }> = memo(props => {
     const zh = useZh();
     return zh ? 
-        <ViewDialog title='Jimmer DSL弥补行业空白' {...props}>
+        <ViewDialog title='Jimmer DSL弥补JVM生态的空白' {...props}>
             {INDUSTRY_GRAP_ZH}
         </ViewDialog> :
         <ViewDialog title='Jimmer DSL fills gap of industry' {...props}>

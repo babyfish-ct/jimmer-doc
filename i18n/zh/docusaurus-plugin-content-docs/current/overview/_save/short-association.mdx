@@ -1,0 +1,47 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 1. DTO代码
+
+```sh
+export yourpackage.Book
+    -> yourpackage.dto
+
+input BookInput {
+    #allScalars
+    #highlight-next-line
+    id(store) // as storeId
+    #highlight-next-line
+    id(author) as authorIds
+}
+```
+
+编译后，将会自动生成Java/Kotlin类型`BookInput`
+
+## 2. 保存代码
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@PutMapping
+public int saveBook(BookInput input) {
+    return sqlClient
+        .save(input)
+        .getTotalAffectedRowCount();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@PutMapping
+fun saveBook(input: Book): Int =
+    sqlClient
+        .save(input)
+        .totalAffectedRowCount
+```
+
+</TabItem>
+</Tabs>

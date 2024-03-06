@@ -13,7 +13,7 @@ There are three groundbreaking capabilities:
 
 -   [Dynamic Join](./dynamic-join)
 
-    This addresses a huge industry gap, enabling easy complex dynamic queries
+    This addresses a huge gap in the JVM ecosystem, enabling easy complex dynamic queries
 
 -   [Smart Paging](./paging) 
 

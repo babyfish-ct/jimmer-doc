@@ -1,0 +1,163 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 定义数据查询方法
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookRepository.java" 
+@Repository
+public class BookRepository {
+
+    private final JSqlClient sqlClient;
+
+    public BookRepository(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
+    List<Book> findBooks(
+        // highlight-next-line
+        @Nullable String name, 
+        // highlight-next-line
+        @Nullable BigDecimal minPrice,
+        // highlight-next-line  
+        @Nullable BigDecimal maxPrice, 
+        @Nullable Fetcher<Book> fetcher
+    ) {  
+        BookTable table = Tables.BOOK_TABLE;
+
+        return sqlClient
+            .createQuery(table)
+            // highlight-next-line
+            .where(table.name().ilikeIf(name)) 
+            // highlight-next-line
+            .where(table.price().betweenIf(minPrice, maxPrice)) 
+            .select(table.fetch(fetcher))
+            .execute();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookRepository.kt" 
+@Repository  
+class BookRepository(
+    private val sqlClient: KSqlClient
+) {
+
+    fun findBooks( 
+        // highlight-next-line
+        name: String? = null,
+        // highlight-next-line
+        minPrice: BigDecimal? = null, 
+        // highlight-next-line
+        maxPrice: BigDecimal? = null,
+        fetcher: Fetcher<Book>? = null
+    ): List<Book> =  
+        sqlClient  
+            .createQuery(Book::class) {
+                // highlight-next-line
+                where(table.name `ilike?` name) 
+                // highlight-next-line 
+                where(table.price.`between?`(minPrice, maxPrice)) 
+            }
+            .select(table.fetch(table))
+            .execute() 
+}
+```
+
+</TabItem> 
+</Tabs>
+
+:::info
+这里，Java的`ilikeIf`、`betweenIf`以及kotlin的`ilike?`、`between?`是动态谓词。如果参数为null或""，直接忽略相关的SQL条件。
+
+> 对于静态谓词 *(比如，`ilike`、`between`)* 而言，任何参数为null都将被视为用户代码的BUG。
+:::
+
+## 用法1: 不指定参数
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = bookRepository.findBooks(
+    null, // nae
+    null, // minPrice
+    null, // maxPrice
+    null
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = bookRepository.findBooks()
+```
+
+</TabItem>
+</Tabs>
+
+不会生成任何where条件，SQL如下
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+// highlight-next-line
+// No SQL predicates
+```
+
+## 用法2: 指定参数
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = bookRepository.findBooks(
+    "GraphQL", // name
+    new BigDecimal(20), // minPrice
+    new BigDecimal(50), // maxPrice
+    null
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = bookRepository.findBooks(
+    name = "GraphQL",
+    minPrice = BigDecimal(20),
+    maxPrice = BigDecimal(50)
+)
+```
+
+</TabItem>
+</Tabs>
+
+会生成所有where条件，SQL如下
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+where
+        /* highlight-next-line */
+        lower(tb_1_.NAME) like ? /* %graphql% */
+    and
+        /* highlight-next-line */
+        (tb_1_.PRICE between ? /* 20 */ and ? /* 50 */)
+```

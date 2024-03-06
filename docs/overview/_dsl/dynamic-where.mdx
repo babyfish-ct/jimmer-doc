@@ -1,0 +1,164 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Define data query method
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookRepository.java" 
+@Repository
+public class BookRepository {
+
+    private final JSqlClient sqlClient;
+
+    public BookRepository(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
+    List<Book> findBooks(
+        // highlight-next-line
+        @Nullable String name, 
+        // highlight-next-line
+        @Nullable BigDecimal minPrice,
+        // highlight-next-line  
+        @Nullable BigDecimal maxPrice, 
+        @Nullable Fetcher<Book> fetcher
+    ) {  
+        BookTable table = Tables.BOOK_TABLE;
+
+        return sqlClient
+            .createQuery(table)
+            // highlight-next-line
+            .where(table.name().ilikeIf(name)) 
+            // highlight-next-line
+            .where(table.price().betweenIf(minPrice, maxPrice)) 
+            .select(table.fetch(fetcher))
+            .execute();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookRepository.kt" 
+@Repository  
+class BookRepository(
+    private val sqlClient: KSqlClient
+) {
+
+    fun findBooks( 
+        // highlight-next-line
+        name: String? = null,
+        // highlight-next-line
+        minPrice: BigDecimal? = null, 
+        // highlight-next-line
+        maxPrice: BigDecimal? = null,
+        fetcher: Fetcher<Book>? = null
+    ): List<Book> =  
+        sqlClient  
+            .createQuery(Book::class) {
+                // highlight-next-line
+                where(table.name `ilike?` name) 
+                // highlight-next-line 
+                where(table.price.`between?`(minPrice, maxPrice)) 
+            }
+            .select(table.fetch(table))
+            .execute() 
+}
+```
+
+</TabItem> 
+</Tabs>
+
+:::info
+Here, Java's `ilikeIf`, `betweenIf`, and Kotlin's `ilike?`, `between?` are dynamic predicates. 
+If the parameter is null or "", the relevant SQL condition will be ignored directly.
+
+> For static predicates *(such as, `ilike`, `between`)*, any null parameter will be treated as a bug in the user's code.
+:::
+
+## Usage 1: Do not specify arguments
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = bookRepository.findBooks(
+    null, // nae
+    null, // minPrice
+    null, // maxPrice
+    null
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = bookRepository.findBooks()
+```
+
+</TabItem>
+</Tabs>
+
+No where condition will be generated, the SQL is as follows
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+// highlight-next-line
+// No SQL predicates
+```
+
+Usage 2: Specify arguments
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = bookRepository.findBooks(
+    "GraphQL", // name
+    new BigDecimal(20), // minPrice
+    new BigDecimal(50), // maxPrice
+    null
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = bookRepository.findBooks(
+    name = "GraphQL",
+    minPrice = BigDecimal(20),
+    maxPrice = BigDecimal(50)
+)
+```
+
+</TabItem>
+</Tabs>
+
+All where conditions will be generated, the SQL is as follows
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID
+from BOOK tb_1_
+where
+        /* highlight-next-line */
+        lower(tb_1_.NAME) like ? /* %graphql% */
+    and
+        /* highlight-next-line */
+        (tb_1_.PRICE between ? /* 20 */ and ? /* 50 */)
+```

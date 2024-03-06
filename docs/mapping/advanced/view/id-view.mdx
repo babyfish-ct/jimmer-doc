@@ -515,3 +515,65 @@ The only difference brought by different choices is that the Jackson [visibility
 
 That is, properties fetched directly will be serialized by Jackson, while properties not fetched directly will be ignored.
 :::
+
+Here is the English translation of the file, with the code indentation preserved:
+
+## Do Not Abuse
+
+:::caution
+Without the assistance of DTOs, hope that the entity itself can express associated ids, is the only scenario where it is appropriate to use `@IdView`.
+
+Other features make no assumptions about whether an association property has a corresponding `@IdView` property.
+:::
+
+-   Using associated IDs in the SQL DSL
+
+    Even if an entity's one-to-one or many-to-one association property does not have a corresponding `@IdView` property, you can still use associated id expressions in the SQL DSL, for example:
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    where(table.storeId().eq(2L));
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    where(table.storeId eq 2L)
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    > Of course, if you are not satisfied with the auto-generated name for the associated id (e.g., `storeId` here), you can provide an `@IdView` property to change its name.
+
+-   Using associated ids in the DTO language
+
+    The DTO language does not require `@IdView` properties at all. Even if an entity's associated property already has a corresponding `@IdView` property, 
+    it is not recommended to use it in the DTO language, as this is a fragile assumption. 
+    Once that `@IdView` property is removed, the DTO code cannot be correctly compiled until it is synchronized with the change.
+
+    The DTO language should directly use the association propertes, for example:
+
+    ```sh
+    export yourpackage.Book
+        -> package yourpackage.dto
+
+    input BookInput {
+        allScalarFields()
+        #highlight-next-line
+        id(store) // as storeId
+        #highlight-next-line
+        id(authors) as authorIds
+    }
+
+    specification BookSpecication {
+        like/i(name)
+        #highlight-next-line
+        associatedIdIn(store) as storeIds
+        #highlight-next-line
+        associatedIdNotIn(store) as excludedStoreIds
+    }
+    ```

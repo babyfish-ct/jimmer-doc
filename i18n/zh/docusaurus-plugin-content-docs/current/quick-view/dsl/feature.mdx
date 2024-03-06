@@ -173,7 +173,7 @@ class BookRepository(
     </TabItem>
     </Tabs>
 
-    不会生成任何where条件，SQL如下
+    会生成所有where条件，SQL如下
 
     ```sql
     select
@@ -282,6 +282,8 @@ from BOOK b
 inner join BOOK_STORE s on b.STORE_ID = s.ID
 ```
 
+你也可以使用外连接，Java代码为`table.store(JoinType.LEFT)`，kotlinJava代码为<code>table.&#96;storeId?&#96;</code>。
+
 事实上，假如实体模型更加丰富，可以书写更长的路径，比如`table.store().city().province()`。
 
 这里，仅仅做入门示范和快速预览，没必要构建更丰富的实体模型以演示更长的路径，最短表链连接路径`table.store()`足够。
@@ -329,6 +331,8 @@ val books = bookRepository.findBooks()
 
 :::tip
 如果在DSL中创建了表连接但没有被真正使用，那么表连接将会被自动忽略，最终在生成的SQL中没有对应的SQL连接。
+
+> 注意：Jimmer没有`JPA`中的`join fetch`概念，join的唯一目的是为了被其他SQL表达式引用，所以未被真正使用的join对象会被忽略。
 :::
 
 生成的SQL如下
@@ -434,10 +438,10 @@ public class BookRepository {
         @Nullable BigDecimal maxPrice,
         @Nullable String storeName,
         @Nullable String storeWebsite,
+        // highlight-next-line
         @Nullable String authorName,
         // highlight-next-line
         @Nullable Gender authorGender,
-        // highlight-next-line
         @Nullable Fetcher<Book> fetcher
     ) {
         BookTable table = Tables.BOOK_TABLE;
@@ -482,7 +486,9 @@ class BookRepository(
         maxPrice: BigDecimal? = null,
         storeName: String? = null,
         storeWebsite: String? = null,
+        // highlight-next-line
         authorName: String? = null,
+        // highlight-next-line
         authorGender: String? = null,
         fetcher: Fetcher<Book>? = null
     ): List<Book> =

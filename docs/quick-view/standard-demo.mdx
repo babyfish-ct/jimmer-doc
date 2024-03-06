@@ -6,6 +6,8 @@ title: Standard Examples
 import {ViewMore} from '@site/src/components/ViewMore';
 import {CacheConsistencyPanel} from '@site/src/components/HomepageFeatures/CacheConsistency';
 import {SwaggerAuthorize, GraphiqlHeaders} from '@site/src/components/Image';
+import Admonition from "@theme/Admonition";
+
 
 Through the previous chapters:
 
@@ -111,6 +113,12 @@ This project provides 5 examples, each with Java and Kotlin versions, for a tota
                         </ul>
                     </li>
                 </ol>
+                <Admonition type="note">
+                    After starting all projects locally, if there is a communication failure 
+                    between the microservices and it persists after waiting for some time, 
+                    please visit http://localhost:7000 to open the eureka registration center,
+                    add the hostnames of the various registered services to your local hosts file.
+                </Admonition>
             </td>
             <td>★</td>
         </tr>

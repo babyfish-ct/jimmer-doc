@@ -146,8 +146,10 @@ Therefore, the subsequent save code needs to adjust the data uploaded by the use
 <TabItem value="java" label="Java">
 
 ```java
-@PutMapping
-public int saveTree(RecursiveTreeInput input) {
+@PutMapping("/tree")
+public int saveTree(
+    @RequestBody RecursiveTreeInput input
+) {
     TreeNode treeNode = TreeNodeDraft.$
         .produce(input.toEntity(), draft -> {
             // As discussed earlier: before saving, 
@@ -167,8 +169,10 @@ public int saveTree(RecursiveTreeInput input) {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-@PutMapping
-fun saveTree(input: RecursiveTreeInput): Int 
+@PutMapping("/tree")
+fun saveTree(
+    @RequestBody input: RecursiveTreeInput
+): Int 
     sqlClient
         .save(
             input.toEntity().copy {

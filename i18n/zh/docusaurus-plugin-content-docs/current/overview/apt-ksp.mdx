@@ -11,7 +11,7 @@ import Precompiler from '../_shared/precompiler.mdx';
 
 Jimmer高度依赖于JVM生态的预编译技术：
 
--   对于Java而言，就是APT，即[Annotation Processor](https://www.jetbrains.com/help/idea/annotation-processors-support.html)
+-   对于Java而言，就是APT，即[Annotation Processor Tool](https://www.jetbrains.com/help/idea/annotation-processors-support.html)
 
 -   Kotlin而言，就是KSP，即[Kotlin Symbol Processing](https://kotlinlang.org/docs/ksp-overview.html)
 
@@ -197,7 +197,7 @@ val fetcher =
     上述Java代码中频繁出现`.$`，`$`这些类的静态只读字段。
 
 其实，使用`$`是最简单的使用方式。然而，考虑到部分Java开发人员对`$`存在主观偏见，对定义实体类型的Java子项目而言，
-Jimmer的Annotations还是生成4个汇总类型:
+Jimmer的APT还是生成4个汇总类型:
 
 -   `Objects`类
 

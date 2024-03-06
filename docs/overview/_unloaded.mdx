@@ -28,7 +28,9 @@ println(book.price)
 </TabItem>
 </Tabs>
 
-这里，Book对象具备`name`和`edition`属性，但是，被标记处的代码企图访问不存在的`price`属性，这会导致如下异常:
+Here, the Book object has `name` and `edition` properties, 
+but the highlighted code attempts to access the non-existent `price` property, 
+which will lead to the following exception:
 
 ```
 Exception in thread "main" org.babyfish.jimmer.UnloadedException: The property "yourpackage.Book.price" is unloaded

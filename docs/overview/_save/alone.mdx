@@ -20,8 +20,10 @@ After compilation, Java/Kotlin type `BookInput` will be automatically generated.
 <TabItem value="java" label="Java">
 
 ```java
-@PutMapping
-public int saveBook(BookInput input) {
+@PutMapping("/book")
+public int saveBook(
+    @RequestBody BookInput input
+) {
     return sqlClient
         .save(input)
         .getTotalAffectedRowCount();
@@ -32,8 +34,10 @@ public int saveBook(BookInput input) {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-@PutMapping
-fun saveBook(input: Book): Int =
+@PutMapping("/book")
+fun saveBook(
+    @RequestBody input: Book
+): Int =
     sqlClient
         .save(input)
         .totalAffectedRowCount

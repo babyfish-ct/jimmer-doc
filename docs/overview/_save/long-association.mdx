@@ -25,8 +25,10 @@ After compilation, Java/Kotlin type `CompositeBookStoreInput` will be automatica
 <TabItem value="java" label="Java">
 
 ```java
-@PutMapping
-public int saveBookStore(CompositeBookStoreInput input) {
+@PutMapping("/store")
+public int saveBookStore(
+    @RequestBody CompositeBookStoreInput input
+) {
     return sqlClient
         .save(input)
         .getTotalAffectedRowCount();
@@ -37,8 +39,10 @@ public int saveBookStore(CompositeBookStoreInput input) {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-@PutMapping
-fun saveBookStore(input: CompositeBookStoreInput): Int =
+@PutMapping("/store")
+fun saveBookStore(
+    @RequestBody input: CompositeBookStoreInput
+): Int =
     sqlClient
         .save(input)
         .totalAffectedRowCount

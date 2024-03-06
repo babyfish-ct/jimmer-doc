@@ -134,7 +134,7 @@ export const ShortAssociation: FC = memo(() => {
                     </Select>
                 </FormControl>
                 <FormControl>
-                    <Button onClick={onSubmitClick} variant="contained">提交</Button>
+                    <Button onClick={onSubmitClick} variant="contained">{isZh ? "提交" : "Submit" }</Button>
                 </FormControl>
             </Stack>
             <Dialog

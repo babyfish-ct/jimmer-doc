@@ -49,6 +49,35 @@ So some additional code needs to be generated at compile-time based on user-defi
 
 </TabItem>
 
+<TabItem value="java_gradle_plugin" label="Java (Gradle Plugin)">
+
+```groovy title="build.gradle"
+jimmer {
+    // Ensure that jimmer-sql is only depended upon during code generation and compilation.
+    ormCompileOnly = true
+
+    ...other configurations omitted...
+}
+
+...other code omitted...
+```
+
+</TabItem>
+<TabItem value="kotlin_gradle_plugin" label="Kotlin (Gradle Plugin)">
+
+```kotlin title="build.gradle.kts"
+jimmer {
+    // Ensure that jimmer-sql is only depended upon during code generation and compilation.
+    ormCompileOnly = true
+
+    ...other configurations omitted...
+}
+
+...other code omitted...
+```
+
+</TabItem>
+
 <TabItem value="java_gradle" label="Java (Gradle)">
 
 ```groovy

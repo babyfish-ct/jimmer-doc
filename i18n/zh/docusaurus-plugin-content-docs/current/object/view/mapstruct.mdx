@@ -70,7 +70,7 @@ Jimmer的实体对象是动态的 *(和Hibernate3引入的标量属性惰性化�
 
     -   对于Java而言，`jimmer-mapstruct-apt`被`jimmer-apt`所包含
 
-    -   对于Kotlin而言，需同时在maven或gradle配置文件中使用`jimmer-ksp`和`jimmer-mapstruct-apt`
+    -   对于Kotlin而言，需同时在maven或gradle配置文件中使用`jimmer-ksp`和`jimmer-mapstruct-apt`。如果使用Gradle插件，当你引入了MapStruct的kapt依赖时，插件会自动引入`jimmer-mapstruct-apt`的依赖。
 
 <Tabs groupId="buildTool">
 <TabItem value="java_maven" label="Java(Maven)">
@@ -124,6 +124,22 @@ Jimmer的实体对象是动态的 *(和Hibernate3引入的标量属性惰性化�
 ```
 
 </TabItem>
+<TabItem value="java_gradle_plugin" label="Java(Gradle插件)">
+
+```groovy title="build.gradle"
+dependencies {
+
+    implementation "org.projectlombok:lombok:${lombok.version}" ➀
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
+
+    annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➍
+
+    ...省略其他依赖...
+}
+```
+
+</TabItem>
 <TabItem value="java_gradle" label="Java(Gradle)">
 
 ```groovy title="build.gradle"
@@ -141,7 +157,7 @@ dependencies {
 ```
 
 </TabItem>
-<TabItem value="kotin_maven" label="Kotlin(Maven)">
+<TabItem value="kotlin_maven" label="Kotlin(Maven)">
 
 ```xml title="pom.xml"
 ...省略其他代码...
@@ -217,18 +233,46 @@ dependencies {
 ```
 
 </TabItem>
-<TabItem value="kotin_gralde" label="Kotlin(Gradle.kts)">
+<TabItem value="kotlin_gradle_plugin" label="Kotlin(Gradle插件)">
+
+```kotlin title="build.gradle.kts"
+plugins {
+    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
+    id("com.google.devtools.ksp") version "1.7.10+"
+    kotlin("kapt") version "1.7.10"
+
+    ...省略其他插件...
+}
+
+jimmer {
+    version = "${jimmerVersion}"
+
+    ...省略其他配置...
+}
+
+dependencies {
+    
+    implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
+    kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
+
+    ...省略其他依赖...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
 
 ```kotlin title="build.gradle.kts"
 plugins {
     id("com.google.devtools.ksp") version "1.7.10-1.0.6"
-    kotlin("kapt") version "1.6.21"
+    kotlin("kapt") version "1.7.10"
 
     ...省略其他插件...
 }
+
 dependencies {
     
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
+    implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
 
     ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}") ➋
     kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌

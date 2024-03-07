@@ -70,7 +70,7 @@ For converting static POJOs to Jimmer dynamic objects, MapStruct does not know h
 
     - For Java, `jimmer-mapstruct-apt` is included in `jimmer-apt`
 
-    - For Kotlin, `jimmer-ksp` and `jimmer-mapstruct-apt` must be used together in the maven or gradle configuration file
+    - For Kotlin, `jimmer-ksp` and `jimmer-mapstruct-apt` must be used together in the maven or gradle configuration file. If you use Gradle plugin Jimmer, the plugin will automatically configure it for you when you have the MapStruct kapt dependency.
 
 <Tabs groupId="buildTool">
 <TabItem value="java_maven" label="Java(Maven)">
@@ -124,6 +124,22 @@ For converting static POJOs to Jimmer dynamic objects, MapStruct does not know h
 ```
 
 </TabItem>
+<TabItem value="java_gradle_plugin" label="Java(Gradle Plugin)">
+
+```groovy title="build.gradle"
+dependencies {
+
+    implementation "org.projectlombok:lombok:${lombok.version}" ➀
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
+
+    annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➍
+
+    ...omit other dependencies...
+}
+```
+
+</TabItem>
 <TabItem value="java_gradle" label="Java(Gradle)">
 
 ```groovy title="build.gradle"
@@ -141,7 +157,7 @@ dependencies {
 ```
 
 </TabItem>
-<TabItem value="kotin_maven" label="Kotlin(Maven)">
+<TabItem value="kotlin_maven" label="Kotlin(Maven)">
 
 ```xml title="pom.xml" 
 ...omit other code...
@@ -217,18 +233,46 @@ dependencies {
 ```
 
 </TabItem>
-<TabItem value="kotin_gralde" label="Kotlin(Gradle.kts)">
+<TabItem value="kotlin_gradle_plugin" label="Kotlin(Gradle Plugin)">
+
+```kotlin title="build.gradle.kts"
+plugins {
+    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
+    id("com.google.devtools.ksp") version "1.7.10+"
+    kotlin("kapt") version "1.7.10"
+
+    ...omit other plugins...
+}
+
+jimmer {
+    version = "${jimmerVersion}"
+
+    ...omit other configurations...
+}
+
+dependencies {
+    
+    implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
+    kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
+
+    ...omit other dependencies...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
 
 ```kotlin title="build.gradle.kts"
 plugins {
     id("com.google.devtools.ksp") version "1.7.10-1.0.6"
-    kotlin("kapt") version "1.6.21"
+    kotlin("kapt") version "1.7.10"
 
     ...omit other plugins...
 }
+
 dependencies {
     
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
+    implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
 
     ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}") ➋
     kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌

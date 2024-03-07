@@ -48,6 +48,8 @@ Jimmer本身是高度中立的，可以脱离spring-boot使用；但同时也提
         </tbody>
     </table>    
 
+如果你使用的构建工具是Gradle，也可以使用社区提供的第三方Gradle插件，自动识别项目类型，自动添加依赖。
+
 相比于独立使用而言，和Spring-Boot结合使用更简单，因此本教程一律使用后者进行演示。
 
 修改gradle或maven文件，加入依赖
@@ -68,6 +70,48 @@ Jimmer本身是高度中立的，可以脱离spring-boot使用；但同时也提
     </dependency>
     ...省略其他依赖...
 </dependencies>
+```
+
+</TabItem>
+<TabItem value="gradle_plugin" label="Gradle插件">
+
+```groovy title="build.gradle"
+plugins {
+    // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
+    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
+    // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
+    // 如果你的项目使用 Kotlin 语言作为主要开发语言，为使本插件正确生效，必须确保你的项目应用了 KSP 插件
+    // KSP插件的作用详见 “初识Jimmer-APT/KSP”
+    id "com.google.devtools.ksp" version "1.7.10+"
+
+    ... 省略其它插件 ...
+}
+
+jimmer {
+    // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
+    version = "0.8.104"
+}
+```
+
+</TabItem>
+<TabItem value="gradle_plugin_kts" label="Gradle插件(kts)">
+
+```kotlin title="build.gradle.kts"
+plugins {
+    // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
+    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
+    // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
+    // 如果你的项目使用 Kotlin 语言作为主要开发语言，为使本插件正确生效，必须确保你的项目应用了 KSP 插件
+    // KSP插件的作用详见 “初识Jimmer-APT/KSP”
+    id("com.google.devtools.ksp") version "1.7.10+"
+
+    ... 省略其它插件 ...
+}
+
+jimmer {
+    // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
+    version = "0.8.104"
+}
 ```
 
 </TabItem>

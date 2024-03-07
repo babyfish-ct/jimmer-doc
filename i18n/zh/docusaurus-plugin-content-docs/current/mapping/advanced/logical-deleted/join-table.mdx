@@ -536,7 +536,7 @@ val authors: List<Author>
 @JoinTable(
     name = "BOOK_AUTHOR_MAPPING",
     joinColumnName = "BOOK_ID",
-    inverseColumnName = "AUTHOR_ID",
+    inverseJoinColumnName = "AUTHOR_ID",
     logicalDeletedFilter = 
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
@@ -554,7 +554,7 @@ List<Author> authors();
 @JoinTable(
     name = "BOOK_AUTHOR_MAPPING",
     joinColumnName = "BOOK_ID",
-    inverseColumnName = "AUTHOR_ID",|
+    inverseJoinColumnName = "AUTHOR_ID",|
     logicalDeletedFilter = 
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",

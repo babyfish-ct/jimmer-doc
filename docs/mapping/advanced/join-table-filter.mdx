@@ -28,7 +28,7 @@ public interface Shop {
     @joinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
-        inverseColumnName = "CUSTOMER_ID",
+        inverseJoinColumnName = "CUSTOMER_ID",
         // highlight-next-line
         readonly = true
     )
@@ -38,7 +38,7 @@ public interface Shop {
     @joinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
-        inverseColumnName = "CUSTOMER_ID",
+        inverseJoinColumnName = "CUSTOMER_ID",
         // highlight-next-line
         filter = @JoinTable.JoinTableFilter(
             columnName = "MAPPING_TYPE",
@@ -52,7 +52,7 @@ public interface Shop {
     @joinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
-        inverseColumnName = "CUSTOMER_ID",
+        inverseJoinColumnName = "CUSTOMER_ID",
         // highlight-next-line
         filter = @JoinTable.JoinTableFilter(
             columnName = "MAPPING_TYPE",
@@ -80,7 +80,7 @@ interface Shop {
     @joinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
-        inverseColumnName = "CUSTOMER_ID",
+        inverseJoinColumnName = "CUSTOMER_ID",
         // highlight-next-line
         readonly = true
     )
@@ -90,7 +90,7 @@ interface Shop {
     @joinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
-        inverseColumnName = "CUSTOMER_ID",
+        inverseJoinColumnName = "CUSTOMER_ID",
         // highlight-next-line
         filter = JoinTable.JoinTableFilter(
             columnName = "MAPPING_TYPE",
@@ -104,7 +104,7 @@ interface Shop {
     @joinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
-        inverseColumnName = "CUSTOMER_ID",
+        inverseJoinColumnName = "CUSTOMER_ID",
         // highlight-next-line
         filter = JoinTable.JoinTableFilter(
             columnName = "MAPPING_TYPE",
@@ -452,7 +452,7 @@ A common case is when a project has many kinds of data, and each kind of data ca
                 name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
-            inverseColumnName = "TAG_ID",
+            inverseJoinColumnName = "TAG_ID",
             filter = @JoinTable.JoinTableFilter(
                 columnName = "SOURCE_TYPE",
                 type = String.class,
@@ -479,7 +479,7 @@ A common case is when a project has many kinds of data, and each kind of data ca
                 name = "SOURCE_ID", 
                 foreignKeyType = ForeignKeyType.FAKE
             ),
-            inverseColumnName = "TAG_ID",
+            inverseJoinColumnName = "TAG_ID",
             filter = JoinTable.JoinTableFilter(
                 columnName = "SOURCE_TYPE",
                 type = String.class,
@@ -511,7 +511,7 @@ A common case is when a project has many kinds of data, and each kind of data ca
                 name = "SOURCE_ID",  
                 foreignKeyType = ForeignKeyType.FAKE
             ),
-            inverseColumnName = "TAG_ID",
+            inverseJoinColumnName = "TAG_ID",
             filter = @JoinTable.JoinTableFilter(
                 columnName = "SOURCE_TYPE",
                 type = String.class,
@@ -538,7 +538,7 @@ A common case is when a project has many kinds of data, and each kind of data ca
                 name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
-            inverseColumnName = "TAG_ID",
+            inverseJoinColumnName = "TAG_ID",
             filter = JoinTable.JoinTableFilter(
                 columnName = "SOURCE_TYPE",
                 type = String.class, 
@@ -570,7 +570,7 @@ A common case is when a project has many kinds of data, and each kind of data ca
                 name = "SOURCE_ID",  
                 foreignKeyType = ForeignKeyType.FAKE
             ),
-            inverseColumnName = "TAG_ID",
+            inverseJoinColumnName = "TAG_ID",
             filter = @JoinTable.JoinTableFilter(
                 columnName = "SOURCE_TYPE",
                 type = String.class,
@@ -597,7 +597,7 @@ A common case is when a project has many kinds of data, and each kind of data ca
                 name = "SOURCE_ID", 
                 foreignKeyType = ForeignKeyType.FAKE
             ),
-            inverseColumnName = "TAG_ID",
+            inverseJoinColumnName = "TAG_ID",
             filter = JoinTable.JoinTableFilter(
                 columnName = "SOURCE_TYPE",
                 type = String.class,
@@ -696,7 +696,7 @@ public interface Book {
     @JoinTable(
         name = "BOOK_AUTHOR_MAPPING",
         joinColumnName = "BOOK_ID",
-        inverseColumnName = "AUTHOR_ID", 
+        inverseJoinColumnName = "AUTHOR_ID", 
         readonly = true
     )
     List<Author> authors();
@@ -706,7 +706,7 @@ public interface Book {
     @JoinTable(
         name = "BOOK_AUTHOR_MAPPING", 
         joinColumnName = "BOOK_ID",
-        inverseColumnName = "AUTHOR_ID",
+        inverseJoinColumnName = "AUTHOR_ID",
         filter = @JoinTable.JoinTableFilter(
             columnName = "MAPPING_TYPE",
             type = String.class,
@@ -719,7 +719,7 @@ public interface Book {
     @JoinTable(
         name = "BOOK_AUTHOR_MAPPING",
         joinColumnName = "BOOK_ID",
-        inverseColumnName = "AUTHOR_ID",
+        inverseJoinColumnName = "AUTHOR_ID",
         filter = @JoinTable.JoinTableFilter(
             columnName = "MAPPING_TYPE",
             type = String.class, 
@@ -743,7 +743,7 @@ interface Book {
     @JoinTable(
         name = "BOOK_AUTHOR_MAPPING",
         joinColumnName = "BOOK_ID",
-        inverseColumnName = "AUTHOR_ID",
+        inverseJoinColumnName = "AUTHOR_ID",
         readonly = true
     )
     val authors: List<Author>
@@ -753,7 +753,7 @@ interface Book {
     @JoinTable(
         name = "BOOK_AUTHOR_MAPPING",
         joinColumnName = "BOOK_ID",
-        inverseColumnName = "AUTHOR_ID",
+        inverseJoinColumnName = "AUTHOR_ID",
         filter = JoinTable.JoinTableFilter(
             columnName = "MAPPING_TYPE",
             type = String.class,
@@ -766,7 +766,7 @@ interface Book {
     @JoinTable(
         name = "BOOK_AUTHOR_MAPPING",
         joinColumnName = "BOOK_ID",
-        inverseColumnName = "AUTHOR_ID",
+        inverseJoinColumnName = "AUTHOR_ID",
         filter = @JoinTable.JoinTableFilter(
             columnName = "MAPPING_TYPE",
             type = String.class,

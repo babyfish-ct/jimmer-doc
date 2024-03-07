@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2  
-title: Quick View
+title: Quick View ★
 ---
 
 This section only enumerates the usage methods of the most important functions in Jimmer to allow readers to build a preliminary impression. 

@@ -192,6 +192,186 @@ from BOOK as tb_1_
 错误地使用常量表达式会带来严重的后果。错误地把善变的数字类型参数作为常量表达式植入SQL，将会破坏SQL字符串的稳定性，最终导致数据库内部执行计划缓存命中率极低，影响性能。
 :::
 
+## 静态谓词 vs 动态谓词
+
+早期，Jimmer通过`whereIf`来支持动态查询
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public List<Book> findBooks(
+    @Nullable String name,
+    @Nullable Integer edition
+) {
+    BookTable table = BookTable.$;
+    return sqlClient
+        .createQuery(table)
+        .whereIf(
+            name != null && !name.isEmpty(),
+            () -> table().name().ilike(name)
+        )
+        .whereIf(
+            edition != null,
+            table().edition().eq(edition)
+        )
+        .select(table)
+        .execute();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+fun findBooks(
+    name: String? = null,
+    edition: Int? = null
+): List<Book> =
+    sqlClient
+        .createQuery(Book::class) {
+            name?.takeIf { it.isNotEmpty() }?.let {
+                where(table.name ilike it)
+            }
+            edition?.let {
+                where(table.edition eq it)
+            }
+            select(table)
+        }
+        .execute()
+```
+
+</TabItem>
+</Tabs>
+
+虽然`whereIf`可读性很好，但是代码相对麻烦。后来，Jimmer提供了动态谓词，上面的代码可以简化为
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public List<Book> findBooks(
+    @Nullable String name,
+    @Nullable Integer edition
+) {
+    BookTable table = BookTable.$;
+    return sqlClient
+        .createQuery(table)
+        .where(table.name().ilikeIf(name))
+        .where(table.edition().eqIf(edition))
+        .select(table)
+        .execute();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+fun findBooks(
+    name: String? = null,
+    edition: Int? = null
+): List<Book> =
+    sqlClient
+        .createQuery(Book::class) {
+            where(table.name `ilike?` name)
+            where(table.name `eq?` edition)
+            select(table)
+        }
+        .execute()
+```
+
+</TabItem>
+</Tabs>
+
+其中，Java的`ilikeIf`、`eqIf`和Kotlin的`ilike?`、`eq?`叫做动态谓词。
+
+在右操作数为null或""*(长度为0的字符串)*时，动态谓词不创建表达式，直接返回null。where调用能自动忽略null，从而实现了等价的动态查询。
+
+:::info
+相比于最初的`whereIf`，动态谓词价值并非简化代码，而是可以适应更复杂的场景，比如`or`
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public List<Book> findBooksByNameOrPriceRange(
+    @Nullable String name,
+    @Nullable BigDecimal minPrice,
+    @Nullable BigDecimal maxPrice
+) {
+    BookTable table = BookTable.$;
+    return sqlClient
+        .createQuery(table)
+        .where(
+            // highlight-next-line
+            Predicate.or(
+                table.name().eqIf(name),
+                table.price().betweenIf(minPrice, maxPrice)
+            )
+        )
+        .select(table)
+        .execute();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+fun findBooksByNameOrPriceRange(
+    name: String? = null,
+    minPrice: BigDecimal? = null,
+    maxPrice: BigDecimal? = null
+): List<Book> =
+    sqlClient
+        .createQuery(Book::class) {
+            where(
+                // highlight-next-line
+                or(
+                    table.name `eq?` name,
+                    table.price.`between?`(minPrice, maxPrice)
+                )
+            )
+            select(table)
+        }
+        .execute()
+```
+
+</TabItem>
+</Tabs>
+
+这里，`or`中所有参数是动态谓词，即，`or`的每个参数都可能为nul，而`or`也能忽略null参数。当然，如果所有参数都为`null`，那么`or`本身也拒绝创建任何表达方式，直接返回null。
+
+以下是Jimmer的所有静态谓词和动态谓词。
+
+|静态谓词|动态谓词(Java)|动态谓词(Kotlin)|
+|---|---|---|
+|eq|eqIf|&#96;eq?&#96;|
+|ne|neIf|&#96;ne?&#96;|
+|lt|ltIf|&#96;lt?&#96;|
+|le|leIf|&#96;le?&#96;|
+|gt|gtIf|&#96;gt?&#96;|
+|ge|geIf|&#96;ge?&#96;|
+|like|likeIf|&#96;like?&#96;|
+|ilike|ilikeIf|&#96;ilike?&#96;|
+|between|betweenIf|&#96;between&#96;|
+
+Q: 为什么Jimmer提供两套谓词，而非只提供动态谓词？
+
+A: 因为静态谓词对null也有特殊处理。
+
+-   eq: 自动转化为isNull()
+-   ne: 自动转化为isNotNull()
+-   其他静态谓词
+    -   Java: 将这视为用户代码的BUG，提供用户要么提供非空值，要么换动态谓词
+    -   Kotlin: 编译时禁止用户提供可能为null的值
+
+:::info
+我们已经清晰地讨论动态谓词的这个概念。为了让简化后续讨论，本文后续内容仅示范静态谓词。
+:::
+
 ## 比较
 
 1.  等于

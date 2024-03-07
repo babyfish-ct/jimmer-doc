@@ -1,6 +1,6 @@
 ---
-sidebar_position: 1
-title: 项目介绍
+sidebar_position: 2
+title: 项目介绍 ✦
 ---
 
 import Tabs from '@theme/Tabs';
@@ -14,6 +14,9 @@ import { ObjectFetcherPanel } from '@site/src/components/HomepageFeatures/Object
 import { CommunicationPanel } from '@site/src/components/HomepageFeatures/Communication';
 import { SaveCommandPanel } from '@site/src/components/HomepageFeatures/SaveCommand';
 import { CacheConsistencyPanel } from '@site/src/components/HomepageFeatures/CacheConsistency';
+import JPA from './_cmp/jpa.md';
+import ActiveRecord from './_cmp/active-record.md';
+import MyBatis from './_cmp/mybatis.md';
 import DynamicShape from '../_shared/dynamic-shape.mdx';
 import ImmutableStep from '../_shared/immutable-step.mdx';
 import Entity from './_entity.mdx';
@@ -53,45 +56,11 @@ Jimmer是一个Java/Kotlin双语框架
 
 ![mirror](@site/static/img/cmp.svg)
 
-1.  以JPA为代表的静态语言ORM
+1.  以JPA为代表的静态语言ORM <ViewMore buttonText="简要描述" title="JPA的优缺点"><JPA/></ViewMore>
 
-    -   优点：便捷，代码安全*(本身基于强类型语言，大部分代码是安全的。如果结合QueryDSL使用，则可以保证所有代码都是安全的)*
+2.  以为ActiveRecord *(Ruby)* 为代表的动态语言ORM <ViewMore buttonText="简要描述" title="Active Record(Ruby)的优缺点"><ActiveRecord/></ViewMore>
 
-    -   缺点：缺乏灵活性
-
-        -   即使JPA从2.1开始支持EntityGraph，控制被查询数据格式的灵活性仍然非常有限。该方案粒度仍然太粗，控制能力远没GraphQL这类技术的细腻。
-
-        -   保存对象时，细节行为受普通属性的`insertable`、`updateable`和关联属性的`cascade`配置的控制，这类配置在实体类型中被硬编码固化，被保存的数据结构的格式是固定的，没有灵活性。
-
-        -   如果要发挥ORM的优势，就必须查询对象的大部分非关联属性 *(少数`@Basic(fetch = FetchType.Lazy)`属性除外，它们多为lob设计)*；如果只想查询一部分属性，就必须放弃对象查询，转而使用这些属性的多列查询，丧失ORM本该有的便捷性和核心价值。
-
-2.  以为ActiveRecord *(Ruby)* 为代表的动态语言ORM
-
-    -   优点：基于动态语言的ORM，只需将动态语言对象结构的灵活性和ORM的实现结合起来，就能兼顾便捷和灵活。
-
-    -   缺点：动态语言虽然既便捷又灵活，但是代码缺乏可维护性且不利于多人协同开发是众所周知的缺点。
-
-        现代软件往往是复杂的，需要团队协作来完成，是否利于团队成员之间协同，远比个人对编程的认知重要。
-
-        这里，不想过多地讨论动静之争，但是有一点需要指出：既然选择了静态语言Java/Kotlin，就应该以静态语言的方式使用它，
-        而不能使用以jFinal为代表的将静态语言当成动态语言用的方案，更不能在应用中频繁地使用`java.util.Map`来代替数据对象。
-        这类做法违背了选择Java/Kotlin的初衷，如果一定要怎么做，为什么不直接选动态语言呢？
-
-3.  以MyBatis为代表的轻量级SQL Builder/Mapper
-
-    -   优点：直接编写SQL，随意且灵活；本身是强类型框架，具有代码安全性 *(MyBatis生态也有强类型SQL DSL扩展，可以解决原生SQL字符串导致的代码不安全问题)*
-
-    -   缺点：便捷性的严重缺失，重复劳动量极大。 
-
-        MyBatis没有统一实体的概念，而是面对具体业务场景DTO，实现ResultSet和这些DTO的映射。由于业务场景多，各DTO类型之间相似却不同，冗余度很高，导致重复劳动量极高。
-        
-        除了以孤单对象为载体的CRUD外，对多个对象彼此关联而成的复杂数据结构的支持较弱，缺乏必要抽象，导致太多繁重的低级任务被推卸给开发人员 
-        *(不少开发人员长期被这类繁重的任务所累，但自己一直没察觉)*。
-
-    :::info
-    最后，这个派别最引以为豪的观点是："直接书写SQL会带来更直接的控制力，这种直接控制力优于任何ORM"。在这个领域长期的技术停滞中，不少开发人员对此深信不疑。
-    然而，后续章节[3.4. SQL DSL](#34-sql-dsl)为此准备一个惊喜，来改变这个根深蒂固的认知。
-    :::
+3.  以MyBatis为代表的轻量级SQL Builder/Mapper <ViewMore buttonText="简要描述" title="MyBatis的优缺点"><MyBatis/></ViewMore>
 
 ### 根本原因
 
@@ -242,7 +211,7 @@ Jimmer对象允许某些属性缺失，对象缺少某个属性 *(其值未知)*
 
 参考链接：[DTO语言](../object/view/dto-language)
 
-### 3.2. Fetcher
+### 3.2. Fetcher ★
 
 :::tip
 Fetcher，是Jimmer三个最基础的核心功能之一 *(另外两个是Save Command和SQL DSL)*。
@@ -314,7 +283,7 @@ Jimmer为查询任意形状的数据结构而设计，能像[GraphQL](https://gr
 
 </details>
 
-### 3.3. Save Command
+### 3.3. Save Command ★
 
 :::tip
 Save Command，是Jimmer三个最基础的核心功能之一 *(另外两个是Fetcher和SQL DSL)*。
@@ -369,7 +338,7 @@ Save Command，是Jimmer三个最基础的核心功能之一 *(另外两个是Fe
 
 </details>
 
-### 3.4. SQL DSL
+### 3.4. SQL DSL ★
 
 :::tip
 SQL DSL，是Jimmer三个最基础的核心功能之一 *(另外两个是Fetcher和Save Command)*。

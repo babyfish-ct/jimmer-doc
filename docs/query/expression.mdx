@@ -195,6 +195,186 @@ If your project does not have this scenario, never use constant expressions. Alw
 Incorrect use of constant expressions can have serious consequences. Erroneously planting unstable numeric variables as constant expressions into SQL will break the stability of the SQL string, eventually leading to extremely low hit rates of execution plan cache in the database, impacting performance.
 :::
 
+## Static Predicates vs Dynamic Predicates
+
+Initially, Jimmer supported dynamic queries through `whereIf`:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public List<Book> findBooks(
+    @Nullable String name,
+    @Nullable Integer edition
+) {
+    BookTable table = BookTable.$;
+    return sqlClient
+        .createQuery(table)
+        .whereIf(
+            name != null && !name.isEmpty(),
+            () -> table().name().ilike(name)
+        )
+        .whereIf(
+            edition != null,
+            table().edition().eq(edition)
+        )
+        .select(table)
+        .execute();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+fun findBooks(
+    name: String? = null,
+    edition: Int? = null
+): List<Book> =
+    sqlClient
+        .createQuery(Book::class) {
+            name?.takeIf { it.isNotEmpty() }?.let {
+                where(table.name ilike it)
+            }
+            edition?.let {
+                where(table.edition eq it)
+            }
+            select(table)
+        }
+        .execute()
+```
+
+</TabItem>
+</Tabs>
+
+Although `whereIf` has good readability, the code is relatively cumbersome. Later, Jimmer provided dynamic predicates, which simplified the above code to:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public List<Book> findBooks(
+    @Nullable String name,
+    @Nullable Integer edition
+) {
+    BookTable table = BookTable.$;
+    return sqlClient
+        .createQuery(table)
+        .where(table.name().ilikeIf(name))
+        .where(table.edition().eqIf(edition))
+        .select(table)
+        .execute();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+fun findBooks(
+    name: String? = null,
+    edition: Int? = null
+): List<Book> =
+    sqlClient
+        .createQuery(Book::class) {
+            where(table.name `ilike?` name)
+            where(table.name `eq?` edition)
+            select(table)
+        }
+        .execute()
+```
+
+</TabItem>
+</Tabs>
+
+Here, `ilikeIf`, `eqIf` in Java and `ilike?`, `eq?` in Kotlin are called dynamic predicates.
+
+When the right operand is null or an empty string (string of length 0), the dynamic predicate does not create an expression and directly returns null. The `where` call can automatically ignore null, thereby achieving an equivalent dynamic query.
+
+:::info
+Compared to the initial `whereIf`, the value of dynamic predicates is not in simplifying the code but in accommodating more complex scenarios, such as `or`:
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public List<Book> findBooksByNameOrPriceRange(
+    @Nullable String name,
+    @Nullable BigDecimal minPrice,
+    @Nullable BigDecimal maxPrice
+) {
+    BookTable table = BookTable.$;
+    return sqlClient
+        .createQuery(table)
+        .where(
+            // highlight-next-line
+            Predicate.or(
+                table.name().eqIf(name),
+                table.price().betweenIf(minPrice, maxPrice)
+            )
+        )
+        .select(table)
+        .execute();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+fun findBooksByNameOrPriceRange(
+    name: String? = null,
+    minPrice: BigDecimal? = null,
+    maxPrice: BigDecimal? = null
+): List<Book> =
+    sqlClient
+        .createQuery(Book::class) {
+            where(
+                // highlight-next-line
+                or(
+                    table.name `eq?` name,
+                    table.price.`between?`(minPrice, maxPrice)
+                )
+            )
+            select(table)
+        }
+        .execute()
+```
+
+</TabItem>
+</Tabs>
+
+Here, all the arguments of `or` are dynamic predicates, meaning each argument of `or` can be null, and `or` can also ignore null arguments. Of course, if all arguments are null, then `or` itself will refuse to create any expression and directly return null.
+
+Here are all the static predicates and dynamic predicates in Jimmer:
+
+|Static Predicate|Dynamic Predicate (Java)|Dynamic Predicate (Kotlin)|
+|---|---|---|
+|eq|eqIf|&#96;eq?&#96;|
+|ne|neIf|&#96;ne?&#96;|
+|lt|ltIf|&#96;lt?&#96;|
+|le|leIf|&#96;le?&#96;|
+|gt|gtIf|&#96;gt?&#96;|
+|ge|geIf|&#96;ge?&#96;|
+|like|likeIf|&#96;like?&#96;|
+|ilike|ilikeIf|&#96;ilike?&#96;|
+|between|betweenIf|&#96;between&#96;|
+
+Q: Why does Jimmer provide two sets of predicates instead of just providing dynamic predicates?
+
+A: Because static predicates also handle null specially:
+
+- eq: automatically converted to isNull()
+- ne: automatically converted to isNotNull()
+- Other static predicates:
+    - Java: Treats this as a bug in the user's code, requiring the user to either provide a non-null value or switch to a dynamic predicate.
+    - Kotlin: Prevents the user from providing potentially null values at compile-time.
+
+:::info
+We have clearly discussed the concept of dynamic predicates. To simplify subsequent discussions, the rest of this content will only demonstrate static predicates.
+:::
+
 ## Comparison
 
 1.  Equals

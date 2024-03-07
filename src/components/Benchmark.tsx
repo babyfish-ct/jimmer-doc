@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { FC, memo, useCallback, useState } from "react";
 import {
 	Chart,
 	Tooltip,
@@ -23,7 +23,7 @@ import { ScaleOption } from "bizcharts/lib/interface";
 
 export const Benchmark: React.FC<{
     readonly type: "OPS" | "TIME",
-    readonly locale?: "zh"
+    readonly locale?: "zh",
 }> = ({type, locale}) => {
 
     const [showJdbc, setShowJdbc] = useState(type !== "OPS");
@@ -67,12 +67,13 @@ const BenchmarkChart: React.FC<{
     readonly scale: {
         readonly [field: string]: ScaleOption
     },
-    readonly showJdbc: boolean
-}> = ({rows, scale, showJdbc}) => {
+    readonly showJdbc: boolean,
+	readonly height?: number
+}> = ({rows, scale, showJdbc, height = 400}) => {
     return (
         <Chart 
         filter={showJdbc ? undefined : {"framework": (v: any) => !(v as string).startsWith("JDBC")}}
-        height={400} 
+        height={height} 
         padding="auto" 
         data={rows} 
         scale={scale} 
@@ -119,6 +120,12 @@ const BenchmarkTable: React.FC<{readonly rows: ReadonlyArray<Row>, readonly valu
         </Table>
     );
 };
+
+export const HighPreformance: FC<{
+	readonly height?: number
+}> = memo(({height}) => {
+	return <BenchmarkChart rows={HighPreformanceRows} scale={opsScale} showJdbc={false} height={height}/>;
+});
 
 const opsScale = {
 	dataCount: {
@@ -248,6 +255,8 @@ const rows: ReadonlyArray<Row> = [
 const opsRows = rows.map(item => ({...item, value: Math.round(item.value)}));
 
 const timeRows = rows.map(item => ({...item, value: Math.round(1000000 / item.value)}));
+
+const HighPreformanceRows =rows.filter(item => !item.framework.startsWith("JDBC("));
 
 function compareByDataCount(a: Row, b: Row) : number {
     return parseInt(a.dataCount) - parseInt(b.dataCount);

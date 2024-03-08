@@ -127,6 +127,18 @@ Jimmer的实体对象是动态的 *(和Hibernate3引入的标量属性惰性化�
 <TabItem value="java_gradle_plugin" label="Java(Gradle插件)">
 
 ```groovy title="build.gradle"
+plugins {
+    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
+
+    ...省略其他插件...
+}
+
+jimmer {
+    version = "${jimmerVersion}"
+
+    ...省略其他配置...
+}
+
 dependencies {
 
     implementation "org.projectlombok:lombok:${lombok.version}" ➀
@@ -134,6 +146,9 @@ dependencies {
 
     annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➍
+    
+    // 不需要手动添加 org.babyfish.jimmer:jimmer-apt 的依赖
+    // 检测到 mapstruct-processor 时，插件会自动添加该依赖
 
     ...省略其他依赖...
 }

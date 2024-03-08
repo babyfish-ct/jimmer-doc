@@ -127,6 +127,18 @@ For converting static POJOs to Jimmer dynamic objects, MapStruct does not know h
 <TabItem value="java_gradle_plugin" label="Java(Gradle Plugin)">
 
 ```groovy title="build.gradle"
+plugins {
+    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
+
+    ...omit other plugins...
+}
+
+jimmer {
+    version = "${jimmerVersion}"
+
+    ...omit other configurations...
+}
+
 dependencies {
 
     implementation "org.projectlombok:lombok:${lombok.version}" ➀
@@ -134,6 +146,9 @@ dependencies {
 
     annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➍
+    
+    // there's no need to add org.babyfish.jimmer:jimmer-apt to dependencies manually
+    // when mapstruct-processor dependency is detected，the gradle plugin will add jimmer-apt to dependencies automatically
 
     ...omit other dependencies...
 }

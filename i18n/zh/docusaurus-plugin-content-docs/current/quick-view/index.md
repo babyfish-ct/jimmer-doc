@@ -1,6 +1,6 @@
 ---
 sidebar_position: 2
-title: 快速预览
+title: 快速预览 ★
 ---
 
 本章节仅仅罗列Jimmer中最重要功能的使用方法，让读者建立一个初步印象。

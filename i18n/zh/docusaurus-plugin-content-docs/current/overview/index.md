@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: 初识Jimmer
+title: 初识Jimmer ★
 ---
 
 在这一系列文章中，我们会介绍

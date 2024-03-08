@@ -1,6 +1,6 @@
 ---
 sidebar_position: 1
-title: Introduction to Jimmer
+title: Introduction ★
 ---
 
 In this series of articles, we will introduce:

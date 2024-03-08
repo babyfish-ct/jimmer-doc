@@ -78,11 +78,8 @@ Jimmer本身是高度中立的，可以脱离spring-boot使用；但同时也提
 ```groovy title="build.gradle"
 plugins {
     // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
-    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
     // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
-    // 如果你的项目使用 Kotlin 语言作为主要开发语言，为使本插件正确生效，必须确保你的项目应用了 KSP 插件
-    // KSP插件的作用详见 “初识Jimmer - APT/KSP”
-    id "com.google.devtools.ksp" version "1.7.10+"
+    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
 
     ... 省略其它插件 ...
 }
@@ -99,11 +96,8 @@ jimmer {
 ```kotlin title="build.gradle.kts"
 plugins {
     // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
-    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
     // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
-    // 如果你的项目使用 Kotlin 语言作为主要开发语言，为使本插件正确生效，必须确保你的项目应用了 KSP 插件
-    // KSP插件的作用详见 “初识Jimmer - APT/KSP”
-    id("com.google.devtools.ksp") version "1.7.10+"
+    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
 
     ... 省略其它插件 ...
 }

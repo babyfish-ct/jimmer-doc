@@ -78,11 +78,8 @@ Modify build.gradle or pom.xml to add dependencies:
 ```groovy title="build.gradle"
 plugins {
     // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
-    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
     // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
-    // If your project primarily uses the Kotlin language for development, to ensure this plugin works correctly, you must make sure that your project has applied the KSP plugin.
-    // For detailed information of KSP plugin, please refer to “Introduction - APT/KSP”
-    id "com.google.devtools.ksp" version "1.7.10+"
+    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
 
     ... other plugins omitted ...
 }
@@ -99,11 +96,8 @@ jimmer {
 ```kotlin title="build.gradle.kts"
 plugins {
     // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
-    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
     // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
-    // If your project primarily uses the Kotlin language for development, to ensure this plugin works correctly, you must make sure that your project has applied the KSP plugin.
-    // For detailed information of KSP plugin, please refer to “Introduction - APT/KSP”
-    id("com.google.devtools.ksp") version "1.7.10+"
+    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
 
     ... other plugins omitted ...
 }

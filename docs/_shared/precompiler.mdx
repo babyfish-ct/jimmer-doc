@@ -32,44 +32,6 @@ import TabItem from '@theme/TabItem';
 ```
 
 </TabItem>
-<TabItem value="java_gradle_plugin" label="Java (Gradle Plugin)">
-
-```groovy title="build.gradle"
-plugins {
-    // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
-    // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
-    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
-
-    ...other plugins omitted...
-}
-
-jimmer {
-    // Set the Jimmer dependency version, where you can also use version range expressions such as "latest.release" or "0.+"
-    version = "${jimmerVersion}"
-}
-```
-
-</TabItem>
-<TabItem value="kotlin_gradle_plugin" label="Kotlin (Gradle Plugin)">
-
-```kotlin title="build.gradle.kts"
-plugins {
-    // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
-    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
-    // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
-    // Add KSP plugin
-    id("com.google.devtools.ksp") version "1.7.10+"
-
-    ...other plugins omitted...
-}
-
-jimmer {
-    // Set the Jimmer dependency version, where you can also use version range expressions such as "latest.release" or "0.+"
-    version = "${jimmerVersion}"
-}
-```
-
-</TabItem>
 <TabItem value="java_gradle" label="Java (Gradle)">
 
 ```groovy
@@ -107,6 +69,44 @@ kotlin {
   sourceSets.main {
     kotlin.srcDir("build/generated/ksp/main/kotlin") 
   }
+}
+```
+
+</TabItem>
+<TabItem value="java_gradle_plugin" label="Java (Gradle Plugin)">
+
+```groovy title="build.gradle"
+plugins {
+    // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
+    // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
+    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
+
+    ...other plugins omitted...
+}
+
+jimmer {
+    // Set the Jimmer dependency version, where you can also use version range expressions such as "latest.release" or "0.+"
+    version = "${jimmerVersion}"
+}
+```
+
+</TabItem>
+<TabItem value="kotlin_gradle_plugin" label="Kotlin (Gradle Plugin)">
+
+```kotlin title="build.gradle.kts"
+plugins {
+    // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
+    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
+    // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
+    // Add KSP plugin
+    id("com.google.devtools.ksp") version "1.7.10+"
+
+    ...other plugins omitted...
+}
+
+jimmer {
+    // Set the Jimmer dependency version, where you can also use version range expressions such as "latest.release" or "0.+"
+    version = "${jimmerVersion}"
 }
 ```
 

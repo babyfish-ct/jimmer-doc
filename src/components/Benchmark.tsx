@@ -121,21 +121,6 @@ const BenchmarkTable: React.FC<{readonly rows: ReadonlyArray<Row>, readonly valu
     );
 };
 
-export const HighPreformance: FC<{
-	readonly height?: number
-}> = memo(({height}) => {
-	return <BenchmarkChart rows={HighPreformanceRows} scale={opsScale} showJdbc={false} height={height}/>;
-});
-
-const opsScale = {
-	dataCount: {
-		alias: "Data count"
-	},
-	value: {
-		alias: "Ops/s"
-	}
-};
-
 const timeScale = {
 	dataCount: {
 		alias: "Data count"

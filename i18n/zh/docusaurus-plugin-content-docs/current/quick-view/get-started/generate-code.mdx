@@ -69,6 +69,34 @@ Jimmer定义数据类型需要如下4个注解之一
 ```
 
 </TabItem>
+<TabItem value="java_gradle_plugin" label="Java(Gradle插件)">
+
+```groovy title="build.gradle"
+jimmer {
+    // 使 jimmer-sql 仅在生成和编译代码时被依赖
+    ormCompileOnly = true
+
+    ...省略其它配置...
+}
+
+...省略其他代码...
+```
+
+</TabItem>
+<TabItem value="kotlin_gradle_plugin" label="Kotlin(Gradle插件)">
+
+```kotlin title="build.gradle.kts"
+jimmer {
+    // 使 jimmer-sql-kotlin 仅在生成和编译代码时被依赖
+    ormCompileOnly = true
+
+    ...省略其它配置...
+}
+
+...省略其他代码...
+```
+
+</TabItem>
 <TabItem value="java_gradle" label="Java(Gradle)">
 
 ```groovy title="build.gradle"
@@ -90,7 +118,7 @@ dependencies {
 ```
 
 </TabItem>
-<TabItem value="kotin_gralde" label="Kotlin(Gradle.kts)">
+<TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
 
 ```kotlin title="build.gradle.kts"
 ...省略其他代码...

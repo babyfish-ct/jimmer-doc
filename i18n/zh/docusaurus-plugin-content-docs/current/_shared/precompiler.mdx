@@ -32,6 +32,44 @@ import TabItem from '@theme/TabItem';
 ```
 
 </TabItem>
+<TabItem value="java_gradle_plugin" label="Java(Gradle插件)">
+
+```groovy title="build.gradle"
+plugins {
+    // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
+    // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
+    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
+
+    ... 省略其它插件 ...
+}
+
+jimmer {
+    // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
+    version = "${jimmerVersion}"
+}
+```
+
+</TabItem>
+<TabItem value="kotlin_gradle_plugin" label="Kotlin(Gradle插件)">
+
+```kotlin title="build.gradle.kts"
+plugins {
+    // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
+    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
+    // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
+    // 添加ksp插件
+    id("com.google.devtools.ksp") version "1.7.10+"
+
+    ... 省略其它插件 ...
+}
+
+jimmer {
+    // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
+    version = "${jimmerVersion}"
+}
+```
+
+</TabItem>
 <TabItem value="java_gradle" label="Java(Gradle)">
 
 ```groovy title="build.gradle"
@@ -44,7 +82,7 @@ dependencies {
 ```
 
 </TabItem>
-<TabItem value="kotin_gralde" label="Kotlin(Gradle.kts)">
+<TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
 
 ```kotlin title="build.gradle.kts"
 plugins {

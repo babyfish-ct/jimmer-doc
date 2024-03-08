@@ -282,6 +282,19 @@ However, once you introduce other APT configurations *(not necessarily Jimmer's 
 ```
 
 </TabItem>
+<TabItem value="java_gradle_plugin" label="Java(Gradle Plugin)">
+
+```groovy title="build.gradle"
+dependencies {
+        
+    ...omitted other dependencies...
+
+    // highlight-next-line
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+}
+```
+
+</TabItem>
 <TabItem value="java_gradle" label="Java(Gradle)">
 
 ```groovy title="build.gradle"

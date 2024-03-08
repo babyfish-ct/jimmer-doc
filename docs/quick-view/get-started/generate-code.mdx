@@ -6,6 +6,7 @@ title: Generate Code
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import {GeneratedJava, GeneratedKt, Generated} from '@site/src/components/Image';
+import Precompiler from '../../_shared/precompiler.mdx';
 
 ## Code Generation
 
@@ -16,153 +17,7 @@ So some additional code needs to be generated at compile-time based on user-defi
 - Java users use Annotation Processor
 - Kotlin users use KSP
 
-<Tabs groupId="buildTool">
-
-<TabItem value="java_maven" label="Java (Maven)">
-
-```xml title="pom.xml"
-...other code omitted... 
-
-<build>
-  <plugins>
-    <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-compiler-plugin</artifactId>
-      <version>3.10.1</version>
-      <configuration>
-        <!-- highlight-next-line -->
-        <annotationProcessorPaths>
-          <path>
-            <groupId>org.babyfish.jimmer</groupId>
-            <!-- highlight-next-line -->
-            <artifactId>jimmer-apt</artifactId>
-            <version>${jimmer.version}</version>
-          </path>
-        </annotationProcessorPaths>
-      </configuration>
-    </plugin>
-  </plugins>
-</build>
-
-...other code omitted...
-```
-
-</TabItem>
-
-<TabItem value="java_gradle" label="Java (Gradle)">
-
-```groovy
-dependencies {
-
-  ...other dependencies omitted...
-
-  annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}" 
-}
-```
-
-</TabItem>
-
-<TabItem value="kotlin_maven" label="Kotlin (Maven)">
-
-```xml title="pom.xml" 
-...other code omitted...
-
-<build>
-
-  <sourceDirectory>src/main/kotlin</sourceDirectory>
-  <testSourceDirectory>src/test/kotlin</testSourceDirectory>
-
-  <plugins>
-    <plugin>
-      <groupId>org.jetbrains.kotlin</groupId>
-      <artifactId>kotlin-maven-plugin</artifactId>
-      <version>${kotlin.version}</version>
-
-      <executions>
-        <execution>
-          <id>compile</id>
-          <phase>compile</phase>
-          <goals>
-            <goal>compile</goal>
-          </goals>
-        </execution>
-        
-        <execution>
-          <id>test-compile</id>
-          <phase>test-compile</phase>
-          <goals>
-            <goal>test-compile</goal> 
-          </goals>
-        </execution>
-      </executions>
-
-      <configuration>
-        <compilerPlugins>
-          <!-- Use KSP -->  
-          <!-- highlight-next-line -->
-          <compilerPlugin>ksp</compilerPlugin> 
-        </compilerPlugins>
-      </configuration>
-
-      <dependencies>
-        <dependency>
-          <groupId>com.dyescape</groupId>
-          <!-- KSP Maven plugin dependency -->
-          <!-- highlight-next-line -->
-          <artifactId>kotlin-maven-symbol-processing</artifactId>
-          <version>1.3</version> 
-        </dependency>
-
-        <dependency>
-          <groupId>org.babyfish.jimmer</groupId>
-          <!-- Apply Jimmer's KSP code generator -->
-          <!-- highlight-next-line -->
-          <artifactId>jimmer-ksp</artifactId>
-          <version>${jimmer.version}</version>
-        </dependency>
-      </dependencies>
-
-    </plugin>
-  </plugins>
-  
-</build>
-
-...other code omitted...
-```
-
-</TabItem>
-
-<TabItem value="kotlin_gradle" label="Kotlin (Gradle.kts)">
-
-```kotlin
-plugins {
-  // Add KSP plugin  
-  id("com.google.devtools.ksp") version "1.7.10-1.0.6"
-
-  ...other plugins omitted...
-}
-
-dependencies {
-
-  // Apply Jimmer's KSP code generator 
-  // highlight-next-line
-  ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
-
-  ...other dependencies omitted...
-}
-
-// Add generated code to compile path.
-// Gradle build works without this, but IntelliJ won't find generated code. 
-kotlin {
-  sourceSets.main {
-    kotlin.srcDir("build/generated/ksp/main/kotlin") 
-  }
-}
-```
-
-</TabItem>
-
-</Tabs>
+<Precompiler/>
 
 After this configuration, running Maven or Gradle will generate additional source code based on user-defined entities.
 
@@ -216,6 +71,37 @@ If entities use the ORM annotations *(eg: @Entity)*, the generated code requires
 
 </TabItem>
 
+<TabItem value="java_gradle_plugin" label="Java (Gradle Plugin)">
+
+```groovy title="build.gradle"
+jimmer {
+    // Ensure that jimmer-sql is only depended upon during code generation and compilation.
+    // highlight-next-line
+    ormCompileOnly = true
+
+    ...other configurations omitted...
+}
+
+...other code omitted...
+```
+
+</TabItem>
+<TabItem value="kotlin_gradle_plugin" label="Kotlin (Gradle Plugin)">
+
+```kotlin title="build.gradle.kts"
+jimmer {
+    // Ensure that jimmer-sql-kotlin is only depended upon during code generation and compilation.
+    // highlight-next-line
+    ormCompileOnly = true
+
+    ...other configurations omitted...
+}
+
+...other code omitted...
+```
+
+</TabItem>
+
 <TabItem value="java_gradle" label="Java (Gradle)">
 
 ```groovy 
@@ -226,6 +112,7 @@ dependencies {
   ...other dependencies omitted...
 
   // User entity code
+  // highlight-next-line
   implementation "org.babyfish.jimmer:jimmer-core:${jimmerVersion}"
 
   // Generated code  
@@ -248,6 +135,7 @@ dependencies {
   ...other dependencies omitted...
 
   // User entity code
+  // highlight-next-line
   implementation("org.babyfish.jimmer:jimmer-core:${jimmerVersion}")
 
   // Generated code

@@ -80,7 +80,7 @@ interface KCacheFactory : CacheFactory {
 </Tabs>
 
 :::info
-对于Kotin而言，为了在覆盖`createAssociatedIdListCache`时让IDE生成更好的代码，请实现`org.babyfish.jimmer.sql.kt.cache.KCacheFactory`接口。
+对于Kotlin而言，为了在覆盖`createAssociatedIdListCache`时让IDE生成更好的代码，请实现`org.babyfish.jimmer.sql.kt.cache.KCacheFactory`接口。
 
 否则，IDE生成的override方法代码时，返回类型是`Cache<*, MutableList<*>>`，而非期望的`Cache<*, List<*>>`
 :::

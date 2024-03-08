@@ -300,45 +300,19 @@ const Line: FC<
 > = ({indent = 0, tooltip, children, mouseId, hoverId, onHoverIdChange, activeId, onActiveIdChange}) => {
 
     const backgroundColor = useMemo(() => {
-        if (activeId !== undefined) {
-            if (mouseId === activeId) {
-                return ACTIVE_COLOR;
-            }
-            const index = activeId.lastIndexOf('#');
-            if (index !== -1) {
-                const noSuffix = activeId.substring(0, index);
-                if (noSuffix === mouseId) {
-                    return ACTIVE_COLOR;
-                }
-            }
-            if (mouseId === "allScalars" && activeId !== undefined) {
-                if (ALL_SCALARS.indexOf(activeId) !== -1) {
-                    return ACTIVE_COLOR;
-                }
-            }
+        if (isMatched(mouseId, activeId)) {
+            return ACTIVE_COLOR;
         }
-        if (hoverId !== undefined) {
-            if (mouseId === hoverId) {
-                return HOVER_COLOR;
-            }
-            const index = hoverId.lastIndexOf('#');
-            if (index !== -1) {
-                const noSuffix = hoverId.substring(0, index);
-                if (noSuffix === mouseId) {
-                    return HOVER_COLOR;
-                }
-            }
-            if (mouseId === "allScalars" && hoverId !== undefined) {
-                if (ALL_SCALARS.indexOf(hoverId) !== -1) {
-                    return HOVER_COLOR;
-                }
-            }
+        if (isMatched(mouseId, hoverId)) {
+            return HOVER_COLOR;
         }
         return undefined;
     }, [mouseId, hoverId, activeId]);
 
     const showTooltip = useMemo(() => {
-        return mouseId != undefined && mouseId === hoverId && tooltip !== undefined;
+        return mouseId != undefined && 
+            (isMatched(mouseId, hoverId) || hoverId === undefined && isMatched(mouseId, activeId)) && 
+            tooltip !== undefined;
     }, [mouseId, hoverId, tooltip]);
 
     const placeHolderRef = useRef<HTMLDivElement>(null);
@@ -459,6 +433,27 @@ function tooltip(isZh: boolean, prop: string, propType: 'SCALAR' | 'MANY-TO-ONE'
         default:
             return (isZh ? '标量属性' : 'Scalar property') + " `" + prop + '`';
     }
+}
+
+function isMatched(mouseId: string | undefined, contextId: string | undefined): boolean {
+    if (contextId !== undefined) {
+        if (mouseId === contextId) {
+            return true;
+        }
+        const index = contextId.lastIndexOf('#');
+        if (index !== -1) {
+            const noSuffix = contextId.substring(0, index);
+            if (noSuffix === mouseId) {
+                return true;
+            }
+        }
+        if (mouseId === "allScalars" && contextId !== undefined) {
+            if (ALL_SCALARS.indexOf(contextId) !== -1) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 const GendertedDtoType: FC = () => {

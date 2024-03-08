@@ -121,6 +121,15 @@ const BenchmarkTable: React.FC<{readonly rows: ReadonlyArray<Row>, readonly valu
     );
 };
 
+const opsScale = {
+	dataCount: {
+		alias: "Data count"
+	},
+	value: {
+		alias: "Ops/s"
+	}
+};
+
 const timeScale = {
 	dataCount: {
 		alias: "Data count"

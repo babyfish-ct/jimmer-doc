@@ -382,7 +382,7 @@ const Line: FC<
     const placeHolderRef = useRef<HTMLDivElement>(null);
     const [point, setPoint] = useState<{readonly x: number, readonly y: number}>({x: 0, y: 0});
     useEffect(() => {
-        if (showTooltip && placeHolderRef.current != null) {
+        if (placeHolderRef.current != null) {
             let e: HTMLElement = placeHolderRef.current;
             const point = {x: e.offsetHeight, y: e.offsetHeight / 2};
             while (e) {
@@ -395,7 +395,7 @@ const Line: FC<
             }
             setPoint(point);
         }
-    }, [showTooltip, placeHolderRef.current]);
+    }, [placeHolderRef.current]);
 
     const onMouseEnter = useCallback(() => {
         if (onHoverIdChange !== undefined) {

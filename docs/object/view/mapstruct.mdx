@@ -62,15 +62,17 @@ Therefore, please use `1.6.0` or higher version of [MapStruct](https://mapstruct
 
 For converting static POJOs to Jimmer dynamic objects, MapStruct does not know how to build Jimmer objects. So
 
-- Jimmer's own preprocessor *(Java's `jimmer-apt` or Kotlin's `jimmer-ksp`)* generates some MapStruct-oriented code in Draft, allowing MapStruct to build Jimmer objects through its [Builder](https://mapstruct.org/documentation/stable/reference/html/#mapping-with-builders) mode.
+-   Jimmer's own preprocessor *(Java's `jimmer-apt` or Kotlin's `jimmer-ksp`)* generates some MapStruct-oriented code in Draft, allowing MapStruct to build Jimmer objects through its [Builder](https://mapstruct.org/documentation/stable/reference/html/#mapping-with-builders) mode.
 
-- Jimmer extends MapStruct's Annotation Processor. This extension allows MapStruct to utilize the capabilities reserved for MapStruct in the generated Draft to build Jimmer objects.
+-   Jimmer extends MapStruct's Annotation Processor. This extension allows MapStruct to utilize the capabilities reserved for MapStruct in the generated Draft to build Jimmer objects.
 
     This extension is called `jimmer-mapstruct-apt`
 
-    - For Java, `jimmer-mapstruct-apt` is included in `jimmer-apt`
+    -   For Java, `jimmer-mapstruct-apt` is included in `jimmer-apt`
 
-    - For Kotlin, `jimmer-ksp` and `jimmer-mapstruct-apt` must be used together in the maven or gradle configuration file. If you use Gradle plugin Jimmer, the plugin will automatically configure it for you when you have the MapStruct kapt dependency.
+    -   For Kotlin, `jimmer-ksp` and `jimmer-mapstruct-apt` must be used together in the maven or gradle configuration file. 
+    
+        If you use [Gradle plugin Jimmer](https://github.com/ArgonarioD/gradle-plugin-jimmer), the plugin will automatically configure it for you when you have the MapStruct kapt dependency.
 
 <Tabs groupId="buildTool">
 <TabItem value="java_maven" label="Java(Maven)">
@@ -121,37 +123,6 @@ For converting static POJOs to Jimmer dynamic objects, MapStruct does not know h
 </build>
 
 ...omit other code...
-```
-
-</TabItem>
-<TabItem value="java_gradle_plugin" label="Java(Gradle Plugin)">
-
-```groovy title="build.gradle"
-plugins {
-    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
-
-    ...omit other plugins...
-}
-
-jimmer {
-    version = "${jimmerVersion}"
-
-    ...omit other configurations...
-}
-
-dependencies {
-
-    implementation "org.projectlombok:lombok:${lombok.version}" ➀
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
-
-    annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
-    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➍
-    
-    // there's no need to add org.babyfish.jimmer:jimmer-apt to dependencies manually
-    // when mapstruct-processor dependency is detected，the gradle plugin will add jimmer-apt to dependencies automatically
-
-    ...omit other dependencies...
-}
 ```
 
 </TabItem>
@@ -248,33 +219,6 @@ dependencies {
 ```
 
 </TabItem>
-<TabItem value="kotlin_gradle_plugin" label="Kotlin(Gradle Plugin)">
-
-```kotlin title="build.gradle.kts"
-plugins {
-    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
-    id("com.google.devtools.ksp") version "1.7.10+"
-    kotlin("kapt") version "1.7.10"
-
-    ...omit other plugins...
-}
-
-jimmer {
-    version = "${jimmerVersion}"
-
-    ...omit other configurations...
-}
-
-dependencies {
-    
-    implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
-    kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
-
-    ...omit other dependencies...
-}
-```
-
-</TabItem>
 <TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
 
 ```kotlin title="build.gradle.kts"
@@ -300,6 +244,64 @@ kotlin {
     sourceSets.main {
         kotlin.srcDir("build/generated/ksp/main/kotlin")
     }
+}
+```
+
+</TabItem>
+<TabItem value="java_gradle_plugin" label="Java(Gradle Plugin)">
+
+```groovy title="build.gradle"
+plugins {
+    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
+
+    ...omit other plugins...
+}
+
+jimmer {
+    version = "${jimmerVersion}"
+
+    ...omit other configurations...
+}
+
+dependencies {
+
+    implementation "org.projectlombok:lombok:${lombok.version}" ➀
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
+
+    annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➍
+    
+    // there's no need to add org.babyfish.jimmer:jimmer-apt to dependencies manually
+    // when mapstruct-processor dependency is detected，the gradle plugin will add jimmer-apt to dependencies automatically
+
+    ...omit other dependencies...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin_gradle_plugin" label="Kotlin(Gradle Plugin)">
+
+```kotlin title="build.gradle.kts"
+plugins {
+    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
+    id("com.google.devtools.ksp") version "1.7.10+"
+    kotlin("kapt") version "1.7.10"
+
+    ...omit other plugins...
+}
+
+jimmer {
+    version = "${jimmerVersion}"
+
+    ...omit other configurations...
+}
+
+dependencies {
+    
+    implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
+    kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
+
+    ...omit other dependencies...
 }
 ```
 

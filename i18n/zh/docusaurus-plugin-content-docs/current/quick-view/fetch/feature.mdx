@@ -78,12 +78,12 @@ pubic class BookRepository {
     public List<Book> findBooksByName(@Nullable String name) {
         BookTable table = Tables.BOOK_TABLE;
         return sqlClient
-                .createQuery(table)
-                .whereIf(
-                    name != null && !name.isEmpty(), 
-                    table.name().ilike(name)
-                )
-                .select(table);
+            .createQuery(table)
+            .whereIf(
+                name != null && !name.isEmpty(), 
+                table.name().ilike(name)
+            )
+            .select(table);
     }
 }
 ```
@@ -101,12 +101,14 @@ class BookRepository(
         sqlClient.findById(Book::class, id)
 
     fun findBooksByName(name: String?): List<Book> =
-        sqlClient.createQuery(Book::class) {
-            name?.takeIf { it.isNotEmpty() }?.let {
-                where(table.name ilike name);
+        sqlClient
+            .createQuery(Book::class) {
+                name?.takeIf { it.isNotEmpty() }?.let {
+                    where(table.name ilike name);
+                }
+                select(table)
             }
-            select(table)
-        }.execute()
+            .execute()
 }
 ```
 
@@ -199,15 +201,15 @@ pubic class BookRepository {
     ) {
         BookTable table = Tables.BOOK_TABLE;
         return sqlClient
-                .createQuery(table)
-                .whereIf(
-                    name != null && !name.isEmpty(), 
-                    table.name().ilike(name)
-                )
-                .select(
-                    // highlight-next-line
-                    table.fetch(fetcher)
-                );
+            .createQuery(table)
+            .whereIf(
+                name != null && !name.isEmpty(), 
+                table.name().ilike(name)
+            )
+            .select(
+                // highlight-next-line
+                table.fetch(fetcher)
+            );
     }
 }
 ```
@@ -237,15 +239,17 @@ class BookRepository(
         // highlight-next-line
         fetcher: Fetcher<Book>? = null
     ): List<Book> =
-        sqlClient.createQuery(Book::class) {
-            name?.takeIf { it.isNotEmpty() }?.let {
-                where(table.name ilike name);
+        sqlClient
+            .createQuery(Book::class) {
+                name?.takeIf { it.isNotEmpty() }?.let {
+                    where(table.name ilike name);
+                }
+                select(
+                    // highlight-next-line
+                    table.fetch(fetcher)
+                )
             }
-            select(
-                // highlight-next-line
-                table.fetch(fetcher)
-            )
-        }.execute()
+            .execute()
 }
 ```
 

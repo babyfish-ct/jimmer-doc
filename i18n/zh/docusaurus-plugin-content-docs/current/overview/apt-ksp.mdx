@@ -283,19 +283,6 @@ Java项目常常和Lombok配合使用使用。
 ```
 
 </TabItem>
-<TabItem value="java_gradle_plugin" label="Java(Gradle插件)">
-
-```groovy title="build.gradle"
-dependencies {
-        
-    ...省略其他依赖...
-
-    // highlight-next-line
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-}
-```
-
-</TabItem>
 <TabItem value="java_gradle" label="Java(Gradle)">
 
 ```groovy title="build.gradle"
@@ -306,6 +293,19 @@ dependencies {
     // highlight-next-line
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}"
+}
+```
+
+</TabItem>
+<TabItem value="java_gradle_plugin" label="Java(Gradle插件)">
+
+```groovy title="build.gradle"
+dependencies {
+        
+    ...省略其他依赖...
+
+    // highlight-next-line
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 }
 ```
 

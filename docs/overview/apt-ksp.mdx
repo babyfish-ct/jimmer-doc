@@ -282,19 +282,6 @@ However, once you introduce other APT configurations *(not necessarily Jimmer's 
 ```
 
 </TabItem>
-<TabItem value="java_gradle_plugin" label="Java(Gradle Plugin)">
-
-```groovy title="build.gradle"
-dependencies {
-        
-    ...omitted other dependencies...
-
-    // highlight-next-line
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-}
-```
-
-</TabItem>
 <TabItem value="java_gradle" label="Java(Gradle)">
 
 ```groovy title="build.gradle"
@@ -305,6 +292,29 @@ dependencies {
     // highlight-next-line
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}"
+}
+```
+
+</TabItem>
+<TabItem value="java_gradle_plugin" label="Java(Gradle Plugin)">
+
+```groovy title="build.gradle"
+plugins {
+    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
+
+    ...省略其它插件...
+}
+
+jimmer {
+    version = ...
+}
+
+dependencies {
+        
+    ...omitted other dependencies...
+
+    // highlight-next-line
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 }
 ```
 

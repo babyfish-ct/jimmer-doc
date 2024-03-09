@@ -492,7 +492,8 @@ class BookRepository(
                 select(
                     table.fetch(viewType) ❻
                 )
-            }  
+            }
+            .execute()
 }
 ```  
 

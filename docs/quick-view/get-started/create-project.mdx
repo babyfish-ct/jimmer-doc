@@ -48,14 +48,6 @@ Users can choose to use it with or without Spring Boot. Different choices requir
         </tbody>
     </table>   
 
-If you are using Gradle as your build tool, you can also use third-party Gradle plugin `tech.argonariod.gradle-plugin-jimmer` provided by the community to automatically identify the project type and add dependencies automatically.
-
-:::caution
-The `tech.argonariod.gradle-plugin-jimmer` gradle plugin is community-provided and maintained to simplify Jimmer project configuration, and it is not officially maintained by Jimmer.
-
-Repository URL: https://github.com/ArgonarioD/gradle-plugin-jimmer
-:::
-
 Compared to standalone usage, integrating with Spring Boot is simpler. So this tutorial will demonstrate the latter.
 
 Modify build.gradle or pom.xml to add dependencies:
@@ -76,6 +68,36 @@ Modify build.gradle or pom.xml to add dependencies:
   </dependency>
   ...other dependencies omitted...  
 </dependencies>
+```
+
+</TabItem>
+<TabItem value="gradle" label="Gradle">
+
+```groovy
+ext {
+  jimmerVersion = '0.8.104' 
+}
+
+dependencies {
+
+  implementation "org.babyfish.jimmer:jimmer-spring-boot-starter:${jimmerVersion}"
+
+  ...other dependencies omitted...
+}
+```
+
+</TabItem>
+<TabItem value="gradlekts" label="Gradle (Kts)">
+
+```kotlin
+val jimmerVersion = "0.8.104"
+
+dependencies {
+
+  implementation("org.babyfish.jimmer:jimmer-spring-boot-starter:${jimmerVersion}")  
+
+  ...other dependencies omitted...
+}
 ```
 
 </TabItem>
@@ -115,38 +137,15 @@ jimmer {
 ```
 
 </TabItem>
-<TabItem value="gradle" label="Gradle">
-
-```groovy
-ext {
-  jimmerVersion = '0.8.104' 
-}
-
-dependencies {
-
-  implementation "org.babyfish.jimmer:jimmer-spring-boot-starter:${jimmerVersion}"
-
-  ...other dependencies omitted...
-}
-```
-
-</TabItem>
-
-<TabItem value="gradlekts" label="Gradle (Kts)">
-
-```kotlin
-val jimmerVersion = "0.8.104"
-
-dependencies {
-
-  implementation("org.babyfish.jimmer:jimmer-spring-boot-starter:${jimmerVersion}")  
-
-  ...other dependencies omitted...
-}
-```
-
-</TabItem>
 </Tabs>
+
+:::info
+If you are using Gradle as your build tool, you can also use third-party Gradle plugin `tech.argonariod.gradle-plugin-jimmer` provided by the community to automatically identify the project type and add dependencies automatically.
+
+The `tech.argonariod.gradle-plugin-jimmer` gradle plugin is community-provided and maintained to simplify Jimmer project configuration, and it is not officially maintained by Jimmer.
+
+Repository URL: https://github.com/ArgonarioD/gradle-plugin-jimmer
+:::
 
 ## Additional Configuration Needed for Kotlin
 

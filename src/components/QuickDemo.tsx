@@ -33,7 +33,7 @@ export const QuickDemo: FC = memo(() => {
         return () => {
             document.body.removeEventListener("click", onBodyClickCapture, true);
         }
-    }, [setActivieId]);
+    }, []);
 
     const matches = useMediaQuery('(min-width:1024px)');
     if (!matches) {
@@ -382,18 +382,25 @@ const Line: FC<
     const placeHolderRef = useRef<HTMLDivElement>(null);
     const [point, setPoint] = useState<{readonly x: number, readonly y: number}>({x: 0, y: 0});
     useEffect(() => {
-        if (placeHolderRef.current != null) {
-            let e: HTMLElement = placeHolderRef.current;
-            const point = {x: e.offsetHeight, y: e.offsetHeight / 2};
-            while (e) {
-                point.x += e.offsetLeft;
-                point.y += e.offsetTop;
-                if (e.offsetParent && e.offsetParent.nodeType != 1) {
-                    break;
+        const derterminePoint = () => {
+            if (placeHolderRef.current != null) {
+                let e: HTMLElement = placeHolderRef.current;
+                const point = {x: e.offsetHeight, y: e.offsetHeight / 2};
+                while (e) {
+                    point.x += e.offsetLeft;
+                    point.y += e.offsetTop;
+                    if (e.offsetParent && e.offsetParent.nodeType != 1) {
+                        break;
+                    }
+                    e = e.offsetParent as HTMLElement;
                 }
-                e = e.offsetParent as HTMLElement;
+                setPoint(point);
             }
-            setPoint(point);
+        };
+        derterminePoint();
+        window.addEventListener("resize", derterminePoint);
+        return () => {
+            window.removeEventListener("resize", derterminePoint);
         }
     }, [placeHolderRef.current]);
 

@@ -91,7 +91,7 @@ for (book in books) {
 2.  在`src/main/dto`目下新建一个`Book.dto`文件，输入如下代码
 
     ```sh="Book.dto"
-    export com.yourcompany.yourproject.model.Book 
+    export com.yourcompany.yourproject.model.Book
         -> package com.yourcompany.yourproject.model.dto
 
     SimpleBookView {
@@ -136,7 +136,7 @@ for (book in books) {
         @NotNull
         private String name;
 
-        public SimpleBookView(@NotNull Book base) { ❸ 
+        public SimpleBookView(@NotNull Book base) { ❸
             ...略...
         }
 
@@ -308,10 +308,10 @@ for (book in books) {
             val name: String
         ) : View<BookStore> {
 
-            constructor(base: BookStore): 
+            constructor(base: BookStore):
                 this(...略...)
 
-            override fun toEntity(): BookStore = 
+            override fun toEntity(): BookStore =
                 ...略...
         }
 
@@ -321,10 +321,10 @@ for (book in books) {
             val lastName: String
         ) : View<Author> {
 
-            constructor(base: Author): 
+            constructor(base: Author):
                 this(...略...)
 
-            override fun toEntity(): Author = 
+            override fun toEntity(): Author =
                 ...略...
         }
     }
@@ -359,7 +359,7 @@ public class BookRepository {
 
     @Nullable
     public Book findBookById(
-        long id, 
+        long id,
         // highlight-next-line
         Fetcher<Book> fetcher
     ) {
@@ -367,7 +367,7 @@ public class BookRepository {
     }
 
     public List<Book> findBooksByName(
-        @Nullable String name, 
+        @Nullable String name,
         // highlight-next-line
         @Nullable Fetcher<Book> fetcher
     ) {
@@ -387,10 +387,10 @@ class BookRepository(
 ) {
 
     fun findBookById(
-        id: Long, 
+        id: Long,
         // highlight-next-line
         fetcher: Fetcher<Book>
-    ): Book? = 
+    ): Book? =
         ...略...
 
     fun findBooksByName(
@@ -429,8 +429,8 @@ public class BookRepository {
     }
 
     @Nullable
-    public <V extends View<Book>> V findBookById( ❶ 
-        long id, 
+    public <V extends View<Book>> V findBookById( ❶
+        long id,
         // highlight-next-line
         Class<V> viewType ❷
     ) {
@@ -449,7 +449,7 @@ public class BookRepository {
         return sqlClient
             .createQuery(table)
             .whereIf(
-                name != null && !name.isEmpty(), 
+                name != null && !name.isEmpty(),
                 table.name().ilike(name)
             )
             .select(
@@ -470,10 +470,10 @@ class BookRepository(
 ) {
 
     fun <V: View<Book>> findBookById( ❶
-        id: Long, 
+        id: Long,
         // highlight-next-line
         viewType: KClass<V> ❷
-    ): V? = 
+    ): V? =
         sqlClient.findById(
             viewType, ❸
             id
@@ -501,7 +501,7 @@ class BookRepository(
 </Tabs>
 
 -   ❶ ❹: Java的`<V extends View<Book>>`或kotlin的`<V: View<Book>>`定义一个范型参数`V`，表示任何由`Book`衍生而来的Output DTO类型。
-    
+
     比如：上文中自动生成的`SimpleBookView`和`ComplexBookView`，它们都实现了`View<Book>`接口。
 
 -   ❷ ❺: 用任何一个由`Book`衍生而来的DTO的类型作为参数。
@@ -526,7 +526,7 @@ class BookRepository(
     ```java
     System.out.println(
         bookRepository.findBookById(
-            1L, 
+            1L,
             // highlight-next-line
             SimpleBookView.class
         )
@@ -539,7 +539,7 @@ class BookRepository(
     ```kotlin
     println(
         bookRepository.findBookById(
-            1L, 
+            1L,
             // highlight-next-line
             SimpleBookView::class
         )
@@ -554,7 +554,7 @@ class BookRepository(
     ```json
     // highlight-next-line
     SimpleBookView(
-        id=1, 
+        id=1,
         name=Learning GraphQL
     )
     ```
@@ -567,7 +567,7 @@ class BookRepository(
     ```java
     System.out.println(
         bookRepository.findBookById(
-            1L, 
+            1L,
             // highlight-next-line
             ComplexBookView.class
         )
@@ -580,7 +580,7 @@ class BookRepository(
     ```kotlin
     println(
         bookRepository.findBookById(
-            1L, 
+            1L,
             // highlight-next-line
             ComplexBookView::class
         )
@@ -595,26 +595,26 @@ class BookRepository(
     ```json
     // highlight-next-line
     ComplexBookView(
-        id=1, 
-        name=Learning GraphQL, 
-        edition=1, 
-        price=50.0, 
+        id=1,
+        name=Learning GraphQL,
+        edition=1,
+        price=50.0,
         // highlight-next-line
         store=ComplexBookView.TargetOf_store(
-            id=1, 
+            id=1,
             name=O'REILLY
-        ), 
+        ),
         authors=[
             // highlight-next-line
             ComplexBookView.TargetOf_authors(
-                id=1, 
-                firstName=Eve, 
+                id=1,
+                firstName=Eve,
                 lastName=Procello
             ),
             // highlight-next-line
             ComplexBookView.TargetOf_authors(
-                id=2, 
-                firstName=Alex, 
+                id=2,
+                firstName=Alex,
                 lastName=Banks
             )
         ]
@@ -642,7 +642,7 @@ public class BookController implements Fetchers {
     @GetMapping("/book/{id}")
     public ComplexBookView findBookById(@PathVariable("id") long id) {
         return bookRepository.findBookById(
-            id, 
+            id,
             // highlight-next-line
             ComplexBookView.class
         );
@@ -654,7 +654,7 @@ public class BookController implements Fetchers {
     ) {
         return bookRepository.findBooksByName(
             name,
-            // highlight-next-line 
+            // highlight-next-line
             SimpleBookView.class
         );
     }
@@ -675,7 +675,7 @@ class BookController(
     ): ComplexBookView =
         bookRepository.findBookById(
             id,
-            // highlight-next-line 
+            // highlight-next-line
             ComplexBookView::class
         )
 
@@ -685,7 +685,7 @@ class BookController(
     ): List<SimpleBookView> =
         bookRepository.findBooksByName(
             name,
-            // highlight-next-line 
+            // highlight-next-line
             SimpleBookView::class
         )
 }
@@ -754,7 +754,7 @@ interface Book {
 [DTO语言](../../../object/view/dto-language.mdx)也支持文档注释，例如
 
 ```json title="Book.Dto"
-export com.yourcompany.yourproject.model.Book 
+export com.yourcompany.yourproject.model.Book
     -> package com.yourcompany.yourproject.model.dto
 
 //highlight-start
@@ -778,7 +778,7 @@ SimpleBookView {
 ```
 
 :::info
-[DTO语言](../../../object/view/dto-language.mdx)总的文档注释具有更高的优先级。
+[DTO语言](../../../object/view/dto-language.mdx)中的文档注释具有更高的优先级。
 
 即，DTO语言中的文档注释能覆盖原始实体中的文档注释，是Jimmer自动生成OpenApi文档或TypeScript代码时优先参考的。
 :::
@@ -827,7 +827,7 @@ SimpleBookView {
 如果选择返回DTO *(而非[上一篇文章](./entity)中的直接返回实体)*，则定义如下DTO代码即可
 
 ```title="Book.dto"
-export com.yourcompany.yourproject.model.Book 
+export com.yourcompany.yourproject.model.Book
         -> package com.yourcompany.yourproject.model.dto
 
 ShallowBookView {
@@ -852,7 +852,7 @@ ShallowBookView {
         file = "<yourproject>/src/main/dto/Book.dto"
 )
 public class ShallowBookView implements View<Book> {
-    
+
     private long id;
 
     @NotNull
@@ -893,7 +893,7 @@ data class ShallowBookView(
     // highlight-next-line
     val authorIds: List<Long>
 ): View<Book> {
-    ...省略其他成员...   
+    ...省略其他成员...
 }
 ```
 
@@ -951,7 +951,7 @@ data class ShallowBookView(
 当争论不过但需要快速完成任务时，如此编写DTO代码即可
 
 ```sh title="Book.dto"
-export com.yourcompany.yourproject.model.Book 
+export com.yourcompany.yourproject.model.Book
     -> package com.yourcompany.yourproject.model.dto
 
 FlatBookView {
@@ -981,7 +981,7 @@ FlatBookView {
         file = "<yourproject>/src/main/dto/Book.dto"
 )
 public class FlatBookView implements View<Book> {
-    
+
     private long id;
 
     @NotNull
@@ -1028,7 +1028,7 @@ data class FlatBookView(
     // highlight-next-line
     val storeWebsite: String?
 ): View<Book> {
-    ...省略其他成员...   
+    ...省略其他成员...
 }
 ```
 

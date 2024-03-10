@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1  
+sidebar_position: 1
 title: 直接返回实体
 ---
 
@@ -39,11 +39,11 @@ public class BookController implements Fetchers {
 
     @Nullable
     @GetMapping("/book/{id}")
-    public 
+    public
     @FetchBy("COMPLEX_BOOK") Book ❶
     findBookById(@PathVariable("id") long id) {
         return bookRepository.findBookById(
-            id, 
+            id,
             COMPLEX_BOOK ❷
         );
     }
@@ -55,7 +55,7 @@ public class BookController implements Fetchers {
             @RequestParam(name = "name", required = false) String name
     ) {
         return bookRepository.findBooksByName(
-            name, 
+            name,
             SIMPLE_BOOK ❹
         );
     }
@@ -98,7 +98,7 @@ class BookController(
         @PathVariable id: Long
     ): @FetchBy("COMPLEX_BOOK") Book = ❶
         bookRepository.findBookById(
-            id, 
+            id,
             COMPLEX_BOOK ❷
         )
 
@@ -109,7 +109,7 @@ class BookController(
         @FetchBy("SIMPLE_BOOK") Book ❸
     > =
         bookRepository.findBooksByName(
-            name, 
+            name,
             SIMPLE_BOOK ❹
         )
 
@@ -180,7 +180,7 @@ jimmer:
                 info:
                     title: My Web Service
                     description: |
-                        Restore the DTO explosion that was 
+                        Restore the DTO explosion that was
                         eliminated by server-side developers
                     version: 1.0
 ```
@@ -219,16 +219,16 @@ import type {Executor} from '../';
 import type {BookDto} from '../model/dto/';
 
 export class BookController {
-    
+
     constructor(private executor: Executor) {}
-    
+
     async findBookById(options: BookControllerOptions['findBookById']): Promise<
         // highlight-next-line
         BookDto['BookController/COMPLEX_BOOK']
     > {
         ...省略具体逻辑...
     }
-    
+
     async findBooksByName(options: BookControllerOptions['findBooksByName']): Promise<
         ReadonlyArray<
             // highlight-next-line
@@ -241,7 +241,7 @@ export class BookController {
 export type BookControllerOptions = {
     'findBookById': {
         readonly id: number
-    }, 
+    },
     'findBooksByName': {
         readonly name?: string | undefined
     }
@@ -336,7 +336,7 @@ Jimmer对这类问题的提供了最简单的解决方案，无需使用任何�
     }
     ```
 
-如果选择直接返回实体 *(而非[下一篇文章](./dto)种的返回DTO)*，且想要使用关联id，需先为实体添加@IdView属性
+如果选择直接返回实体 *(而非[下一篇文章](./dto)中的返回DTO)*，且想要使用关联id，需先为实体添加@IdView属性
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -425,8 +425,8 @@ public class BookController implements Fetchers {
     }
 
     /**
-     * Shallow Book DTO which can access 
-     * 1. All scalar properties of `Book` itself 
+     * Shallow Book DTO which can access
+     * 1. All scalar properties of `Book` itself
      * 2. All associated ids, not associated objects.
      */
     private static final Fetcher<Book> SIMPLE_BOOK =
@@ -453,7 +453,7 @@ class BookController(
     fun findBookById(
         @PathVariable id: Long
         // highlight-next-line
-    ): @FetchBy("SHALLOW_BOOK") Book = 
+    ): @FetchBy("SHALLOW_BOOK") Book =
         // highlight-next-line
         bookRepository.findBookById(id, SHALLOW_BOOK)
 
@@ -462,8 +462,8 @@ class BookController(
     companion object {
 
         /**
-         * Shallow Book DTO which can access 
-         * 1. All scalar properties of `Book` itself 
+         * Shallow Book DTO which can access
+         * 1. All scalar properties of `Book` itself
          * 2. All associated ids, not associated objects.
          */
         val SHALLOW_BOOK =

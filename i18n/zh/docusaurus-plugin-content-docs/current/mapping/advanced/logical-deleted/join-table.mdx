@@ -43,7 +43,7 @@ import TabItem from '@theme/TabItem';
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED",
             type = boolean.class,
@@ -60,7 +60,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "DELETED",
             type = boolean.class,
@@ -85,7 +85,7 @@ val authors: List<Author>
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "ACTIVE",
             type = boolean.class,
@@ -102,7 +102,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "ACTIVE",
             type = boolean.class,
@@ -128,7 +128,7 @@ val authors: List<Author>
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "STATE",
             type = int.class,
@@ -146,7 +146,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "STATE",
             type = int.class,
@@ -173,7 +173,7 @@ val authors: List<Author>
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "STATE",
             type = State.class,
@@ -191,7 +191,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "STATE",
             type = State.class,
@@ -224,7 +224,7 @@ long
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
             type = long.class
@@ -240,7 +240,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
             type = long.class
@@ -271,7 +271,7 @@ Nullable Long
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
             type = Long.class,
@@ -288,7 +288,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
             type = Long.class,
@@ -320,7 +320,7 @@ UUID
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_DATA",
             type = UUID.class
@@ -336,7 +336,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_DATA",
             type = UUID.class
@@ -367,7 +367,7 @@ Nullable UUID
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_DATA",
             type = UUID.class,
@@ -384,7 +384,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_DATA",
             type = UUID.class,
@@ -415,7 +415,7 @@ Nullable LocalDateTime
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_TIME",
             type = LocalDateTime.class,
@@ -433,7 +433,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_TIME",
             type = LocalDateTime.class,
@@ -460,7 +460,7 @@ val authors: List<Author>
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "CREATED_TIME",
             type = LocalDateTime.class,
@@ -478,7 +478,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...省略其他属性...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "CREATED_TIME",
             type = LocalDateTime.class,
@@ -506,7 +506,7 @@ val authors: List<Author>
     支持逻辑删除却不考虑多版本数据的问题，是一种成熟不高的考虑，因此建议使用支持多版本的逻辑删除配置。
     :::
 
--   `当前时钟毫秒数`，默认行为是`System.currentMillis()`，即使默认的`org.babyfish.jimmer.sql.meta.LogicalDeletedLongGenerator`的行为。
+-   `当前时钟毫秒数`，默认行为是`System.currentMillis()`，即是默认的`org.babyfish.jimmer.sql.meta.LogicalDeletedLongGenerator`的行为。
 
     如果对此行为不满意，可以自定义类实现`LogicalDeletedValueGenerator<Long>`接口，并用如下配置
 
@@ -514,7 +514,7 @@ val authors: List<Author>
 
     -   `@JoinTable.LogicalDeletedFilter(generatedRef = yourGenerator.class)`，这里`generatorRef`表示对象在IOC容器管理框架中的名称
 
--   `随机UUD`，默认行为是`UUID.randomUUID()`，即使默认的`org.babyfish.jimmer.sql.meta.LogicalDeletedUUIDGenerator`的行为。
+-   `随机UUD`，默认行为是`UUID.randomUUID()`，即是默认的`org.babyfish.jimmer.sql.meta.LogicalDeletedUUIDGenerator`的行为。
 
     如果对此行为不满意，可以自定义类实现`LogicalDeletedValueGenerator<UUID>`接口，并用如下配置
 
@@ -537,7 +537,7 @@ val authors: List<Author>
     name = "BOOK_AUTHOR_MAPPING",
     joinColumnName = "BOOK_ID",
     inverseJoinColumnName = "AUTHOR_ID",
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
             type = long.class
@@ -555,7 +555,7 @@ List<Author> authors();
     name = "BOOK_AUTHOR_MAPPING",
     joinColumnName = "BOOK_ID",
     inverseJoinColumnName = "AUTHOR_ID",|
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
             type = long.class
@@ -573,7 +573,7 @@ val authors: List<Author>
 alter table BOOK_AUTHOR_MAPPING
     add pk_BOOK_AUTHOR_MAPPING
         primary key(
-            BOOK_ID, 
+            BOOK_ID,
             AUTHOR_ID,
             DELETED_MILLIS
         );

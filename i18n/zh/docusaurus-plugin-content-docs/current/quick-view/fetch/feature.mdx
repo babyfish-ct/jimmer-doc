@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1  
+sidebar_position: 1
 title: 功能介绍
 ---
 
@@ -7,7 +7,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import FetchPartial from '../../_shared/fetch/partial.mdx';
 import FetchAssociation from '../../_shared/fetch/association.mdx';
-import FetchRecursion from '../../_shared/fetch/recursion.mdx'; 
+import FetchRecursion from '../../_shared/fetch/recursion.mdx';
 
 ## 基本用法
 
@@ -47,7 +47,7 @@ Jimmer可以查询任意形状的数据结构，对被查询数据结构的控�
 
 上面的代码只是为了通过三个场景展示Jimmer对被查询数据格式控制的强大，并没有对代码结构进行组织。
 
-在实际开发中，我们必要会以某种方式组织代码的，数据操作层面的代码应该放到`Repository`中。
+在实际开发中，我们必然要以某种方式组织代码的，数据操作层面的代码应该放到`Repository`中。
 
 :::caution
 前文展示了两种用法：查询实体对象和查询DTO对象，但为了控制本文的复杂度，后文只讨论如何对查询实体对象这种情况进行代码组织。
@@ -80,7 +80,7 @@ pubic class BookRepository {
         return sqlClient
             .createQuery(table)
             .whereIf(
-                name != null && !name.isEmpty(), 
+                name != null && !name.isEmpty(),
                 table.name().ilike(name)
             )
             .select(table);
@@ -183,13 +183,13 @@ pubic class BookRepository {
 
     @Nullable
     public Book findBookById(
-        long id, 
+        long id,
         // highlight-next-line
         Fetcher<Book> fetcher
     ) {
         return sqlClient.findById(
             // highlight-next-line
-            fetcher, 
+            fetcher,
             id
         );
     }
@@ -203,7 +203,7 @@ pubic class BookRepository {
         return sqlClient
             .createQuery(table)
             .whereIf(
-                name != null && !name.isEmpty(), 
+                name != null && !name.isEmpty(),
                 table.name().ilike(name)
             )
             .select(
@@ -230,7 +230,7 @@ class BookRepository(
     ): Book? =
         sqlClient.findById(
             // highlight-next-line
-            fetcher, 
+            fetcher,
             id
         )
 

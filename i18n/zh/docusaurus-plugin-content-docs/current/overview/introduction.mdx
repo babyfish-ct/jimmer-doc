@@ -21,7 +21,7 @@ import DynamicShape from '../_shared/dynamic-shape.mdx';
 import ImmutableStep from '../_shared/immutable-step.mdx';
 import Entity from './_entity.mdx';
 import Unloaded from './_unloaded.mdx';
-import DTO from './_dto.mdx'; 
+import DTO from './_dto.mdx';
 import SaveAlone from './_save/alone.mdx';
 import FetchPartial from '../_shared/fetch/partial.mdx';
 import FetchAssociation from '../_shared/fetch/association.mdx';
@@ -129,13 +129,13 @@ Jimmer实体支持两个重要特征，动态性和不可变性
 
     -   动态语言数据对象觉有高度的灵活性，Jimmer实体吸收了这个优点，每个属性都可以缺失*(但是不能如同动态语言一样增加属性，因为这必然会破坏静态语言的特性，Jimmer也不需要此能力)*
 
-        > 对Jimmer而言，对象缺少某个属性 *(其值未知)* 和 对象的某个属性为null *(其值已知)* 是完全不同的两回事。  
+        > 对Jimmer而言，对象缺少某个属性 *(其值未知)* 和 对象的某个属性为null *(其值已知)* 是完全不同的两回事。
 
     :::tip
     这种平衡设计，可以在享受静态语言好处的同时，为数据结构赋予<ViewMore buttonText="极大的灵活性" title="Jimmer实体的灵活性"><DynamicShape/></ViewMore>。
 
     这种绝对的灵活性，既可用于表达查询业务的输出格式，也可用于表达保存业务的输入格式。
-    
+
     这导致Jimmer拥有了崭新的定位：一个为任意形状数据结构设计的ORM。其所有功能都是为了操作任意形状的数据结构，而非一个个简单的实体对象。
     :::
 
@@ -145,7 +145,7 @@ Jimmer实体支持两个重要特征，动态性和不可变性
 
     :::tip
     Jimmer选择不可变对象是为了让数据结构绝不包含[循环引用](https://en.wikipedia.org/wiki/Circular_reference)。
-    
+
     这可以保证由Jimmer实体及彼此关联组合而成的数据结构一定能够被直接Jackson序列化，并不需要使用诡异的序列化技巧为JSON植入任何特殊的额外信息，任何编程语言都可以轻松理解。
     :::
 
@@ -156,11 +156,11 @@ Jimmer实体支持两个重要特征，动态性和不可变性
     -   既对Java和Kotlin进行双语支持，又善于基于现有深层次数据结构按照一些修改的愿望创建出新的不可变数据结构的方案，目前的JVM生态没有。
 
     幸运的是，`JavaScript/TypeScript`领域存在一个足够强大的方案: [immer](https://github.com/immerjs/immer)，可以完美解决这个问题。该方案工作方式如下
-    
+
     1.  基于现有不可变数据结构开启一个临时作用域。
 
     2.  在这个作用域内，开发人人员可得到一个draft数据结构，该数据结构的形状和初始值和原数据结构完全一致，且可以被随意修改，包括修改任意深的子对象。
-    
+
     3.  作用域结束后，draft数据结构会利用收集到的修改行为创建另外一个新的数据结构。其中，未被修改的局部会被优化处理，复用以前的旧对象。
 
     Immer完美结合了不可变对象和可变对象的优点，代码简单、功能强大、性能卓越。因此，Jimmer选择为JVM生态移植了immer，项目名称也是对其致敬。<ViewMore buttonText="查看快捷示范" title="从immer移植而来的不可变对象"><ImmutableStep/></ViewMore>
@@ -185,13 +185,13 @@ Jimmer对象允许某些属性缺失，对象缺少某个属性 *(其值未知)*
     > 请参考这[这里](https://docs.oracle.com/javaee%2F7%2Fapi%2F%2F/javax/persistence/Basic.html)。
     >
     > 这和Jimmer对象任何属性都可以缺失有一定相似性，只是Jimmer将此特征推广到了任何属性。所以，Jimmer的这个异常和[org.hibernate.LazyIntializationException](https://docs.jboss.org/hibernate/orm/5.6/javadocs/org/hibernate/LazyInitializationException.html)有一定相似性。
-    
+
     所以，这并非由Jimmer制造的新问题，而是一个在静态语言ORM生态中早已存在和被接受的问题。然而，不可否认这的确对静态语言的安全性形成了破坏。
 
     如果要追求100%的静态语言安全性，使用`DTO`对象是唯一的方法。然而，目前JVM生态的DTO映射技术存在很大缺陷。
     -   要么显式地映射属性*(例如纯手工映射和转化)*，这种做法工作量巨大，枯燥且容易出错。
     -   要么隐式地映射属性*(例如采用[BeanUilts](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/BeanUtils.html)技术)*，这种做法会引入新的不安全问题，即，无法在编译发现的问题。
-    
+
     即使你使用强大的[mapstruct](https://mapstruct.org/)，你所能做也只是在这两个极端之间作出选择而已。
 
     因此，Jimmer提供了DTO语言，用户使用该语言编写非常简单的代码，编译项目即可自动生成各种丰富的DTO类型定义。
@@ -201,7 +201,7 @@ Jimmer对象允许某些属性缺失，对象缺少某个属性 *(其值未知)*
 
     -   让生成DTO类型的的过程足够简单，从而让DTO类型足够廉价。
 
-    -   100%符合静态语言安全性，在编译时发现所有问题并报错。   
+    -   100%符合静态语言安全性，在编译时发现所有问题并报错。
     :::
 
     在任何子项目中 *(并不限制为实体定义子项目)*，开发人员都可以在`src/main/dto`目录下随意建立扩展名为`dto`的文件，
@@ -253,7 +253,7 @@ Jimmer为查询任意形状的数据结构而设计，能像[GraphQL](https://gr
 -   快速构建REST服务
 
     由服务端控制返回对象的形状。如果某个HTTP API需要返回的数据结构形状是什么，开发人员都有两种选择：直接使用实体类型，或用DTO语言廉价地生成DTO类型。
-    
+
     无论如何选择，客户端都是被动地接受服务端返回的数据格式。即使，客户端需要的数据结构形状种类非常多，对基于Jimmer开发的服务端影响很小。
 
     如果开发人员选择直接返回实体对象而非DTO。这时服务端没有<ViewMore buttonText="DTO爆炸问题" variant="text"><DtoExplosion/></ViewMore>，
@@ -302,7 +302,7 @@ Save Command，是Jimmer三个最基础的核心功能之一 *(另外两个是Fe
 
 接下来，我们通过4个案例，展示保存指令的基本用法:
 
-1.  保存孤单对象 
+1.  保存孤单对象
 
     这时最简单的情况，因为孤单的不存在任何关联数据。<ViewMore buttonText="查看快捷示范" title="保存孤单对象"><SaveAlone/></ViewMore>
 
@@ -319,7 +319,7 @@ Save Command，是Jimmer三个最基础的核心功能之一 *(另外两个是Fe
     对于UI界面而言，形式多样，以表单内嵌子表最为常见 *(一对多)*
     ：<ViewMore buttonText="长关联常见UI"><LongAssociation/></ViewMore> <ViewMore buttonText="查看快捷示范" title="保存长关联"><SaveLongAssociation/></ViewMore>
 
-4.  递归保存树形结构 
+4.  递归保存树形结构
 
     这个例子稍有不同，需要在保存之前稍微需改一下根节点的数据。<ViewMore buttonText="查看快捷示范" title="递归保存树形结构"><SaveRecursiveTree/></ViewMore>
 
@@ -401,7 +401,7 @@ Jimmer SQL DSL为任意复杂的动态SQL而设计。
 
 Trigger不但能通知开发人员哪些实体对象发生了什么变化，还对变化事件的信息做了ORM映射，以通知开发人员哪些实体关联发生了变化。
 
-Trigger为另外一个功能：缓存，打下了坚实的基础。  
+Trigger为另外一个功能：缓存，打下了坚实的基础。
 
 Jimmer支持两种各不同类型的触发器: BinLog触发器和Transaction触发器
 
@@ -417,7 +417,7 @@ Jimmer支持两种各不同类型的触发器: BinLog触发器和Transaction触�
 <tr>
 <td>工作原理</td>
 <td>通过整合业内成熟的CDC方案<i>(比如：maxwell，debezium)</i>发现数据的变化</td>
-<td>靠Jimmer置身的能力发现数据库的变化</td>
+<td>靠Jimmer自身的能力发现数据库的变化</td>
 </tr>
 <tr>
 <td>通知时机</td>
@@ -564,4 +564,3 @@ Remote Associations只是在有限时间内为微服务体系开发的首个功�
 -   Gradle插件
 
     https://github.com/ArgonarioD/gradle-plugin-jimmer
-    

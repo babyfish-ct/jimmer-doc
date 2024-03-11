@@ -264,10 +264,10 @@ val customers: List<Customer>
     ```sql
     select distinct tb_1_.ID, tb_1_.NAME
     from SHOP tb_1_
-    inner join SHOP_CUSTOMER_MAPPING tb_2_ 
+    inner join SHOP_CUSTOMER_MAPPING tb_2_
         /* highlight-next-line */
         on tb_1_.ID = tb_2_.SHOP_ID
-    inner join CUSTOMER tb_3_ 
+    inner join CUSTOMER tb_3_
         on tb_2_.CUSTOMER_ID = tb_3_.ID
     where tb_3_.NAME = ? /* Smith */
     ```
@@ -321,14 +321,14 @@ val customers: List<Customer>
     ```sql
     select distinct tb_1_.ID, tb_1_.NAME
     from SHOP tb_1_
-    inner join SHOP_CUSTOMER_MAPPING tb_2_ 
+    inner join SHOP_CUSTOMER_MAPPING tb_2_
         /* highlight-next-line */
         on tb_1_.ID = tb_2_.SHOP_ID
         /* highlight-next-line */
         and tb_2_.MAPPING_TYPE = ? /* VIP */
     and
         tb_2_.type = ?
-    inner join CUSTOMER tb_3_ 
+    inner join CUSTOMER tb_3_
         on tb_2_.CUSTOMER_ID = tb_3_.ID
     where tb_3_.NAME = ? /* Smith */
     ```
@@ -382,14 +382,14 @@ val customers: List<Customer>
     ```sql
     select distinct tb_1_.ID, tb_1_.NAME
     from SHOP tb_1_
-    inner join SHOP_CUSTOMER_MAPPING tb_2_ 
+    inner join SHOP_CUSTOMER_MAPPING tb_2_
         /* highlight-next-line */
         on tb_1_.ID = tb_2_.SHOP_ID
         /* highlight-next-line */
         and tb_2_.MAPPING_TYPE = ? /* ORDINARY */
     and
         tb_2_.type = ?
-    inner join CUSTOMER tb_3_ 
+    inner join CUSTOMER tb_3_
         on tb_2_.CUSTOMER_ID = tb_3_.ID
     where tb_3_.NAME = ? /* Smith */
     ```
@@ -447,7 +447,7 @@ val customers: List<Customer>
         @ManyToMany
         @JoinTable(
             name = "SOURCE_TAG_MAPPING",
-            joinColumns = @joinColumn(
+            joinColumns = @JoinColumn(
                 name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
@@ -459,7 +459,7 @@ val customers: List<Customer>
             )
         )
         List<Tag> tags();
-        
+
         ...省略其他属性...
     }
     ```
@@ -474,7 +474,7 @@ val customers: List<Customer>
         @ManyToMany
         @JoinTable(
             name = "SOURCE_TAG_MAPPING",
-            joinColumns = @joinColumn(
+            joinColumns = @JoinColumn(
                 name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
@@ -486,7 +486,7 @@ val customers: List<Customer>
             )
         )
         val tags: List<Tag>
-        
+
         ...省略其他属性...
     }
     ```
@@ -506,7 +506,7 @@ val customers: List<Customer>
         @ManyToMany
         @JoinTable(
             name = "SOURCE_TAG_MAPPING",
-            joinColumns = @joinColumn(
+            joinColumns = @JoinColumn(
                 name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
@@ -518,7 +518,7 @@ val customers: List<Customer>
             )
         )
         List<Tag> tags();
-        
+
         ...省略其他属性...
     }
     ```
@@ -533,7 +533,7 @@ val customers: List<Customer>
         @ManyToMany
         @JoinTable(
             name = "SOURCE_TAG_MAPPING",
-            joinColumns = @joinColumn(
+            joinColumns = @JoinColumn(
                 name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
@@ -545,7 +545,7 @@ val customers: List<Customer>
             )
         )
         val tags: List<Tag>
-        
+
         ...省略其他属性...
     }
     ```
@@ -565,7 +565,7 @@ val customers: List<Customer>
         @ManyToMany
         @JoinTable(
             name = "SOURCE_TAG_MAPPING",
-            joinColumns = @joinColumn(
+            joinColumns = @JoinColumn(
                 name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
@@ -577,7 +577,7 @@ val customers: List<Customer>
             )
         )
         List<Tag> tags();
-        
+
         ...省略其他属性...
     }
     ```
@@ -592,7 +592,7 @@ val customers: List<Customer>
         @ManyToMany
         @JoinTable(
             name = "SOURCE_TAG_MAPPING",
-            joinColumns = @joinColumn(
+            joinColumns = @JoinColumn(
                 name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
@@ -604,7 +604,7 @@ val customers: List<Customer>
             )
         )
         val tags: List<Tag>
-        
+
         ...省略其他属性...
     }
     ```
@@ -649,7 +649,7 @@ alter table SOURCE_TAG_MAPPING
 
 ```java
 @JoinTable(
-    joinColumns = @joinColumn(
+    joinColumns = @JoinColumn(
         name = "SOURCE_ID",
         // highlight-next-line
         foreignKeyType = ForeignKeyType.FAKE
@@ -816,7 +816,7 @@ alter table BOOK_AUTHOR_MAPPING
 // highlight-start
 // 不同数据库的条件索引的语法可能有少量差异，
 // 这里以Postgres为例
-create unique index BOOK_AUTHOR_MAPPING__PRIMARY_INDEX 
+create unique index BOOK_AUTHOR_MAPPING__PRIMARY_INDEX
     on BOOK_AUTHOR_MAPPING(AUTHOR_ID)
     when MAPPING_TYPE = 'PRIMARY';
 // highlight-end

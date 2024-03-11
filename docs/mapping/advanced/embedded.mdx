@@ -18,7 +18,7 @@ First, define a composite type:
 <TabItem value="java" label="Java">
 
 ```java title="FullName.java"
-// highlight-next-line  
+// highlight-next-line
 @Embeddable
 public interface FullName {
 
@@ -29,15 +29,15 @@ public interface FullName {
 ```
 
 </TabItem>
-<TabItem value="kotlin" label="Kotlin">  
+<TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="FullName.kt"
 // highlight-next-line
-@Embeddable 
+@Embeddable
 interface FullName {
 
     val firstName: String
-    
+
     val lastName: String
 }
 ```
@@ -58,7 +58,7 @@ Then we can use it in another entity:
 @Entity
 public interface Author {
 
-    @Id  
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id();
 
@@ -70,7 +70,7 @@ public interface Author {
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin title="Author.kt" 
+```kotlin title="Author.kt"
 @Entity
 interface Author {
 
@@ -84,20 +84,20 @@ interface Author {
 ```
 
 </TabItem>
-</Tabs>  
+</Tabs>
 
 :::info
-Unlike JPA/Hibernate, when using composite types in entities, `@Embedded` is not required. In fact, Jimmer does not provide the `@Embedded` annotation at all. 
+Unlike JPA/Hibernate, when using composite types in entities, `@Embedded` is not required. In fact, Jimmer does not provide the `@Embedded` annotation at all.
 :::
 
-The table structure corresponding to `Author` is: 
+The table structure corresponding to `Author` is:
 
 ```sql
 create table author(
     id bigint unsigned not null auto_increment primary key,
     /* highlight-next-line */
     first_name varchar(20) not null,
-    /* highlight-next-line */  
+    /* highlight-next-line */
     last_name varchar(20) not null
 ) engine=innodb;
 ```
@@ -129,7 +129,7 @@ create table author(
     interface Point {
 
         val x: Int
-        
+
         val y: Int
     }
     ```
@@ -147,7 +147,7 @@ create table author(
     public interface Rect {
 
         // highlight-next-line
-        @PropOverride(prop = "x", columnName = "`LEFT`") 
+        @PropOverride(prop = "x", columnName = "`LEFT`")
         // highlight-next-line
         @PropOverride(prop = "y", columnName = "`TOP`")
         Point leftTop();
@@ -169,12 +169,12 @@ create table author(
 
         // highlight-next-line
         @PropOverride(prop = "x", columnName = "`LEFT`")
-        // highlight-next-line  
+        // highlight-next-line
         @PropOverride(prop = "y", columnName = "`TOP`")
         val leftTop: Point
 
         // highlight-next-line
-        @PropOverride(prop = "x", columnName = "`RIGHT`") 
+        @PropOverride(prop = "x", columnName = "`RIGHT`")
         // highlight-next-line
         @PropOverride(prop = "y", columnName = "BOTTOM")
         val rightBottom: Point
@@ -244,7 +244,7 @@ create table transition(
     id bigint unsigned not null auto_increment primary key,
     millis int not null,
     `LEFT` int not null,
-    `TOP` int not null, 
+    `TOP` int not null,
     `RIGHT` int not null,
     bottom int not null,
     target_left int not null,
@@ -254,7 +254,7 @@ create table transition(
 ) engine=innodb;
 ```
 
-## As Primary/Foreign Keys 
+## As Primary/Foreign Keys
 
 :::warning
 Using composite types as primary/foreign keys, that is, primary keys and foreign keys are composed of multiple columns, makes the system more complex without much benefit.
@@ -265,7 +265,7 @@ Therefore, unless compatibility with legacy database design is required, the sys
 Let's first define a composite type:
 
 <Tabs groupId="language">
-<TabItem value="java" label="Java">  
+<TabItem value="java" label="Java">
 
 ```java title="UniqueId.java"
 // highlight-next-line
@@ -275,7 +275,7 @@ public interface UniqueId {
     @columnName("UNIQUE_ID_DAY_NO")
     int dayNo();
 
-    @columnName("UNIQUE_ID_SEQ_NO")  
+    @columnName("UNIQUE_ID_SEQ_NO")
     int sequenceNo();
 }
 ```
@@ -290,9 +290,9 @@ interface UniqueId {
 
     @columnName("UNIQUE_ID_DAY_NO")
     val dayNo: Int
-    
+
     @columnName("UNIQUE_ID_SEQ_NO")
-    val sequenceNo: Int  
+    val sequenceNo: Int
 }
 ```
 
@@ -302,10 +302,10 @@ interface UniqueId {
 ### As Primary Key
 
 <Tabs groupId="language">
-<TabItem value="java" label="Java">  
+<TabItem value="java" label="Java">
 
 ```java title="Book.java"
-@Entity 
+@Entity
 public interface Book {
 
     @Id
@@ -325,7 +325,7 @@ interface Book {
     @Id
     val id: UniqueId
 
-    ...Omit other code... 
+    ...Omit other code...
 }
 ```
 
@@ -338,27 +338,27 @@ Since `Book.id` does not override column names of `UniqueId` type using `@PropOv
 create table book(
     unique_id_day_no int not null,
     unique_id_seq_no int not null,
-    ...Omit other columns...   
+    ...Omit other columns...
 ) engine=innodb;
 
 alter table book
     add constraint pk_book
-        primary key(unique_id_day_no, unique_id_seq_no); 
+        primary key(unique_id_day_no, unique_id_seq_no);
 ```
 
-### Referenced by @JoinColumn  
+### Referenced by @JoinColumn
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
-```java title="Chapter.java"  
+```java title="Chapter.java"
 @Entity
 public interface Chapter {
 
     @ManyToOne
     @JoinColumn(
         name = "BOOK_ID_DAY_NO",
-        referencedColumnName = "UNIQUE_ID_DAY_NO" 
+        referencedColumnName = "UNIQUE_ID_DAY_NO"
     )
     @JoinColumn(
         name = "BOOK_ID_SEQ_NO",
@@ -384,7 +384,7 @@ interface Chapter {
     )
     @JoinColumn(
         name = "BOOK_ID_SEQ_NO",
-        referencedColumnName = "UNIQUE_ID_SEQ_NO" 
+        referencedColumnName = "UNIQUE_ID_SEQ_NO"
     )
     val book: Book
 
@@ -396,12 +396,12 @@ interface Chapter {
 </Tabs>
 
 :::caution
-Different from all the examples we have covered before, here the `referencedColumnName` of the @JoinColumn annotation is specified.  
+Different from all the examples we have covered before, here the `referencedColumnName` of the @JoinColumn annotation is specified.
 
 When the foreign key consists of multiple columns, multiple `@JoinColumn` annotations must be used, where each `@JoinColumn` must specify `referencedColumnName`.
 :::
 
-If the foreign key is real, the corresponding constraint is:  
+If the foreign key is real, the corresponding constraint is:
 
 ```sql
 alter table chapter
@@ -420,7 +420,7 @@ alter table chapter
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
-```java title="Book.java"  
+```java title="Book.java"
 @Entity
 public interface Book {
 
@@ -433,7 +433,7 @@ public interface Book {
             @JoinColumn(
                 name = "BOOK_ID_DAY_NO",
                 referencedColumnName = "UNIQUE_ID_DAY_NO"
-            )
+            ),
             @JoinColumn(
                 name = "BOOK_ID_SEQ_NO",
                 referencedColumnName = "UNIQUE_ID_SEQ_NO"
@@ -451,7 +451,7 @@ public interface Book {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="Book.kt"
-@Entity  
+@Entity
 interface Book {
 
     @Id
@@ -459,16 +459,16 @@ interface Book {
 
     @ManyToMany
     @JoinTable(
-        joinColumns = {
-            @JoinColumn(
+        joinColumns = [
+            JoinColumn(
                 name = "BOOK_ID_DAY_NO",
                 referencedColumnName = "UNIQUE_ID_DAY_NO"
-            )
-            @JoinColumn(
-                name = "BOOK_ID_SEQ_NO", 
+            ),
+            JoinColumn(
+                name = "BOOK_ID_SEQ_NO",
                 referencedColumnName = "UNIQUE_ID_SEQ_NO"
             )
-        }
+        ]
     )
     // highlight-next-line
     val authors: List<Author>
@@ -496,7 +496,7 @@ alter table book_author_mapping
             book_id_seq_id,
             author_id
         );
-        
+
 alter table book_author_mapping
     add constraint fk_book_author_mapping__book
         foreign key(
@@ -506,7 +506,7 @@ alter table book_author_mapping
             unique_id_day_no,
             unique_id_seq_no
         );
-        
+
 alter table book_author_mapping
     add constraint fk_book_author_mapping__author
         foreign key(author_id)

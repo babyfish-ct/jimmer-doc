@@ -148,7 +148,7 @@ Jimmer使用注解`@org.babyfish.jimmer.sql.Version`支持乐观锁。
     :::
 
     所有对象都没有指定id属性，Jimmer根据每个对象的key去判断它们是否存在。
-    
+
     假设所有对象都不存在，因此，三条新数据会被插入。
 
     所有对象都没有指定`version`属性，所以，它们会被自动填充为0。
@@ -240,7 +240,7 @@ Jimmer使用注解`@org.babyfish.jimmer.sql.Version`支持乐观锁。
                 edition = 3;
                 price = BigDecimal("44.99")
                 // highlight-next-line
-            version = 0
+                version = 0
             }
             books().addBy {
                 name = "The Pragmatic Programmer"
@@ -266,7 +266,7 @@ Jimmer使用注解`@org.babyfish.jimmer.sql.Version`支持乐观锁。
     :::
 
     执行，由于数据库中已经存在数据，所以三个对象都会被UPDATE。
-    
+
     很明显，最后一本书籍的version`9999`是非法的，上面的的代码将会得到如下异常：
 
     -   异常类型：`org.babyfish.jimmer.sql.runtime.SaveException`
@@ -461,7 +461,7 @@ sqlClient.save(
     insert或update，略
 
 3.  判断第1本书籍是否存在
-    
+
     ```sql
     select
         tb_1_.ID,
@@ -514,7 +514,7 @@ sqlClient.save(
     -   Spring Boot Starter的配置
 
         修改`application.yml` *(或`application.properties`)*
-        
+
         ```
         jimmer:
             save-command-pessimistic-lock: true
@@ -630,7 +630,7 @@ sqlClient.save(
     insert或update，略
 
 3.  判断第1本书籍是否存在
-    
+
     ```sql
     select
         tb_1_.ID,

@@ -10,7 +10,7 @@ import TabItem from '@theme/TabItem';
 
 Jimmer supports join table filters, with two usage scenarios:
 
-### 1. Multiple associations between same entity types 
+### 1. Multiple associations between same entity types
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -128,8 +128,8 @@ create table SHOP_CUSTOMER_MAPPING(
     MAPPING_TYPE varchar(8) not null
 );
 
-// Whether the primary key of the join table contains 
-// the filter column depends on the specific case.  
+// Whether the primary key of the join table contains
+// the filter column depends on the specific case.
 // In this example, a mapping between a `Shop` and `Customer`
 // cannot be both "VIP" and "ORDINARY" at the same time.
 // So the primary key does not contain `MAPPING_TYPE`.
@@ -156,37 +156,37 @@ The table stores data like below:
 
 |SHOP_ID|CUSTOMER_ID|MAPPING_TYPE|
 |---|---|---|
-|21|3176|VIP|  
+|21|3176|VIP|
 |21|1087|ORDINARY|
 |21|9155|ORDINARY|
 |40|8347|VIP|
-|40|4365|ORDINARY| 
+|40|4365|ORDINARY|
 |40|3478|ORDINARY|
 
 Where `Shop.vipCustomers` corresponds to two rows, `Shop.ordinaryCustomers` to four rows, and `Shop.customers` can see all rows:
 
 ```
-Shop.customers = Shop.vipCustomers + Shop.ordinaryCustomers 
+Shop.customers = Shop.vipCustomers + Shop.ordinaryCustomers
 ```
 
-We can see that `Shop.customers` is not a base association, but the union of other associations. Let's call it a union association.  
+We can see that `Shop.customers` is not a base association, but the union of other associations. Let's call it a union association.
 
 :::caution
-Union associations cannot be directly modified, so `readonly = true` must be declared.  
+Union associations cannot be directly modified, so `readonly = true` must be declared.
 :::
 
 Actually, the union association `Shop.customers` has an equivalent alternative syntax:
 
 <Tabs groupId="language">
-<TabItem value="java" label="Java">  
+<TabItem value="java" label="Java">
 
-```java  
+```java
 @ManyToMany
 @joinTable(
-    ...other params omitted..., 
+    ...other params omitted...,
     filter = @JoinTable.JoinTableFilter(
         columnName = "MAPPING_TYPE",
-        type = String.class, 
+        type = String.class,
         // highlight-next-line
         values = {"VIP", "ORDINARY"}
     )
@@ -203,10 +203,10 @@ List<Customer> customers();
     ...other params omitted...,
     filter = @JoinTable.JoinTableFilter(
         columnName = "MAPPING_TYPE",
-        type = String.class, 
-        // highlight-next-line 
+        type = String.class,
+        // highlight-next-line
         values = {"VIP", "ORDINARY"}
-    )  
+    )
 )
 val customers: List<Customer>
 ```
@@ -214,18 +214,18 @@ val customers: List<Customer>
 </TabItem>
 </Tabs>
 
-Finally, let's look at the difference in JOIN behavior between these three associations:  
+Finally, let's look at the difference in JOIN behavior between these three associations:
 
--   `Shop.customers`  
+-   `Shop.customers`
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
 
-    ```java  
+    ```java
     ShopTable table = Tables.SHOP_TABLE;
 
     List<Long> shopIds = sqlClient
-        .create(table) 
+        .create(table)
         .where(
             table
                 .asTableEx()
@@ -236,7 +236,7 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
         .select(table.id())
         .distinct()
         .execute();
-    ```  
+    ```
 
     </TabItem>
     <TabItem value="kotlin" label="Kotlin">
@@ -244,14 +244,14 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
     ```kotlin
     val shopIds = sqlClient
         .create(Shop::class) {
-            where(  
+            where(
                 table
                     .asTableEx()
                     // highlight-next-line
                     .customers
                     .name eq "Smith"
             )
-            select(table.id()) 
+            select(table.id())
         }
         .distinct()
         .execute();
@@ -260,43 +260,43 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
     </TabItem>
     </Tabs>
 
-    The generated SQL is:  
+    The generated SQL is:
 
     ```sql
-    select distinct tb_1_.ID, tb_1_.NAME 
+    select distinct tb_1_.ID, tb_1_.NAME
     from SHOP tb_1_
     inner join SHOP_CUSTOMER_MAPPING tb_2_
         /* highlight-next-line */
-        on tb_1_.ID = tb_2_.SHOP_ID 
+        on tb_1_.ID = tb_2_.SHOP_ID
     inner join CUSTOMER tb_3_
-        on tb_2_.CUSTOMER_ID = tb_3_.ID 
+        on tb_2_.CUSTOMER_ID = tb_3_.ID
     where tb_3_.NAME = ? /* Smith */
     ```
 
--   `Shop.vipCustomers`  
+-   `Shop.vipCustomers`
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
 
-    ```java  
+    ```java
     ShopTable table = Tables.SHOP_TABLE;
 
     List<Long> shopIds = sqlClient
         .create(table)
         .where(
             table
-                .asTableEx() 
+                .asTableEx()
                 // highlight-next-line
                 .vipCustomers()
                 .name().eq("Smith")
         )
         .select(table.id())
-        .distinct() 
+        .distinct()
         .execute();
     ```
 
     </TabItem>
-    <TabItem value="kotlin" label="Kotlin">  
+    <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
     val shopIds = sqlClient
@@ -304,7 +304,7 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
             where(
                 table
                     .asTableEx()
-                    // highlight-next-line  
+                    // highlight-next-line
                     .vipCustomers
                     .name eq "Smith"
             )
@@ -323,14 +323,14 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
     select distinct tb_1_.ID, tb_1_.NAME
     from SHOP tb_1_
     inner join SHOP_CUSTOMER_MAPPING tb_2_
-        /* highlight-next-line */  
+        /* highlight-next-line */
         on tb_1_.ID = tb_2_.SHOP_ID
         /* highlight-next-line */
-        and tb_2_.MAPPING_TYPE = ? /* VIP */ 
+        and tb_2_.MAPPING_TYPE = ? /* VIP */
     and
         tb_2_.type = ?
     inner join CUSTOMER tb_3_
-        on tb_2_.CUSTOMER_ID = tb_3_.ID 
+        on tb_2_.CUSTOMER_ID = tb_3_.ID
     where tb_3_.NAME = ? /* Smith */
     ```
 
@@ -342,7 +342,7 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
     ```java
     ShopTable table = Tables.SHOP_TABLE;
 
-    List<Long> shopIds = sqlClient 
+    List<Long> shopIds = sqlClient
         .create(table)
         .where(
             table
@@ -350,7 +350,7 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
                 // highlight-next-line
                 .ordinaryCustomers()
                 .name().eq("Smith")
-        ) 
+        )
         .select(table.id())
         .distinct()
         .execute();
@@ -359,17 +359,17 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
     </TabItem>
     <TabItem value="kotlin" label="Kotlin">
 
-    ```kotlin 
+    ```kotlin
     val shopIds = sqlClient
         .create(Shop::class) {
             where(
                 table
-                    .asTableEx()  
+                    .asTableEx()
                     // highlight-next-line
                     .ordinaryCustomers
                     .name eq "Smith"
             )
-            select(table.id()) 
+            select(table.id())
         }
         .distinct()
         .execute();
@@ -378,15 +378,15 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
     </TabItem>
     </Tabs>
 
-    The generated SQL is:  
+    The generated SQL is:
 
     ```sql
     select distinct tb_1_.ID, tb_1_.NAME
     from SHOP tb_1_
     inner join SHOP_CUSTOMER_MAPPING tb_2_
         /* highlight-next-line */
-        on tb_1_.ID = tb_2_.SHOP_ID 
-        /* highlight-next-line */  
+        on tb_1_.ID = tb_2_.SHOP_ID
+        /* highlight-next-line */
         and tb_2_.MAPPING_TYPE = ? /* ORDINARY */
     and
         tb_2_.type = ?
@@ -395,9 +395,9 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
     where tb_3_.NAME = ? /* Smith */
     ```
 
-### 2. Multiple associations between different entity types  
+### 2. Multiple associations between different entity types
 
-A common case is when a project has many kinds of data, and each kind of data can be tagged with multiple `Tag`s.  
+A common case is when a project has many kinds of data, and each kind of data can be tagged with multiple `Tag`s.
 
 -   `Tag`
 
@@ -408,7 +408,7 @@ A common case is when a project has many kinds of data, and each kind of data ca
     @Entity
     public interface Tag {
 
-        @Id  
+        @Id
         long id();
 
         String name();
@@ -425,10 +425,10 @@ A common case is when a project has many kinds of data, and each kind of data ca
     interface Tag {
 
         @Id
-        val id: Long  
+        val id: Long
 
         val name: String
-   
+
         ...other properties omitted...
     }
     ```
@@ -447,8 +447,8 @@ A common case is when a project has many kinds of data, and each kind of data ca
 
         @ManyToMany
         @JoinTable(
-            name = "SOURCE_TAG_MAPPING", 
-            joinColumns = @joinColumn(
+            name = "SOURCE_TAG_MAPPING",
+            joinColumns = @JoinColumn(
                 name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
@@ -456,11 +456,11 @@ A common case is when a project has many kinds of data, and each kind of data ca
             filter = @JoinTable.JoinTableFilter(
                 columnName = "SOURCE_TYPE",
                 type = String.class,
-                values = "BOOK_STORE", 
+                values = "BOOK_STORE",
             )
         )
         List<Tag> tags();
-        
+
         ...other properties omitted...
     }
     ```
@@ -469,14 +469,14 @@ A common case is when a project has many kinds of data, and each kind of data ca
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    @Entity  
+    @Entity
     interface BookStore {
 
         @ManyToMany
         @JoinTable(
             name = "SOURCE_TAG_MAPPING",
-            joinColumns = @joinColumn(
-                name = "SOURCE_ID", 
+            joinColumns = @JoinColumn(
+                name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
             inverseJoinColumnName = "TAG_ID",
@@ -487,7 +487,7 @@ A common case is when a project has many kinds of data, and each kind of data ca
             )
         )
         val tags: List<Tag>
-        
+
         ...other properties omitted...
     }
     ```
@@ -507,8 +507,8 @@ A common case is when a project has many kinds of data, and each kind of data ca
         @ManyToMany
         @JoinTable(
             name = "SOURCE_TAG_MAPPING",
-            joinColumns = @joinColumn(
-                name = "SOURCE_ID",  
+            joinColumns = @JoinColumn(
+                name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
             inverseJoinColumnName = "TAG_ID",
@@ -517,9 +517,9 @@ A common case is when a project has many kinds of data, and each kind of data ca
                 type = String.class,
                 values = "BOOK",
             )
-        ) 
+        )
         List<Tag> tags();
-        
+
         ...other properties omitted...
     }
     ```
@@ -534,19 +534,19 @@ A common case is when a project has many kinds of data, and each kind of data ca
         @ManyToMany
         @JoinTable(
             name = "SOURCE_TAG_MAPPING",
-            joinColumns = @joinColumn(
+            joinColumns = @JoinColumn(
                 name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
             inverseJoinColumnName = "TAG_ID",
             filter = JoinTable.JoinTableFilter(
                 columnName = "SOURCE_TYPE",
-                type = String.class, 
+                type = String.class,
                 values = "BOOK",
             )
         )
         val tags: List<Tag>
-        
+
         ...other properties omitted...
     }
     ```
@@ -566,19 +566,19 @@ A common case is when a project has many kinds of data, and each kind of data ca
         @ManyToMany
         @JoinTable(
             name = "SOURCE_TAG_MAPPING",
-            joinColumns = @joinColumn(
-                name = "SOURCE_ID",  
+            joinColumns = @JoinColumn(
+                name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
             inverseJoinColumnName = "TAG_ID",
             filter = @JoinTable.JoinTableFilter(
                 columnName = "SOURCE_TYPE",
                 type = String.class,
-                values = "AUTHOR", 
+                values = "AUTHOR",
             )
         )
         List<Tag> tags();
-        
+
         ...other properties omitted...
     }
     ```
@@ -593,8 +593,8 @@ A common case is when a project has many kinds of data, and each kind of data ca
         @ManyToMany
         @JoinTable(
             name = "SOURCE_TAG_MAPPING",
-            joinColumns = @joinColumn(
-                name = "SOURCE_ID", 
+            joinColumns = @JoinColumn(
+                name = "SOURCE_ID",
                 foreignKeyType = ForeignKeyType.FAKE
             ),
             inverseJoinColumnName = "TAG_ID",
@@ -602,10 +602,10 @@ A common case is when a project has many kinds of data, and each kind of data ca
                 columnName = "SOURCE_TYPE",
                 type = String.class,
                 values = "AUTHOR",
-            ) 
+            )
         )
         val tags: List<Tag>
-        
+
         ...other properties omitted...
     }
     ```
@@ -613,29 +613,29 @@ A common case is when a project has many kinds of data, and each kind of data ca
     </TabItem>
     </Tabs>
 
-For the join table `SOURCE_TAG_MAPPING`, although the foreign key `TAG_ID` references the `TAG` table, 
-the other foreign key `SOURCE_ID` does not have a fixed target - it could reference `BOOK_STORE`, `BOOK` or `AUTHOR`.  
+For the join table `SOURCE_TAG_MAPPING`, although the foreign key `TAG_ID` references the `TAG` table,
+the other foreign key `SOURCE_ID` does not have a fixed target - it could reference `BOOK_STORE`, `BOOK` or `AUTHOR`.
 
-Therefore we cannot add a foreign key constraint on `SOURCE_ID`.  
+Therefore we cannot add a foreign key constraint on `SOURCE_ID`.
 
-```sql  
+```sql
 create table SOURCE_TAG_MAPPING(
     SOURCE_ID bigint not null,
     TAG_ID bigint not null,
-    SOURCE_TYPE varchar(10) not null  
+    SOURCE_TYPE varchar(10) not null
 );
 
-// Whether the primary key contains the filter column 
+// Whether the primary key contains the filter column
 // depends on the specific case.
-// In this example, `SOURCE_ID` of different types could be equal, 
+// In this example, `SOURCE_ID` of different types could be equal,
 // so the primary key constraint needs to contain `SOURCE_TYPE`.
 alter table SOURCE_TAG_MAPPING
     add constraint pk_SHOP_CUSTOMER_MAPPING
-        primary key(SOURCE_ID, TAG_ID, SOURCE_TYPE);  
+        primary key(SOURCE_ID, TAG_ID, SOURCE_TYPE);
 
 // highlight-next-line
 // `SOURCE_ID` could reference `BOOK_STORE`, `BOOK` or `AUTHOR`,
-// highlight-next-line 
+// highlight-next-line
 // so we cannot add a foreign key constraint
 
 alter table SOURCE_TAG_MAPPING
@@ -645,50 +645,50 @@ alter table SOURCE_TAG_MAPPING
 
 alter table SOURCE_TAG_MAPPING
     add constraint ck_SOURCE_TAG_MAPPING__SOURCE_TYPE
-        check(SOURCE_TYPE in ('BOOK_STORE', 'BOOK', 'AUTHOR')); 
+        check(SOURCE_TYPE in ('BOOK_STORE', 'BOOK', 'AUTHOR'));
 ```
 
-Since `SOURCE_ID` cannot have a foreign key constraint, it is a [fake foreign key](../base/foreignkey). 
-That's why in the code above:  
+Since `SOURCE_ID` cannot have a foreign key constraint, it is a [fake foreign key](../base/foreignkey).
+That's why in the code above:
 
 ```java
 @JoinTable(
-    joinColumns = @joinColumn(
+    joinColumns = @JoinColumn(
         name = "SOURCE_ID",
-        // highlight-next-line  
+        // highlight-next-line
         foreignKeyType = ForeignKeyType.FAKE
-    ), 
+    ),
     ...other params omitted...
 )
 ```
 
-Sample data could look like:  
+Sample data could look like:
 
-|SOURCE_ID|TARGET_ID|SOURCE_TYPE| 
+|SOURCE_ID|TARGET_ID|SOURCE_TYPE|
 |---|---|---|
 |9|2|BOOK_STORE|
 |9|4|BOOK_STORE|
-|86|3|BOOK|  
+|86|3|BOOK|
 |86|4|BOOK|
 |781|1|AUTHOR|
 |781|3|AUTHOR|
 
-## Mixing One-to-Many and Many-to-Many  
+## Mixing One-to-Many and Many-to-Many
 
-Both one-to-many and many-to-many can use join tables, so we can merge their join tables into one table. But please note:  
+Both one-to-many and many-to-many can use join tables, so we can merge their join tables into one table. But please note:
 
-:::caution  
-It is strongly recommended to only use this pattern when the database supports conditional indexes.  
+:::caution
+It is strongly recommended to only use this pattern when the database supports conditional indexes.
 
-That is, do not use this pattern on databases without conditional index support like MySQL.  
+That is, do not use this pattern on databases without conditional index support like MySQL.
 :::
 
-### Define Associations  
+### Define Associations
 
 <Tabs groupId="language">
-<TabItem value="java" label="Java">  
+<TabItem value="java" label="Java">
 
-```java 
+```java
 @Entity
 public interface Book {
 
@@ -696,7 +696,7 @@ public interface Book {
     @JoinTable(
         name = "BOOK_AUTHOR_MAPPING",
         joinColumnName = "BOOK_ID",
-        inverseJoinColumnName = "AUTHOR_ID", 
+        inverseJoinColumnName = "AUTHOR_ID",
         readonly = true
     )
     List<Author> authors();
@@ -704,7 +704,7 @@ public interface Book {
     @Nullable
     @ManyToOne
     @JoinTable(
-        name = "BOOK_AUTHOR_MAPPING", 
+        name = "BOOK_AUTHOR_MAPPING",
         joinColumnName = "BOOK_ID",
         inverseJoinColumnName = "AUTHOR_ID",
         filter = @JoinTable.JoinTableFilter(
@@ -712,7 +712,7 @@ public interface Book {
             type = String.class,
             values = "PRIMARY"
         )
-    )  
+    )
     Author primaryAuthor();
 
     @ManyToMany
@@ -722,21 +722,21 @@ public interface Book {
         inverseJoinColumnName = "AUTHOR_ID",
         filter = @JoinTable.JoinTableFilter(
             columnName = "MAPPING_TYPE",
-            type = String.class, 
+            type = String.class,
             values = "SECONDARY"
         )
     )
     List<Author> secondaryAuthors();
 
-    ...other properties omitted...  
+    ...other properties omitted...
 }
 ```
 
-</TabItem>  
+</TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-@Entity  
+@Entity
 interface Book {
 
     @ManyToMany
@@ -758,7 +758,7 @@ interface Book {
             columnName = "MAPPING_TYPE",
             type = String.class,
             values = "PRIMARY"
-        ) 
+        )
     )
     val primaryAuthor: Author?
 
@@ -770,7 +770,7 @@ interface Book {
         filter = @JoinTable.JoinTableFilter(
             columnName = "MAPPING_TYPE",
             type = String.class,
-            values = "SECONDARY"  
+            values = "SECONDARY"
         )
     )
     val secondaryAuthors: List<Author>
@@ -779,29 +779,29 @@ interface Book {
 }
 ```
 
-</TabItem>  
+</TabItem>
 </Tabs>
 
-Clearly:  
+Clearly:
 
 `authors` *(many-to-many)* = `primaryAuthor` *(many-to-one)* + `secondaryAuthors` *(many-to-many)*
 
-### Conditional Indexes  
+### Conditional Indexes
 
 ```sql
 create table BOOK_AUTHOR_MAPPING(
     BOOK_ID bigint not null,
     AUTHOR_ID bigint not null,
-    MAPPING_TYPE varchar(9) not null  
+    MAPPING_TYPE varchar(9) not null
 );
 
 // Whether the primary key contains the filter column depends on the specific case.
-// In this example, a mapping between an `Author` and a `Book`  
+// In this example, a mapping between an `Author` and a `Book`
 // cannot be both "PRIMARY" and "SECONDARY" at the same time.
 // So the primary key constraint does not contain `MAPPING_TYPE`.
 alter table BOOK_AUTHOR_MAPPING
     add constraint pk_BOOK_AUTHOR_MAPPING
-        primary key(BOOK_ID, AUTHOR_ID);  
+        primary key(BOOK_ID, AUTHOR_ID);
 
 alter table BOOK_AUTHOR_MAPPING
     add constraint fk_BOOK_AUTHOR_MAPPING__BOOK
@@ -811,27 +811,27 @@ alter table BOOK_AUTHOR_MAPPING
 alter table BOOK_AUTHOR_MAPPING
     add constraint fk_BOOK_AUTHOR_MAPPING__BOOK
         foreign key(AUTHOR_ID)
-            references AUTHOR(ID); 
+            references AUTHOR(ID);
 
 alter table BOOK_AUTHOR_MAPPING
     add constraint ck_BOOK_AUTHOR_MAPPING__MAPPING_TYPE
-        check(MAPPING_TYPE in ('PRIMARY', 'SECONDARY'));  
+        check(MAPPING_TYPE in ('PRIMARY', 'SECONDARY'));
 
 // highlight-start
-// Syntax for conditional indexes may differ slightly between databases,  
+// Syntax for conditional indexes may differ slightly between databases,
 // here is an example in Postgres
 create unique index BOOK_AUTHOR_MAPPING__PRIMARY_INDEX
-    on BOOK_AUTHOR_MAPPING(AUTHOR_ID) 
-    when MAPPING_TYPE = 'PRIMARY'; 
+    on BOOK_AUTHOR_MAPPING(AUTHOR_ID)
+    when MAPPING_TYPE = 'PRIMARY';
 // highlight-end
 ```
 
-The `when` clause is very important, indicating this is a conditional index.  
+The `when` clause is very important, indicating this is a conditional index.
 
-Syntax for conditional indexes may differ slightly between databases, here is an example in Postgres. See https://www.postgresql.org/docs/current/indexes-partial.html for more details.  
+Syntax for conditional indexes may differ slightly between databases, here is an example in Postgres. See https://www.postgresql.org/docs/current/indexes-partial.html for more details.
 
--   When `MAPPING_TYPE` is "PRIMARY", a unique index is added on the `AUTHOR_ID` foreign key to ensure each `Book` has maximum one primary `Author`.  
-    That is, to ensure `Book.primaryAuthor` is a many-to-one association.   
+-   When `MAPPING_TYPE` is "PRIMARY", a unique index is added on the `AUTHOR_ID` foreign key to ensure each `Book` has maximum one primary `Author`.
+    That is, to ensure `Book.primaryAuthor` is a many-to-one association.
 
--   Otherwise, there is no uniqueness constraint, so each `Book` can have any number of secondary `Author`s.  
-    That is, `Book.secondaryAuthors` remains a many-to-many association.  
+-   Otherwise, there is no uniqueness constraint, so each `Book` can have any number of secondary `Author`s.
+    That is, `Book.secondaryAuthors` remains a many-to-many association.

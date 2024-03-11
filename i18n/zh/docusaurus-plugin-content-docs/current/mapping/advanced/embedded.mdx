@@ -37,7 +37,7 @@ public interface FullName {
 interface FullName {
 
     val firstName: String
-    
+
     val lastName: String
 }
 ```
@@ -107,7 +107,7 @@ create table author(
 可以使用`org.babyfish.jimmer.sql.PropOverride`覆盖复合类型字段的列名
 
 -   定义复合类型`Point`
-    
+
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
 
@@ -129,7 +129,7 @@ create table author(
     interface Point {
 
         val x: Int
-        
+
         val y: Int
     }
     ```
@@ -138,7 +138,7 @@ create table author(
     </Tabs>
 
 -   定义复合类型`Rect`，覆盖`Point`类型的列名
-    
+
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
 
@@ -290,7 +290,7 @@ interface UniqueId {
 
     @columnName("UNIQUE_ID_DAY_NO")
     val dayNo: Int
-    
+
     @columnName("UNIQUE_ID_SEQ_NO")
     val sequenceNo: Int
 }
@@ -357,11 +357,11 @@ public interface Chapter {
 
     @ManyToOne
     @JoinColumn(
-        name = "BOOK_ID_DAY_NO", 
+        name = "BOOK_ID_DAY_NO",
         referencedColumnName = "UNIQUE_ID_DAY_NO"
     )
     @JoinColumn(
-        name = "BOOK_ID_SEQ_NO", 
+        name = "BOOK_ID_SEQ_NO",
         referencedColumnName = "UNIQUE_ID_SEQ_NO"
     )
     Book book();
@@ -379,11 +379,11 @@ interface Chapter {
 
     @ManyToOne
     @JoinColumn(
-        name = "BOOK_ID_DAY_NO", 
+        name = "BOOK_ID_DAY_NO",
         referencedColumnName = "UNIQUE_ID_DAY_NO"
     )
     @JoinColumn(
-        name = "BOOK_ID_SEQ_NO", 
+        name = "BOOK_ID_SEQ_NO",
         referencedColumnName = "UNIQUE_ID_SEQ_NO"
     )
     val book: Book
@@ -431,11 +431,11 @@ public interface Book {
     @JoinTable(
         joinColumns = {
             @JoinColumn(
-                name = "BOOK_ID_DAY_NO", 
+                name = "BOOK_ID_DAY_NO",
                 referencedColumnName = "UNIQUE_ID_DAY_NO"
-            )
+            ),
             @JoinColumn(
-                name = "BOOK_ID_SEQ_NO", 
+                name = "BOOK_ID_SEQ_NO",
                 referencedColumnName = "UNIQUE_ID_SEQ_NO"
             )
         }
@@ -459,16 +459,16 @@ interface Book {
 
     @ManyToMany
     @JoinTable(
-        joinColumns = {
-            @JoinColumn(
-                name = "BOOK_ID_DAY_NO", 
+        joinColumns = [
+            JoinColumn(
+                name = "BOOK_ID_DAY_NO",
                 referencedColumnName = "UNIQUE_ID_DAY_NO"
-            )
-            @JoinColumn(
-                name = "BOOK_ID_SEQ_NO", 
+            ),
+            JoinColumn(
+                name = "BOOK_ID_SEQ_NO",
                 referencedColumnName = "UNIQUE_ID_SEQ_NO"
             )
-        }
+        ]
     )
     // highlight-next-line
     val authors: List<Author>
@@ -492,8 +492,8 @@ create table book_author_mapping(
 alter table book_author_mapping
     add constraint pk_book_author_mapping
         primary key(
-            book_id_day_no, 
-            book_id_seq_id, 
+            book_id_day_no,
+            book_id_seq_id,
             author_id
         );
 

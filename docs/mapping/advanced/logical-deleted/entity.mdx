@@ -13,8 +13,8 @@ Once a logical deletion property is configured for an entity:
 -   By default, when developers call APIs to delete an entity object, Jimmer will NOT actually delete the data with SQL `delete` statements. Instead, it will use `update` statements to set the logical deletion property of the entity to "already deleted".
 
     Other cases: Even if an entity has a logical deletion property, Jimmer also provides APIs for developers to forcibly truly delete objects by passing additional parameters.
-  
--   By default, all SQL queries against the entity will be automatically appended with a `where logicalDeleteFlag <> already deleted` condition to create the illusion that some data has been deleted. 
+
+-   By default, all SQL queries against the entity will be automatically appended with a `where logicalDeleteFlag <> already deleted` condition to create the illusion that some data has been deleted.
 
 :::info
 This doc only covers the mapping configuration of the logical deletion flag field. For how to use the logical deletion functionality, see [Global Filters / Logical Deletion](../../../query/global-filter/logical-deleted).
@@ -25,7 +25,7 @@ This doc only covers the mapping configuration of the logical deletion flag fiel
 The logical deletion flag property can be one of the following types:
 
 -   boolean: must be non-null
--   int: must be non-null  
+-   int: must be non-null
 -   enum: must be non-null
 -   long/Long：either null or non-null
 -   UUID: either null or non-null
@@ -333,17 +333,17 @@ Where
 
 -   ✩ in the first or second column indicates that the current configuration method supports multi-version data to be discussed in the next section.
 
-    :::info  
+    :::info
     Supporting logical deletion but not considering multi-version data issues is a less mature consideration. Therefore, it is recommended to use the logical deletion configuration that supports multi-version data.
     :::
 
--   `Current milliseconds`, the default behavior is `System.currentMillis()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedLongGenerator`.  
+-   `Current milliseconds`, the default behavior is `System.currentMillis()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedLongGenerator`.
 
     If this behavior is unsatisfactory, a custom class can be implemented that implements the `LogicalDeletedValueGenerator<Long>` interface, and configured with:
 
-    -   `@LogicalDeleted(generatedType = YourGenerator.class)`  
+    -   `@LogicalDeleted(generatedType = YourGenerator.class)`
 
-    -   `@LogicalDeleted(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework
+    -   `@LogicalDeleted(generatedRef = YourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework
 
 - `Random UUID`, the default behavior is `UUID.randomUUID()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedUUIDGenerator`.
 
@@ -351,107 +351,107 @@ Where
 
     - `@LogicalDeleted(generatedType = YourGenerator.class)`
 
-    - `@LogicalDeleted(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework  
+    - `@LogicalDeleted(generatedRef = YourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework
 
-## Multi-Version Data  
+## Multi-Version Data
 
-Logical deletion does not actually delete data, it only hides the data. This means that data appears in multiple versions. This issue is also described in [Key / Multi-version Support](../key#multi-version-support).  
+Logical deletion does not actually delete data, it only hides the data. This means that data appears in multiple versions. This issue is also described in [Key / Multi-version Support](../key#multi-version-support).
 
-Take the example of long type logical deletion that supports multiple versions  
+Take the example of long type logical deletion that supports multiple versions
 
 <Tabs groupId="language">
-<TabItem value="java" label="Java">  
+<TabItem value="java" label="Java">
 
 ```java
-@Entity  
-public interface Book {   
-    
+@Entity
+public interface Book {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  
-    long id();  
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    long id();
 
     @Key
-    String name();   
+    String name();
 
-    @Key 
+    @Key
     int edition();
 
     // hightlight-next-line
-    @LogicalDeleted    
+    @LogicalDeleted
     long deletedMillis();
 
-    BigDecimal price();  
+    BigDecimal price();
 
     @ManyToOne
     BookStore store();
 }
-```  
+```
 
 </TabItem>
-<TabItem value="kotlin" label="Kotlin">   
+<TabItem value="kotlin" label="Kotlin">
 
-```kotlin   
+```kotlin
 @Entity
 interface Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long  
-
-    @Key 
-    val name: String   
+    val id: Long
 
     @Key
-    val edition: String 
+    val name: String
+
+    @Key
+    val edition: String
 
     // hightlight-next-line
     @LogicalDeleted
-    val deletedMillis: Long  
+    val deletedMillis: Long
 
     val price: BigDecimal
 
     @ManyToOne
-    val store: BookStore 
+    val store: BookStore
 }
-```  
+```
 
 </TabItem>
-</Tabs>   
+</Tabs>
 
-Although the Key of the `Book` object is `name` and `edition`, because the `deletedMillis` property is the logical deletion flag, the non-primary key `UNIQUE` constraint at the database level should be:  
+Although the Key of the `Book` object is `name` and `edition`, because the `deletedMillis` property is the logical deletion flag, the non-primary key `UNIQUE` constraint at the database level should be:
 
-```sql  
+```sql
 alter table BOOK
     add constraint uq_key_BOOK
-        unique(NAME, EDITION, DELETED_MILLIS);  
-```  
+        unique(NAME, EDITION, DELETED_MILLIS);
+```
 
-If the table input is as follows:  
+If the table input is as follows:
 
-|ID|NAME|EDITION|PRICE|STORE_ID|DELETED_MILLIS|  
+|ID|NAME|EDITION|PRICE|STORE_ID|DELETED_MILLIS|
 |---|---|---|---|---|---|
-|1027|SQL in Action|1|49.99|23|0|  
+|1027|SQL in Action|1|49.99|23|0|
 |1026|SQL in Action|1|55.99|22|1708796420956|
-|1025|SQL in Action|1|47.99|23|1708234681901|  
+|1025|SQL in Action|1|47.99|23|1708234681901|
 |3131|SQL in Action|2|59.99|23|0|
 |3130|SQL in Action|2|53.99|22|1708722582793|
 |3129|SQL in Action|2|58.99|23|1708664484823|
 
-There are 4 associated data records hidden, leaving only two valid data records:  
+There are 4 associated data records hidden, leaving only two valid data records:
 
 |ID|NAME|EDITION|PRICE|STORE_ID|DELETED_MILLIS|
-|---|---|---|---|---|---|  
+|---|---|---|---|---|---|
 |1027|SQL in Action|1|49.99|23|0|
-|3131|SQL in Action|2|59.99|23|0|   
+|3131|SQL in Action|2|59.99|23|0|
 
-## Effects on Middle Tables  
+## Effects on Middle Tables
 
 If an entity is logically deleted, what effect does it have on associations based on middle tables *(using the `@JoinTable` annotation)*?
 
--   If the middle table also supports logical deletion, that is, the `logicalDeletedFilter` of the `@JoinTable` annotation is specified, the middle table records related to the logically deleted entity will also be logically deleted.  
+-   If the middle table also supports logical deletion, that is, the `logicalDeletedFilter` of the `@JoinTable` annotation is specified, the middle table records related to the logically deleted entity will also be logically deleted.
 
     In [the next document] (./join-table), we will discuss in detail the logical deletion of middle tables.
 
--   If the `deletedWhenEndpointIsLogicallyDeleted` of the `@JoinTable` annotation is set to true, the middle table records related to the logically deleted entity will be physically deleted.  
+-   If the `deletedWhenEndpointIsLogicallyDeleted` of the `@JoinTable` annotation is set to true, the middle table records related to the logically deleted entity will be physically deleted.
 
 -   If neither of the above two conditions is met, the middle table records related to the logically deleted entity will not be processed at all.

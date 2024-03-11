@@ -10,18 +10,18 @@ To enable logical deletion for the middle table, the property needs to be specif
 
 - Once a logical deletion attribute is configured for the middle table, when any entity on either end is logically deleted, all related middle table records will be logically deleted.
 
-- All JOIN operations for the current association will be automatically added with the condition `and logical deletion flag <> already deleted` to give the illusion that some associations have been deleted.  
+- All JOIN operations for the current association will be automatically added with the condition `and logical deletion flag <> already deleted` to give the illusion that some associations have been deleted.
 
 ## Usage
 
-The logical deletion flag attribute can be one of the following types:  
+The logical deletion flag attribute can be one of the following types:
 
-- boolean: must be non-null  
+- boolean: must be non-null
 - int: must be non-null
-- enum: must be non-null 
-- long/Long: can be null or non-null  
+- enum: must be non-null
+- long/Long: can be null or non-null
 - UUID: must be non-null
-- Date: must be nullable  
+- Date: must be nullable
 
 <table>
 <thead>
@@ -43,7 +43,7 @@ The logical deletion flag attribute can be one of the following types:
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED",
             type = boolean.class,
@@ -60,7 +60,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "DELETED",
             type = boolean.class,
@@ -85,7 +85,7 @@ val authors: List<Author>
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "ACTIVE",
             type = boolean.class,
@@ -102,7 +102,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "ACTIVE",
             type = boolean.class,
@@ -128,7 +128,7 @@ val authors: List<Author>
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "STATE",
             type = int.class,
@@ -146,7 +146,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "STATE",
             type = int.class,
@@ -173,7 +173,7 @@ val authors: List<Author>
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "STATE",
             type = State.class,
@@ -191,7 +191,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "STATE",
             type = State.class,
@@ -224,7 +224,7 @@ long
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
             type = long.class
@@ -240,7 +240,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
             type = long.class
@@ -271,7 +271,7 @@ Nullable Long
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
             type = Long.class,
@@ -288,7 +288,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
             type = Long.class,
@@ -320,7 +320,7 @@ UUID
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_DATA",
             type = UUID.class
@@ -336,7 +336,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_DATA",
             type = UUID.class
@@ -367,7 +367,7 @@ Nullable UUID
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_DATA",
             type = UUID.class,
@@ -384,7 +384,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_DATA",
             type = UUID.class,
@@ -415,7 +415,7 @@ Nullable LocalDateTime
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_TIME",
             type = LocalDateTime.class,
@@ -433,7 +433,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_TIME",
             type = LocalDateTime.class,
@@ -460,7 +460,7 @@ val authors: List<Author>
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "CREATED_TIME",
             type = LocalDateTime.class,
@@ -478,7 +478,7 @@ List<Author> authors();
 @ManyToMany
 @JoinTable(
     ...Omit other arguments...,
-    logicalDeletedFilter = 
+    logicalDeletedFilter =
         JoinTable.LogicalDeletedFilter(
             columnName = "CREATED_TIME",
             type = LocalDateTime.class,
@@ -498,9 +498,9 @@ val authors: List<Author>
 </tbody>
 </table>
 
-Where  
+Where
 
--   ✩ in the first or second column indicates that the current configuration method supports multi-version data to be discussed in the next section.  
+-   ✩ in the first or second column indicates that the current configuration method supports multi-version data to be discussed in the next section.
 
     :::info
     Supporting logical deletion without considering multi-version data issues is less mature. Therefore, it is recommended to use the logical deletion configuration that supports multi-version data.
@@ -508,91 +508,91 @@ Where
 
 -   `Current milliseconds`, the default behavior is `System.currentMillis()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedLongGenerator`.
 
-    If this behavior is unsatisfactory, a custom class can be implemented that implements the `LogicalDeletedValueGenerator<Long>` interface, and configured with:  
+    If this behavior is unsatisfactory, a custom class can be implemented that implements the `LogicalDeletedValueGenerator<Long>` interface, and configured with:
 
     - `@JoinTable.LogicalDeletedFilter(generatedType = YourGenerator.class)`
 
-    - `@JoinTable.LogicalDeletedFilter(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework  
+    - `@JoinTable.LogicalDeletedFilter(generatedRef = YourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework
 
-- `Random UUID`, the default behavior is `UUID.randomUUID()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedUUIDGenerator`.  
+- `Random UUID`, the default behavior is `UUID.randomUUID()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedUUIDGenerator`.
 
-    If this behavior is unsatisfactory, a custom class can be implemented that implements the `LogicalDeletedValueGenerator<UUID>` interface, and configured with:  
+    If this behavior is unsatisfactory, a custom class can be implemented that implements the `LogicalDeletedValueGenerator<UUID>` interface, and configured with:
 
-    - `@JoinTable.LogicalDeletedFilter(generatedType = YourGenerator.class)`  
+    - `@JoinTable.LogicalDeletedFilter(generatedType = YourGenerator.class)`
 
-    - `@JoinTable.LogicalDeletedFilter(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework  
+    - `@JoinTable.LogicalDeletedFilter(generatedRef = YourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework
 
 ## Multi-Version Data
 
-Logical deletion does not actually delete data, it only hides it. This means that data appears in multiple versions.  
+Logical deletion does not actually delete data, it only hides it. This means that data appears in multiple versions.
 
-Take the configuration that supports multi-version data as an example:  
+Take the configuration that supports multi-version data as an example:
 
-<Tabs groupId="language">  
-<TabItem value="java" label="Java">   
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
 
-```java 
+```java
 @ManyToMany
 @JoinTable(
     name = "BOOK_AUTHOR_MAPPING",
     joinColumnName = "BOOK_ID",
-    inverseJoinColumnName = "AUTHOR_ID", 
-    logicalDeletedFilter = 
+    inverseJoinColumnName = "AUTHOR_ID",
+    logicalDeletedFilter =
         @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
-            type = long.class  
-        )  
-)  
-List<Author> authors(); 
-```  
+            type = long.class
+        )
+)
+List<Author> authors();
+```
 
 </TabItem>
-<TabItem value="kotlin" label="Kotlin">  
+<TabItem value="kotlin" label="Kotlin">
 
-```kotlin   
+```kotlin
 @ManyToMany
 @JoinTable(
-    name = "BOOK_AUTHOR_MAPPING",  
+    name = "BOOK_AUTHOR_MAPPING",
     joinColumnName = "BOOK_ID",
     inverseJoinColumnName = "AUTHOR_ID",|
-    logicalDeletedFilter =  
-        @JoinTable.LogicalDeletedFilter(  
+    logicalDeletedFilter =
+        @JoinTable.LogicalDeletedFilter(
             columnName = "DELETED_MILLIS",
-            type = long.class  
+            type = long.class
         )
-)  
-val authors: List<Author>  
-```  
+)
+val authors: List<Author>
+```
 
-</TabItem>  
-</Tabs>   
+</TabItem>
+</Tabs>
 
-For example, the `BOOK_AUTHOR_MAPPING` table has three columns, all as part of the primary key  
+For example, the `BOOK_AUTHOR_MAPPING` table has three columns, all as part of the primary key
 
-```sql   
+```sql
 alter table BOOK_AUTHOR_MAPPING
-    add pk_BOOK_AUTHOR_MAPPING  
-        primary key(  
-            BOOK_ID,   
-            AUTHOR_ID,  
+    add pk_BOOK_AUTHOR_MAPPING
+        primary key(
+            BOOK_ID,
+            AUTHOR_ID,
             DELETED_MILLIS
-        );  
-```  
+        );
+```
 
-If the table input is as follows:   
+If the table input is as follows:
 
-|BOOK_ID|AUTHOR_ID|DELETED_MILLIS|  
-|---|---|---|  
-|97|23|0|  
-|97|23|1708796420956|   
-|97|23|1708234681901|   
-|249|11|0|   
-|249|11|1708722582793|  
-|249|11|1708664484823|   
+|BOOK_ID|AUTHOR_ID|DELETED_MILLIS|
+|---|---|---|
+|97|23|0|
+|97|23|1708796420956|
+|97|23|1708234681901|
+|249|11|0|
+|249|11|1708722582793|
+|249|11|1708664484823|
 
-There are 4 associated data records hidden, leaving only two valid data records:  
+There are 4 associated data records hidden, leaving only two valid data records:
 
-|BOOK_ID|AUTHOR_ID|DELETED_MILLIS|  
-|---|---|---|   
+|BOOK_ID|AUTHOR_ID|DELETED_MILLIS|
+|---|---|---|
 |97|23|0|
 |249|11|0|

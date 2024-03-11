@@ -25,7 +25,7 @@ public interface Shop {
     String name();
 
     @ManyToMany
-    @joinTable(
+    @JoinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
         inverseJoinColumnName = "CUSTOMER_ID",
@@ -35,7 +35,7 @@ public interface Shop {
     List<Customer> customers();
 
     @ManyToMany
-    @joinTable(
+    @JoinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
         inverseJoinColumnName = "CUSTOMER_ID",
@@ -49,7 +49,7 @@ public interface Shop {
     List<Customer> vipCustomers();
 
     @ManyToMany
-    @joinTable(
+    @JoinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
         inverseJoinColumnName = "CUSTOMER_ID",
@@ -77,7 +77,7 @@ interface Shop {
     val name: String
 
     @ManyToMany
-    @joinTable(
+    @JoinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
         inverseJoinColumnName = "CUSTOMER_ID",
@@ -87,7 +87,7 @@ interface Shop {
     val customers: List<Customer>
 
     @ManyToMany
-    @joinTable(
+    @JoinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
         inverseJoinColumnName = "CUSTOMER_ID",
@@ -101,7 +101,7 @@ interface Shop {
     val vipCustomers: List<Customer>
 
     @ManyToMany
-    @joinTable(
+    @JoinTable(
         name = "SHOP_CUSTOMER_MAPPING",
         joinColumnName = "SHOP_ID",
         inverseJoinColumnName = "CUSTOMER_ID",
@@ -182,7 +182,7 @@ Actually, the union association `Shop.customers` has an equivalent alternative s
 
 ```java  
 @ManyToMany
-@joinTable(
+@JoinTable(
     ...other params omitted..., 
     filter = @JoinTable.JoinTableFilter(
         columnName = "MAPPING_TYPE",
@@ -199,7 +199,7 @@ List<Customer> customers();
 
 ```kotlin
 @ManyToMany
-@joinTable(
+@JoinTable(
     ...other params omitted...,
     filter = @JoinTable.JoinTableFilter(
         columnName = "MAPPING_TYPE",

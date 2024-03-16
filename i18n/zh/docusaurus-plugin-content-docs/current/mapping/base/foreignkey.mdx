@@ -184,9 +184,9 @@ Jimmer中外键有两种
         @ManyToMany
         @JoinTable(
             // highlight-next-line
-            joinColumns = @JoinColumn(foreignKeyType = ForeignKeyType.FAKE),
+            joinColumns = {@JoinColumn(foreignKeyType = ForeignKeyType.FAKE)},
             // highlight-next-line
-            inverseJoinColumns = @JoinColumn(foreignKeyType = ForeignKeyType.FAKE)
+            inverseJoinColumns = {@JoinColumn(foreignKeyType = ForeignKeyType.FAKE)}
         )
         List<Author> authors();
 
@@ -202,12 +202,11 @@ Jimmer中外键有两种
     interface Book {
         
         @ManyToMany
-        // highlight-next-line
         @JoinTable(
             // highlight-next-line
-            joinColumns = @JoinColumn(foreignKeyType = ForeignKeyType.FAKE),
+            joinColumns = [JoinColumn(foreignKeyType = ForeignKeyType.FAKE)],
             // highlight-next-line
-            inverseJoinColumns = @JoinColumn(foreignKeyType = ForeignKeyType.FAKE)
+            inverseJoinColumns = [JoinColumn(foreignKeyType = ForeignKeyType.FAKE)]
         )
         val authors: List<Author>
         

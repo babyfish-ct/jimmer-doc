@@ -79,9 +79,9 @@ This difference is transparent to the user. The user only needs to configure the
         @ManyToMany
         @JoinTable(
             // highlight-next-line
-            joinColumns = @JoinColumn(foreignKeyType = ForeignKeyType.REAL),
+            joinColumns = {@JoinColumn(foreignKeyType = ForeignKeyType.REAL)},
             // highlight-next-line
-            inverseJoinColumns = @JoinColumn(foreignKeyType = ForeignKeyType.REAL)
+            inverseJoinColumns = {@JoinColumn(foreignKeyType = ForeignKeyType.REAL)}
         )
         List<Author> authors();
 
@@ -97,12 +97,11 @@ This difference is transparent to the user. The user only needs to configure the
     interface Book {
         
         @ManyToMany
-        // highlight-next-line
         @JoinTable(
             // highlight-next-line
-            joinColumns = @JoinColumn(foreignKeyType = ForeignKeyType.REAL),
+            joinColumns = [JoinColumn(foreignKeyType = ForeignKeyType.REAL)],
             // highlight-next-line
-            inverseJoinColumns = @JoinColumn(foreignKeyType = ForeignKeyType.REAL)
+            inverseJoinColumns = [JoinColumn(foreignKeyType = ForeignKeyType.REAL)]
         )
         val authors: List<Author>
         

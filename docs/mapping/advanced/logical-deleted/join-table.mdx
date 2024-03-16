@@ -512,7 +512,7 @@ Where
 
     - `@JoinTable.LogicalDeletedFilter(generatedType = YourGenerator.class)`
 
-    - `@JoinTable.LogicalDeletedFilter(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework  
+    - `@JoinTable.LogicalDeletedFilter(generatedRef = YourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework  
 
 - `Random UUID`, the default behavior is `UUID.randomUUID()`, which is the behavior of the default `org.babyfish.jimmer.sql.meta.LogicalDeletedUUIDGenerator`.  
 
@@ -520,7 +520,7 @@ Where
 
     - `@JoinTable.LogicalDeletedFilter(generatedType = YourGenerator.class)`  
 
-    - `@JoinTable.LogicalDeletedFilter(generatedRef = yourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework  
+    - `@JoinTable.LogicalDeletedFilter(generatedRef = YourGenerator.class)`, where `generatorRef` indicates the name of the object in the IOC container management framework  
 
 ## Multi-Version Data
 

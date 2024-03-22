@@ -37,8 +37,7 @@ val dataSource: javax.sql.DataSource = ...
 
 val sqlClient = newKSqlClient {
     setConnectionManager {
-        ConnectionManager
-        dataSource.connection.use {
+        dataSoruce.connection.use {
             // highlight-next-line
             proceed(it)
         }

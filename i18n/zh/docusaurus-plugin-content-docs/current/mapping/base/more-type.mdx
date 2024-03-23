@@ -1,0 +1,156 @@
+---
+sidebar_position: 6 
+title: 更多类型
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+除了boolean，数字，字符串，UUID，日期，枚举外，标量属性还支持其他类型，包括
+
+-   数组类型
+-   JSON类型
+-   自定义类型
+
+:::info
+枚举类型不在本文讨论范围内，请参见[Enum映射](../advanced/enum)
+:::
+
+## 数组类型
+
+:::warning
+要使用数组类型，需要底层数据库支持素组类型
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Book {
+
+    @Id
+    long id();
+
+    // highlight-next-line
+    String[] tags();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Book {
+
+    @Id
+    val id: Long
+
+    // highlight-next-line
+    val tags: Array<String>
+}
+```
+
+</TabItem>
+</Tabs>
+
+对于Postgres而言，需要指定SQL中的数据元素类型，例如
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Book {
+
+    @Id
+    long id();
+
+    // highlight-next-line
+    @Column(sqlElementType = "text")
+    String[] tags();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Book {
+
+    @Id
+    val id: Long
+
+    // highlight-next-line
+    @Column(sqlElementType = "text")
+    val tags: Array<String>
+}
+```
+
+</TabItem>
+</Tabs>
+
+## JSON类型
+
+可以利用Jackson支持任何类型的标量属性，无论自定义Java/Kotlin类型，还是集合类型，甚至二者的混合类型。
+
+只需要使用`@org.babyfish.jimmer.sql.Serialized`注解，就可以使用JSON类型。
+
+这里，以集合类型为例，展示其用法
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Book {
+
+    @Id
+    long id();
+
+    // highlight-next-line
+    @Serialized
+    Map<String, Map<String, List<Integer>> data();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Book {
+
+    @Id
+    val id: Long
+
+    // highlight-next-line
+    @Serialized
+    val data: Map<String, Map<String, List<Integer>>
+}
+```
+
+</TabItem>
+</Tabs>
+
+那么JSON类型在SQL对应何种类型呢？
+
+-   如果数据库支持JSON或JSONB类型，就使用该类型
+
+-   否则，请使用字符串类型
+
+对于Postgres而言，支持对JSON内部结构的操作，请详见[Postgres中的JSON操作](https://www.postgresql.org/docs/9.5/functions-json.html)。那么Jimmer应该如何实现这种操作呢？
+
+Jimmer的SQL DSL可以混入Native SQL表达式，请查看[Native表达式](../../query/native-sql)，本文不再赘述。需要注意
+
+:::caution
+[Postgres中的JSON操作](https://www.postgresql.org/docs/9.5/functions-json.html)会用到`?`，而`?`恰好是JDBC的参数，请使用`??`代替。
+:::
+
+## 自定义类型
+
+如果JSON类型仍然无法满足你要求 *(例如：你期望映射一些Postgres特有的类型)*，你可以使用`ScalarProvider`自定义类型。
+
+请参见[ScalarProvider](../../configuration/scala-providder)，本文不再赘述。

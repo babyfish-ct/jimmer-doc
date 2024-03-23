@@ -149,7 +149,7 @@ package com.yourcompany.yourproject.dto
 import com.yourcompany.yourproject.Book
 import org.babyfish.jimmer.View
 
-data class BookView(
+open class BookView(
     ...omitted...
 ) : View<Book> {
     ...omitted...
@@ -370,7 +370,7 @@ public class BookView implements View<Book> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="BookView.kt"
-data class BookView(
+open class BookView(
     val id: Long = 0, 
     val name: String = "",
     val edition: Int = 0  
@@ -648,7 +648,7 @@ public class RobotView implements View<Robot> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="BookView.kt"
-data class RobotView(
+open class RobotView(
     
     val oldSystemProp1 = "",
     val oldSystemProp2 = "",
@@ -729,7 +729,7 @@ You can map enum types to numbers or strings:
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin title="BookView.kt"
-    data class RobotView(
+    open class RobotView(
         val gender: Int,
         ...other members omitted...
     ) : View<Robot> {
@@ -771,7 +771,7 @@ You can map enum types to numbers or strings:
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin title="BookView.kt"
-    data class RobotView(
+    open class RobotView(
         val gender: String,
         ...other members omitted... 
     ) : View<Robot> {
@@ -869,7 +869,7 @@ The handling of association properties is a very powerful feature of the DTO lan
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin title="CompositeBookInput.kt"
-    data class CompositeBookInput(
+    open class CompositeBookInput(
         val id: Long? = null,
         val name: String = "",
         val edition: Int = 0, 
@@ -882,7 +882,7 @@ The handling of association properties is a very powerful feature of the DTO lan
     ) : Input<Book> {
 
         // highlight-next-line
-        data class TargetOf_store(
+        open class TargetOf_store(
             val name: String = "",
             val website: String? = null,
         ) : Input<BookStore> {
@@ -890,7 +890,7 @@ The handling of association properties is a very powerful feature of the DTO lan
         }
 
         // highlight-next-line
-        data class TargetOf_authors(
+        open class TargetOf_authors(
             public val firstName: String = "",
             public val lastName: String = "",
             public val gender: Gender,
@@ -1363,3 +1363,119 @@ There are some subtle differences between Java and Kotlin annotation syntax. The
     ```
 
 The above four styles are equivalent. You can freely choose the style you like.  
+
+## 13. Implementing Interfaces
+
+DTO types are low-value information, and if different DTO types are allowed to reference each other, it would lead to a problem: 
+the early effect is convenience, but the later effect is difficulty in maintenance.
+Therefore, Jimmer prohibits users from seeking reusability in low-value DTO types.
+
+However, sometimes there is indeed a need to find commonalities between different DTO types *(especially for internal classes of DTO)*, in order to facilitate abstraction and design.
+For this purpose, the DTO language provides a compromise: DTO types are allowed to implement existing Java/Kotlin interfaces, provided that the abstract properties in the interface are a subset of the properties in the DTO and can be implemented by the DTO type.
+
+DTO code as follows
+
+```sh
+export com.yourcompany.yourproject.model.Book
+    -> com.yourcompany.yourproject.model.dto
+
+import com.yourcompany.yourcompany.common.{
+    Shape1, Shape2, Shape3, Shape4, Shape5, Shape6
+}
+
+#highlight-next-line
+BookView implements Shape1<String>, Shape2 {
+    #allScalars
+    #highlight-next-line
+    store implements Shape3<String>, Shape4 {
+        #allScalars
+    }
+    #highlight-next-line
+    authors implements Shape5<String>, Shape6 {
+        #allScalars
+    }
+}
+```
+
+Compiled, generates the following code
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookView.java"
+package com.yourcompany.yourproject.dto;
+
+import com.yourcompany.yourproject.Book;
+import org.babyfish.jimmer.View;
+
+public class BookView 
+    // highlight-next-line
+    implements View<Book>, Shape1<String>, Shape2 {
+    
+    @Nullable
+    private TargetOf_store store;
+
+    private List<TargetOf_authors> authors;
+    
+    ...other members omitted...
+
+    public static class TargetOf_store
+        // highlight-next-line
+        implements View<BookStore>, Shape3<String>, Shape4 {
+    
+        ...members omitted...
+    }
+
+    public static class TargetOf_authors
+        // highlight-next-line
+        implements View<Author>, Shape5<String>, Shape6 {
+    
+        ...members omitted...
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookView.kt"
+package com.yourcompany.yourproject.dto
+
+import com.yourcompany.yourproject.Book
+import org.babyfish.jimmer.View
+
+open class BookView(
+    ...other properties omitted...
+    store: TargetOf_store? = null,
+    authors: List<TargetOf_authors> = emptyList()
+// highlight-next-line
+) : View<Book>, Shape1<String>, Shape2 {
+    
+    ...other members omitted...
+
+    open class TargetOf_store(
+        ...omitted...
+    // highlight-next-line
+    ): View<BookStore>, Shape3<String>, Shape4 {
+        
+        ...omitted...
+    }
+
+    open class TargetOf_authors(
+        ...omitted...
+    // highlight-next-line
+    ): View<Author>, Shape5<String>, Shape6 {
+        
+        ...omitted...
+    }
+} 
+```
+
+</TabItem>
+</Tabs>
+
+:::caution
+If a property in the DTO overrides an abstract property in the interface, then in the auto-generated Java/Kotlin type, that property will be annotated with `@Override` (Java) or `override` keyword (Kotlin).
+
+Apart from this, the DTO language does not perform much validation on interface implementation. If the user makes other mistakes, it will result in generating incorrect Java/Kotlin types, which will be handled by the Java/Kotlin compiler.
+:::

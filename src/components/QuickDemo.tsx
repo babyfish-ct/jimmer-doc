@@ -5,6 +5,7 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import CodeBlock from "@theme/CodeBlock"
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Admonition from "@theme/Admonition";
 import { ViewMore } from "./ViewMore";
 
 export const QuickDemo: FC = memo(() => {
@@ -40,7 +41,7 @@ export const QuickDemo: FC = memo(() => {
         return (
             <Grid container>
                 <Grid item xs={12} style={TITLE}>
-                    <h2>{isZh ? "用法1. 查询实体" : "Usage1. Query Entitie"}</h2>
+                    <h2>{isZh ? "用法1. 查询实体" : "Usage1. Query Entities"}</h2>
                 </Grid>
                 <Grid item xs={12} style={CELL}>
                     <EntityQuery {...bindProps}/>
@@ -199,14 +200,14 @@ const DtoQuery: FC<BindProps> = bindProps => {
                 <Line>&#125;</Line>
             </div>
             {
-                isZh && <div>
+                isZh && <Admonition type="info">
                     编译后，自动生成Java/Kotlin类型 <ViewMore buttonText="BookDetailView" title="自动生成的类型`BookDetailView`"><GendertedDtoType/></ViewMore>
-                </div>
+                </Admonition>
             }
             {
-                !isZh && <div>
+                !isZh && <Admonition type="info">
                     After compilation, A new java/kotlin type <ViewMore buttonText="BookDetailView" title="Generated type `BookDetailView`"><GendertedDtoType/></ViewMore> will be automatically generated.
-                </div>
+                </Admonition>
             }
             <div>&nbsp;</div>
             <div><h3>{isZh ? "查询代码" : "Query Code"}</h3></div>
@@ -215,7 +216,7 @@ const DtoQuery: FC<BindProps> = bindProps => {
                     <div style={CODE}>
                         <Line><Type>BookTable</Type> <Value>table</Value><Op> = </Op><Type>BookTable</Type><Dot/>$;</Line>
                         <Line>&nbsp;</Line>
-                        <Line><Type>List</Type><Op>&lt;</Op><Type>Book</Type><Op>&gt;</Op><Op> = </Op><Value>sqlClient</Value></Line>
+                        <Line><Type>List</Type><Op>&lt;</Op><Type>BookDetailView</Type><Op>&gt;</Op> <Value>books</Value><Op> = </Op><Value>sqlClient</Value></Line>
                         <Line mouseId='createQuery' {...bindProps} indent={1}><Dot/>createQuery<Op>(</Op><Value>table</Value><Op>)</Op></Line>
                         <Line mouseId='where' {...bindProps} indent={1}><Dot/>where<Op>(</Op><Value>table</Value><Dot/>name<Op>().</Op>eq<Op>(</Op><Literal>"Learning GraphQL"</Literal><Op>)</Op><Op>)</Op></Line>
                         <Line mouseId='select' {...bindProps} indent={1}><Dot/>select<Op>(</Op></Line>

@@ -14,7 +14,7 @@ Jimmer supports optimistic lock via the `@org.babyfish.jimmer.sql.Version` annot
 
 ### Modify Entity Types
 
-- Modify `BookStore`
+-   Modify `BookStore`
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -49,7 +49,7 @@ Jimmer supports optimistic lock via the `@org.babyfish.jimmer.sql.Version` annot
     </TabItem>
     </Tabs>
 
-- Modify `Book`
+-   Modify `Book`
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -269,12 +269,12 @@ Characteristics of optimistic lock:
 
     Obviously, the last book's `version` `9999` is illegal. The above code will result in the following exception:
 
-    - Exception Type: `org.babyfish.jimmer.sql.runtime.SaveException`
+    -   Exception Type: `org.babyfish.jimmer.sql.runtime.SaveException`
 
-    - Exception Code: `org.babyfish.jimmer.sql.runtime.SaveErrorCode.ILLEGAL_VERSION`
+    -   Exception Code: `org.babyfish.jimmer.sql.runtime.SaveErrorCode.ILLEGAL_VERSION`
 
-    - Exception Message:
-      > Save error caused by the path: "&lt;root&gt;.books": Cannot update the entity whose type is "org.doc.j.model.Book", id is "101" and version is "9999"
+    -   Exception Message:
+        > Save error caused by the path: "&lt;root&gt;.books": Cannot update the entity whose type is "org.doc.j.model.Book", id is "101" and version is "9999"
 
     Let's modify the code again to use the correct `version` for all objects:
 
@@ -512,16 +512,16 @@ There are two ways to enable pessimistic lock:
 
     There are two ways to enable pessimistic lock globally:
 
-    - Via Spring Boot Starter configuration
+    -   Via Spring Boot Starter configuration
 
         Modify `application.yml` *(or `application.properties`)*: 
         
         ```
         jimmer:
-            save-command-pessimistic-lock: true
+            default-lock-mode: PESSIMISTIC
         ```
 
-    - Via low-level API configuration
+    -   Via low-level API configuration
 
         <Tabs groupId="language">
         <TabItem value="java" label="Java">
@@ -530,7 +530,7 @@ There are two ways to enable pessimistic lock:
         JSqlClient sqlClient = JSqlClient
             .newBuilder()
             // highlight-next-line
-            .setSaveCommandPessimisticLock()
+            .setDefaultLockMode(LockMode.PESSIMISTIC)
             ...other configurations omitted...
             .build();
         ```
@@ -541,12 +541,21 @@ There are two ways to enable pessimistic lock:
         ```kotlin
         val sqlClient = newKSqlClient {
             // highlight-next-line
-            setSaveCommandPessimisticLock()
+            setDefaultLockMode(LockMode.PESSIMISTIC)
         }
         ```
 
         </TabItem>
         </Tabs>
+
+    :::warning
+    This change modifies the global setting, and the original default value `OPTIMISTIC` is compromised. 
+    This means that unless a specific save command is set to optimistic locking mode, 
+    the optimistic locking functionality described earlier disappears. 
+    
+    Therefore, in most cases, global configuration is not recommended, and the command-level configuration 
+    that will be introduced later is more recommended.
+    :::
 
 -   Command-level configuration
 
@@ -556,7 +565,7 @@ There are two ways to enable pessimistic lock:
     If pessimistic lock is already enabled globally, no need for command-level configuration.
     :::
 
-    Calling `setPessimisticLock()` on the save command enables pessimistic lock:
+    Calling `setLockMode(LockMode)` on the save command enables pessimistic lock:
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -580,7 +589,7 @@ There are two ways to enable pessimistic lock:
                     })
             )
             // highlight-next-line
-            .setPessimisticLock()
+            .setLockMode(LockMode.PESSIMISTIC)
             .execute();
     ```
 
@@ -604,7 +613,7 @@ There are two ways to enable pessimistic lock:
         }
     ) {
         // highlight-next-line
-        setPessimisticLock()
+        setLockMode(LockMode.PESSIMISTIC)
     }
     ```
 

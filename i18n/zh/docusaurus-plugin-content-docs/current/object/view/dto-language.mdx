@@ -150,7 +150,7 @@ package com.yourcompany.yourproject.dto
 import com.yourcompany.yourproject.Book
 import org.babyfish.jimmer.View
 
-data class BookView(
+open class BookView(
     ...略...
 ) : View<Book> {
     ...略...
@@ -368,7 +368,7 @@ public class BookView implements View<Book> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="BookView.kt"
-data class BookView(
+open class BookView(
     val id: Long = 0,
     val name: String = "",
     val edition: Int = 0
@@ -645,7 +645,7 @@ public class RobotView implements View<Robot> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="BookView.kt"
-data class RobotView(
+open class RobotView(
     
     val oldSystemProp1 = "",
     val oldSystemProp2 = "",
@@ -725,7 +725,7 @@ RobotView {
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin title="BookView.kt"
-    data class RobotView(
+    open class RobotView(
         val gender: Int,
         ...省略其他成员...
     ) : View<Robot> {
@@ -766,7 +766,7 @@ RobotView {
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin title="BookView.kt"
-    data class RobotView(
+    open class RobotView(
         val gender: String,
         ...省略其他成员...
     ) : View<Robot> {
@@ -864,7 +864,7 @@ RobotView {
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin title="CompositeBookInput.kt"
-    data class CompositeBookInput(
+    open class CompositeBookInput(
         val id: Long? = null,
         val name: String = "",
         val edition: Int = 0,
@@ -877,7 +877,7 @@ RobotView {
     ) : Input<Book> {
 
         // highlight-next-line
-        data class TargetOf_store(
+        open class TargetOf_store(
             val name: String = "",
             val website: String? = null,
         ) : Input<BookStore> {
@@ -885,7 +885,7 @@ RobotView {
         }
 
         // highlight-next-line
-        data class TargetOf_authors(
+        open class TargetOf_authors(
             public val firstName: String = "",
             public val lastName: String = "",
             public val gender: Gender,
@@ -1357,3 +1357,118 @@ Java和Kotlin的注解语法存在一些微弱的差异，DTO语言混合了二�
     ```
 
 以上四种写法是等价的。你可以随意选择你喜欢的系法。
+
+## 13. 实现接口
+
+DTO类型是低价值信息，如果允许不同的DTO类型彼此引用，会引发一个问题：早期效果是方便，但后期效果是难以维护。
+因此，Jimmer禁止用户在低价值的DTO类型中寻找可复用性。
+
+然而，有的时候的确需要在不同的DTO类型之间寻找共性 *(尤其是DTO的内部类)*，以便于抽象和设计。
+为此，DTO语言提供了一个折中方案：允许DTO类型实现已有的Java/Kotlin接口。前提是接口中的抽象属性是DTO中的属性的子集，能被DTO类型实现。
+
+DTO代码如下
+
+```sh
+export com.yourcompany.yourproject.model.Book
+    -> com.yourcompany.yourproject.model.dto
+
+import com.yourcompany.yourcompany.common.{
+    Shape1, Shape2, Shape3, Shape4, Shape5, Shape6
+}
+
+#highlight-next-line
+BookView implements Shape1<String>, Shape2 {
+    #allScalars
+    #highlight-next-line
+    store implements Shape3<String>, Shape4 {
+        #allScalars
+    }
+    #highlight-next-line
+    authors implements Shape5<String>, Shape6 {
+        #allScalars
+    }
+}
+```
+
+编译，生成如下代码
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookView.java"
+package com.yourcompany.yourproject.dto;
+
+import com.yourcompany.yourproject.Book;
+import org.babyfish.jimmer.View;
+
+public class BookView 
+    // highlight-next-line
+    implements View<Book>, Shape1<String>, Shape2 {
+    
+    @Nullable
+    private TargetOf_store store;
+
+    private List<TargetOf_authors> authors;
+    
+    ...省略其他成员...
+
+    public static class TargetOf_store
+        // highlight-next-line
+        implements View<BookStore>, Shape3<String>, Shape4 {
+    
+        ...省略成员...
+    }
+
+    public static class TargetOf_authors
+        // highlight-next-line
+        implements View<Author>, Shape5<String>, Shape6 {
+    
+        ...省略成员...
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookView.kt"
+package com.yourcompany.yourproject.dto
+
+import com.yourcompany.yourproject.Book
+import org.babyfish.jimmer.View
+
+open class BookView(
+    ...省略其他属性...
+    store: TargetOf_store? = null,
+    authors: List<TargetOf_authors> = emptyList()
+// highlight-next-line
+) : View<Book>, Shape1<String>, Shape2 {
+    
+    ...省略其他成员...
+
+    open class TargetOf_store(
+        ...略...
+    // highlight-next-line
+    ): View<BookStore>, Shape3<String>, Shape4 {
+        
+        ...略...
+    }
+
+    open class TargetOf_authors(
+        ...略...
+    // highlight-next-line
+    ): View<Author>, Shape5<String>, Shape6 {
+        
+        ...略...
+    }
+} 
+```
+
+</TabItem>
+</Tabs>
+
+:::caution
+如果DTO中的某个属性覆盖了接口的抽象属性，那么在自动生成的Java/Kotlin类型中，该属性会被添加`@Override`注解 *(Java)* 或`override`关键字 *(Kotlin)*。
+
+除此之外，DTO语言对接口实现的验证并不多。如果用户犯了其他错误，将会导致生成错误的Java/Kotlin类型，由Java/Kotlin编译器负责处理。
+:::

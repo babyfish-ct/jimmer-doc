@@ -6,7 +6,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Jimmer, a revolutionary integrated solution for java & kotlin, include a revolutionary ORM',
+  title: 'A revolutionary ORM framework for both java & kotlin',
   tagline: 'Not only ORM, but also a complete integrated solution',
   url: 'https://github.com',
   baseUrl: '/jimmer-doc/',

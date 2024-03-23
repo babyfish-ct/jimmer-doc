@@ -86,7 +86,7 @@ Jimmer使用注解`@org.babyfish.jimmer.sql.Version`支持乐观锁。
 
 ### 示范
 
-悲观锁的特性
+乐观锁的特性
 
 -   当插入对象时 *(无论明确地进行INSERT操作，还是UPSERT操作被判定为INSERT)*，将对象的`version`插入到数据库。
 
@@ -517,7 +517,7 @@ sqlClient.save(
         
         ```
         jimmer:
-            save-command-pessimistic-lock: true
+            default-lock-mode: PESSIMISTIC
         ```
 
     -   底层API的配置
@@ -529,7 +529,7 @@ sqlClient.save(
         JSqlClient sqlClient = JSqlClient
             .newBuilder()
             // highlight-next-line
-            .setSaveCommandPessimisticLock()
+            .setDefaultLockMode(LockMode.PESSIMISTIC)
             ...省略其他配置...
             .build();
         ```
@@ -540,12 +540,18 @@ sqlClient.save(
         ```kotlin
         val sqlClient = newKSqlClient {
             // highlight-next-line
-            setSaveCommandPessimisticLock()
+            setDefaultLockMode(LockMode.PESSIMISTIC)
         }
         ```
 
         </TabItem>
         </Tabs>
+
+    :::warning
+    此举修改了全局设置，原本的默认值`OPTIMISTIC`被破坏。这意味着，除非将某个保存指令设置为乐观锁模式，前文所讲述的乐观锁的功能消失。
+
+    因此，大部分情况下，不推荐全局配置，而更推荐下文即将介绍的指令级配置。
+    :::
 
 -   指令级配置
 
@@ -555,7 +561,7 @@ sqlClient.save(
     如果已经通过全局配置打开了悲观锁控制，就不再需要指令级配置了
     :::
 
-    调用保存指令的配置方法`setPessimisticLock`，即可启用悲观锁，如下
+    调用保存指令的配置方法`setLockMode`，即可启用悲观锁，如下
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -579,7 +585,7 @@ sqlClient.save(
                     })
             )
             // highlight-next-line
-            .setPessimisticLock()
+            .setLockMode(LockMode.PESSIMISTIC)
             .execute();
     ```
 
@@ -603,7 +609,7 @@ sqlClient.save(
         }
     ) {
         // highlight-next-line
-        setPessimisticLock()
+        setLockMode(LockMode.PESSIMISTIC)
     }
     ```
 

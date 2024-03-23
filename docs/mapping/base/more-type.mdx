@@ -1,0 +1,156 @@
+---
+sidebar_position: 6
+title: More Types
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+In addition to boolean, number, string, UUID, date, and enumeration, scalar properties also support other types, including:
+
+-   Array types
+-   JSON types
+-   Custom types
+
+:::info
+Enum types are not discussed in this article, please refer to [Enum Mapping](../advanced/enum)
+:::
+
+## Array Types
+
+:::warning
+To use array types, the underlying database must support array types
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Book {
+
+    @Id
+    long id();
+
+    // highlight-next-line
+    String[] tags();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Book {
+
+    @Id
+    val id: Long
+
+    // highlight-next-line
+    val tags: Array<String>
+}
+```
+
+</TabItem>
+</Tabs>
+
+For Postgres, you need to specify the data element type in SQL, for example:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Book {
+
+    @Id
+    long id();
+
+    // highlight-next-line
+    @Column(sqlElementType = "text")
+    String[] tags();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Book {
+
+    @Id
+    val id: Long
+
+    // highlight-next-line
+    @Column(sqlElementType = "text")
+    val tags: Array<String>
+}
+```
+
+</TabItem>
+</Tabs>
+
+## JSON Types
+
+You can use Jackson to support scalar properties of any type, whether it's a custom Java/Kotlin type, a collection type, or even a mix of the two.
+
+Just use the `@org.babyfish.jimmer.sql.Serialized` annotation, and you can use the JSON type.
+
+Here, the usage is demonstrated using a collection type as an example:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface Book {
+
+    @Id
+    long id();
+
+    // highlight-next-line
+    @Serialized
+    Map<String, Map<String, List<Integer>>> data();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface Book {
+
+    @Id
+    val id: Long
+
+    // highlight-next-line
+    @Serialized
+    val data: Map<String, Map<String, List<Integer>>>
+}
+```
+
+</TabItem>
+</Tabs>
+
+So what SQL type does the JSON type correspond to?
+
+-   If the database supports the JSON or JSONB type, use that type
+
+-   Otherwise, please use the string type
+
+For Postgres, it supports operations on the internal structure of JSON, please see [JSON Operations in Postgres](https://www.postgresql.org/docs/9.5/functions-json.html). How should Jimmer implement such operations?
+
+Jimmer's SQL DSL can mix in Native SQL expressions, please see [Native Expressions](../../query/native-sql), this article will not repeat it. Note:
+
+:::caution
+[JSON Operations in Postgres](https://www.postgresql.org/docs/9.5/functions-json.html) use `?`, which happens to be the parameter for JDBC, please use `??` instead.
+:::
+
+## Custom Types
+
+If the JSON type still cannot meet your requirements (e.g., you expect to map some Postgres-specific types), you can use `ScalarProvider` to customize types.
+
+Please refer to [ScalarProvider](../../configuration/scala-providder), this article will not repeat it.

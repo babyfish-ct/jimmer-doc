@@ -433,7 +433,7 @@ public interface Book {
             @JoinColumn(
                 name = "BOOK_ID_DAY_NO", 
                 referencedColumnName = "UNIQUE_ID_DAY_NO"
-            )
+            ),
             @JoinColumn(
                 name = "BOOK_ID_SEQ_NO", 
                 referencedColumnName = "UNIQUE_ID_SEQ_NO"
@@ -459,16 +459,16 @@ interface Book {
 
     @ManyToMany
     @JoinTable(
-        joinColumns = {
-            @JoinColumn(
+        joinColumns = [
+            JoinColumn(
                 name = "BOOK_ID_DAY_NO", 
                 referencedColumnName = "UNIQUE_ID_DAY_NO"
-            )
-            @JoinColumn(
+            ),
+            JoinColumn(
                 name = "BOOK_ID_SEQ_NO", 
                 referencedColumnName = "UNIQUE_ID_SEQ_NO"
             )
-        }
+        ]
     )
     // highlight-next-line
     val authors: List<Author>

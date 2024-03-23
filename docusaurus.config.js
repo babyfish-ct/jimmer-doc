@@ -47,8 +47,12 @@ const config = {
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl:
-              'https://github.com/babyfish-ct/jimmer-doc/tree/main/',
+          editUrl: ({locale, versionDocsDirPath, docPath}) => {
+            if (locale == 'zh') {
+              return `https://github.com/babyfish-ct/jimmer-doc/edit/main/i18n/zh/docusaurus-plugin-content-docs/current/${docPath}`
+            }
+            return `https://github.com/babyfish-ct/jimmer-doc/edit/main/docs/${docPath}`
+          },
         },
         // blog: {
         //   showReadingTime: true,

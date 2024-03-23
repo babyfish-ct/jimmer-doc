@@ -61,7 +61,7 @@ object JimmerUtils {
 
     val sqlClient: KSqlClient =  
         newKSqlClient {
-            setDialect(new PostgresDialect())
+            setDialect(PostgresDialect())
             ...other config omitted...
         }  
 }

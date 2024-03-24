@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://github.com/jimmer-doc/blog</id>
-    <title>Jimmer, a revolutionary integrated solution for java &amp; kotlin, include a revolutionary ORM Blog</title>
+    <title>A revolutionary ORM framework for both java &amp; kotlin Blog</title>
     <updated>2021-08-26T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://github.com/jimmer-doc/blog"/>
-    <subtitle>Jimmer, a revolutionary integrated solution for java &amp; kotlin, include a revolutionary ORM Blog</subtitle>
+    <subtitle>A revolutionary ORM framework for both java &amp; kotlin Blog</subtitle>
     <icon>https://github.com/jimmer-doc/https://raw.githubusercontent.com/babyfish-ct/jimmer-doc/main/logo.png</icon>
     <entry>
         <title type="html"><![CDATA[Welcome]]></title>

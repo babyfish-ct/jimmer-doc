@@ -112,7 +112,7 @@ const EntityQuery: FC<BindProps> = bindProps => {
                     <div style={CODE}>
                         <Line><Type>BookTable</Type> <Value>table</Value><Op> = </Op><Type>BookTable</Type><Dot/>$;</Line>
                         <Line>&nbsp;</Line>
-                        <Line><Type>List</Type><Op>&lt;</Op><Type>Book</Type><Op>&gt;</Op><Op> = </Op><Value>sqlClient</Value></Line>
+                        <Line><Type>List</Type><Op>&lt;</Op><Type>Book</Type><Op>&gt;</Op> <Value>books</Value><Op> = </Op><Value>sqlClient</Value></Line>
                         <Line mouseId='createQuery' {...bindProps} indent={1}><Dot/>createQuery<Op>(</Op><Value>table</Value><Op>)</Op></Line>
                         <Line mouseId='where' {...bindProps} indent={1}><Dot/>where<Op>(</Op><Value>table</Value><Dot/>name<Op>().</Op>eq<Op>(</Op><Literal>"Learning GraphQL"</Literal><Op>)</Op><Op>)</Op></Line>
                         <Line mouseId='select' {...bindProps} indent={1}><Dot/>select<Op>(</Op></Line>

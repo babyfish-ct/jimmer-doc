@@ -64,7 +64,7 @@ export const QuickDemo: FC = memo(() => {
     return (
         <Grid container>
             <Grid item xs={6} style={TITLE}>
-                <h2>{isZh ? "用法1. 查询实体" : "Usage1. Query Entitie"}</h2>
+                <h2>{isZh ? "用法1. 查询实体" : "Usage1. Query Entities"}</h2>
             </Grid>
             <Grid item xs={6} style={{...TITLE, borderLeft: "solid 1px white"}}>
                 <h2>{isZh ? "用法2. 查询DTO" : "Usage2. Query DTOs"}</h2>

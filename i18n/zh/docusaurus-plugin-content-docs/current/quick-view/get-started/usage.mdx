@@ -30,47 +30,60 @@ Jimmer具备完善的配套例子项目，关于Jimmer之Spring Boot Starter的�
     </tr>
 </table>
 
+需要创建一个该类型的全局对象，这个全局变量是Jimmer所有ORM行为的Api入口。
+
+> [多数据源](../../configuration/multi-datasources)需要创建多个全局对象。然而，我们这里讨论的是单数据源这种最常见的情况，一个全局对象足够。
+
+由于采用了Jimmer的Spring Boot Starter，在这种情况下，请在`application.yml` *(或`application.properties`)* 指定如下配置
+
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
-```java
-public class JimmerUtils {
-
-    // highlight-next-line
-    public static final JSqlClient SQL_CLIENT =
-        JSqlClient
-            .newBuilder()
-            .setDialect(new PostgresDialect())
-            ...省略其他配置...
-            .build();
-
-    // 这个方法没什么实际用途，只是为了统一命名风格，
-    // 尽可能让本文的Java代码和Kotlin代码风格一致
-    public static JSqlClient sqlClient() {
-        return SQL_CLIENT;
-    }
-}
+```yml
+spring:
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/jimmer_demo
+        username: root
+        password: 123456
+jimmer:
+    dialect: org.babyfish.jimmer.sql.dialect.MySqlDialect
+    show-sql: true
+    pretty-sql: true
+    database-validation-mode: ERROR
 ```
 
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin
-// highlight-next-line
-object JimmerUtils {
-
-    val sqlClient: KSqlClient =
-        newKSqlClient {
-            setDialect(new PostgresDialect())
-            ...省略其他配置...
-        }
-}
+```yml
+spring:
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/jimmer_demo
+        username: root
+        password: 123456
+jimmer:
+    #highlight-next-line
+    language: kotlin // This is important for kotlin
+    dialect: org.babyfish.jimmer.sql.dialect.MySqlDialect
+    show-sql: true
+    pretty-sql: true
+    database-validation-mode: ERROR
 ```
 
 </TabItem>
 </Tabs>
 
-这个全局变量是Jimmer所有ORM行为的Api入口
+Jimmer的Spring Boot Starter会自动创建这个全局对象
+
+>   注意，对于kotlin而言，为了创建`KSqlClient`而非`JSqlClient`，需要为`application.yml`/`application.properties`配置`jimmer.language = kotlin`。
+
+:::info
+因此，你可以在任何地方直接注入`JSqlClient`/`KSqlClient`类型的对象。
+
+本文的后续代码会假设有一个`sqlClient`变量并使用它，但不会给予解释，因为这里已经给出了详细的解释。
+:::
 
 ## 查询
 
@@ -108,8 +121,7 @@ public class BookRepository {
             @Nullable String storeWebsite,
             @Nullable String authorName
     ) {
-        return JimmerUtils
-                .sqlClient()
+        return sqlClient
                 .createQuery(T)
                 .where(T.name().ilikeIf(name))
                 .where(T.price().betweenIf(minPrice, maxPrice))
@@ -171,8 +183,7 @@ class BookRepository {
         authorName: String? = null,
         authorGender: Gender? = null
     ): Page<Book> =
-        JimmerUtils
-            .sqlClient
+        sqlClient
             .createQuery(Book::class) {
                 where(table.name `ilike?` name)
                 where(table.price.`between?`(minPrice, maxPrice))
@@ -286,8 +297,7 @@ public class BookRepository {
     ...省略其他成员...
 
     public long saveBook(BookInput input) {
-        return JimmerUtils
-            .sqlClient()
+        return sqlClient
             .save(input)
             .execute()
             .getModifiedEntity()
@@ -306,8 +316,7 @@ class BookRepository {
     ...省略其他成员...
 
     fun saveBook(input: BookInput): Long =
-        JimmerUtils
-            .sqlClient
+        sqlClient
             .save(input)
             .execute()
             .modifiedEntity
@@ -411,8 +420,7 @@ class CompositeBookStoreInput(
 public class BookStoreRepository {
 
     public long saveBookStore(CompositeBookStoreInput input) {
-        return JimmerUtils
-            .sqlClient()
+        return sqlClient
             .save(input)
             .execute()
             .getModifiedEntity()
@@ -429,8 +437,7 @@ public class BookStoreRepository {
 class BookStoreRepository {
 
     fun saveBookStore(input: CompositeBookStoreInput): Long =
-        JimmerUtils
-            .sqlClient
+        sqlClient
             .save(input)
             .execute()
             .modifiedEntity
@@ -455,9 +462,7 @@ public class BookRepository {
     ...省略其他成员...
 
     public void deleteBook(long id) {
-        JimmerUtils
-            .sqlClient()
-            .deleteById(Book.class, id);
+        sqlClient.deleteById(Book.class, id);
     }
 }
 ```
@@ -471,9 +476,7 @@ class BookRepository {
     ...省略其他成员...
 
     fun deleteBook(id: Long) {
-        JimmerUtils
-            .sqlClient
-            .deleteById(Book::class, id)
+        sqlClient.deleteById(Book::class, id)
     }
 }
 ```

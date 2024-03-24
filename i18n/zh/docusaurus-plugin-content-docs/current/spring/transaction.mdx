@@ -119,3 +119,7 @@ Jimmer无需提供任何类似于`createNativeQuery`的API
 -   对于和ORM关系不大的报表查询，用户期望书写完整的Native SQL，那么直接使用Spring的JdbcTemplate即可，这是因为Jimmer的事务管理和JdbcTemplate的事务管理完全相同。
 
 -   对于Jimmer的ORM风格查询，在强类型SQL DSL中混入[Native SQL](../query/native-sql)表达式即可
+
+## 多数据源
+
+上文我们讨论的是单数据源场景下的Spring事务整合，至于多数据源，请查看[这里](../configuration/multi-datasources)。

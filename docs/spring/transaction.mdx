@@ -121,3 +121,8 @@ Jimmer doesn't need to provide any APIs like `createNativeQuery`
 -   For report queries that are not closely related to ORM, users expect to write complete Native SQL, then JdbcTemplate can be used directly, because Jimmer's transaction management is exactly the same as JdbcTemplate's.
 
 -   For Jimmer's ORM-style queries, inject [Native SQL](../query/native-sql) expressions in strongly typed SQL DSL.
+
+## Multiple Data Sources
+
+In the previous sections, we discussed the integration of Spring transactions in the single data source scenario. 
+As for multiple data sources, please refer to [this section](../configuration/multi-datasources).

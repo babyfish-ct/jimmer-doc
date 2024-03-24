@@ -48,7 +48,7 @@ Jimmer本身是高度中立的，可以脱离spring-boot使用；但同时也提
         </tbody>
     </table>    
 
-相比于独立使用而言，和Spring-Boot结合使用更简单，因此本教程一律使用后者进行演示。
+相比于独立使用而言，和Spring-Boot结合使用更简单，因此本教程一律使用`jimmer-spring-boot-starter`进行演示。
 
 修改gradle或maven文件，加入依赖
 
@@ -57,7 +57,7 @@ Jimmer本身是高度中立的，可以脱离spring-boot使用；但同时也提
 
 ```xml title="pom.xml"
 <properties>
-    <jimmer.version>0.8.104</jimmer.version>
+    <jimmer.version>0.8.114</jimmer.version>
 </properties>
 
 <dependencies>
@@ -75,7 +75,7 @@ Jimmer本身是高度中立的，可以脱离spring-boot使用；但同时也提
 
 ```groovy title="build.gradle"
 ext {
-    jimmerVersion = "0.8.104"
+    jimmerVersion = "0.8.114"
 }
 
 dependencies {
@@ -90,7 +90,7 @@ dependencies {
 <TabItem value="gradlekts" label="Gradle(kts)">
 
 ```kotlin title="build.gradle.kts"
-val jimmerVersion = "0.8.104"
+val jimmerVersion = "0.8.114"
 
 dependencies {
     
@@ -114,7 +114,7 @@ plugins {
 
 jimmer {
     // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
-    version = "0.8.104"
+    version = "0.8.114"
 }
 ```
 
@@ -132,7 +132,7 @@ plugins {
 
 jimmer {
     // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
-    version = "0.8.104"
+    version = "0.8.114"
 }
 ```
 
@@ -165,7 +165,7 @@ jimmer.language = kotlin
 </TabItem>
 <TabItem value="maven" label="application.yml">
 
-```
+```yml
 jimmer:
     language: kotlin
 ```

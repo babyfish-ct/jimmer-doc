@@ -1,0 +1,192 @@
+---
+sidebar_position: 3
+title: Multiple DataSources
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+In Jimmer, each data source corresponds to a `sqlClient` object *(whose type is `JSqlClient` or `KSqlClient`)*. 
+
+For the most classic single data source case, one `sqlClient` object is sufficient. Even the Jimmer Spring Boot Starter can automatically create a single `sqlClient` object.
+
+For multiple data sources, developers need to manually create multiple `sqlClient` objects.
+
+For the Jimmer Spring Boot Starter, the support for multiple data sources falls into two cases:
+
+- Distributed Transaction Mode
+- Local Transaction Mode
+
+## Distributed Transaction Mode
+
+Here, distributed transactions refer to using [Spring's support for JTA transactions](https://docs.spring.io/spring-boot/docs/2.1.13.RELEASE/reference/html/boot-features-jta.html).
+
+In this mode, simply create multiple `sqlClient` objects.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.babyfish.jimmer.spring.SpringClients;
+
+@configuration
+public class SqlClientConfig {
+
+    @Bean
+    public JSqlClient sqlClient1(
+        ApplicationContext ctx,
+        @Qualifier("ds1") DataSource dataSource
+    ) {
+        return SqlClients.java(ctx, dataSoruce, null);
+    }
+
+    @Bean
+    public JSqlClient sqlClient2(
+        ApplicationContext ctx,
+        @Qualifier("ds2") DataSource dataSource
+    ) {
+        return SqlClients.java(ctx, dataSoruce, null);
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+import org.springframework.beans.factory.annotation.Qualifier
+import org.babyfish.jimmer.spring.SpringClients
+
+@configuration
+class SqlClientConfig {
+
+    @Bean
+    public fun sqlClient1(
+        ctx: ApplicationContext,
+        @Qualifier("ds1") dataSource: DataSource
+    ): KSqlClient =
+        SqlClients.kotlin(ctx, dataSoruce)
+
+    @Bean
+    public fun sqlClient2(
+        ctx: ApplicationContext,
+        @Qualifier("ds2") dataSource: DataSource
+    ): KSqlClient =
+        SqlClients.kotlin(ctx, dataSoruce)
+}
+```
+
+</TabItem>
+</Tabs>
+
+Then, developers can freely use any of the `sqlClient` objects. Even if two data sources are operated within a transaction, the JTA transaction will ensure consistency between them.
+
+## Local Transaction Mode
+
+Local transactions are slightly different, let's first look at the code:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.transaction.support.PlatformTransactionManager;
+import org.babyfish.jimmer.spring.SpringClients;
+// highlight-next-line
+import org.babyfish.jimmer.spring.transaction.JimmerTransactionManager;
+// highlight-next-line
+import org.babyfish.jimmer.spring.transaction.TransactionalSqlClients;
+
+@configuration
+public class SqlClientConfig {
+
+    @Bean
+    public PlatformTransactionManager tm1( ❶
+        ApplicationContext ctx,
+        @Qualifier("ds1") DataSource dataSource
+    ) {
+        return new JimmerTransactionManager(
+            SqlClients.java(ctx, dataSoruce, null)
+        );
+    }
+
+    @Bean
+    public PlatformTransactionManager tm2(  ❷
+        ApplicationContext ctx,
+        @Qualifier("ds2") DataSource dataSource
+    ) {
+        return new JimmerTransactionManager(
+            SqlClients.java(ctx, dataSoruce, null)
+        );
+    }
+
+    @Bean
+    public JSqlClient sqlClient() {  ❸
+        TransactionalSqlClients.java();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.transaction.support.PlatformTransactionManager
+import org.babyfish.jimmer.spring.SpringClients
+// highlight-next-line
+import org.babyfish.jimmer.spring.transaction.JimmerTransactionManager
+// highlight-next-line
+import org.babyfish.jimmer.spring.transaction.TransactionalSqlClients
+
+@configuration
+public class SqlClientConfig {
+
+    @Bean
+    fun tm1(
+        ctx: ApplicationContext,
+        @Qualifier("ds1") dataSource: DataSource
+    ): PlatformTransactionManager = ❶
+        JimmerTransactionManager(
+            SqlClients.kotlin(ctx, dataSoruce, null)
+        )
+
+    @Bean
+    fun tm2(  
+        ctx: ApplicationContext,
+        @Qualifier("ds2") dataSource: DataSource
+    ): PlatformTransactionManager = ❷
+        JimmerTransactionManager(
+            SqlClients.kotlin(ctx, dataSoruce, null)
+        )
+
+    @Bean
+    public JSqlClient sqlClient() = ❸
+        TransactionalSqlClients.kotlin()
+}
+```
+
+</TabItem>
+</Tabs>
+
+- ❶ Create the first transaction manager based on the first `DataSource`, note that:
+
+    - The transaction manager type is `org.babyfish.jimmer.spring.transaction.JimmerTransactionManager`.
+    
+    - Although the internal code creates a `sqlClient` object, it is not exposed to the Spring context, but is held and hidden by the transaction manager.
+
+- ❷ Create the second transaction manager based on the second `DataSource`, same as ❶, no need to repeat.
+
+- ❸ Create a `sqlClient` proxy and expose it to the Spring context for developers to inject and use.
+
+    - For any business method that needs to operate Jimmer, the annotation `@Transactional("tm1")` or `@Transactional("tm2")` must be used, so that Jimmer can be told which `JimmerTransactionManager` the current business method is using. Otherwise, using the ❸ `sqlClient` proxy will result in the following exception:
+        ```
+        The transactional sql client is used, 
+        however, there is no AOP transaction, or the transaction manager is not 
+        "org.babyfish.jimmer.spring.transaction.JimmerTransactionManager"
+        ```
+
+    - Once Jimmer understands that the current thread is using one of the transaction managers from ❶ and ❷, the ❸ `sqlClient` proxy will use the internal `sqlClient` of the corresponding `JimmerTransactionManager` from ❶ or ❷ to provide services for the user.
+
+That is, in the local transaction mode, although multiple `sqlClient` objects can be created, the business method must explicitly specify which data source to use through the Spring annotation `@Transactional(transactionManagerRef)`.

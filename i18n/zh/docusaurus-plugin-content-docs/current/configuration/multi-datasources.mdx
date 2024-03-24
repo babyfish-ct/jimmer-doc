@@ -1,0 +1,195 @@
+---
+sidebar_position: 3
+title: 多数据源
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+在Jimmer中，每个数据源都和一个`sqlClient`对象 *(其类型为`JSqlClient`或`KSqlClient`)*对应。
+
+对于最经典的单数据源案例而言，一个`sqlClient`对象足够。甚至Jimmer的Spring Boot Starter中还可以自动创建单个`sqlClient`对象。
+
+对于多数据源而言，需要开发人员手动创建多个`sqlClient`对象。
+
+对于Jimmer的Spring Boot Starter而言，多数据源的支持分两种情况
+
+-   分布式事务模式
+
+-   本地事务模式
+
+## 分布式事务模式
+
+这里的分布式事务，指采用[Spring对JTA事务的支持](https://docs.spring.io/spring-boot/docs/2.1.13.RELEASE/reference/html/boot-features-jta.html)。
+
+在这种模式下，简单地创建多个`sqlClient`对象即可。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.babyfish.jimmer.spring.SpringClients;
+
+@configuration
+public class SqlClientConfig {
+
+    @Bean
+    public JSqlClient sqlClient1(
+        ApplicationContext ctx,
+        @Qualifier("ds1") DataSource dataSource
+    ) {
+        return SqlClients.java(ctx, dataSoruce, null);
+    }
+
+    @Bean
+    public JSqlClient sqlClient2(
+        ApplicationContext ctx,
+        @Qualifier("ds2") DataSource dataSource
+    ) {
+        return SqlClients.java(ctx, dataSoruce, null);
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+import org.springframework.beans.factory.annotation.Qualifier
+import org.babyfish.jimmer.spring.SpringClients
+
+@configuration
+class SqlClientConfig {
+
+    @Bean
+    public fun sqlClient1(
+        ctx: ApplicationContext,
+        @Qualifier("ds1") dataSource: DataSource
+    ): KSqlClient =
+        SqlClients.kotlin(ctx, dataSoruce)
+
+    @Bean
+    public fun sqlClient2(
+        ctx: ApplicationContext,
+        @Qualifier("ds2") dataSource: DataSource
+    ): KSqlClient =
+        SqlClients.kotlin(ctx, dataSoruce)
+}
+```
+
+</TabItem>
+</Tabs>
+
+然后，开发人员可以随心所欲地使用其中任何一个`sqlClient`。即使一个事务内部操作了两个数据源，JTA事务也会保证二者的一致性。
+
+## 本地事务模式
+
+本地事务稍有不同，先看代码
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.transaction.support.PlatformTransactionManager;
+import org.babyfish.jimmer.spring.SpringClients;
+// highlight-next-line
+import org.babyfish.jimmer.spring.transaction.JimmerTransactionManager;
+// highlight-next-line
+import org.babyfish.jimmer.spring.transaction.TransactionalSqlClients;
+
+@configuration
+public class SqlClientConfig {
+
+    @Bean
+    public PlatformTransactionManager tm1( ❶
+        ApplicationContext ctx,
+        @Qualifier("ds1") DataSource dataSource
+    ) {
+        return new JimmerTransactionManager(
+            SqlClients.java(ctx, dataSoruce, null)
+        );
+    }
+
+    @Bean
+    public PlatformTransactionManager tm2(  ❷
+        ApplicationContext ctx,
+        @Qualifier("ds2") DataSource dataSource
+    ) {
+        return new JimmerTransactionManager(
+            SqlClients.java(ctx, dataSoruce, null)
+        );
+    }
+
+    @Bean
+    public JSqlClient sqlClient() {  ❸
+        TransactionalSqlClients.java();
+    }
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.transaction.support.PlatformTransactionManager
+import org.babyfish.jimmer.spring.SpringClients
+// highlight-next-line
+import org.babyfish.jimmer.spring.transaction.JimmerTransactionManager
+// highlight-next-line
+import org.babyfish.jimmer.spring.transaction.TransactionalSqlClients
+
+@configuration
+public class SqlClientConfig {
+
+    @Bean
+    fun tm1(
+        ctx: ApplicationContext,
+        @Qualifier("ds1") dataSource: DataSource
+    ): PlatformTransactionManager = ❶
+        JimmerTransactionManager(
+            SqlClients.kotlin(ctx, dataSoruce, null)
+        )
+
+    @Bean
+    fun tm2(  
+        ctx: ApplicationContext,
+        @Qualifier("ds2") dataSource: DataSource
+    ): PlatformTransactionManager = ❷
+        JimmerTransactionManager(
+            SqlClients.kotlin(ctx, dataSoruce, null)
+        )
+
+    @Bean
+    public JSqlClient sqlClient() = ❸
+        TransactionalSqlClients.kotlin()
+}
+```
+
+</TabItem>
+</Tabs>
+
+-   ❶ 根据第一个`DataSource`创建第一个事务管理器，注意：
+
+    -   事务管理器类型为`org.babyfish.jimmer.spring.transaction.JimmerTransactionManager`。
+
+    -   虽然内部代码创建了`sqlClient`对象，但是并未暴露给Spring上下文，而是被事务管理器持有并隐藏。
+
+-   ❷ 根据第二个`DataSource`创建第二个事务管理器，和❶相同，不再赘述。
+
+-   ❸ 创建一个`sqlClient`代理，并将之暴露给Spring上下文，供开发人员注入和使用。
+
+    -   对于任何需要需要操作Jimmer的业务方法，必须使用注解`@Transactional("tm1")`或`@Transactional("tm2")`，
+        这样就可以告诉Jimmer当前业务方法使用哪个`JimmerTransactionManager`。否则使用❸处的`sqlClient`代理会如下异常：
+        ```
+        The transactional sql client is used, 
+        however, there is no AOP transaction, or the transaction manager is not 
+        "org.babyfish.jimmer.spring.transaction.JimmerTransactionManager"
+        ```
+
+    -   一旦Jimmer明白了当前线程使用的是❶和❷处的事务管理器中的某个，
+        ❸处的`sqlClient`代理将会使用❶或❷处的某个`JimmerTransactionManager`内部的`sqlClient`来为用户提供服务。
+
+即，在本地事务模式下，虽然可以生命多个`sqlClient`对象，但是业务方法必须通过Spring的注解`@Transactional(transactionManagerRef)`来明确使用那个数据源。

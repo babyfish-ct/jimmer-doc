@@ -30,47 +30,61 @@ Jimmer has complete sample projects. For how to use Jimmer's Spring Boot Starter
     </tr>
 </table>
 
-<Tabs groupId="language"> 
-<TabItem value="java" label="Java">  
+You need to create a global object of this type, which is the API entry point for all ORM behaviors of Jimmer.
 
-```java
-public class JimmerUtils {
+>   [Multiple data sources](../../configuration/multi-datasources) require creating multiple global objects. 
+>   However, here we discuss the most common case of a single data source, where one global object is sufficient.
 
-    // highlight-next-line
-    public static final JSqlClient SQL_CLIENT =  
-        JSqlClient
-            .newBuilder()
-            .setDialect(new PostgresDialect()) 
-            ...other config omitted...
-            .build();
+Since we are using the Jimmer Spring Boot Starter, in this case, please specify the following configuration in `application.yml` *(or `application.properties`)*
 
-    // This method has no actual use, just to unify naming style  
-    // and make the Java and Kotlin code here as consistent as possible
-    public static JSqlClient sqlClient() {
-        return SQL_CLIENT;
-    }  
-}
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```yml
+spring:
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/jimmer_demo
+        username: root
+        password: 123456
+jimmer:
+    dialect: org.babyfish.jimmer.sql.dialect.MySqlDialect
+    show-sql: true
+    pretty-sql: true
+    database-validation-mode: ERROR
 ```
 
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin 
-// highlight-next-line
-object JimmerUtils {
-
-    val sqlClient: KSqlClient =  
-        newKSqlClient {
-            setDialect(PostgresDialect())
-            ...other config omitted...
-        }  
-}
+```yml
+spring:
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/jimmer_demo
+        username: root
+        password: 123456
+jimmer:
+    #highlight-next-line
+    language: kotlin // This is important for kotlin
+    dialect: org.babyfish.jimmer.sql.dialect.MySqlDialect
+    show-sql: true
+    pretty-sql: true
+    database-validation-mode: ERROR
 ```
 
-</TabItem> 
+</TabItem>
 </Tabs>
 
-This global variable is the API entry point for all Jimmer ORM behaviors   
+The Jimmer Spring Boot Starter will automatically create this global object
+
+>   Note that for Kotlin, in order to create `KSqlClient` instead of `JSqlClient`, you need to configure `jimmer.language = kotlin` in `application.yml`/`application.properties`.
+
+:::info
+Therefore, you can directly inject an object of type `JSqlClient`/`KSqlClient` anywhere.
+
+The subsequent code in this article will assume there is a `sqlClient` variable and use it, but it will not provide an explanation, as a detailed explanation has already been given here.
+:::
 
 ## Query
 
@@ -108,8 +122,7 @@ public class BookRepository {
             @Nullable String storeWebsite,
             @Nullable String authorName
     ) {
-        return JimmerUtils
-                .sqlClient()
+        return sqlClient
                 .createQuery(T)
                 .where(T.name().ilikeIf(name)) 
                 .where(T.price().betweenIf(minPrice, maxPrice))
@@ -171,8 +184,7 @@ class BookRepository {
         authorName: String? = null, 
         authorGender: Gender? = null  
     ): Page<Book> =
-        JimmerUtils
-            .sqlClient
+        sqlClient
             .createQuery(Book::class) {
                 where(table.name `ilike?` name)
                 where(table.price.`between?`(minPrice, maxPrice))
@@ -288,8 +300,7 @@ public class BookRepository {
     ...other members omitted...
 
     public long saveBook(BookInput input) {
-        return JimmerUtils
-            .sqlClient()
+        return sqlClient
             .save(input) 
             .execute()
             .getModifiedEntity()  
@@ -308,8 +319,7 @@ class BookRepository {
     ...other members omitted...  
 
     fun saveBook(input: BookInput): Long =  
-        JimmerUtils
-            .sqlClient 
+        sqlClient 
             .save(input)
             .execute() 
             .modifiedEntity
@@ -415,8 +425,7 @@ Then create the `BookStoreRepository`:
 public class BookStoreRepository {
 
     public long saveBookStore(CompositeBookStoreInput input) {
-        return JimmerUtils
-            .sqlClient()
+        return sqlClient
             .save(input)
             .execute()
             .getModifiedEntity()  
@@ -433,8 +442,7 @@ public class BookStoreRepository {
 class BookStoreRepository {
 
     fun saveBookStore(input: CompositeBookStoreInput): Long =
-        JimmerUtils
-            .sqlClient
+        sqlClient
             .save(input) 
             .execute()
             .modifiedEntity  
@@ -459,9 +467,7 @@ public class BookRepository {
     ...other members omitted...
 
     public void deleteBook(long id) {
-        JimmerUtils
-            .sqlClient()
-            .deleteById(Book.class, id);
+        sqlClient.deleteById(Book.class, id);
     }
 }
 ```
@@ -475,9 +481,7 @@ class BookRepository {
     ...other members omitted...
 
     fun deleteBook(id: Long) {
-        JimmerUtils
-            .sqlClient
-            .deleteById(Book::class, id) 
+        sqlClient.deleteById(Book::class, id) 
     }  
 }
 ```

@@ -152,7 +152,7 @@ class BaseEntityDraftInterceptor(
         }
 
         if (!isLoaded(draft, BaseEntity::modifiedBy)) {
-            draft.modifiedBy().apply {
+            draft.modifiedBy {
                 id = userService.currentUserId
             }
         }
@@ -163,7 +163,7 @@ class BaseEntityDraftInterceptor(
             }
 
             if (!isLoaded(draft, BaseEntity::createdBy)) {
-                draft.createdBy().apply {
+                draft.createdBy {
                     id = userService.currentUserId
                 }
             }

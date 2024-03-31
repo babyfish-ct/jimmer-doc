@@ -235,7 +235,7 @@ Here, let's not discuss how to configure for now, but look at whether enabling t
     sqlClient.update(
         new(Book::class).by {
             id = 10L
-            store().apply { id = 321L }
+            store { id = 321L }
         }
     );
     ```

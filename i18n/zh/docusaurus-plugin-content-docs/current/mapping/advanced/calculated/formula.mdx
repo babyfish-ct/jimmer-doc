@@ -25,7 +25,9 @@ fullName = firstName + ' ' + lastName
 
 接下来，我们用两者不同的方式，即基于Java/Kotlin的计算和基于SQL的计算，来实现`Author.fullName`
 
-## 基于Java/Kotlin的计算
+## 1. 基于Java/Kotlin的计算
+
+### 依赖普通属性
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -38,6 +40,11 @@ import org.babyfish.jimmer.sql.*;
 @Entity
 public interface Author {
 
+    String firstName();
+
+    String lastName();
+
+    // highlight-next-line
     @Formula(dependencies = {"firstName", "lastName"})
     default String fullName() {
         return firstName() + ' ' + lastName();
@@ -58,6 +65,11 @@ import org.babyfish.jimmer.sql.*
 @Entity
 interface Author {
 
+    val firstName: String
+
+    val lastName: String
+
+    // highlight-next-line
     @Formula(dependencies = ["firstName", "lastName"])
     val fullName: String
         get() = "$firstName $lastName"
@@ -143,7 +155,259 @@ from AUTHOR as tb_1_
 如果让对象抓取器直接抓取`firstName`和`lastName`，那么它们一定会出现在序列化结果中。读者可以自行试验，这里不再赘述。
 :::
 
-## 基于SQL的计算
+### 依赖Embbeddable
+
+假设有一个Embeddable类型
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="NameInfo.java"
+@Embeddable
+public interface NameInfo {
+    String firstName();
+    String lastName();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="NameInfo.kt"
+@Embeddable
+interface NameInfo {
+    val firstName: String
+    val lastName: String
+}
+```
+
+</TabItem>
+</Tabs>
+
+如果某实体使用了此Embeddable类型，那么实体属性可以依赖其内部属性，例如
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Author.java"
+@Entity
+public interface Author {
+
+    NameInfo nameInfo();
+
+    // highlight-next-line
+    @Formula(dependencies = {"nameInfo.firstName", "nameInfo.lastName"})
+    // 也可以写成：@Formula(dependencies = "nameInfo")
+    default String fullName() {
+        return nameInfo().firstName() + ' ' + nameInfo().lastName();
+    }
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="Author.kt"
+@Entity
+interface Author {
+
+    val nameInfo: NameInfo
+
+    // highlight-next-line
+    @Formula(dependencies = ["nameInfo.firstName", "nameInfo.lastName"])
+    // 也可以写成：@Formula(dependencies = ["nameInfo"])
+    ...省略其他属性...
+    val fullName: String
+        get() = "${nameInfo.firstName} ${nameInfo.lastName}"
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+使用方法和执行效果完全同上，无需重复。
+:::
+
+### 依赖关联属性
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+@Entity
+public interface Book {
+
+    @ManyToMany
+    List<Author> authors();
+
+    // highlight-next-line
+    @Formula(dependencies = "authors")
+    default int authorCount() {
+        return authors().size();
+    }
+
+    // highlight-next-line
+    @Formula(dependencies = {"authors.firstName", "authors.lastName"})
+    default List<String> authorNames() {
+        return authors()
+            .stream()
+            .map(author -> author.firstName() + ' ' + author.lastName())
+            .collect(Collectors.toList());
+    }
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="Book.kt"
+@Entity
+public interface Book {
+
+    @ManyToMany
+    val authors: List<Author>
+
+    // highlight-next-line
+    @Formula(dependencies = "authors")
+    val authorCount: Int
+        get() = authors.size
+
+    // highlight-next-line
+    @Formula(dependencies = ["authors.firstName", "authors.lastName"])
+    val authorNames: List<String>
+        get() = authors.map { "${it.firstName} ${it.lastName}" }
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+</Tabs>
+
+执行如下代码
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable table = BookTable.$;
+
+List<Book> books = sqlClient
+    .createQuery(table)
+    .where(table.name().eq("Learning GraphQL"))
+    .orderBy(table.edition().desc())
+    .select(
+        table.fetch(
+            BookFetcher.$
+                .name()
+                .edition()
+                // highlight-next-line
+                .authorCount()
+                // highlight-next-line
+                .authorNames()
+        )
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = sqlClient
+    .createQuery(Book::class) {
+        where(table.name eq "Learning GraphQL")
+        orderBy(table.edition().desc())
+        select(
+            table.fetchBy {
+                name()
+                edition()
+                // highlight-next-line
+                authorCount()
+                // highlight-next-line
+                authorNames()
+            }
+        )
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+执行，生成如下两条SQL语句
+
+1.
+    ```sql
+    select
+        tb_1_.ID,
+        tb_1_.NAME,
+        tb_1_.EDITION,
+    from BOOK tb_1_
+    where
+        tb_1_.NAME = ? /* Learning GraphQL */
+    order by
+        tb_1_.EDITION desc
+    ```
+
+2.  ```sql
+    select
+        tb_2_.BOOK_ID,
+        tb_1_.ID,
+        tb_1_.FIRST_NAME,
+        tb_1_.LAST_NAME
+    from AUTHOR tb_1_
+    inner join BOOK_AUTHOR_MAPPING tb_2_
+        on tb_1_.ID = tb_2_.AUTHOR_ID
+    where
+        tb_2_.BOOK_ID in (
+            ? /* 3 */, ? /* 2 */, ? /* 1 */
+        )
+    order by
+        tb_1_.FIRST_NAME asc,
+        tb_1_.LAST_NAME asc
+    ```
+    
+得到的数据如下
+
+```json
+[
+    {
+        "id":3,
+        "name":"Learning GraphQL",
+        "edition":3,
+        // highlight-next-line
+        "authorCount":2,
+        // highlight-next-line
+        "authorNames":["Alex Banks","Eve Procello"]
+    }, 
+    {
+        "id":2,
+        "name":"Learning GraphQL",
+        "edition":2,
+        // highlight-next-line
+        "authorCount":2,
+        // highlight-next-line
+        "authorNames":["Alex Banks","Eve Procello"]
+    }, 
+    {
+        "id":1,
+        "name":"Learning GraphQL",
+        "edition":1,
+        // highlight-next-line
+        "authorCount":2,
+        // highlight-next-line
+        "authorNames":["Alex Banks","Eve Procello"]
+    }
+]
+```
+
+## 2. 基于SQL的计算
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -243,7 +507,7 @@ where tb_1_.ID = ?
 {"id":1,"fullName":"Eve Procello"}
 ```
 
-### 和基于Java/Kotlin的简单计算的比较
+## 比较
 
 相比于基于Java/Kotlin的简单计算，基于SQL的简单计算有一个缺点和一个优点。
 
@@ -266,3 +530,4 @@ where tb_1_.ID = ?
     :::
 
 因此，建议认真考虑@Formula计算属性应该基于Java/Kotlin计算还是基于SQL计算。
+

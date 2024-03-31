@@ -1057,10 +1057,10 @@ System.out.println(view);
 val treeNode = new(TreeNode::class).by {
     id = 4L
     name = "Coca cola"
-    parent().apply {
+    parent {
         id = 3L
         name = "Drinks"
-        parent().apply {
+        parent {
             id = 2L
             name = "Food"
         }   

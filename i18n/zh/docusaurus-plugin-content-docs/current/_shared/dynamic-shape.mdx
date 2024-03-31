@@ -92,7 +92,7 @@ val book = new(Book::class).by {
     name = "Learning GraphQL"
     edition = 1
     price = BigDecimal("49.99")
-    store().apply {
+    store {
         name = "O'REILLY"
         website = "https://www.oreilly.com/"
     }
@@ -151,7 +151,7 @@ val book = new(Book::class).by {
     name = "Learning GraphQL"
     edition = 1
     price = BigDecimal("49.99")
-    store().apply {
+    store {
         name = "O'REILLY"
         website = "https://www.oreilly.com/"
     }

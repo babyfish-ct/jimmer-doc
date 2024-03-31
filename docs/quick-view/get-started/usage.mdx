@@ -196,12 +196,12 @@ class BookRepository {
                         lastName `ilike?` authorName  
                     )
                 }
-                where += table.authors { gender `eq?` authorGender }  
+                where += table.authors { gender `eq?` authorGender } 
+                orderBy(table.makeOrders(sortCode))
+                select( 
+                    table.fetch(fetcher)
+                )
             }
-            .orderBy(table.makeOrders(sortCode))
-            .select( 
-                table.fetch(fetcher)
-            )
             .fetchPage(pageIndex, pageSize) 
 }
 ```

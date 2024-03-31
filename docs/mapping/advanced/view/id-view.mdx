@@ -416,7 +416,7 @@ IdView properties and original association properties are linked. Setting one ne
     ```kotlin 
     // Set original property
     val book = new(Book::class).by {
-        store().apply { 
+        store { 
             id = 10L
             name = "TURING"
         }

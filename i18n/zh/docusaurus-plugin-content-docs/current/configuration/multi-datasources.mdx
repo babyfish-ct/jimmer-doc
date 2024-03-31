@@ -192,4 +192,4 @@ public class SqlClientConfig {
     -   一旦Jimmer明白了当前线程使用的是❶和❷处的事务管理器中的某个，
         ❸处的`sqlClient`代理将会使用❶或❷处的某个`JimmerTransactionManager`内部的`sqlClient`来为用户提供服务。
 
-即，在本地事务模式下，虽然可以生命多个`sqlClient`对象，但是业务方法必须通过Spring的注解`@Transactional(transactionManagerRef)`来明确使用那个数据源。
+即，在本地事务模式下，虽然可以声明多个`sqlClient`对象，但是业务方法必须通过Spring的注解`@Transactional(transactionManagerRef)`来明确使用那个数据源。

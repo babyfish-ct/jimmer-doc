@@ -25,7 +25,9 @@ fullName = firstName + ' ' + lastName
 
 Then we use two different ways, Java/Kotlin-based calculation and SQL-based calculation, to implement `Author.fullName`.
 
-## Java/Kotlin-based Calculation
+## 1. Java/Kotlin-based Calculation
+
+### Depending on simple properties
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">  
@@ -143,7 +145,258 @@ In this case, although the dynamic object has `firstName` and `lastName`, they a
 If the object fetcher directly fetches `firstName` and `lastName`, they will definitely appear in the serialization result. Readers can try it themselves, no need to repeat here.
 :::
 
-## SQL-based Calculation
+### Depending on embedded object
+
+Suppose there is an Embeddable type
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="NameInfo.java"
+@Embeddable
+public interface NameInfo {
+    String firstName();
+    String lastName();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="NameInfo.kt"
+@Embeddable
+interface NameInfo {
+    val firstName: String
+    val lastName: String
+}
+```
+
+</TabItem>
+</Tabs>
+
+If an entity uses this Embeddable type, then the entity properties can depend on its internal properties, for example
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Author.java"
+@Entity
+public interface Author {
+
+    NameInfo nameInfo();
+
+    // highlight-next-line
+    @Formula(dependencies = {"nameInfo.firstName", "nameInfo.lastName"})
+    // or it can be written as: @Formula(dependencies = "nameInfo")
+    default String fullName() {
+        return nameInfo().firstName() + ' ' + nameInfo().lastName();
+    }
+
+    ...other properties omitted...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="Author.kt"
+@Entity
+interface Author {
+
+    val nameInfo: NameInfo
+
+    // highlight-next-line
+    @Formula(dependencies = ["nameInfo.firstName", "nameInfo.lastName"])
+    // or it can be written as: @Formula(dependencies = ["nameInfo"])
+    ...other properties omitted...
+    val fullName: String
+        get() = "${nameInfo.firstName} ${nameInfo.lastName}"
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+The usage and execution effect are completely the same as above, no need to repeat.
+:::
+
+### Depending on association properties
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+@Entity
+public interface Book {
+
+    @ManyToMany
+    List<Author> authors();
+
+    // highlight-next-line
+    @Formula(dependencies = "authors")
+    default int authorCount() {
+        return authors().size();
+    }
+
+    // highlight-next-line
+    @Formula(dependencies = {"authors.firstName", "authors.lastName"})
+    default List<String> authorNames() {
+        return authors()
+            .stream()
+            .map(author -> author.firstName() + ' ' + author.lastName())
+            .collect(Collectors.toList());
+    }
+
+    ...other properties omitted...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="Book.kt"
+@Entity
+public interface Book {
+
+    @ManyToMany
+    val authors: List<Author>
+
+    // highlight-next-line
+    @Formula(dependencies = "authors")
+    val authorCount: Int
+        get() = authors.size
+
+    // highlight-next-line
+    @Formula(dependencies = ["authors.firstName", "authors.lastName"])
+    val authorNames: List<String>
+        get() = authors.map { "${it.firstName} ${it.lastName}" }
+
+    ...other properties omitted...
+}
+```
+
+</TabItem>
+</Tabs>
+
+Execute the following code
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable table = BookTable.$;
+
+List<Book> books = sqlClient
+    .createQuery(table)
+    .where(table.name().eq("Learning GraphQL"))
+    .orderBy(table.edition().desc())
+    .select(
+        table.fetch(
+            BookFetcher.$
+                .name()
+                .edition()
+                // highlight-next-line
+                .authorCount()
+                // highlight-next-line
+                .authorNames()
+        )
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = sqlClient
+    .createQuery(Book::class) {
+        where(table.name eq "Learning GraphQL")
+        orderBy(table.edition().desc())
+        select(
+            table.fetchBy {
+                name()
+                edition()
+                // highlight-next-line
+                authorCount()
+                // highlight-next-line
+                authorNames()
+            }
+        )
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+Execute, generating two SQL statements
+
+1. ```sql
+   select
+       tb_1_.ID,
+       tb_1_.NAME,
+       tb_1_.EDITION,
+   from BOOK tb_1_
+   where
+       tb_1_.NAME = ? /* Learning GraphQL */
+   order by
+       tb_1_.EDITION desc
+   ```
+
+2. ```sql
+   select
+       tb_2_.BOOK_ID,
+       tb_1_.ID,
+       tb_1_.FIRST_NAME,
+       tb_1_.LAST_NAME
+   from AUTHOR tb_1_
+   inner join BOOK_AUTHOR_MAPPING tb_2_
+       on tb_1_.ID = tb_2_.AUTHOR_ID
+   where
+       tb_2_.BOOK_ID in (
+           ? /* 3 */, ? /* 2 */, ? /* 1 */
+       )
+   order by
+       tb_1_.FIRST_NAME asc,
+       tb_1_.LAST_NAME asc
+   ```
+
+The obtained data is as follows
+
+```json
+[
+    {
+        "id":3,
+        "name":"Learning GraphQL",
+        "edition":3,
+        // highlight-next-line
+        "authorCount":2,
+        // highlight-next-line
+        "authorNames":["Alex Banks","Eve Procello"]
+    }, 
+    {
+        "id":2,
+        "name":"Learning GraphQL",
+        "edition":2,
+        // highlight-next-line
+        "authorCount":2,
+        // highlight-next-line
+        "authorNames":["Alex Banks","Eve Procello"]
+    }, 
+    {
+        "id":1,
+        "name":"Learning GraphQL",
+        "edition":1,
+        // highlight-next-line
+        "authorCount":2,
+        // highlight-next-line
+        "authorNames":["Alex Banks","Eve Procello"]
+    }
+]
+```
+
+## 2. SQL-based Calculation
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -243,7 +496,7 @@ The final printed result is:
 {"id":1,"fullName":"Eve Procello"}
 ```
 
-### Comparison with Java/Kotlin-based Simple Formula
+## Comparison
 
 Compared with Java/Kotlin-based simple formula, SQL-based simple formula has one disadvantage and one advantage:
 

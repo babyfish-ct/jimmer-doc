@@ -82,7 +82,7 @@ Two examples are shown below:
         name = "SQL in Action"
         edition = 1
         price = BigDecimal("39.9")
-        store().apply {
+        store {
             // Associated object has only id property
             // highlight-next-line
             id = 2L
@@ -167,7 +167,7 @@ Two examples are shown below:
         name = "SQL in Action"
         edition = 1
         price = BigDecimal("39.9")
-        store().apply {
+        store {
             // Associated object has only key property, i.e. `BookStore.name`
             // highlight-next-line
             name = "MANNING"
@@ -256,18 +256,18 @@ sqlClient.save(order);
 
 ```kotlin
 val order = new(Order::class).by {
-    customer().apply { id = 1L }
+    customer { id = 1L }
     province = "Prenzlauer Berg"
     city = "Berlin" 
     address = "Brandenburgische Straße 9, Prenzlauer Berg, Berlin, Germany"
     items().addBy {
-        product().apply { id = 1L }
+        product { id = 1L }
         // Property neither id nor key
         // highlight-next-line
         quantity = 2
     }
     items().addBy {
-        product().apply { id = 10L }
+        product { id = 10L }
         // Property neither id nor key
         // highlight-next-line
         quantity = 1

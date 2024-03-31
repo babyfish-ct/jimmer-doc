@@ -81,7 +81,7 @@ import { LongAssociation } from '@site/src/components/LongAssociation';
         name = "SQL in Action"
         edition = 1
         price = BigDecimal("39.9")
-        store().apply {
+        store {
             // 关联对象只有id属性
             // highlight-next-line
             id = 2L
@@ -161,7 +161,7 @@ import { LongAssociation } from '@site/src/components/LongAssociation';
         name = "SQL in Action"
         edition = 1
         price = BigDecimal("39.9")
-        store().apply {
+        store {
             // 关联对象只有key属性，即`BookStore.name`
             // highlight-next-line
             name = "MANNING"
@@ -249,18 +249,18 @@ sqlClient.save(order);
 
 ```kotlin
 val order = new(Order::class).by {
-    customer().apply { id = 1L }
+    customer { id = 1L }
     province = "四川"
     city = "成都"
     address = "龙泉驿区洪玉路与十洪路交叉口"
     items().addBy {
-        product().apply { id = 1L }
+        product { id = 1L }
         // 既非id也非key的属性
         // highlight-next-line
         quantity = 2
     }
     items().addBy {
-        product().apply { id = 10L }
+        product { id = 10L }
         // 既非id也非key的属性
         // highlight-next-line
         quantity = 1

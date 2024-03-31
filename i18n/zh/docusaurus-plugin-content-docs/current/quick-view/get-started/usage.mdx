@@ -196,11 +196,11 @@ class BookRepository {
                     )
                 }
                 where += table.authors { gender `eq?` authorGender }
+                orderBy(table.makeOrders(sortCode))
+                select(
+                    table.fetch(fetcher)
+                )
             }
-            .orderBy(table.makeOrders(sortCode))
-            .select(
-                table.fetch(fetcher)
-            )
             .fetchPage(pageIndex, pageSize)
 }
 ```

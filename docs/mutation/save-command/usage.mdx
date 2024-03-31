@@ -86,7 +86,7 @@ A save command persists an arbitrary shaped data structure to the database, for 
         name = "SQL in Action"
         edition = 1
         price = BigDecimal("59.9")
-        store().apply {
+        store {
             name = MANNING;
         }
         authors().addBy {

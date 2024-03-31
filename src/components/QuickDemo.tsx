@@ -110,21 +110,21 @@ const EntityQuery: FC<BindProps> = bindProps => {
             <Tabs groupId="quckdemo-language">
                 <TabItem value="java" label="Java">
                     <div style={CODE}>
-                        <Line><Type>BookTable</Type> <Value>table</Value><Op> = </Op><Type>BookTable</Type><Dot/>$;</Line>
+                        <Line><Type>BookTable</Type> <Value>table</Value><Op> = </Op><Type>BookTable</Type><Dot/>$;<Comment>Or `Tables.BOOK_TABLE`</Comment></Line>
                         <Line>&nbsp;</Line>
                         <Line><Type>List</Type><Op>&lt;</Op><Type>Book</Type><Op>&gt;</Op> <Value>books</Value><Op> = </Op><Value>sqlClient</Value></Line>
                         <Line mouseId='createQuery' {...bindProps} indent={1}><Dot/>createQuery<Op>(</Op><Value>table</Value><Op>)</Op></Line>
                         <Line mouseId='where' {...bindProps} indent={1}><Dot/>where<Op>(</Op><Value>table</Value><Dot/>name<Op>().</Op>eq<Op>(</Op><Literal>"Learning GraphQL"</Literal><Op>)</Op><Op>)</Op></Line>
                         <Line mouseId='select' {...bindProps} indent={1}><Dot/>select<Op>(</Op></Line>
                         <Line mouseId='fetcher' {...bindProps} indent={2} tooltip={fetchByShape}><Value>table</Value><Dot/>fetch<Op>(</Op></Line>
-                        <Line {...bindProps} indent={3}><Type>BookFetcher</Type><Dot/>$</Line>
+                        <Line {...bindProps} indent={3}><Type>BookFetcher</Type><Dot/>$<Comment>Or `Fetchers.BOOK_FETCHER`</Comment></Line>
                         <Line mouseId='allScalars' {...bindProps} indent={4} tooltip={allScalarTooltip}><Dot/>allScalarFields<Op>()</Op></Line>
                         <Line mouseId='Book.store' {...bindProps} indent={4} tooltip={tooltip(isZh, 'Book.store', 'MANY-TO-ONE', true)}><Dot/>store<Op>(</Op></Line>
-                        <Line {...bindProps} indent={5}><Type>BookStoreFecher</Type><Dot/>$</Line>
+                        <Line {...bindProps} indent={5}><Type>BookStoreFecher</Type><Dot/>$<Comment>Or `Fetchers.BOOK_STORE_FETCHER`</Comment></Line>
                         <Line mouseId='BookStore.name' {...bindProps} indent={6} tooltip={tooltip(isZh, 'BookStore.name')}><Dot/>name<Op>()</Op></Line>
                         <Line {...bindProps} indent={4}><Op>)</Op></Line>
                         <Line mouseId='Book.authors' {...bindProps} indent={4} tooltip={tooltip(isZh, 'Book.authors', 'MANY-TO-MANY', true)}><Dot/>authors<Op>(</Op></Line>
-                        <Line {...bindProps} indent={5}><Type>AuthorFetcher</Type><Dot/>$</Line>
+                        <Line {...bindProps} indent={5}><Type>AuthorFetcher</Type><Dot/>$<Comment>Or `Fetchers.AUTHOR_FETCHER`</Comment></Line>
                         <Line mouseId='Author.firstName' {...bindProps} indent={6} tooltip={tooltip(isZh, 'Author.firstName')}><Dot/>firstName<Op>()</Op></Line>
                         <Line mouseId='Author.lastName' {...bindProps} indent={6} tooltip={tooltip(isZh, 'Author.lastName')}><Dot/>lastName<Op>()</Op></Line>
                         <Line {...bindProps} indent={4}><Op>)</Op></Line>
@@ -214,7 +214,7 @@ const DtoQuery: FC<BindProps> = bindProps => {
             <Tabs groupId="quckdemo-language">
                 <TabItem value="java" label="Java">
                     <div style={CODE}>
-                        <Line><Type>BookTable</Type> <Value>table</Value><Op> = </Op><Type>BookTable</Type><Dot/>$;</Line>
+                        <Line><Type>BookTable</Type> <Value>table</Value><Op> = </Op><Type>BookTable</Type><Dot/>$;<Comment>Or `Tables.BOOK`</Comment></Line>
                         <Line>&nbsp;</Line>
                         <Line><Type>List</Type><Op>&lt;</Op><Type>BookDetailView</Type><Op>&gt;</Op> <Value>books</Value><Op> = </Op><Value>sqlClient</Value></Line>
                         <Line mouseId='createQuery' {...bindProps} indent={1}><Dot/>createQuery<Op>(</Op><Value>table</Value><Op>)</Op></Line>
@@ -470,6 +470,12 @@ const Keyword: FC<{
     readonly children: string
 }> = ({children}) => {
     return <span style={{color: '#64b5f6', fontWeight: 'bold'}}>{children}</span>;
+};
+
+const Comment: FC<{
+    readonly children: string
+}> = ({children}) => {
+    return <span style={{color: '#757575', fontStyle: 'italic'}}> // {children}</span>;
 };
 
 const EntityProp: FC<{

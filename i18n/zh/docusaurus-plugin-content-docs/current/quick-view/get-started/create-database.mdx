@@ -141,12 +141,12 @@ insert into book(id, name, edition, price, store_id) values
     (12, 'GraphQL in Action', 3, 80, 2)
 ;
 
-insert into author(id, first_name, last_name, gender) values
-    (1, 'Eve', 'Procello', 'F'),
-    (2, 'Alex', 'Banks', 'M'),
-    (3, 'Dan', 'Vanderkam', 'M'),
-    (4, 'Boris', 'Cherny', 'M'),
-    (5, 'Samer', 'Buna', 'M')
+insert into author(id, first_name, last_name, gender, created_time, modified_time) values
+    (1, 'Eve', 'Procello', 'F', now(), now()),
+    (2, 'Alex', 'Banks', 'M', now(), now()),
+    (3, 'Dan', 'Vanderkam', 'M', now(), now()),
+    (4, 'Boris', 'Cherny', 'M', now(), now()),
+    (5, 'Samer', 'Buna', 'M', now(), now())
 ;
 
 insert into book_author_mapping(book_id, author_id) values

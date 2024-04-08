@@ -66,6 +66,8 @@ Jimmer is responsible for compiling dto files and automatically generating DTO t
 If Java/Kotlin source code files other than dto files are modified, running the application directly from the IDE can trigger recompilation of dto files. 
 
 However, if no Java/Kotlin files other than dto files are modified, simply clicking the run button in the IDE does not cause dto files to be recompiled unless explicitly rebuilding!
+
+If you are using Gradle as your build tool, you can also use the third-party Gradle plugin provided by the community to solve this problem: [jimmer-gradle](https://github.com/Enaium/jimmer-gradle)
 :::
 
 Taking `BookDetailView` in the above code as an example, after the dto file is successfully compiled by Jimmer, the following DTO type will be automatically generated:

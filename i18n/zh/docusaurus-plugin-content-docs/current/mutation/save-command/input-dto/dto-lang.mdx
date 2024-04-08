@@ -73,7 +73,7 @@ Jimmer负责编译dto文件，自动生成符合这些形状的DTO类型。
 
 但是，如果除了dto文件外没有其他Java/Kotlin文件被修改，简单地点击IDE中运行按钮并不会导致dto文件被重新编译，除非显式地rebuild！
 
-未来会思考如何解决这个问题，提供更好的服务。
+如果你使用的构建工具是Gradle，也可以使用社区提供的第三方Gradle插件来解决这个问题: [jimmer-gradle](https://github.com/Enaium/jimmer-gradle)
 :::
 
 以上面代码中的`BookInput`为例，此dto文件被Jimmer成功编译后，会自动生成如下DTO类型

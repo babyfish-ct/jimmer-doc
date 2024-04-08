@@ -176,6 +176,8 @@ open class BookView(
     -   如果除了dto文件外还有其他Java/Kotlin文件被修改了，直接点击IDE中运行按钮可以导致dto文件的重新编译
 
     -   但是，如果除了dto文件外没有其他Java/Kotlin文件被修改，简单地点击IDE中运行按钮并不会导致dto文件被重新编译，除非显式地rebuild！
+    
+    -   如果你使用的构建工具是Gradle，也可以使用社区提供的第三方Gradle插件来解决这个问题: [jimmer-gradle](https://github.com/Enaium/jimmer-gradle)
 :::
 
 ## 3. view、input和specification

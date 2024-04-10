@@ -316,9 +316,9 @@ val sqlClient = newKSqlClient {
 `RedisHashBinder`和[多视角缓存](./multiview-cache)相关，本文不讨论。
 :::
 
-要构建`RedisValueBinder`，需要一个[RedisOptions<String, byte[]>](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/core/RedisOperations.html)。
+要构建`RedisValueBinder`，需要一个[RedisOptions\<String, byte[]>](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/core/RedisOperations.html)。
 
-Jimmer的SpringBoot Stater提供`org.babyfish.jimmer.spring.cache.RedisCaches`类，其静态方法`RedisCaches.cacheRedisTemplate`可快速构建这个[RedisOptions<String, byte[]>](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/core/RedisOperations.html)对象。
+Jimmer的SpringBoot Stater提供`org.babyfish.jimmer.spring.cache.RedisCaches`类，其静态方法`RedisCaches.cacheRedisTemplate`可快速构建这个[RedisOptions\<String, byte[]>](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/core/RedisOperations.html)对象。
 
 辅助方法`RedisCaches.cacheRedisTemplate`的例子如下：
 

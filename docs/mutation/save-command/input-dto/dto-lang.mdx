@@ -74,7 +74,7 @@ If Java/Kotlin source files other than dto files are modified, directly clicking
 
 However, if no Java/Kotlin files other than dto files are modified, simply clicking the Run button in IDE will not trigger dto file recompilation unless rebuild is explicitly triggered!
 
-In the future we will think about how to solve this problem and provide better service.
+If you are using Gradle as your build tool, you can also use the third-party Gradle plugin provided by the community to solve this problem: [jimmer-gradle](https://github.com/Enaium/jimmer-gradle)
 :::
 
 Take `BookInput` in the above code as an example. After successful compilation of this dto file, the following DTO types will be auto-generated:

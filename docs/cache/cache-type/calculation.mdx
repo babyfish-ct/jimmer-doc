@@ -631,7 +631,7 @@ Now let's verify the effect of modifying `Book.price`:
 
 -   If BinLog trigger is enabled, modifying the database by any means can lead to Jimmer's cache consistency intervention. For example, directly execute the following SQL in the SQL IDE:
 
-    ```sql
+  ```sql
     update BOOK
     set PRICE = PRICE + 1
     where ID = 7;

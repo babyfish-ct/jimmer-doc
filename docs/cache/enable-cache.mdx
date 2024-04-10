@@ -316,9 +316,9 @@ Earlier we mentioned that if using Jimmer's SpringBoot Starter, you can use the 
 `RedisHashBinder` is related to [multi-view caches](./multiview-cache) and will not be discussed in this article.
 :::
 
-To build `RedisValueBinder`, you need a [RedisOperations<String, byte[]>](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/core/RedisOperations.html).
+To build `RedisValueBinder`, you need a [RedisOperations\<String, byte[]>](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/core/RedisOperations.html).
 
-Jimmer's SpringBoot Stater provides the `org.babyfish.jimmer.spring.cache.RedisCaches` class whose static method `RedisCaches.cacheRedisTemplate` can quickly build this [RedisOperations<String, byte[]>](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/core/RedisOperations.html) object.
+Jimmer's SpringBoot Stater provides the `org.babyfish.jimmer.spring.cache.RedisCaches` class whose static method `RedisCaches.cacheRedisTemplate` can quickly build this [RedisOperations\<String, byte[]>](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/core/RedisOperations.html) object.
 
 An example of the helper method `RedisCaches.cacheRedisTemplate` is as follows:
 

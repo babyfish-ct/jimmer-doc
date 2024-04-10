@@ -102,7 +102,7 @@ public abstract class ScalarProvider<T ❶, S ❷> {
 <TabItem value="java" label="Java">
 
 ```java title="UUIDScalarProvider.java"
-public class UUIDScalarProvider extends ScalarProvider<UUID, String> {
+public class UUIDScalarProvider extends AbstractScalarProvider<UUID, String> {
 
     @Override
     public UUID toScalar(String sqlValue) {
@@ -149,7 +149,7 @@ class UUIDScalarProvider : ScalarProvider<UUID, String> {
         ```java title="UUIDScalarProvider.java"
         // highlight-next-line
         @Component
-        public class UUIDScalarProvider extends ScalarProvider<UUID, String> {
+        public class UUIDScalarProvider extends AbstractScalarProvider<UUID, String> {
             
             ...省略代码...
         }
@@ -299,7 +299,7 @@ fun sqlClient() : KSqlClient =
 
 ```java title="LocationScalarProvider.java"
 @Component
-public class LocationScalarProvider extends ScalarProvider<Location, String> {
+public class LocationScalarProvider extends AbstractScalarProvider<Location, String> {
     
     @Override
     // highlight-next-line

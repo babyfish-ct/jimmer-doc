@@ -84,7 +84,7 @@ Jimmer会根据[命名策略](./naming-strategy)推导`BookStore`接口对应的
 ```java title="BookStore.java"
 @Entity
 // highlight-next-line
-@Table("BOOK_STORE")
+@Table(name = "BOOK_STORE")
 public interface BookStore {
     ...省略其他代码...
 }
@@ -96,7 +96,7 @@ public interface BookStore {
 ```kotlin title="BookStore.kt"
 @Entity
 // highlight-next-line
-@Table("BOOK_STORE")
+@Table(name = "BOOK_STORE")
 interface BookStore {
     ...省略其他代码...
 }

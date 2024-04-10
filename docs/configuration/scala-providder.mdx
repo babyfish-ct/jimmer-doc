@@ -103,7 +103,7 @@ For example, the current database does not support the UUID type, which can be h
 <TabItem value="java" label="Java">  
 
 ```java title="UUIDScalarProvider.java"
-public class UUIDScalarProvider extends ScalarProvider<UUID, String> {
+public class UUIDScalarProvider extends AbstractScalarProvider<UUID, String> {
 
     @Override
     public UUID toScalar(String sqlValue) {
@@ -150,7 +150,7 @@ There are two ways for Jimmer to register `ScalarProvider`:
         ```java title="UUIDScalarProvider.java"
         // highlight-next-line
         @Component 
-        public class UUIDScalarProvider extends ScalarProvider<UUID, String> {
+        public class UUIDScalarProvider extends AbstractScalarProvider<UUID, String> {
                 
             ...Omitted code...
         }
@@ -300,7 +300,7 @@ Of course. Just override the `getHandledProps` method of `ScalarProvider`, and y
 
 ```java title="LocationScalarProvider.java"
 @Component
-public class LocationScalarProvider extends ScalarProvider<Location, String> {
+public class LocationScalarProvider extends AbstractScalarProvider<Location, String> {
     
     @Override
     // highlight-next-line 

@@ -84,7 +84,7 @@ If the default [naming strategy](./naming-strategy) is not overridden by the use
 ```java title="BookStore.java"
 @Entity
 // highlight-next-line  
-@Table("BOOK_STORE")
+@Table(name = "BOOK_STORE")
 public interface BookStore {
     ...Omit other code...
 }
@@ -96,7 +96,7 @@ public interface BookStore {
 ```kotlin title="BookStore.kt"  
 @Entity
 // highlight-next-line
-@Table("BOOK_STORE") 
+@Table(name = "BOOK_STORE") 
 interface BookStore {
     ...Omit other code...
 }

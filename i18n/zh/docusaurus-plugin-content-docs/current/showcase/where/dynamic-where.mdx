@@ -108,7 +108,7 @@ val books = sqlClient
 </Tabs>
 
 :::tip
-大部分SQL条件*(比如，这里的`ilike`)*不接受null，并视之为开发人员犯下的BUG。*(`eq`和`ne`除外，应为它们会讲null渲染为`is null`和`not null`)*
+大部分SQL条件*(比如，这里的`ilike`)*不接受null，并视之为开发人员犯下的BUG。*(`eq`和`ne`除外，因为它们会将null渲染为`is null`和`not null`)*
 
 然而，动态谓词 *(Java中`ilikeIf`和Kotlin中的`ilike?`)* 则完全不同，它们接受null值并将之理解为动态查询。即，如果参数为null或""，则忽略当前SQL条件。
 :::

@@ -27,8 +27,8 @@ List<Book> books = bookRepository.findBooksByName(
 for (Book book : books) {
     System.out.println("--------");
     System.out.println("Id: " + book.id());
-    System.out.println("Name: " + book.id());
-    System.out.println("Edition: " + book.id());
+    System.out.println("Name: " + book.name());
+    System.out.println("Edition: " + book.edition());
     System.out.println("Price:" + book.price()); ❷
 }
 ```  

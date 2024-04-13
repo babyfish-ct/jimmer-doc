@@ -17,6 +17,6 @@ In the [OnDissociate](../mapping/advanced/on-dissociate) article, we know there 
 
 For pseudo foreign key *(please refer to [Real and Fake Foreign Keys](../mapping/base/foreignkey))* associative properties, when its dissociation mode is `NONE`:
 
-- If the global configuration `jimmer.default-dissociation-action-checkable` is false *(default)*, it is equivalent to `NONE`.
+- If the global configuration `jimmer.default-dissociation-action-checkable` is true *(default)*, it is equivalent to `CHECK`.
 
-- If the global configuration `jimmer.default-dissociation-action-checkable` is true, it is equivalent to `CHECK`.
+- If the global configuration `jimmer.default-dissociation-action-checkable` is false, it is equivalent to `NONE`.

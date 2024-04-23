@@ -20,8 +20,10 @@ import { ViewMore } from '@site/src/components/ViewMore';
 
 -   UPDATE_ONLY: 无条件执行UPDATE语句
 
-:::info
-保存模式仅影响聚合根对象，不影响其他关联对象。也可以理解为关联对象的保存模式只能是UPSERT。
+:::caution
+保存模式仅影响聚合根对象，不影响其他关联对象。
+
+对于关联对象而言，请参考[关联对象保存模式](./associated-save-mode)。
 :::
 
 ## 指定对象的id

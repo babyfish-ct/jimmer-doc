@@ -83,7 +83,7 @@ interface TreeNode {
 </Tabs>
 
 :::info
-这里`TreeNode.name`和`TreeNode.parent`属性被`@Key`修饰。这个两个属性对应于数据库中`BOOK`表的普通字段`NAME`和外键字段`PARENT_ID`。
+这里`TreeNode.name`和`TreeNode.parent`属性被`@Key`修饰。这两个属性对应于数据库中`BOOK`表的普通字段`NAME`和外键字段`PARENT_ID`。
 
 这表示，如果`TreeNode.id`属性没有被指定 *(任何被指定了自动分配策略的`id`属性都可以缺失)*，那么，默认情况下，Jimmer将基于`NAME`和`PARENT_ID`字段查询数据库中是否存在已有数据，最终决定应该执行插入操作还是更新操作。
 :::

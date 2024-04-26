@@ -481,7 +481,7 @@ sqlClient.save(store) {
     where
         STORE_ID = ? /* 2 */
         and
-        // hightlight-next-line
+        // highlight-next-line
         ID not in ( // Be careful, this is `not in`
             ? /* 10 */, ? /* 100 */
         )

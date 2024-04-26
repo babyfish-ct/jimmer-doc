@@ -6,7 +6,7 @@ title: 一对一
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-本通过介绍如何使用`@org.babyfish.jimmer.sql.OneToOne`注解可以声明一对一关联属性
+本文通过介绍如何使用`@org.babyfish.jimmer.sql.OneToOne`注解可以声明一对一关联属性
 
 一对一可支持双向关联，对于双向关联而言，其中一方必须主动方，另外一方为从动方。
 
@@ -237,12 +237,14 @@ alter table CUSTOMER_ADDRESS_MAPPING
 
 // 这两个约束非常重要。
 // 否则这张中间表表达的是多对多关联，而非一对一关联
+// 为中间表 CUSTOMER_ID 字段设置唯一约束
 alter table CUSTOMER_ADDRESS_MAPPING
     add constraint UQ_CUSTOMER_ADDRESS_MAPPING__CUSTOMER_ID
         unique(CUSTOMER_ID);
+// 为中间表 ADDRESS_ID 字段设置唯一约束
 alter table CUSTOMER_ADDRESS_MAPPING
     add constraint UQ_CUSTOMER_ADDRESS_MAPPING__ADDRESS_ID
-        unique(CUSTOMER_ID);
+        unique(ADDRESS_ID);
 ```
 
 -   中间表的只有两个外键，而且都非null。中间表靠插入数据和删除数据维护关联，本身从不存储null数据

@@ -20,7 +20,7 @@ import TabItem from '@theme/TabItem';
 
 -   可以使用`@JoinTable(name = "...")`明确地为基于中间表的关联属性指定中间表表名以及其所有列名。
 
-然而，为了提高开发效率，我们不可能到过多地使用这些注解。大部分情况下，默认的名字推导行为应该可以工作，少数情况下，才在代码中使用这些注解。
+然而，为了提高开发效率，我们不可能过多地使用这些注解。大部分情况下，默认的名字推导行为应该可以工作，少数情况下，才在代码中使用这些注解。
 
 对于某个类或属性，如果用户**不**用这类注解，如何自动决定数据库中的标识名，被称为命名策略，是一个可定制的Java接口
 
@@ -84,7 +84,7 @@ DefaultDatabaseNamingStrategy类有两个静态字段
 
     生成的数据库标识名全部小写。
 
-    一些数据库，比如MySQL，可以配置是否大小写敏感。所以，你很有可能接手一个MySQL数据库，被设置为大小敏感模式且大部分表名和列名都是小写的，这是，你需要用此策略覆盖默认策略。
+    一些数据库，比如MySQL，可以配置是否大小写敏感。所以，你很有可能接手一个MySQL数据库，被设置为大小敏感模式且大部分表名和列名都是小写的，这时，你需要用此策略覆盖默认策略。
 
 :::tip
 即使`UPPER_CASE`和`LOWER_CASE`都无法满足你的要求，你需要实现自己的策略，也可以考虑继承这个默认策略，而非从头实现。
@@ -92,7 +92,7 @@ DefaultDatabaseNamingStrategy类有两个静态字段
 
 在介绍默认策略的行为之前，我们先引入一个字符变换规则：snake。
 
-所谓snake，即使把大小写交替的文本转化为下划线拼接的文本，比如类名`BookStore`的snake变形为`BOOK_STORE`，属性名`firstName`的snake变形为`FIRST_NAME`。
+所谓snake，即把大小写交替的文本转化为下划线拼接的文本，比如类名`BookStore`的snake变形为`BOOK_STORE`，属性名`firstName`的snake变形为`FIRST_NAME`。
 
 考虑到大小写问题，我们定义两个函数, `u_snake`和`l_snake`，其行为如下
 
@@ -197,7 +197,7 @@ DefaultDatabaseNamingStrategy类有两个静态字段
 
 ## 覆盖策略
 
-现在，我们来掩饰如何用`DefaultDatabaseNamingStrategy.LOWER_CASE`覆盖默认的`DefaultDatabaseNamingStrategy.UPPER_CASE`。
+现在，我们来演示如何用`DefaultDatabaseNamingStrategy.LOWER_CASE`覆盖默认的`DefaultDatabaseNamingStrategy.UPPER_CASE`。
 
 ### 使用SpringBoot时
 

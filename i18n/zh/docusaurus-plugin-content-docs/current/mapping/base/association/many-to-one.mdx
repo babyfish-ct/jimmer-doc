@@ -6,7 +6,7 @@ title: 多对一
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-本通过介绍如何使用`@org.babyfish.jimmer.sql.ManyToOne`注解可以声明多对一关联属性
+本文通过介绍如何使用`@org.babyfish.jimmer.sql.ManyToOne`注解可以声明多对一关联属性
 
 有两种方法可以实现多对一关联，基于外键和基于中间表。
 
@@ -120,7 +120,6 @@ public interface Book {
 @Entity
 interface Book {
 
-    @Nullable
     @ManyToOne
     @JoinTable
     val store: BookStore?

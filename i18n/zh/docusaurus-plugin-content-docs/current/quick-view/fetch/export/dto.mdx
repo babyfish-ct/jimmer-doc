@@ -623,7 +623,7 @@ class BookRepository(
 
 ## 编写BookController
 
-虽然DTO语言更适合于Java/Kotlin应用内部自己使用查询结果，但你也可以用它们作为HTTP API的返回信息，和实用普通的POJO没有任何区别。
+虽然DTO语言更适合于Java/Kotlin应用内部自己使用查询结果，但你也可以用它们作为HTTP API的返回信息，和使用普通的POJO没有任何区别。
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -902,7 +902,7 @@ data class ShallowBookView(
 
 ## Flat关联对象
 
-很大一部分服务端开发团队，会接触到一种前端开开发团队，他们不接受由关联连接多个对象而成的数据结构，只愿意接受一个庞大的孤单对象。因此他们要求讲所有非集合关联都平坦化。即
+很大一部分服务端开发团队，会接触到一种前端开发团队，他们不接受由关联连接多个对象而成的数据结构，只愿意接受一个庞大的孤单对象。因此他们要求讲所有非集合关联都平坦化。即
 
 -   他们不接受结构化的返回信息
 

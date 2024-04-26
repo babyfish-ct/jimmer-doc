@@ -6,7 +6,7 @@ title: 实体表
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-想让实体支持逻辑删除，需要添加一个被`org.babyfish.jimmer.sql.LogicalDeleted`的标志属性，以表示该数据是正常的还是已经被删除。
+想让实体支持逻辑删除，需要添加一个被`org.babyfish.jimmer.sql.LogicalDeleted`标记的标志属性，以表示该数据是正常的还是已经被删除。
 
 一旦为实体配置了逻辑删除属性
 
@@ -376,7 +376,7 @@ public interface Book {
     @Key
     int edition();
 
-    // hightlight-next-line
+    // highlight-next-line
     @LogicalDeleted
     long deletedMillis();
 
@@ -404,7 +404,7 @@ interface Book {
     @Key
     val edition: String
 
-    // hightlight-next-line
+    // highlight-next-line
     @LogicalDeleted
     val deletedMillis: Long
 
@@ -446,7 +446,7 @@ alter table BOOK
 
 ## 对中间表的影响
 
-如果实体被逻辑删除，那么和他相关的基于中间表 *(采用`@JoinTable`的注解)* 的关联会收到何种影响呢？
+如果实体被逻辑删除，那么和它相关的基于中间表 *(采用`@JoinTable`的注解)* 的关联会受到何种影响呢？
 
 -   如果中间表也支持逻辑删除，即`@JoinTable`注解的`logicalDeletedFilter`参数被指定，与被逻辑删除实体相关的中间表记录也会被逻辑删除。
 

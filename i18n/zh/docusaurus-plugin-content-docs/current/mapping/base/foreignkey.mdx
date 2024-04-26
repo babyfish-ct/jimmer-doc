@@ -21,7 +21,7 @@ Jimmer中外键有两种
 :::info
 在保存数据时
 
--   真外键靠关系性数据库本身的能力保证引用完整性
+-   真外键靠关系型数据库本身的能力保证引用完整性
 
 -   伪外键靠ORM在上层代码中植入额外检查来保证引用完整性
 
@@ -127,7 +127,7 @@ Jimmer中外键有两种
     :::
 
 :::caution
-如果数据方言不支持外键， *（比如：`org.babyfish.jimmer.sql.dialect.TiDBDialect`）*，则不能明确指定真外键。
+如果数据库方言不支持外键， *（比如：`org.babyfish.jimmer.sql.dialect.TiDBDialect`）*，则不能明确指定真外键。
 
 因为，作为一个分布式关系型数据库，TiDB不支持外键约束。
 :::

@@ -3,10 +3,10 @@ sidebar_position: 1
 title: 可空性
 ---
 
-实体对象属性是否许为null这个问题，Jimmer用非常严格的方式处理。即便对Java开发者而言，也要求如同kotlin开发者一样认知考虑思考每个属性是否允许为null。
+实体对象属性是否允许为null这个问题，Jimmer用非常严格的方式处理。即便对Java开发者而言，也要求如同kotlin开发者一样认知考虑思考每个属性是否允许为null。
 
 :::caution
-明确说明实体对象的每个属性是否允许为null，对Jimmer而言非常重要，很多功能都会其影响。
+明确说明实体对象的每个属性是否允许为null，对Jimmer而言非常重要，很多功能都会受其影响。
 :::
 
 ## 定义属性的可空性
@@ -50,7 +50,7 @@ Java下属性是否为null，靠以下规则制定
 
     -   JPA/Hibernate推荐将id属性声明为可空类型，比如，对Java而言，就是`Long`而非`long`，这样，保存数据时可表达没有id而需要自动分配的情况。
 
-    -   Jimmer必须将id属性声明为非空了类型，比如，对Java而言，就是`long`而非`Long`。Jimmer靠实体对象本身的动态性来表达id属性的缺失。
+    -   Jimmer必须将id属性声明为非空类型，比如，对Java而言，就是`long`而非`Long`。Jimmer靠实体对象本身的动态性来表达id属性的缺失。
 
 -   一对多和多对多属性必须非null
 

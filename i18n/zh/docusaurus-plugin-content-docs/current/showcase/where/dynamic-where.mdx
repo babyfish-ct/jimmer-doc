@@ -60,7 +60,7 @@ val books = sqlClient
 :::caution
 Java代码中，第一个whereIf采用Lambda传入表达式。
 
-这是是因为除了`eq`和`ne`能接受null值*(翻译为`is null`和`is not null`)*外，
+这是因为除了`eq`和`ne`能接受null值*(翻译为`is null`和`is not null`)*外，
 其他条件*(比如，这里的`ilike`)*不接受null并视之为开发人员犯下的BUG。
 :::
 

@@ -81,7 +81,7 @@ After compilation, the following Input DTO will be generated automatically:
 <TabItem value="java" label="Java">
 
 ```java title="BookInput.java"
-@lombok.Data
+@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
 public class BookInput implements Input<Book> { ❶
 
     @Nullable
@@ -111,6 +111,7 @@ public class BookInput implements Input<Book> { ❶
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="BookInput.kt" 
+@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
 data class BookInput(
     val id: Long? = null,
     val name: String = "",

@@ -88,7 +88,7 @@ package com.yourcompany.yourpoject.model.dto;
 import com.yourcompany.yourpoject.model.Book;
 import org.babyfish.jimmer.Input;
 
-@lombok.Data
+@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
 public class BookInput implements Input<Book> {
 
     @Nullable
@@ -139,6 +139,7 @@ package com.yourcompany.yourpoject.model.dto
 import com.yourcompany.yourpoject.model.Book
 import org.babyfish.jimmer.Input
 
+@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
 data class BookInput(
     val id: Long? = null, ❶
     val name: String = "", 

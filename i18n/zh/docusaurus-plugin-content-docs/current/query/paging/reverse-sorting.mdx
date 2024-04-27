@@ -26,33 +26,7 @@ import TabItem from '@theme/TabItem';
 
 让我们来看一个例子。
 
-SpringBoot的`Page<E>`类型的定义过于复杂，不利于本文通过打印结果进行演示，所以我们并不采用SpringBoot并采用自定义Page类：
-
-<Tabs groupId="language">
-<TabItem value="java" label="Java">
-
-```java title="Page.java"
-@lombok.Data
-public class Page<E> {
-    private final int totalRowCount;
-    private final int totalPage;
-    private final List<E> entities;
-}
-```
-
-</TabItem>
-<TabItem value="kotlin" label="Kotlin">
-
-```kotlin title="Page.kt"
-data class Page<E>(
-    val totalRowCount: Int,
-    val totalPage: Int,
-    val entities: List<E>
-)
-```
-
-</TabItem>
-</Tabs>
+SpringBoot的`Page<E>`类型的定义过于复杂，不利于本文通过打印结果进行演示，所以我们采用Jimmer定义的Page类，而非SpringBoot并采用自定义Page类。
 
 分页查询代码为
 

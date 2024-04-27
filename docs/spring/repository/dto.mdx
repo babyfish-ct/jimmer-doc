@@ -77,7 +77,7 @@ package com.yourcompany.yourpoject.model.dto;
 import com.yourcompany.yourpoject.model.Book;
 import org.babyfish.jimmer.View;
 
-@lombok.Data
+@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
 public class BookDetailView implements Input<Book> {
 
     private long id;
@@ -94,7 +94,6 @@ public class BookDetailView implements Input<Book> {
     // highlight-next-line
     private List<TargetOf_authors> authors;
 
-    @lombok.Data
     // highlight-next-line  
     public static class TargetOf_store implements Input<BookStore> {
 
@@ -108,7 +107,6 @@ public class BookDetailView implements Input<Book> {
         ...Omitted other members...
     }
 
-    @lombok.Data
     // highlight-next-line
     public static class TargetOf_authors implements Input<Author> {
 
@@ -136,6 +134,7 @@ package com.yourcompany.yourpoject.model.dto
 import com.yourcompany.yourpoject.model.Book 
 import org.babyfish.jimmer.View
 
+@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
 data class BookDetailView(
     val id: Long = 0,
     val name: String = "",

@@ -321,6 +321,14 @@ val anotherEntity: Book = dto.toEntity()
 
 -   input DTO中只能定义可以保存的属性，如简单属性、普通ORM关联属性和id-view属性。 不能定义无法保存的属性，如transient属性、公式属性、计算属性和远程关联，否则会导致编译错误。
 
+-   input DTO对nullable属性有强大的全面的支持
+    
+    :::tip
+    对于原实体中允许为null的属性而言，如何通过Input DTO映射是一个复杂的话题，Jimmer提供全面和强大的支持。
+
+    请参见[修改篇/保持指令/Input DTO/处理空值](../../mutation/save-command/input-dto/null-handling)。
+    :::
+
 ### 3.3 specification特有功能
 
 `specification`和`input`的作用类似，用于修饰输入类型，但`specification`不提供和实体对象相互转化的能力，而是被用作支持[超级QBE查询](../../query/super_qbe)。
@@ -517,20 +525,11 @@ input UpdateBookInput {
 
 -   当实体的原属性允许为null时
 
-    对于实体中的本就允许为null原始属性而言，如果DTO对象的对应属性为null，那么将改DTO对象转化为实体对象后：
-
-    -   如果`input`类型未被`dynamic`关键字修饰，那么实体对象中原始属性会被赋为null。
-
-    -   如果`input`类型被`dynamic`关键字修饰，例如
-
-        ```sh title="BookStroe.dto"
-        #highlight-next-line
-        dynamic input BookInput {
-            #allScalars(this)?
-        }
-        ```
-
-        那么，实体对象中原始属性不会被赋值。
+    :::tip
+    对于原实体中允许为null的属性而言，如何通过Input DTO映射是一个复杂的话题，Jimmer提供全面和强大的支持。
+    
+    限于篇幅问题，这个问题单独形成一篇文章，请参见[修改篇/保持指令/Input DTO/处理空值](../../mutation/save-command/input-dto/null-handling)。
+    :::
 
 ### 7.2. `!`
 
@@ -1474,3 +1473,11 @@ open class BookView(
 
 除此之外，DTO语言对接口实现的验证并不多。如果用户犯了其他错误，将会导致生成错误的Java/Kotlin类型，由Java/Kotlin编译器负责处理。
 :::
+
+## 12. 相关链接
+
+前文提到，DTO语言还有两个强大的功能，由于篇幅原因，未在本文中深入讨论，而是被独立成了其他文档。这里再次强调一次。
+
+-   [在Input DTO中处理空值](../../mutation/save-command/input-dto/null-handling)
+
+-   [Specification DTO，超级QBE](../../query/super_qbe)

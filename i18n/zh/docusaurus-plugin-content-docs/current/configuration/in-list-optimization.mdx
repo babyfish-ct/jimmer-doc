@@ -1,0 +1,93 @@
+---
+sidebar_position: 15
+title: In List谓词优化
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+:::caution
+本文只阐述如何开启相关选项。
+
+至于选项究竟有何用，请参见[查询篇/DSL表达式/IN LIST/优化](../query/expression#优化)，本文不做重复
+:::
+
+## 开启Padding优化
+
+两种开启方式
+
+-   如果使用了Jimmer的Spring Boot Starter，修改`application.yml` *(或`application.properties`)*如下
+
+    ```sh title="application.yml"
+    jimmer:
+        #highlight-next-line
+        in-list-padding-enabled: true
+    ```
+
+-   如果没有使用了Jimmer的Spring Boot Starter，则需要在创建`sqlClient`时调用如下API
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    JSqlClient sqlClient = JSqlClient
+        .newBuilder()
+        // highlight-next-line
+        .setInListPaddingEnabled(true)
+        // ...省略其他配置...
+        .build();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val sqlClient = newKSqlClient {
+        // highlight-next-line
+        setInListPaddingEnabled(true)
+        // ...省略其他配置...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+## 开启Any等式优化
+
+如下两种开启方式
+
+-   如果使用了Jimmer的Spring Boot Starter，修改`application.yml` *(或`application.properties`)*如下
+
+    ```sh title="application.yml"
+    jimmer:
+        #highlight-next-line
+        in-list-to-any-equality-enabled: true
+    ```
+
+-   如果没有使用了Jimmer的Spring Boot Starter，则需要在创建`sqlClient`时调用如下API
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    JSqlClient sqlClient = JSqlClient
+        .newBuilder()
+        // highlight-next-line
+        .setInListToAnyEqualityEnabled(true)
+        // ...省略其他配置...
+        .build();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val sqlClient = newKSqlClient {
+        // highlight-next-line
+        setInListToAnyEqualityEnabled(true)
+        // ...省略其他配置...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>

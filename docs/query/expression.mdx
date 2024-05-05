@@ -829,6 +829,249 @@ Besides used with collections, `in` can also be used with subqueries.
 This will be covered in detail in docs about [subqueries](../query/sub-query).
 :::
 
+### Optimization
+
+Jimmer provides 3 optimizations for the `in list` expression:
+
+- Single value optimization
+- Padding optimization
+- Any equality optimization
+
+1.  Single value optimization
+
+    When the list length is 1, `in(?)` will be automatically rewritten as `= ?`, and `not in(?)` will be automatically rewritten as `<> ?`. For example:
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    where(
+        Expression.tuple(
+            book.name(),
+            book.edition()
+        ).in(
+            Arrays.asList(
+                new Tuple2<>("SQL in Action", 1)
+            )
+        )
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    where(
+        tuple(
+            table.name,
+            table.edition
+        ) valueIn listOf(
+            Tuple2("SQL in Action", 1)
+        )
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    The generated SQL condition:
+    ```sql
+    where
+        (tb_1_.NAME, tb_1_.EDITION) =
+        (? /* SQL in Action */, ? /* 1 */)
+    ```
+
+2.  Padding optimization
+
+    To support padding optimization, Jimmer provides a switch that can be enabled in two ways:
+
+    - If you are using the Jimmer Spring Boot Starter, modify `application.yml` (or `application.properties`) as follows:
+
+        ```sh title="application.yml"
+        jimmer:
+            #highlight-next-line
+            in-list-padding-enabled: true
+        ```
+
+    - If you are not using the Jimmer Spring Boot Starter, you need to call the following API when creating the `sqlClient`:
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        JSqlClient sqlClient = JSqlClient
+            .newBuilder()
+            // highlight-next-line
+            .setInListPaddingEnabled(true)
+            // ...omitted other configurations...
+            .build();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val sqlClient = newKSqlClient {
+            // highlight-next-line
+            setInListPaddingEnabled(true)
+            // ...omitted other configurations...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+    Once this switch is enabled, Jimmer will ensure that the list length is a power of 2 (2, 4, 6, 8, 16, 32, ...), thereby significantly reducing the diversity of SQL and increasing the diversity of database execution plan caching. For example:
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    where(
+        Expression.tuple(
+            book.name(),
+            book.edition()
+        ).in(
+            Arrays.asList(
+                new Tuple2<>("SQL in Action", 1),
+                new Tuple2<>("SQL in Action", 2),
+                new Tuple2<>("Java in Action", 1)
+            )
+        )
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    where(
+        tuple(
+            table.name,
+            table.edition
+        ) valueIn listOf(
+            Tuple2("SQL in Action", 1),
+            Tuple2("SQL in Action", 2),
+            Tuple2("Java in Action", 1)
+        )
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    In this example, the list length is 3, which is not a power of 2. The nearest power of 2 to 3 is 4, so Jimmer will repeat the last item in the list, eventually making the list length 4. The generated SQL condition is as follows:
+
+    ```sql
+    where (tb_1_.NAME, tb_1_.EDITION) in (
+
+        // Original list
+        (? /* SQL in Action */, ? /* 1 */),
+        (? /* SQL in Action */, ? /* 2 */),
+        (? /* Java in Action */, ? /* 1 */),
+
+        // Repeat the last item in the original list 
+        // to make the list length a power of 2
+        // highlight-next-line
+        (? /* Java in Action */, ? /* 1 */)
+    )
+    ```
+
+3.  Any equality optimization
+
+    This optimization is better tested by the previously discussed padding optimization, but it has two limitations:
+
+    - Currently, it can only optimize single column in
+
+    - The database needs to support the `= any(?)` expression, i.e., the `isAnyEqualityOfArraySupported()` method of the implementation class of `org.babyfish.jimmer.sql.dialect.Dialect` needs to return true
+
+        > Currently, the dialects that support this behavior are:
+        >
+        > - org.babyfish.jimmer.sql.dialect.H2Dialect
+        > - org.babyfish.jimmer.sql.dialect.PostgresDialect
+
+    For this, Jimmer provides a switch that can be enabled in two ways:
+
+    - If you are using the Jimmer Spring Boot Starter, modify `application.yml` (or `application.properties`) as follows:
+
+        ```sh title="application.yml"
+        jimmer:
+            #highlight-next-line
+            in-list-to-any-equality-enabled: true
+        ```
+
+    - If you are not using the Jimmer Spring Boot Starter, you need to call the following API when creating the `sqlClient`:
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        JSqlClient sqlClient = JSqlClient
+            .newBuilder()
+            // highlight-next-line
+            .setInListToAnyEqualityEnabled(true)
+            // ...omitted other configurations...
+            .build();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val sqlClient = newKSqlClient {
+            // highlight-next-line
+            setInListToAnyEqualityEnabled(true)
+            // ...omitted other configurations...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+    :::warning
+    If the current `org.babyfish.jimmer.sql.dialect.Dialect` implementation class's `isAnyEqualityOfArraySupported()` method returns false (does not support this feature),
+    this configuration will cause an exception, and the `sqlClient` cannot be created, and the application cannot start.
+    :::
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    where(
+        book.name().in(
+            Arrays.asList(
+                "SQL in Action",
+                "Java in Action"
+            )
+        )
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    where(
+        table.name valueIn listOf(
+            "SQL in Action",
+            "Java in Action"
+        )
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    The generated SQL condition:
+
+    ```sql
+    where tb_1_.NAME = any(
+        ? /* [SQL in Action, Java in Action] */
+    )
+    ```
+
+    Here, the entire list is treated as a whole and passed as an array-type parameter.
+
 ## AND, OR, NOT 
 
 ### AND

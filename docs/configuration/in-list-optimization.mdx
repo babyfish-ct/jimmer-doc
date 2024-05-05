@@ -1,0 +1,93 @@
+---
+sidebar_position: 15
+title: In List Predicate Optimization
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+:::caution
+This article only explains how to enable the relevant options.
+
+As for what these options are used for, please refer to [Query Chapter/DSL Expression/IN LIST/Optimization](../query/expression#optimization), this article will not repeat it.
+:::
+
+## Enable Padding Optimization
+
+Two ways to enable:
+
+-   If you are using the Jimmer Spring Boot Starter, modify `application.yml` (or `application.properties`) as follows:
+
+    ```sh title="application.yml"
+    jimmer:
+        #highlight-next-line
+        in-list-padding-enabled: true
+    ```
+
+-   If you are not using the Jimmer Spring Boot Starter, you need to call the following API when creating the `sqlClient`:
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    JSqlClient sqlClient = JSqlClient
+        .newBuilder()
+        // highlight-next-line
+        .setInListPaddingEnabled(true)
+        // ...omitted other configurations...
+        .build();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val sqlClient = newKSqlClient {
+        // highlight-next-line
+        setInListPaddingEnabled(true)
+        // ...omitted other configurations...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+## Enable Any Equality Optimization
+
+Two ways to enable:
+
+-   If you are using the Jimmer Spring Boot Starter, modify `application.yml` (or `application.properties`) as follows:
+
+    ```sh title="application.yml"
+    jimmer:
+        #highlight-next-line
+        in-list-to-any-equality-enabled: true
+    ```
+
+-   If you are not using the Jimmer Spring Boot Starter, you need to call the following API when creating the `sqlClient`:
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    JSqlClient sqlClient = JSqlClient
+        .newBuilder()
+        // highlight-next-line
+        .setInListToAnyEqualityEnabled(true)
+        // ...omitted other configurations...
+        .build();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val sqlClient = newKSqlClient {
+        // highlight-next-line
+        setInListToAnyEqualityEnabled(true)
+        // ...omitted other configurations...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>

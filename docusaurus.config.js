@@ -53,6 +53,7 @@ const config = {
             }
             return `https://github.com/babyfish-ct/jimmer-doc/edit/main/docs/${docPath}`
           },
+          showLastUpdateTime: true,
         },
         // blog: {
         //   showReadingTime: true,
@@ -66,6 +67,25 @@ const config = {
         },
       }),
     ],
+  ],
+
+  plugins:[
+    [
+      'content-docs',
+      {
+        id: 'faq',
+        path: 'faq',
+        routeBasePath: 'faq',
+        sidebarPath: require.resolve('./sidebars-faq.js'),
+        showLastUpdateTime: true,
+        editUrl: ({locale, versionDocsDirPath, docPath}) => {
+          if (locale == 'zh') {
+            return `https://github.com/babyfish-ct/jimmer-doc/edit/main/i18n/zh/docusaurus-plugin-content-faq/current/${docPath}`
+          }
+          return `https://github.com/babyfish-ct/jimmer-doc/edit/main/faq/${docPath}`
+        },
+      },
+    ]
   ],
 
   themeConfig:
@@ -83,6 +103,11 @@ const config = {
           docId: 'overview/introduction',
           position: 'left',
           label: 'View more',
+        },
+        {
+          to: '/faq',
+          position: 'left',
+          label: 'FAQ',
         },
         {
           type: 'localeDropdown',

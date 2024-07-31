@@ -111,7 +111,7 @@ Jimmer提供的配套示例，对快速掌握Jimmer非常有帮助
                 </ol>
                 <Admonition type="note">
                     本机启动所有项目后，如果微服务彼此通讯有故障且等待一段时间仍如此，
-                    请访问http://localhost:7000打开eureka注册中心,
+                    请访问 http://localhost:7000 打开eureka注册中心,
                     将其中各服务注册的机器名添加到本机hosts文件中。
                 </Admonition>
             </td>
@@ -203,7 +203,7 @@ bash ./install.sh
 |-----|---|----|
 |maxwell-demo-zookeeper|4000|支撑Kafka，用户不会直接使用|
 |maxwell-demo-kafka|4100|对外暴露的地址为localhost，即，假设docker宿主是你的本机。如果要使用远程服务器作为docker宿主，需自行修改install.sh中的kafka安装命令，并修改例子中的spring-boot配置文件|
-|maxwell-demo-kafdrop|4101|一个Kafka图形界面工具，用浏览器访问http://localhost:4101即可|
+|maxwell-demo-kafdrop|4101|一个Kafka图形界面工具，用浏览器访问 http://localhost:4101 即可|
 |maxwell-demo-mysql|4200|此模式下的数据库服务|
 |maxwell-demo-maxwell|NA|负责把MySQL的变化事件推送给Kafka的后台服务|
 |maxwell-demo-redis|4400|此模式下的缓存服务|
@@ -227,7 +227,7 @@ bash ./install.sh
 |-----|---|----|
 |debezium-demo-zookeeper|5000|支撑Kafka，用户不会直接使用|
 |debezium-demo-kafka|5100|对外暴露的地址为localhost，即，假设docker宿主是你的本机。如果要使用远程服务器作为docker宿主，需自行修改install.sh中的kafka安装命令，并修改例子中的spring-boot配置文件|
-|debezium-demo-kafdrop|5101|一个Kafka图形界面工具，用浏览器访问http://localhost:5101即可|
+|debezium-demo-kafdrop|5101|一个Kafka图形界面工具，用浏览器访问 http://localhost:5101 即可|
 |debezium-demo-postgres|5200|此模式下的数据库服务|
 |debezium-demo-connect|5300|负责把Postgres的变化事件推送给Kafka的kafka-connector，可以通过http://localhost:5300/connectors来检验名为`debezium-connector`的pg-connector是否成功安装|
 |debezium-demo-redis|5400|此模式下的缓存服务|

@@ -318,7 +318,6 @@ class BookRepository {
     fun saveBook(input: BookInput): Long =
         sqlClient
             .save(input)
-            .execute()
             .modifiedEntity
             // 如果`input.id`为null，返回自动分配的id
             .id
@@ -439,7 +438,6 @@ class BookStoreRepository {
     fun saveBookStore(input: CompositeBookStoreInput): Long =
         sqlClient
             .save(input)
-            .execute()
             .modifiedEntity
             // 如果`input.id`为null，返回自动分配的id
             .id

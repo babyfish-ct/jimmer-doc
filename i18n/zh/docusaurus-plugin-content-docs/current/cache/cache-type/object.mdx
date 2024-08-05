@@ -23,10 +23,6 @@ public CacheFactory cacheFactory(
     RedisConnectionFactory connectionFactory,
     ObjectMapper objectMapper
 ) {
-
-    RedisTemplate<String, byte[]> redisTemplate = 
-        RedisCaches.cacheRedisTemplate(connectionFactory);
-
     return new CacheFactory() {
 
         @Override
@@ -34,15 +30,19 @@ public CacheFactory cacheFactory(
         public Cache<?, ?> createObjectCache(@NotNull ImmutableType type) {
             return new ChainCacheBuilder<>()
                 .add(
-                    new CaffeineBinder<>(512, Duration.ofSeconds(1))
+                    CaffeineValueBinder
+                        .forObject(type)
+                        .maximumSize(1024)
+                        .duration(Duration.ofHours(1))
+                        .build()
                 )
                 .add(
-                    new RedisValueBinder<>(
-                        redisTemplate, 
-                        objectMapper, 
-                        type, 
-                        Duration.ofMinutes(30)
-                    )
+                    RedisValueBinder
+                        .forObject(type)
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(Duration.ofHours(24))
+                        .build()
                 )
                 .build();
         }
@@ -61,24 +61,25 @@ fun cacheFactory(
     connectionFactory: RedisConnectionFactory,
     objectMapper: ObjectMapper
 ): KCacheFactory {
-
-    val redisTemplate = RedisCaches.cacheRedisTemplate(connectionFactory)
-
     return object: KCacheFactory {
 
         // highlight-next-line
         override fun createObjectCache(type: ImmutableType): Cache<*, *>? =
             ChainCacheBuilder<Any, Any>()
                 .add(
-                    CaffeineBinder(512, Duration.ofSeconds(1))
+                    CaffeineValueBinder
+                        .forObject(type)
+                        .maximumSize(1024)
+                        .duration(Duration.ofHours(1))
+                        .build()
                 )
                 .add(
-                    RedisValueBinder(
-                        redisTemplate, 
-                        objectMapper, 
-                        type, 
-                        Duration.ofMinutes(30)
-                    )
+                    RedisValueBinder
+                        .forObject(type)
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(Duration.ofHours(24))
+                        .build()
                 )
                 .build()
 

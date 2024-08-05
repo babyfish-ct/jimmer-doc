@@ -105,6 +105,12 @@ public class BookRepository {
 
     private static final BookTable T = BookTable.$;
 
+    private final JSqlClinet sqlClient;
+
+    public BookRepository(JSqlClient sqlClient) {
+        this.sqlClient = sqlClient;
+    }
+
     public Page<Book> findBooks(  
 
             int pageIndex, // Starts from 0
@@ -165,7 +171,9 @@ import org.babyfish.jimmer.Page
 
 import com.example.model.*  
 
-class BookRepository {
+class BookRepository(
+    private val sqlClient: KSqlClient
+) {
 
     fun findBooks(
         
@@ -321,7 +329,6 @@ class BookRepository {
     fun saveBook(input: BookInput): Long =  
         sqlClient 
             .save(input)
-            .execute() 
             .modifiedEntity
             // Return auto-generated id if `input.id` is null
             .id
@@ -444,7 +451,6 @@ class BookStoreRepository {
     fun saveBookStore(input: CompositeBookStoreInput): Long =
         sqlClient
             .save(input) 
-            .execute()
             .modifiedEntity  
             // Return auto-generated id if `input.id` is null
             .id  

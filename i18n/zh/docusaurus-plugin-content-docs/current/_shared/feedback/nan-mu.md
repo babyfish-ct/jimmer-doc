@@ -233,8 +233,21 @@ public class CacheConfig {
             @Override
             public Cache<?, ?> createObjectCache(ImmutableType type) {
                 return new ChainCacheBuilder<>()
-                        .add(new CaffeineBinder<>(512, Duration.ofSeconds(1)))
-                        .add(new RedisValueBinder<>(redisTemplate, objectMapper, type, Duration.ofMinutes(10)))
+                        .add(
+                            CaffeineValueBinder
+                                .forObject(type)
+                                .maximumSize(1024)
+                                .duration(caffeineDuration)
+                                .build()
+                        )
+                        .add(
+                            RedisValueBinder
+                                .forObject(type)
+                                .redis(connectionFactory)
+                                .objectMapper(objectMapper)
+                                .duration(redisDuration)
+                                .build()
+                        )
                         .build();
             }
 
@@ -296,13 +309,40 @@ public class CacheConfig {
          */
         if (isMultiView) {
             return new ChainCacheBuilder<K, V>()
-                    .add(new RedisHashBinder<>(redisTemplate, objectMapper, prop, redisDuration))
+                    .add(
+                        RedisHashBinder
+                            .forProp(prop)
+                            .redis(connectionFactory)
+                            .objectMapper(objectMapper)
+                            .duration(redisDuration)
+                            .build()
+                    )
+                    .add(
+                        CaffeineHashBinder
+                            .forProp(prop)
+                            .maximumSize(128)
+                            .duration(caffeineDuration)
+                            .bind()
+                    )
                     .build();
         }
 
         return new ChainCacheBuilder<K, V>()
-                .add(new CaffeineBinder<>(512, Duration.ofSeconds(1)))
-                .add(new RedisValueBinder<>(redisTemplate, objectMapper, prop, redisDuration))
+                .add(
+                    RedisValueBinder
+                        .forProp(prop)
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(redisDuration)
+                        .build()
+                )
+                .add(
+                    CaffeineValueBinder
+                        .forProp()
+                        .maximumSize(512)
+                        .duration(caffeineDuration)
+                        .bind()
+                )
                 .build();
     }
 }

@@ -239,10 +239,6 @@ public CacheFactory cacheFactory(
     RedisConnectionFactory connectionFactory,
     ObjectMapper objectMapper
 ) {
-
-    RedisTemplate<String, byte[]> redisTemplate = 
-        RedisCaches.cacheRedisTemplate(connectionFactory);
-
     return new CacheFactory() {
 
         @Override
@@ -263,7 +259,8 @@ public CacheFactory cacheFactory(
                     prop == AuthorProps.BOOKS.unwrap()
                 /* highlight-end */
                 prop, 
-                Duration.ofMinutes(5)
+                Duration.ofMinutes(5),
+                Duration.ofHours(5)
             );
         }
 
@@ -275,6 +272,7 @@ public CacheFactory cacheFactory(
                     prop == BookStoreProps.NEWEST_BOOKS.unwrap()
                 /* highlight-end */
                 prop, 
+                Duration.ofMinutes(1),
                 Duration.ofHours(1)
             );
         }
@@ -283,35 +281,46 @@ public CacheFactory cacheFactory(
             // highlight-next-line
             boolean isMultiviewCache,
             ImmutableProp prop, 
-            Duration duration
+            Duration caffeineDuration,
+            Duration redisDuration
         ) {
             // highlight-next-line
             if (isMultiView) {
                 // highlight-next-line
                 return new ChainCacheBuilder<K, V>()
                         .add(
-                            // highlight-next-line
-                            new RedisHashBinder<>(
-                                redisTemplate, 
-                                objectMapper, 
-                                prop, 
-                                redisDuration
-                            )
+                            CaffeineHashBinder
+                                .forProp(prop)
+                                .maximumSize(128)
+                                .duration(caffeineDuration)
+                                .build()
+                        )
+                        .add(
+                            RedisHashBinder
+                                .forProp(prop)
+                                .redis(connectionFactory)
+                                .objectMapper(objectMapper)
+                                .duration(redisDuration)
+                                .build()
                         )
                         .build();
             }
 
             return new ChainCacheBuilder<>()
                 .add(
-                    new CaffeineBinder<>(512, Duration.ofSeconds(1))
+                    CaffeineValueBinder
+                        .forObject(type)
+                        .maximumSize(512)
+                        .duration(caffeineDuration)
+                        .build()
                 )
                 .add(
-                    new RedisValueBinder<>(
-                        redisTemplate, 
-                        objectMapper, 
-                        prop, 
-                        duration
-                    )
+                    RedisValueBinder
+                        .forProp(prop)
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(redisDuration)
+                        .build()
                 )
                 .build();
         }
@@ -328,9 +337,6 @@ fun cacheFactory(
     connectionFactory: RedisConnectionFactory,
     objectMapper: ObjectMapper
 ): KCacheFactory {
-
-    val redisTemplate = RedisCaches.cacheRedisTemplate(connectionFactory)
-
     return object: KCacheFactory {
 
         override fun createObjectCache(type: ImmutableType): Cache<*, *>? =
@@ -346,6 +352,7 @@ fun cacheFactory(
                     prop === Author::books.toImmutableProp(),
                 /* highlight-end */ 
                 prop,
+                Duration.ofMinutes(1),
                 Duration.ofHours(1)
             )
 
@@ -356,6 +363,7 @@ fun cacheFactory(
                     prop === BookStore::newestBooks.toImmutableProp(),
                 /* highlight-end */
                 prop,
+                Duration.ofMinutes(1),
                 Duration.ofHours(1)
             )
 
@@ -363,33 +371,44 @@ fun cacheFactory(
             // highlight-next-line
             isMultiView: Boolean,
             prop: ImmutableProp, 
-            duration: Duration
+            caffeineDuration: Duration,
+            redisDuration: Duration
         ): Cache<K, V> {
             // highlight-next-line
             if (isMultiView) {
                 return ChainCacheBuilder<K, V>()
                         .add(
-                            // highlight-next-line
-                            RedisHashBinder<>(
-                                redisTemplate, 
-                                objectMapper, 
-                                prop, 
-                                redisDuration
-                            )
+                            CaffeineHashBinder
+                                .forProp(prop)
+                                .maximumSize(128)
+                                .duration(caffeineDuration)
+                                .build()
+                        )
+                        .add(
+                            RedisHashBinder
+                                .forProp(prop)
+                                .redis(connectionFactory)
+                                .objectMapper(objectMapper)
+                                .duration(redisDuration)
+                                .build()
                         )
                         .build();
             }
             ChainCacheBuilder<Any, Any>()
                 .add(
-                    CaffeineBinder(512, Duration.ofSeconds(1))
+                    CaffeineValueBinder
+                        .forProp(prop)
+                        .maximumSize(512)
+                        .duration(caffeineDuration)
+                        .build()
                 )
                 .add(
-                    RedisValueBinder(
-                        redisTemplate, 
-                        objectMapper, 
-                        prop, 
-                        duration
-                    )
+                    RedisValueBinder
+                        .forProp(prop)
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(redisDuration)
+                        .build()
                 )
                 .build()
         }
@@ -407,8 +426,8 @@ The `RedisHashBinder` class in the above code is a very important implementation
         <tr>
             <th>Cache Style</th>
             <th>Is Multi-view</th>  
-            <th>Abstract API❶</th>
-            <th>Built-in Impl❷</th>
+            <th>Abstract API</th>
+            <th>Built-in Impl</th>
         </tr>
     </thead>
     <tbody>
@@ -424,7 +443,7 @@ The `RedisHashBinder` class in the above code is a very important implementation
                 LoadingBinder&lt;K, V&gt;
             </td>
             <td>
-                CaffeineBinder&lt;K, V&gt;
+                CaffeineValueBinder&lt;K, V&gt;
             </td>
         </tr>
         <tr>
@@ -432,14 +451,14 @@ The `RedisHashBinder` class in the above code is a very important implementation
                 Multi-view
             </td>
             <td>
-                LoadingBinder.Parameterized&lt;K, V&gt;
+                LoadingBinder&lt;K, V&gt;.Parameterized&lt;K, V&gt;
             </td>
             <td>
                 None
             </td>
         </tr>
         <tr>
-            <td rowspan="2">
+            <td rowspan="3">
                 Cache without self-loading
                 <div><i>(usually second-level cache technologies like Redis)</i></div>
             </td>
@@ -454,26 +473,21 @@ The `RedisHashBinder` class in the above code is a very important implementation
             </td>
         </tr>
         <tr>
-            <td>
+            <td rowspan="2">
                 Multi-view
             </td>
-            <td>
+            <td rowspan="2">
                 SimpleBinder.Parameterized&lt;K, V&gt;
             </td>
             <td>
-                <b>RedisHashBinder&lt;K, V&gt;</b>
+                RedisHashBinder&lt;K, V&gt;
             </td>
+        </tr>
+        <tr>
+            <td>RedisHashBinder&lt;K, V&gt;</td>
         </tr>
     </tbody>
 </table>
-
--   ❶ Abstract API: located in project `jimmer-sql`, package `org.babyfish.jimmer.sql.cache.chain`
-
--   ❷ Built-in implementations: located in project `jimmer-spring-boot-starter`, package `org.babyfish.jimmer.spring.cache`  
-
-:::caution
-Unfortunately, there is currently no multi-view cache implementation for `Caffeine`. So in the above code, multi-view cache only applies to Redis. That is, in multi-view mode, there is only one cache level instead of two.
-:::
 
 ### Better Approach  
 
@@ -494,10 +508,6 @@ public CacheFactory cacheFactory(
     RedisConnectionFactory connectionFactory,
     ObjectMapper objectMapper  
 ) {
-
-    RedisTemplate<String, byte[]> redisTemplate = 
-        RedisCaches.cacheRedisTemplate(connectionFactory);
-
     // highlight-next-line  
     return new AbstractCacheFactory() {
 
@@ -512,7 +522,8 @@ public CacheFactory cacheFactory(
                 // highlight-next-line
                 getFilterState().isAffectedBy(prop.getTargetType()),
                 prop, 
-                Duration.ofMinutes(5)
+                Duration.ofMinutes(5),
+                Duration.ofHours(5)
             );
         }
 
@@ -522,7 +533,8 @@ public CacheFactory cacheFactory(
                 // highlight-next-line
                 getFilterState().isAffectedBy(prop.getTargetType()),
                 prop, 
-                Duration.ofMinutes(5)
+                Duration.ofMinutes(5),
+                Duration.ofHours(5)
             );
         }
 
@@ -534,7 +546,8 @@ public CacheFactory cacheFactory(
                     prop == BookStoreProps.NEWEST_BOOKS.unwrap()
                 /* highlight-end */
                 prop, 
-                Duration.ofHours(1)
+                Duration.ofSeconds(1),
+                Duration.ofHours(24)
             );
         }
 
@@ -559,9 +572,6 @@ fun cacheFactory(
     connectionFactory: RedisConnectionFactory,
     objectMapper: ObjectMapper
 ): KCacheFactory {
-
-    val redisTemplate = RedisCaches.cacheRedisTemplate(connectionFactory)
-
     // highlight-next-line
     return object: AbstractKCacheFactory() {
 
@@ -573,7 +583,8 @@ fun cacheFactory(
                 // highlight-next-line
                 filterState.isAffectedBy(prop.targetType),
                 prop,
-                Duration.ofHours(1)
+                Duration.ofMinutes(5),
+                Duration.ofHours(5)
             )
 
         override fun createAssociatedIdListCache(prop: ImmutableProp): Cache<*, List<*>>? =
@@ -581,7 +592,8 @@ fun cacheFactory(
                 // highlight-next-line
                 filterState.isAffectedBy(prop.targetType),
                 prop,
-                Duration.ofHours(1)
+                Duration.ofMinutes(5),
+                Duration.ofHours(5)
             )
 
         override fun createResolverCache(prop: ImmutableProp): Cache<*, *> =
@@ -589,14 +601,16 @@ fun cacheFactory(
                 prop === BookStore::avgPrice.toImmutableProp() ||
                     prop === BookStore::newestBooks.toImmutableProp(),
                 prop,
-                Duration.ofHours(1)
+                Duration.ofHours(1),
+                Duration.ofHours(24)
             )
 
         private fun <K, V> createPropCache(
             // highlight-next-line
             isMultiView: Boolean,
             prop: ImmutableProp, 
-            duration: Duration
+            caffeineDuration: Duration,
+            redisDuration: Duration
         ): Cache<K, V> {
             ...code omitted...
         }

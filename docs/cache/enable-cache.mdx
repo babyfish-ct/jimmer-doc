@@ -137,14 +137,19 @@ return new CacheFactory() {
     public Cache<?, ?> createObjectCache(@NotNull ImmutableType type) {
         return new ChainCacheBuilder<>()
             .add( ❶
-                new CaffeineBinder<>(512, Duration.ofSeconds(1))
+                CaffeineValueBinder
+                    .forObject(type)
+                    .maximumSize(512)
+                    .duration(Duration.ofSeconds(10))
+                    .build()
             )
             .add( ❷
-                new RedisValueBinder<>(
-                    redisTemplate, 
-                    objectMapper, 
-                    type, 
-                    Duration.ofMinutes(10)
+                RedisValueBinder
+                    .forObject(type)
+                    .redis(connectionFactory)
+                    .objectMapper(objectMapper)
+                    .duration(Duration.ofHours(10))
+                    .build()
                 )
             )
             .build();
@@ -161,14 +166,19 @@ return object: KCacheFactory {
     override fun createObjectCache(type: ImmutableType): Cache<*, *>? =
         ChainCacheBuilder<Any, Any>()
             .add( ❶
-                CaffeineBinder(512, Duration.ofSeconds(1))
+                CaffeineValueBinder
+                    .forObject(type)
+                    .maximumSize(512)
+                    .duration(Duration.ofSeconds(10))
+                    .build()
             )
             .add( ❷
-                RedisValueBinder(
-                    redisTemplate, 
-                    objectMapper, 
-                    type, 
-                    Duration.ofMinutes(10)
+                RedisValueBinder
+                    .forObject(type)
+                    .redis(connectionFactory)
+                    .objectMapper(objectMapper)
+                    .duration(Duration.ofHours(10))
+                    .build()
                 )
             )
             .build()
@@ -332,28 +342,27 @@ public CacheFactory cacheFactory(
     RedisConnectionFactory connectionFactory,
     ObjectMapper objectMapper
 ) {
-
-    RedisTemplate<String, byte[]> redisTemplate =
-        // highlight-next-line
-        RedisCaches.cacheRedisTemplate(connectionFactory);
-
     return new CacheFactory() {
 
         @Override
         @Nullable
         public Cache<?, ?> createObjectCache(@NotNull ImmutableType type) {
-            return new ChainCacheBuilder<>()
+            return new ChainCacheBuilder<Object, Object>()
                 .add(
-                    new CaffeineBinder<>(512, Duration.ofSeconds(1))
+                    CaffeineValueBinder
+                        .forProp()
+                        .maximumSize(1024)
+                        .duration(RedisCaches.ofMinutes(24))
+                        .bind()
                 )
                 .add(
-                    new RedisValueBinder<>(
+                    RedisValueBinder
+                        .forProp(prop)
                         // highlight-next-line
-                        redisTemplate, 
-                        objectMapper, 
-                        type, 
-                        Duration.ofMinutes(30)
-                    )
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(Duration.ofHours(24))
+                        .build()
                 )
                 .build();
         }
@@ -361,34 +370,53 @@ public CacheFactory cacheFactory(
         @Override
         @Nullable
         public Cache<?, ?> createAssociatedIdCache(@NotNull ImmutableProp prop) {
-            return createPropCache(prop, Duration.ofMinutes(10));
+            return createPropCache(
+                prop, 
+                Duration.ofMinutes(10),
+                Duration.ofHours(10)
+            );
         }
 
         @Override
         @Nullable
         public Cache<?, List<?>> createAssociatedIdListCache(@NotNull ImmutableProp prop) {
-            return createPropCache(prop, Duration.ofMinutes(5));
+            return createPropCache(
+                prop, 
+                Duration.ofMinutes(5),
+                Duration.ofHours(5),
+            );
         }
 
         @Override
         @Nullable
         public Cache<?, ?> createResolverCache(@NotNull ImmutableProp prop) {
-            return createPropCache(prop, Duration.ofMinutes(5));
+            return createPropCache(
+                prop, 
+                Duration.ofMinutes(5),
+                Duration.ofHours(5)
+            );
         }
 
-        private Cache<?, ?> createPropCache(ImmutableProp prop, Duration duration) {
-            return new ChainCacheBuilder<>()
+        private Cache<?, ?> createPropCache(
+            ImmutableProp prop, 
+            Duration caffeineDuration
+            Duration redisduration
+        ) {
+            return new ChainCacheBuilder<K, V>()
                 .add(
-                    new CaffeineBinder<>(512, Duration.ofSeconds(1))
+                    CaffeineValueBinder
+                        .forProp(prop)
+                        .maximumSize(512)
+                        .duration(caffeineDuration)
+                        .build()
                 )
                 .add(
-                    new RedisValueBinder<>(
-                        // highlight-next-line
-                        redisTemplate, 
-                        objectMapper, 
-                        prop, 
-                        duration
-                    )
+                    RedisValueBinder
+                        .forProp(prop)
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(redisDuration)
+                        .build()
                 )
                 .build();
         }
@@ -407,49 +435,68 @@ fun cacheFactory(
     objectMapper: ObjectMapper
 ): KCacheFactory {
 
-    // highlight-next-line
-    val redisTemplate = RedisCaches.cacheRedisTemplate(connectionFactory)
-
     return object: KCacheFactory {
 
         override fun createObjectCache(type: ImmutableType): Cache<*, *>? =
             ChainCacheBuilder<Any, Any>()
                 .add(
-                    CaffeineBinder(512, Duration.ofSeconds(1))
+                    CaffeineValueBinder
+                        .forObject(type)
+                        .maximumSize(1024)
+                        .duration(Duration.ofHours(1))
+                        .build()
                 )
                 .add(
-                    RedisValueBinder(
-                        // highlight-next-line
-                        redisTemplate, 
-                        objectMapper, 
-                        type, 
-                        Duration.ofMinutes(30)
-                    )
+                    RedisValueBinder
+                        .forObject(type)
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(Duration.ofHours(24))
+                        .build()
                 )
                 .build()
 
         override fun createAssociatedIdCache(prop: ImmutableProp): Cache<*, *>? =
-            createPropCache(prop, Duration.ofMinutes(10))
+            createPropCache(
+                prop, 
+                Duration.ofMinutes(10),
+                Duration.ofHours(10)
+            )
 
         override fun createAssociatedIdListCache(prop: ImmutableProp): Cache<*, List<*>>? =
-            createPropCache(prop, Duration.ofMinutes(5))
+            createPropCache(
+                prop, 
+                Duration.ofMinutes(5),
+                Duration.ofHours(5)
+            )
 
         override fun createResolverCache(prop: ImmutableProp): Cache<*, *>? =
-            createPropCache(prop, Duration.ofMinutes(5))
+            createPropCache(
+                prop, 
+                Duration.ofMinutes(5),
+                Duration.ofHours(5)
+            )
 
-        private fun createPropCache(type: ImmutableType, duration: Duration): Cache<*, *> =
+        private fun createPropCache(
+            type: ImmutableType, 
+            caffeineDuration: Duration,
+            redisDuration: Duration
+        ): Cache<*, *> =
             ChainCacheBuilder<Any, Any>()
                 .add(
-                    CaffeineBinder(512, Duration.ofSeconds(1))
+                    CaffeineValueBinder
+                        .forProp(prop)
+                        .maximumSize(512)
+                        .duration(caffeineDuration)
+                        .build()
                 )
                 .add(
-                    RedisValueBinder(
-                        // highlight-next-line
-                        redisTemplate, 
-                        objectMapper, 
-                        prop, 
-                        Duration.ofMinutes(10)
-                    )
+                    RedisValueBinder
+                        .forProp(prop)
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(redisDuration)
+                        .build()
                 )
                 .build()
     }

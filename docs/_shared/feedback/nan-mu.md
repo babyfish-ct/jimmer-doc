@@ -222,10 +222,10 @@ public class CacheConfig {
 
     @Bean
     public CacheFactory cacheFactory(
-            RedisTemplate<String, byte[]> redisTemplate,
+            RedisConnectionFactory connectionFactory,
             ObjectMapper objectMapper
     ) {
-        RedisTemplate<String, byte[]> redisTemplate = RedisCaches.cacheRedisTemplate(connectionFactory);
+        RedisConnectionFactory connectionFactory = RedisCaches.cacheRedisTemplate(connectionFactory);
         
         return new CacheFactory() {
 
@@ -280,9 +280,10 @@ public class CacheConfig {
     private static <K, V> Cache<K, V> createPropCache(
             boolean isMultiView,
             ImmutableProp prop,
-            RedisTemplate<String, byte[]> redisTemplate,
+            RedisConnectionFactory connectionFactory,
             ObjectMapper objectMapper,
-            Duration redisDuration
+            Duration redisDuration,
+            Duration caffeineDuration
     ) {
         /*
          * If multi-view cache is required, only redis can be used, because redis support hash structure.  
@@ -296,13 +297,41 @@ public class CacheConfig {
          */
         if (isMultiView) {
             return new ChainCacheBuilder<K, V>()
-                    .add(new RedisHashBinder<>(redisTemplate, objectMapper, prop, redisDuration))
+                    .add(
+                        RedisHashBinder
+                            .forProp(prop)
+                            .redis(connectionFactory)
+                            .objectMapper(objectMapper)
+                            .duration(redisDuration)
+                            .build()
+                    )
+                    .add(
+                        CaffeineHashBinder
+                            .forProp()
+                            .maximumSize(128)
+                            .duration(caffeineDuration)
+                            .bind()
+                    )
                     .build();
         }
 
         return new ChainCacheBuilder<K, V>()
                 .add(new CaffeineBinder<>(512, Duration.ofSeconds(1)))
-                .add(new RedisValueBinder<>(redisTemplate, objectMapper, prop, redisDuration))
+                .add(
+                    RedisValueBinder
+                        .forProp(prop)
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(redisDuration)
+                        .build()
+                )
+                .add(
+                    CaffeineValueBinder
+                        .forProp()
+                        .maximumSize(128)
+                        .duration(caffeineDuration)
+                        .bind()
+                )
                 .build(); 
     }
 }

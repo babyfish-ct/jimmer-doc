@@ -56,10 +56,6 @@ public CacheFactory cacheFactory(
     RedisConnectionFactory connectionFactory,
     ObjectMapper objectMapper
 ) {
-
-    RedisTemplate<String, byte[]> redisTemplate = 
-        RedisCaches.cacheRedisTemplate(connectionFactory);
-
     return new CacheFactory() {
 
         @Override
@@ -72,7 +68,11 @@ public CacheFactory cacheFactory(
         @Override
         // highlight-next-line
         public Cache<?, ?> createAssociatedIdCache(@NotNull ImmutableProp prop) {
-            return createPropCache(prop, Duration.ofMinutes(10));
+            return createPropCache(
+                prop, 
+                Duration.ofMinutes(10),
+                Duration.ofHours(10)
+            );
         }
 
         // Map current object id to collection of associated object ids
@@ -80,21 +80,33 @@ public CacheFactory cacheFactory(
         @Override
         // highlight-next-line
         public Cache<?, List<?>> createAssociatedIdListCache(@NotNull ImmutableProp prop) {
-            return createPropCache(prop, Duration.ofMinutes(5));
+            return createPropCache(
+                prop, 
+                Duration.ofMinutes(5),
+                Duration.ofHours(5)
+            );
         }
 
-        private <K, V> Cache<K, V> createPropCache(ImmutableProp prop, Duration duration) {
+        private <K, V> Cache<K, V> createPropCache(
+            ImmutableProp prop, 
+            Duration caffeineDuration,
+            Duration redisDuration
+        ) {
             return new ChainCacheBuilder<>()
                 .add(
-                    new CaffeineBinder<>(512, Duration.ofSeconds(1))
+                    CaffeineValueBinder
+                        .forObject(type)
+                        .maximumSize(512)
+                        .duration(caffeineDuration)
+                        .build()
                 )
                 .add(
-                    new RedisValueBinder<>(
-                        redisTemplate, 
-                        objectMapper, 
-                        prop, 
-                        duration
-                    )
+                    RedisValueBinder
+                        .forProp(prop)
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(redisDuration)
+                        .build()
                 )
                 .build();
         }
@@ -114,8 +126,6 @@ fun cacheFactory(
     objectMapper: ObjectMapper  
 ): KCacheFactory {
 
-    val redisTemplate = RedisCaches.cacheRedisTemplate(connectionFactory)
-
     return object: KCacheFactory {
 
         override fun createObjectCache(type: ImmutableType): Cache<*, *>? =
@@ -125,26 +135,38 @@ fun cacheFactory(
         // Applies to one-to-one and many-to-one associations
         // highlight-next-line
         override fun createAssociatedIdCache(prop: ImmutableProp): Cache<*, *>? =
-            createPropCache(prop, Duration.ofMinutes(10))
+            createPropCache(
+                prop, 
+                Duration.ofMinutes(10),
+                Duration.ofHours(10)
+            )
 
         // Map current object id to collection of associated object ids
         // Applies to one-to-many and many-to-many associations 
         // highlight-next-line
         override fun createAssociatedIdListCache(prop: ImmutableProp): Cache<*, List<*>>? =
-            createPropCache(prop, Duration.ofMinutes(5))
+            createPropCache(
+                prop, 
+                Duration.ofMinutes(5),
+                Duration.ofHours(5)
+            )
 
         private fun <K, V> createPropCache(prop: ImmutableProp, duration: Duration): Cache<K, V> =
             ChainCacheBuilder<Any, Any>()
                 .add(
-                    CaffeineBinder(512, Duration.ofSeconds(1))
+                    CaffeineValueBinder
+                        .forProp(prop)
+                        .maximumSize(512)
+                        .duration(caffeineDuration)
+                        .build()
                 )
                 .add(
-                    RedisValueBinder(
-                        redisTemplate, 
-                        objectMapper, 
-                        prop,  
-                        duration
-                    )
+                    RedisValueBinder
+                        .forProp(prop)
+                        .redis(connectionFactory)
+                        .objectMapper(objectMapper)
+                        .duration(redisDuration)
+                        .build()
                 )
                 .build()
 

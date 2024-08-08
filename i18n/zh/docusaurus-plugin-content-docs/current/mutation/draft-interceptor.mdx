@@ -123,7 +123,7 @@ implements DraftInterceptor<BaseEntity, BaseEntityDraft> {
                 user.setId(userService.getCurrentUserId());
             });
         }
-        if (orginal == null) {
+        if (original == null) {
             if (!ImmutableObjects.isLoaded(draft, BaseEntityProps.CREATED_TIME)) {
                 draft.setCreatedTime(LocalDateTime.now());
             }

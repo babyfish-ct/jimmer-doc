@@ -33,17 +33,21 @@ JSqlClient sqlClient = JSqlClient
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-javax.sql.DataSource dataSource = ...;
+//    val dataSource: DataSource = DriverManagerDataSource().apply {
+//        setDriverClassName("com.mysql.cj.jdbc.Driver")
+//        url = "jdbc:mysql://localhost:3306/jimmer_demo"
+//        username = "root"
+//        password = "" // 输入你自己的密码
+//    }
 
-var sqlClient = newKSqlClient {
-    setConnectionManager {
-        ConnectionManager
-            dataSoruce.connection.use {
-                // highlight-next-line
-                proceed(it)
-            }
+val sqlClient = newKSqlClient {
+        setConnectionManager(
+            ConnectionManager.simpleConnectionManager(dataSource)
+        )
+        setDatabaseNamingStrategy(
+            //DefaultDatabaseNamingStrategy.LOWER_CASE
+        )
     }
-}
 ```
 
 </TabItem>

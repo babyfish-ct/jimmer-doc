@@ -188,9 +188,9 @@ Please do not modify properties decorated with `@Id` or `@Key` in the `beforeSav
 
 It was mentioned above that if the current operation is `UPDATE`, the `original` parameter of the `beforeSave` method is non-null, representing the old value in the database.  
 
-`original` is a Jimmer dynamic object. By default, only the `id` and `key` properties are loaded and accessible. However, can we control the format of the `orginal` object to allow more properties to be accessed?
+`original` is a Jimmer dynamic object. By default, only the `id` and `key` properties are loaded and accessible. However, can we control the format of the `original` object to allow more properties to be accessed?
 
-The `DraftInterceptor` interface provides another default method `dependencies()` which returns a collection of properties to indicate that in addition to the id property and key property, which other properties of the `orginal` object need to be loaded.  
+The `DraftInterceptor` interface provides another default method `dependencies()` which returns a collection of properties to indicate that in addition to the id property and key property, which other properties of the `original` object need to be loaded.  
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">  

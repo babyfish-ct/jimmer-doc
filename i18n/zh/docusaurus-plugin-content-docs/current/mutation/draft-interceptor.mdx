@@ -123,7 +123,7 @@ implements DraftInterceptor<BaseEntity, BaseEntityDraft> {
                 user.setId(userService.getCurrentUserId());
             });
         }
-        if (orginal == null) {
+        if (original == null) {
             if (!ImmutableObjects.isLoaded(draft, BaseEntityProps.CREATED_TIME)) {
                 draft.setCreatedTime(LocalDateTime.now());
             }
@@ -157,7 +157,7 @@ class BaseEntityDraftInterceptor(
             }
         }
 
-        if (orginal === null) {
+        if (original === null) {
             if (!isLoaded(draft, BaseEntity::createdTime)) {
                 draft.createdTime = LocalDateTime.now()
             }
@@ -185,9 +185,9 @@ class BaseEntityDraftInterceptor(
 
     -   对于UPDATE操作而言，`original`非null
 
-    所以，可以通过`orginal`是否为null判断当前操作是INSERT还是UPDATE。
+    所以，可以通过`original`是否为null判断当前操作是INSERT还是UPDATE。
 
-    `orginal`对象是一个Jimmer动态对象，其哪些些属性就绪可以访问而哪些缺失不可访问，受到另外一个方法`dependencies`的控制。
+    `original`对象是一个Jimmer动态对象，其哪些些属性就绪可以访问而哪些缺失不可访问，受到另外一个方法`dependencies`的控制。
 
 :::warning
 请不要在`beforeSave`方法中，修改被`@Id`或`@Key`修饰的属性。
@@ -197,9 +197,9 @@ class BaseEntityDraftInterceptor(
 
 上文谈到，如果当前操作为`UPDATE`，`beforeSave`方法的`original`参数非null，表示数据库中的旧值。
 
-`original`是Jimmer动态对象，默认情况下，只有`id`和`key`属性是已加载和可访问的。然而，是否能够控制`orginal`对象的格式让跟多的属性可以被访问呢？
+`original`是Jimmer动态对象，默认情况下，只有`id`和`key`属性是已加载和可访问的。然而，是否能够控制`original`对象的格式让跟多的属性可以被访问呢？
 
-`DraftInterceptor`接口提供了另外一个default方法`dependencies`，返回一个属性集合，以表示除了id属性和key属性外，`orginal`对象还有那些属性需要被加载。
+`DraftInterceptor`接口提供了另外一个default方法`dependencies`，返回一个属性集合，以表示除了id属性和key属性外，`original`对象还有那些属性需要被加载。
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">

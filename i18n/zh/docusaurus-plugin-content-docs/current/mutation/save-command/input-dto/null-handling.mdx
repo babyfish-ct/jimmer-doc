@@ -71,7 +71,7 @@ Jimmer实体最重要一个特征之一，就是严格区分数据未知 *(不�
         draft.setId(12L);
         draft.setName("TURING");
         // highlight-next-line
-        draft.setStoreId(null);
+        // `storeId` is not specified
     });
     sqlClient.update(book);
     ```

@@ -8,11 +8,12 @@ export const ViewMore: FC<
         readonly buttonText: string,
         readonly fullScreen?: boolean,
         readonly title?: string,
-        readonly variant?: 'text' | 'outlined' | 'contained'
+        readonly variant?: 'text' | 'outlined' | 'contained',
+        readonly large: boolean,
         readonly maxWidth?: Breakpoint,
         readonly useOriginalText?: boolean
     }>
-> = memo(({buttonText, fullScreen = false, title = buttonText, variant='outlined', maxWidth, useOriginalText = true, children}) => {
+> = memo(({buttonText, fullScreen = false, title = buttonText, variant='outlined', large=false, maxWidth, useOriginalText = true, children}) => {
     
     const [open, setOpen] = useState(false);
 
@@ -33,7 +34,7 @@ export const ViewMore: FC<
 
     return (
         <>
-            <Button data-is-view-more-button="true" onClick={onButtonClick} variant={variant} size="small" style={style}>{buttonText}</Button>
+            <Button data-is-view-more-button="true" onClick={onButtonClick} variant={variant} size={large? "large" : "small"} style={style}>{buttonText}</Button>
             <ViewDialog open={open} onClose={onClose} title={title} maxWidth={maxWidth} fullScreen={fullScreen}>
                 {children}
             </ViewDialog>

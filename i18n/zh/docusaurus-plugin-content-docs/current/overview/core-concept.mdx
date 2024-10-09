@@ -33,13 +33,32 @@ Jimmer的核心理念，在于任意形状的的数据结构作为一个整体�
 <td>GraphQL不支持基于自关联属性的递归查询，Jimmer支持</td>
 </tr>
 <tr>
-<td rowspan="2">JPA</td>
-<td>JPA的EntityGraphQL不支持基于自关联属性的递归查询，Jimmer支持</td>
-</tr>
-<tr>
+<td rowspan="5">JPA</td>
 <td>JPA中，为控制被保存数据结构的形状，必须为使属性配置insertable、updatable或cascade<i>(针对关联属性)</i>，
 无论如何配置，被保存的数据结构是固定的；Jimmer实体并非POJO，其数据结构的形状千变万化，
 无需事先规划和设计，任何业务场景都可以构建它需要的数据结构并直接保存</td>
+</tr>
+<tr>
+<td>对于查询而言，JPA的EntityGraphQL非常复杂；Jimmer提供了两种手段来实现类似的功能：
+控制返回实体对象的格式，或者通过极其廉价的方式生成DTO并直接查询，无论哪种方式，都远比EntityGraph简单</td>
+</tr>
+<tr>
+<td>
+
+在JPA中，如果需要为只查询部分属性而使用DTO对象，那么DTO必须是一个没有任何关联简单对象。即，丢失了ORM最宝贵的能力，从`ORM`退化成了`OM`；
+Jimmer自动生成的DTO支持任意复杂的层级关系，**Jimmer是目前唯一一个支持嵌套投影的ORM**
+
+</td>
+</tr>
+<tr>
+<td>
+
+在JPA中，更新对象会导致所有可更新的列被修改。为了简便，开发人员很少使用`update`，选择先查询完整的对象，修改部分属性，最后保存整个对象；Jimmer可以构建并直接保存残缺对象
+
+</td>
+</tr>
+<tr>
+<td>JPA的EntityGraphQL不支持基于自关联属性的递归查询，Jimmer支持</td>
 </tr>
 <tr>
 <td>MongoDB</td>

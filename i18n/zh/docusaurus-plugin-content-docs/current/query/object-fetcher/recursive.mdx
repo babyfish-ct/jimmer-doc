@@ -532,14 +532,12 @@ val treeNodes = sqlClient
         select(
             table.fetchBy {
                 allScalarFields()
-                childNodes({
+                childNodes{
                     recursive {
                         // highlight-next-line
                         entity.name != "Clothing"
                     }
-                }) {
-                    allScalarFields()
-                }
+                } 
             }
         )
     }

@@ -71,7 +71,7 @@ Jimmer实体最重要一个特征之一，就是严格区分数据未知 *(不�
         draft.setId(12L);
         draft.setName("TURING");
         // highlight-next-line
-        draft.setStoreId(null);
+        // `storeId` is not specified
     });
     sqlClient.update(book);
     ```
@@ -603,7 +603,7 @@ Jimmer提供影响范围更大的配置方法
 
     ```sh
     // highlight-next-line
-    dynamic interface XxxInput {
+    dynamic input XxxInput {
         fixed nullableProp1
         static nullableProp2
         // highlight-next-line

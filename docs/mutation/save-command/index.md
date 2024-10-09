@@ -3,6 +3,14 @@ sidebar_position: 3
 title: Save Command
 ---
 
+:::caution
+In recent months, the save instruction has undergone a major restructuring, so there hasn't been time to update all the documentation in this directory.
+
+Apart from new features, the new version of the save instruction has made minimal changes to existing functionality, and it remains largely consistent with the description in this directory. However, the new version of the save instruction **generates SQL with much higher performance than described here**.
+
+The good news is that this historically significant restructuring of Jimmer has finally been completed and stabilized, so all the content in this directory will be updated soon.
+:::
+
 :::tip
 One statement to save complex data of arbitrary shape, find DIFF to change database, like React/Vue
 :::

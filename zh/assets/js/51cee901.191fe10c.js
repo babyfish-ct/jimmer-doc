@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocusaurus_code=self.webpackChunkdocusaurus_code||[]).push([[3719],{69609:e=>{e.exports=JSON.parse('{"permalink":"/jimmer-doc/zh/blog/tags/hello","page":1,"postsPerPage":10,"totalPages":1,"totalCount":2,"blogDescription":"Blog","blogTitle":"Blog"}')}}]);

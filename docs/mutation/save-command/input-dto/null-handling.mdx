@@ -72,7 +72,7 @@ Let's temporarily set aside the concept of Input DTO and review the differences 
         draft.setId(12L);
         draft.setName("TURING");
         // highlight-next-line
-        draft.setStoreId(null);
+        // `storeId` is not specified
     });
     sqlClient.update(book);
     ```
@@ -607,7 +607,7 @@ Jimmer provides configuration methods with a broader scope of influence:
 
     ```sh 
     // highlight-next-line
-    dynamic interface XxxInput {
+    dynamic input XxxInput {
         fixed nullableProp1
         static nullableProp2
         // highlight-next-line

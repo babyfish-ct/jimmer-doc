@@ -30,7 +30,7 @@ import SaveCommandAbuse from '../../_shared/save-command-abuse.md';
     ```java
     // highlight-next-line
     sqlClient.save(
-        Objects.createBook(draft -> {
+        Immutables.createBook(draft -> {
             draft.setName("GraphQL in Action");
             draft.setEdition(4);
             draft.setPrice(new BigDecimal("59.9"));
@@ -71,7 +71,7 @@ import SaveCommandAbuse from '../../_shared/save-command-abuse.md';
     ```java
     // highlight-next-line
     sqlClient.save(
-        Objects.createBook(draft -> {
+        Immutables.createBook(draft -> {
             draft.setName("GraphQL in Action");
             draft.setEdition(4);
             draft.setPrice(new BigDecimal("59.9"));
@@ -151,7 +151,7 @@ Jimmer并没有像传统ORM一样为关联属性提供配置`cascade`选项，�
 
     ```java
     boolean matched = sqlClient.update(
-        Objects.createBook(draft -> {
+        Immutables.createBook(draft -> {
             draft.setId(100L);
             draft.setPrice(new BigDecimal(60));
             // 除了`id`和`price`外，其他属性都没有被指定

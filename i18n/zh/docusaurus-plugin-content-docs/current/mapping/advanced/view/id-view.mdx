@@ -347,7 +347,7 @@ IdView属性和原始关联属性是联动的，设置一个，必然影响另�
 
     ```java
     // 设置视图属性
-    Book book = Objects.createBook(draft -> {
+    Book book = Immutables.createBook(draft -> {
         draft.setStoreId(10L);
         draft.setAuthorIds(Arrays.asList(100L, 101L));
     });
@@ -389,7 +389,7 @@ IdView属性和原始关联属性是联动的，设置一个，必然影响另�
 
     ```java
     // 设置原始属性
-    Book book = Objects.createBook(draft -> {
+    Book book = Immutables.createBook(draft -> {
         draft.applyStore(store -> {
             store.setId(10L).storeName("TURING")
         });

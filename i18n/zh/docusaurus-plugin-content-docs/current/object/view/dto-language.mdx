@@ -1024,7 +1024,7 @@ FlatTreeNodeView {
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = Objects.createTreeNode(cola -> {
+TreeNode treeNode = Immutables.createTreeNode(cola -> {
     cola.setId(4L);
     cola.setName("Coca cola");
     cola.applyParent(drinks -> {

@@ -38,7 +38,7 @@ This brings great simplification to application development.
 <TabItem value="java" label="Java">  
 
 ```java
-TreeNode aggregateRoot = Objects.createTreeNode(aggregateRootDraft ->
+TreeNode aggregateRoot = Immutables.createTreeNode(aggregateRootDraft ->
         aggregateRootDraft
             .setName("Aggregate root") 
             .addIntoChildNodes(childDraft ->

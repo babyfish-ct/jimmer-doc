@@ -112,7 +112,7 @@ Jimmer实体并非POJO，但可以靠`org.babyish.jimmmer.jackson.ImmutableModul
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(draft -> {
+Book book = Immutables.createBook(draft -> {
     draft.setId(1546434604146774987L);
     draft.setName("SQL in Action");
 });
@@ -200,7 +200,7 @@ interface Author {
 <TabItem value="java" label="Java">
 
 ```java
-Author author = Objects.createAuthor(draft -> {
+Author author = Immutables.createAuthor(draft -> {
     draft.setBookIds(
         Arrays.asList(
             1546434604146774987L,
@@ -304,7 +304,7 @@ class BookView(
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(draft -> {
+Book book = Immutables.createBook(draft -> {
     draft.setId(1546434604146774987L);
     draft.setName("SQL in Action");
 });

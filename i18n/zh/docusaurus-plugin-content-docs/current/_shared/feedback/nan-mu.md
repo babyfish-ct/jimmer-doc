@@ -142,7 +142,7 @@ Jimmer采用动态对象的设计，让其具备了复杂的表达能力，还�
 需求1: 只查询`User`的的`name`, `age`, `gender`
 ```java
 // 真实情况应该从dao层查询数据库后返回该对象，这里为了方便就直接先手动创建一个对象了
-User user = Objects.createUser(draft -> draft.setName("张三").setAge(20).setGender(Gender.MAN));
+User user = Immutables.createUser(draft -> draft.setName("张三").setAge(20).setGender(Gender.MAN));
 ```
 返回给前端的json为
 ```json
@@ -156,7 +156,7 @@ User user = Objects.createUser(draft -> draft.setName("张三").setAge(20).setGe
 需求2: 查询所有`User`列表，去掉`password`属性
 ```java
 // 真实情况应该从dao层查询数据库后返回该对象，这里为了方便就直接先手动创建一个对象了
-User user = Objects.createUser(draft -> draft.setId(1).setName("张三").setAge(20).setGender(Gender.MAN).setCreateTime(LocalDateTime.now()).setUpdateTime(LocalDateTime.now()));
+User user = Immutables.createUser(draft -> draft.setId(1).setName("张三").setAge(20).setGender(Gender.MAN).setCreateTime(LocalDateTime.now()).setUpdateTime(LocalDateTime.now()));
 ```
 返回给前端的json为
 ```json

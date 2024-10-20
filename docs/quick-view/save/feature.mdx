@@ -30,7 +30,7 @@ However, to simplify the discussion here, we directly hard code the object to be
     ```java 
     // highlight-next-line
     sqlClient.save(  
-        Objects.createBook(draft -> {
+        Immutables.createBook(draft -> {
             draft.setName("GraphQL in Action");  
             draft.setEdition(4);
             draft.setPrice(new BigDecimal("59.9"));
@@ -71,7 +71,7 @@ However, to simplify the discussion here, we directly hard code the object to be
     ```java
     // highlight-next-line
     sqlClient.save(  
-        Objects.createBook(draft -> {
+        Immutables.createBook(draft -> {
             draft.setName("GraphQL in Action");
             draft.setEdition(4); 
             draft.setPrice(new BigDecimal("59.9"));
@@ -151,7 +151,7 @@ This absolute flexibility has many wonderful uses. For example, changing the pri
 
     ```java 
     boolean matched = sqlClient.update(
-        Objects.createBook(draft -> {
+        Immutables.createBook(draft -> {
             draft.setId(100L);  
             draft.setPrice(new BigDecimal(60));
             // No other properties except `id` and `price` are specified

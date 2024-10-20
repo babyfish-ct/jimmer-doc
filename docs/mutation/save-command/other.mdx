@@ -41,7 +41,7 @@ Let's look at some examples of the `totalAffectedRowCount` property and `getAffe
 
 ```java
 SimpleSaveResult<Book> result = sqlClient.update(
-        Objects.createBook(draft -> {
+        Immutables.createBook(draft -> {
             draft.setId(3L);
             draft.setPrice(new BigDecimal("59.9"));
             draft.addIntoAuthors(author -> author.setId(1L));

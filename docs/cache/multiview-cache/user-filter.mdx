@@ -1243,7 +1243,7 @@ Since `Book-6` belongs to `BookStore-1`, it is foreseeable that the multi-view c
 
     ```java
     sqlClient.save(
-        Objects.createBook(draft -> {
+        Immutables.createBook(draft -> {
             draft.setId(6L);
             draft.setTenant("a");
         })

@@ -347,7 +347,7 @@ IdView properties and original association properties are linked. Setting one ne
 
     ```java 
     // Set view property
-    Book book = Objects.createBook(draft -> {
+    Book book = Immutables.createBook(draft -> {
         draft.setStoreId(10L);
         draft.setAuthorIds(Arrays.asList(100L, 101L)); 
     });
@@ -389,7 +389,7 @@ IdView properties and original association properties are linked. Setting one ne
 
     ```java
     // Set original property
-    Book book = Objects.createBook(draft -> {
+    Book book = Immutables.createBook(draft -> {
         draft.applyStore(store -> {
             store.setId(10L).storeName("TURING")  
         });

@@ -34,7 +34,7 @@ import { ViewMore } from '@site/src/components/ViewMore';
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(draft -> {
+Book book = Immutables.createBook(draft -> {
     draft.setId(20L);
     draft.setName("SQL in Action");
     draft.setEdition(1);
@@ -199,7 +199,7 @@ public interface Book {
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(draft -> {
+Book book = Immutables.createBook(draft -> {
     draft.setName("SQL in Action");
     draft.setEdition(1);
     draft.setPrice(new BigDecimal("39.9"));
@@ -408,7 +408,7 @@ val newestBookId = sqlClient.save(book)
     <TabItem value="java" label="Java">
 
     ```java
-    Book book = Objects.createBook(draft -> {
+    Book book = Immutables.createBook(draft -> {
         draft.setName("SQL in Action");
         draft.setEdition(1);
         draft.setPrice(new BigDecimal("39.9"));

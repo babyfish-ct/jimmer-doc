@@ -521,7 +521,7 @@ fun setAuthors(bookId: Long, authorIds: Collection<Long>) {
 ```java title="更好的用法示范"
 public void setAuthors(long bookId, Collection<Long> authorIds) {
     sqlClient.save(
-        Objects.createBook(book -> {
+        Immutables.createBook(book -> {
             book.setId(bookId);
             book.setAuthorIds(authorIds);
         })

@@ -142,7 +142,7 @@ Note: The following are only examples, not a complete setup from scratch. For co
 Requirement 1: Only query User's `name`, `age` and `gender`
 ```java
 // In real cases it should be returned from dao query, here for convenience manually create an object
-User user = Objects.createUser(draft -> draft.setName("Zhang San").setAge(20).setGender(Gender.MAN));
+User user = Immutables.createUser(draft -> draft.setName("Zhang San").setAge(20).setGender(Gender.MAN));
 ```
 The json returned to the front end is: 
 ```json
@@ -156,7 +156,7 @@ The json returned to the front end is:
 Requirement 2: Query all `User` lists, remove `password` property
 ```java 
 // In real cases it should be returned from dao query, here for convenience manually create an object
-User user = Objects.createUser(draft -> draft.setId(1).setName("Zhang San").setAge(20).setGender(Gender.MAN).setCreateTime(LocalDateTime.now()).setUpdateTime(LocalDateTime.now()));
+User user = Immutables.createUser(draft -> draft.setId(1).setName("Zhang San").setAge(20).setGender(Gender.MAN).setCreateTime(LocalDateTime.now()).setUpdateTime(LocalDateTime.now()));
 ```
 The json returned to the front end is:
 ```json

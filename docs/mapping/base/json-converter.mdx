@@ -112,7 +112,7 @@ Here, bypassing ORM, we demonstrate the effect by simulating data.
 <TabItem value="java" label="Java">  
 
 ```java  
-Book book = Objects.createBook(draft -> {
+Book book = Immutables.createBook(draft -> {
     draft.setId(1546434604146774987L); 
     draft.setName("SQL in Action");  
 });
@@ -200,7 +200,7 @@ Similarly, bypassing ORM, demonstrate the effect through simulated data.
 <TabItem value="java" label="Java">  
 
 ```java   
-Author author = Objects.createAuthor(draft -> {
+Author author = Immutables.createAuthor(draft -> {
     draft.setBookIds(
         Arrays.asList(
             1546434604146774987L,
@@ -304,7 +304,7 @@ Finally, we verify the conversion from entity to DTO object as follows
 <TabItem value="java" label="Java">  
 
 ```java
-Book book = Objects.createBook(draft -> {
+Book book = Immutables.createBook(draft -> {
     draft.setId(1546434604146774987L);    
     draft.setName("SQL in Action");  
 }); 

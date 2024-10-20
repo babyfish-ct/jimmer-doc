@@ -214,7 +214,7 @@ You can use it like this:
     <TabItem value="java" label="Java">
     
     ```java
-    TreeNode oldTreeNode = Objects.createTreeNode(treeNodeDraft -> {
+    TreeNode oldTreeNode = Immutables.createTreeNode(treeNodeDraft -> {
             ...omitted...
         });
     ```
@@ -237,7 +237,7 @@ You can use it like this:
     <TabItem value="java" label="Java">
     
     ```java
-    TreeNode newTreeNode = Objects.createTreeNode(oldTreeNode, treeNodeDraft -> {
+    TreeNode newTreeNode = Immutables.createTreeNode(oldTreeNode, treeNodeDraft -> {
             ...omitted...
         });
     ```
@@ -302,7 +302,7 @@ Developers can use this method to set the `name` property of the draft proxy:
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = Objects.createTreeNode(draft -> {
+TreeNode treeNode = Immutables.createTreeNode(draft -> {
         draft.setName("Root Node");
     });
 ```
@@ -365,7 +365,7 @@ That is, if the reference association of the draft object has been set and set t
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode newTreeNode = Objects.createTreeNode(treeNode, draft -> {
+TreeNode newTreeNode = Immutables.createTreeNode(treeNode, draft -> {
         draft.parent().setName("Daddy"); 
         draft.parent().parent().setName("Grandpa");
     });
@@ -431,7 +431,7 @@ Java's `parent(false)` and Kotlin's `parent` have two issues:
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = Objects.createTreeNode(/* No `base` here */ draft -> {
+TreeNode treeNode = Immutables.createTreeNode(/* No `base` here */ draft -> {
         draft.parent(true).setName("Daddy");
         draft.parent(true).parent(true).setName("Grandpa");
     });
@@ -488,9 +488,9 @@ This setter allows the user to replace the entire associated object.
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = Objects.createTreeNode(draft -> {
+TreeNode treeNode = Immutables.createTreeNode(draft -> {
         draft.setParent(
-            Objects.createTreeNode(daddyDraft -> {
+            Immutables.createTreeNode(daddyDraft -> {
                 daddyDraft.setName("Daddy")
             })
         )
@@ -541,9 +541,9 @@ These two setters are used to simplify the code. Since the two methods are highl
 
 1. More verbose writing:
     ```java
-    TreeNode oldTreeNode = Objects.createTreeNode(draft -> {
+    TreeNode oldTreeNode = Immutables.createTreeNode(draft -> {
             draft.setParent(
-                Objects.createTreeNode(daddyDraft -> {
+                Immutables.createTreeNode(daddyDraft -> {
                     daddyDraft.setName("Daddy")
                 })
             )
@@ -552,7 +552,7 @@ These two setters are used to simplify the code. Since the two methods are highl
 
 2. More concise writing:
     ```java 
-    TreeNode oldTreeNode = Objects.createTreeNode(draft -> {
+    TreeNode oldTreeNode = Immutables.createTreeNode(draft -> {
             draft.applyParent(daddyDraft -> {
                 daddyDraft.setName("Daddy")
             })
@@ -600,7 +600,7 @@ If the collection association of the draft object has been set, all elements in 
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode newTreeNode = Objects.createTreeNode(treeNode, draft -> {
+TreeNode newTreeNode = Immutables.createTreeNode(treeNode, draft -> {
         ((TreeNodeDraft)
             draft
                 .childNodes().get(0)
@@ -676,7 +676,7 @@ public interface TreeNodeDraft : TreeNode, Draft {
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode newTreeNode = Objects.createTreeNode(treeNode, draft -> {
+TreeNode newTreeNode = Immutables.createTreeNode(treeNode, draft -> {
         draft
             .childNodes(false)
             .get(0)
@@ -747,13 +747,13 @@ This setter allows the user to replace the entire associated collection.
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = Objects.createTreeNode(draft -> {
+TreeNode treeNode = Immutables.createTreeNode(draft -> {
         draft.setChildNodes(
             Arrays.asList(
-                Objects.createTreeNode(childDraft -> {
+                Immutables.createTreeNode(childDraft -> {
                     childDraft.setName("Eldest son")
                 }),
-                Objects.createTreeNode(childDraft -> {
+                Immutables.createTreeNode(childDraft -> {
                     childDraft.setName("Second son")
                 })
             )
@@ -842,7 +842,7 @@ You should use it like this:
 <TabItem value="java" label="Java">  
 
 ```java
-TreeNode treeNode = Objects.createTreeNode(draft -> {
+TreeNode treeNode = Immutables.createTreeNode(draft -> {
         draft
             .addIntoChildNodes(childDraft ->
                 childDraft.setName("Eldest son")

@@ -59,7 +59,7 @@ interface TreeNode {
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = Objects.createTreeNode(root -> {
+TreeNode treeNode = Immutables.createTreeNode(root -> {
     root.setName("Root").addIntoChildNodes(food -> {
         food
             .setName("Food")
@@ -109,7 +109,7 @@ val treeNode = new(TreeNode::class).by {
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode newTreeNode = Objects.createTreeNode(
+TreeNode newTreeNode = Immutables.createTreeNode(
         // highlight-next-line
         treeNode, // existing data
         root -> {

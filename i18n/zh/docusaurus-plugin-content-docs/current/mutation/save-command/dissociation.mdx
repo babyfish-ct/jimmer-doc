@@ -106,7 +106,7 @@ where book_id = 3;
 
 ```java
 sqlClient.update(
-    Objects.createBook(draft -> {
+    Immutables.createBook(draft -> {
         draft.setId(3L);
         draft.addIntoAuthors(author -> author.setId(2L));
         draft.addIntoAuthors(author -> author.setId(5L));
@@ -334,7 +334,7 @@ where STORE_ID = 2
 
 ```java
 sqlClient.update(
-    Objects.createBookStore(draft -> {
+    Immutables.createBookStore(draft -> {
         draft.setId(2L);
         draft.addIntoBooks(book -> book.setId(9L));
         draft.addIntoBooks(book -> book.setId(10L));

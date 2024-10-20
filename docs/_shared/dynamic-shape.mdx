@@ -7,7 +7,7 @@ import TabItem from '@theme/TabItem';
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(draft -> {
+Book book = Immutables.createBook(draft -> {
     draft.setName("Learning GraphQL");
 });
 ```
@@ -36,7 +36,7 @@ In this case, the JSON for the `books` object would be like follows
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(draft -> {
+Book book = Immutables.createBook(draft -> {
     draft.setName("Learning GraphQL");
     draft.setEdition(1);
     draft.setPrice(new BigDecimal("49.99"));
@@ -73,7 +73,7 @@ In this case, the JSON for the `books` object would be like follows
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(draft -> {
+Book book = Immutables.createBook(draft -> {
     draft.setName("Learning GraphQL");
     draft.setEdition(1);
     draft.setPrice(new BigDecimal("49.99"));
@@ -122,7 +122,7 @@ In this case, the JSON for the `books` object would be like follows
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Objects.createBook(draft -> {
+Book book = Immutables.createBook(draft -> {
     draft.setName("Learning GraphQL");
     draft.setEdition(1);
     draft.setPrice(new BigDecimal("49.99"));
@@ -207,7 +207,7 @@ Unlike the previous examples, here we choose `BookStore` as the aggregate root f
 <TabItem value="java" label="Java">
 
 ```java
-BookStore store = Objects.createBookStore(draft -> {
+BookStore store = Immutables.createBookStore(draft -> {
     draft.setName("O'REILLY");
     draft.setWebsite("https://www.oreilly.com/");
     draft.addIntoBooks(book -> {

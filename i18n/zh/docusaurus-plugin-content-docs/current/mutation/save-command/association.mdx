@@ -50,7 +50,7 @@ import { LongAssociation } from '@site/src/components/LongAssociation';
     <TabItem value="java" label="Java">
 
     ```java
-    Book book = Objects.createBook(draft -> {
+    Book book = Immutables.createBook(draft -> {
         draft.setName("SQL in Action");
         draft.setEdition(1);
         draft.setPrice(new BigDecimal("39.9"));
@@ -130,7 +130,7 @@ import { LongAssociation } from '@site/src/components/LongAssociation';
     <TabItem value="java" label="Java">
 
     ```java
-    Book book = Objects.createBook(draft -> {
+    Book book = Immutables.createBook(draft -> {
         draft.setName("SQL in Action");
         draft.setEdition(1);
         draft.setPrice(new BigDecimal("39.9"));
@@ -223,7 +223,7 @@ import { LongAssociation } from '@site/src/components/LongAssociation';
 <TabItem value="java" label="Java">
 
 ```java
-Order order = Objects.createOrder(draft -> {
+Order order = Immutables.createOrder(draft -> {
     draft.applyCustomer(customer -> customer.setId(1L));
     draft.setProvince("四川");
     draft.setCity("成都");
@@ -353,7 +353,7 @@ public interface TreeNode {
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = Objects.createTreeNode(food -> {
+TreeNode treeNode = Immutables.createTreeNode(food -> {
     food
         // highlight-next-line
         .setParent(null)

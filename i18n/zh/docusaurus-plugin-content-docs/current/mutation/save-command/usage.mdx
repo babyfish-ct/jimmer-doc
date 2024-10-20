@@ -28,7 +28,7 @@ import SaveCommandAbuse from '../../_shared/save-command-abuse.md';
     <TabItem value="java" label="Java">
 
     ```java
-    Book simpleBook = Objects.createBook(draft -> {
+    Book simpleBook = Immutables.createBook(draft -> {
         draft.setName("SQL in Action");
         dratt.setEdition(1);
         draft.setPrice(new BigDecimal("59.9"));
@@ -57,7 +57,7 @@ import SaveCommandAbuse from '../../_shared/save-command-abuse.md';
     <TabItem value="java" label="Java">
 
     ```java
-    Book complexBook = Objects.createBook(draft -> {
+    Book complexBook = Immutables.createBook(draft -> {
         draft.setName("SQL in Action");
         dratt.setEdition(1);
         draft.setPrice(new BigDecimal("59.9"));
@@ -262,7 +262,7 @@ Save指令为不同语言和不同的开发模式提供了多个API，但功能�
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = Objects.createTreeNode(food -> {
+TreeNode treeNode = Immutables.createTreeNode(food -> {
     food
         .setParent(null)
         .setName("Food")

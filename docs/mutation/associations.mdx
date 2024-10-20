@@ -538,7 +538,7 @@ When the business scenario is no longer simple addition or deletion, [Save Comma
 ```java title="Better Usage Example"
 public void setAuthors(long bookId, Collection<Long> authorIds) {
     sqlClient.save(
-        Objects.createBook(book -> {
+        Immutables.createBook(book -> {
             book.setId(bookId);
             book.setAuthorIds(authorIds);
         })

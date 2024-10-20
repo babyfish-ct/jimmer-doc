@@ -26,7 +26,7 @@ import { ViewMore } from '@site/src/components/ViewMore';
 
 ```java
 sqlClient.update(
-    Objects.createBook(draft -> {
+    Immutables.createBook(draft -> {
         draft.setId(3L);
         draft.addIntoAuthors(author -> author.setId(1L)); // ❶
         draft.addIntoAuthors(author -> author.setId(2L)); // ❷
@@ -154,7 +154,7 @@ values
 
     ```java
     sqlClient.update(
-            Objects.createBookStore(draft -> {
+            Immutables.createBookStore(draft -> {
                 draft.setId(2L);
                 draft.addIntoBooks(book -> book.setId(8L));
                 draft.addIntoBooks(book -> book.setId(9L));
@@ -221,7 +221,7 @@ values
 
     ```java
     sqlClient.update(
-            Objects.createBook(draft -> {
+            Immutables.createBook(draft -> {
                 draft.setId(10L);
                 draft.applyStore(store -> store.setId(321L));
             })

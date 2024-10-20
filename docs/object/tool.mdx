@@ -256,7 +256,7 @@ val book = fromString(
 <TabItem value="java" label="Java">
 
 ```java  
-Book newBook = Objects.createBook(book, draft -> {
+Book newBook = Immutables.createBook(book, draft -> {
     DraftObjects.set(draft, BookProps.AUTHOR_IDS, Arrays.asList(1L, 3L)); 
 });
 ```
@@ -281,7 +281,7 @@ val newBook = new(Book::class).by(book) {
 <TabItem value="java" label="Java">
 
 ```java
-Book newBook = Objects.createBook(book, draft -> {
+Book newBook = Immutables.createBook(book, draft -> {
     DraftObjects.unload(draft, BookProps.AUTHOR_IDS);  
 });
 ```
@@ -306,7 +306,7 @@ val newBook = new(Book::class).by(book) {
 <TabItem value="java" label="Java">
 
 ```java 
-Book newBook = Objects.createBook(book, draft -> {
+Book newBook = Immutables.createBook(book, draft -> {
     DraftObjects.show(draft, BookProps.AUTHOR_IDS);
 });
 ```
@@ -331,7 +331,7 @@ val newBook = new(Book::class).by(book) {
 <TabItem value="java" label="Java">
 
 ```java
-Book newBook = Objects.createBook(book, draft -> {
+Book newBook = Immutables.createBook(book, draft -> {
     DraftObjects.hide(draft, BookProps.AUTHOR_IDS); 
 });
 ```

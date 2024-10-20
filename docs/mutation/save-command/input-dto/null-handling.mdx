@@ -35,7 +35,7 @@ Let's temporarily set aside the concept of Input DTO and review the differences 
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    val book = new(Book::class).by {
+    val book = Book {
         id = 12L
         name = "TURING"
         // highlight-next-line
@@ -81,7 +81,7 @@ Let's temporarily set aside the concept of Input DTO and review the differences 
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    val book = new(Book::class).by {
+    val book = Book {
         id = 12L
         name = "TURING"
         // highlight-next-line

@@ -224,7 +224,7 @@ public fun TreeNode.copy(block: TreeNodeDraft.() -> Unit): TreeNode =
     <TabItem value="kotlin" label="Kotlin">
     
     ```kotlin
-    vak oldTreeNode = new(TreeNode::class).by {
+    vak oldTreeNode = TreeNode {
         ...省略...
     }
     ```
@@ -247,7 +247,7 @@ public fun TreeNode.copy(block: TreeNodeDraft.() -> Unit): TreeNode =
     <TabItem value="kotlin" label="Kotlin">
     
     ```kotlin
-    val newTreeNode = new(TreeNode::class).by(oldTreeNode) {
+    val newTreeNode = TreeNode(oldTreeNode) {
         ...省略...
     }
     ```
@@ -312,7 +312,7 @@ TreeNode treeNode = Immutables.createTreeNode(draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val treeNode = new(TreeNode::class).by {
+val treeNode = TreeNode {
     name = "Root Node"
 } 
 ```
@@ -377,7 +377,7 @@ TreeNode newTreeNode = Immutables.createTreeNode(treeNode, draft -> {
 
 ```kotlin
 @DslScope
-var newTreeNode = new(TreeNode::class).by(treeNode) {
+var newTreeNode = TreeNode(treeNode) {
     parent().name = "Daddy"
     parent().parent().name = "Grandpa"
 }
@@ -442,7 +442,7 @@ TreeNode treeNode = Immutables.createTreeNode(/* No `base` here */ draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val treeNode = new(TreeNode::class).by /* No `base` here */ {
+val treeNode = TreeNode /* No `base` here */ {
     parent().setName("Daddy");
     parent().parent().setName("Grandpa");
 }
@@ -502,8 +502,8 @@ TreeNode treeNode = Immutables.createTreeNode(draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val treeNode = new(TreeNode::class).by {
-    parent = new(TreeNode::class).by {
+val treeNode = TreeNode {
+    parent = TreeNode {
         name = "Daddy"
     }
 }
@@ -618,7 +618,7 @@ TreeNode newTreeNode = Immutables.createTreeNode(treeNode, draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val newTreeNode = new(TreeNode::class).by(treeNode) {
+val newTreeNode = TreeNode(treeNode) {
     (childNodes[0] as TreeNodeDraft)
         .name = "Son"
     (childNodes[0].childNodes[0] as TreeNodeDraft)
@@ -701,7 +701,7 @@ TreeNode newTreeNode = Immutables.createTreeNode(treeNode, draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val newTreeNode = new(TreeNode::class).by(treeNode) {
+val newTreeNode = TreeNode(treeNode) {
     childNodes()[0].name = "Son"
     childNodes()[0].childNodes()[0].name = "Grandson"
 }
@@ -766,12 +766,12 @@ TreeNode treeNode = Immutables.createTreeNode(draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val treeNode = new(TreeNode::class).by {
+val treeNode = TreeNode {
     childNodes = listOf(
-        new(TreeNode::class).by {
+        TreeNode {
             name = "Eldest son"
         },
-        new(TreeNode::class).by {
+        TreeNode {
             name = "Second son"
         }
     )
@@ -858,7 +858,7 @@ TreeNode treeNode = Immutables.createTreeNode(draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val treeNode = new(TreeNode::class).by {
+val treeNode = TreeNode {
     childNodes().addBy {
         name = "Eldest son"
     }

@@ -40,7 +40,7 @@ import SaveCommandAbuse from '../../_shared/save-command-abuse.md';
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    val simpleBook = new(Book::class).by {
+    val simpleBook = Book {
         name = "SQL in Action"
         edition = 1
         price = BigDecimal("59.9")
@@ -82,7 +82,7 @@ import SaveCommandAbuse from '../../_shared/save-command-abuse.md';
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    val complexBook = new(Book::class).by {
+    val complexBook = Book {
         name = "SQL in Action"
         edition = 1
         price = BigDecimal("59.9")
@@ -296,7 +296,7 @@ sqlClient.save(treeNode);
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val treeNode = new(TreeNode::class).by {
+val treeNode = TreeNode {
     parent = null
     name = "Food"
     childNodes().addBy {

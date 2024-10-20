@@ -1,5 +1,5 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 title: Save Mode of Associated Objects
 ---
 
@@ -176,7 +176,7 @@ sqlClient
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val store = new(BookStore::class).by {
+val store = BookStore {
     id = 2L
     books().addBy {
         name = "SQL in Action"
@@ -266,7 +266,7 @@ sqlClient
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val store = new(BookStore::class).by {
+val store = BookStore {
     id = 2L
     books().addBy { // With id
         id = 10L
@@ -391,7 +391,7 @@ sqlClient
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val store = new(BookStore::class).by {
+val store = BookStore {
     id = 2L
     books().addBy { // With id
         id = 10L

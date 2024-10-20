@@ -44,7 +44,7 @@ However, to simplify the discussion here, we directly hard code the object to be
     ```kotlin
     // highlight-next-line
     sqlClient.save(
-        new(Book::class).by {  
+        Book {  
             name = "GraphQL in Action"
             edition = 4
             price = BigDecimal("59.9")  
@@ -99,7 +99,7 @@ However, to simplify the discussion here, we directly hard code the object to be
     ```kotlin
     // highlight-next-line
     sqlClient.save(
-        new(Book::class).by {
+        Book {
             name = "GraphQL in Action"
             edition = 4  
             price = BigDecimal("59.9")
@@ -165,7 +165,7 @@ This absolute flexibility has many wonderful uses. For example, changing the pri
 
     ```kotlin
     val matched sqlClient.update(  
-        new(Book::class).by {
+        Book {
             id = 100L
             price = BigDecimal(60)
             // No other properties except `id` and `price` are specified

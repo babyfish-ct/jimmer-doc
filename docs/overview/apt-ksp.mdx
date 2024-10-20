@@ -92,7 +92,7 @@ Book book =
 ```kotlin
 val book =
     // highlight-next-line
-    new(Book::class).by {
+    Book {
         name = "SQL in Action"
         authors().addBy {
             name = "Jessica"

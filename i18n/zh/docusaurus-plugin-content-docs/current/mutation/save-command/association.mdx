@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: 保存关联
 ---
 
@@ -77,7 +77,7 @@ import { LongAssociation } from '@site/src/components/LongAssociation';
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    val book = new(Book::class).by {
+    val book = Book {
         name = "SQL in Action"
         edition = 1
         price = BigDecimal("39.9")
@@ -157,7 +157,7 @@ import { LongAssociation } from '@site/src/components/LongAssociation';
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    val book = new(Book::class).by {
+    val book = Book {
         name = "SQL in Action"
         edition = 1
         price = BigDecimal("39.9")
@@ -248,7 +248,7 @@ sqlClient.save(order);
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val order = new(Order::class).by {
+val order = Order {
     customer { id = 1L }
     province = "四川"
     city = "成都"
@@ -388,7 +388,7 @@ sqlClient.save(treeNode);
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val treeNode = new(TreeNode::class).by {
+val treeNode = TreeNode {
     // highlight-next-line
     parent = null
     name = "Food"

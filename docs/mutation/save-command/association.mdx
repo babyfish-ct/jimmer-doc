@@ -1,5 +1,5 @@
 ---
-sidebar_position: 5
+sidebar_position: 6
 title: Save Associations
 ---
 
@@ -78,7 +78,7 @@ Two examples are shown below:
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    val book = new(Book::class).by {
+    val book = Book {
         name = "SQL in Action"
         edition = 1
         price = BigDecimal("39.9")
@@ -163,7 +163,7 @@ Two examples are shown below:
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    val book = new(Book::class).by {
+    val book = Book {
         name = "SQL in Action"
         edition = 1
         price = BigDecimal("39.9")
@@ -255,7 +255,7 @@ sqlClient.save(order);
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val order = new(Order::class).by {
+val order = Order {
     customer { id = 1L }
     province = "Prenzlauer Berg"
     city = "Berlin" 
@@ -396,7 +396,7 @@ sqlClient.save(treeNode);
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val treeNode = new(TreeNode::class).by {
+val treeNode = TreeNode {
     // highlight-next-line
     parent = null
     name = "Food"

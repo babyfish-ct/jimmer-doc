@@ -362,7 +362,7 @@ IdView properties and original association properties are linked. Setting one ne
 
     ```kotlin
     // Set view property
-    val book = new(Book::class).by { 
+    val book = Book { 
         storeId = 10L
         authorIds = listOf(100L, 101L)
     }
@@ -415,7 +415,7 @@ IdView properties and original association properties are linked. Setting one ne
 
     ```kotlin 
     // Set original property
-    val book = new(Book::class).by {
+    val book = Book {
         store { 
             id = 10L
             name = "TURING"

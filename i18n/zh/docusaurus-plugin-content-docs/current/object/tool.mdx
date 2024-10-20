@@ -264,7 +264,7 @@ Book newBook = Immutables.createBook(book, draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val newBook = new(Book::class).by(book) {
+val newBook = Book(book) {
     set(draft, Book::authorIds, listOf(1L, 3L))
 }
 ```
@@ -289,7 +289,7 @@ Book newBook = Immutables.createBook(book, draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val newBook = new(Book::class).by(book) {
+val newBook = Book(book) {
     unload(draft, Book::authorIds)
 }
 ```
@@ -314,7 +314,7 @@ Book newBook = Immutables.createBook(book, draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val newBook = new(Book::class).by(book) {
+val newBook = Book(book) {
     show(draft, Book::authorIds)
 }
 ```
@@ -339,7 +339,7 @@ Book newBook = Immutables.createBook(book, draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val newBook = new(Book::class).by(book) {
+val newBook = Book(book) {
     hide(draft, Book::authorIds)
 }
 ```

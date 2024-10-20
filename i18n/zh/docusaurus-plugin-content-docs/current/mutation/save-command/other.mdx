@@ -1,5 +1,5 @@
 ---
-sidebar_position: 9
+sidebar_position: 10
 title: 其它功能
 ---
 
@@ -81,7 +81,7 @@ System.out.println(
 
 ```kotlin
 val result = sqlClient.update(
-    new(Book::class).by {
+    Book {
         id = 3L
         price = BigDecimal("59.9"))
         authors().addBy { id = 1L }

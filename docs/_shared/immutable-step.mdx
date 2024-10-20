@@ -83,7 +83,7 @@ TreeNode treeNode = Immutables.createTreeNode(root -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val treeNode = new(TreeNode::class).by {
+val treeNode = TreeNode {
     name = "Root"
     childNodes().addBy {
         name = "Food"
@@ -139,7 +139,7 @@ System.out.println("newTreeNode:" + newTreeNode);
  *
  * is actually shorthand for 
  * 
- * val newTreeNode = new(TreeNode::class).by(treeNode) {
+ * val newTreeNode = TreeNode(treeNode) {
  *     ...
  * }
  */

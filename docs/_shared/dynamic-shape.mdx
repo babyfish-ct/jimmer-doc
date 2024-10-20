@@ -16,7 +16,7 @@ Book book = Immutables.createBook(draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val book = new(Book::class).by {
+val book = Book {
     name = "Learning GraphQL"
 }
 ```
@@ -47,7 +47,7 @@ Book book = Immutables.createBook(draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val book = new(Book::class).by {
+val book = Book {
     name = "Learning GraphQL"
     edition = 1
     price = BigDecimal("49.99")
@@ -88,7 +88,7 @@ Book book = Immutables.createBook(draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val book = new(Book::class).by {
+val book = Book {
     name = "Learning GraphQL"
     edition = 1
     price = BigDecimal("49.99")
@@ -147,7 +147,7 @@ Book book = Immutables.createBook(draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val book = new(Book::class).by {
+val book = Book {
     name = "Learning GraphQL"
     edition = 1
     price = BigDecimal("49.99")
@@ -232,7 +232,7 @@ BookStore store = Immutables.createBookStore(draft -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val store = new(BookStore::class).by {
+val store = BookStore {
     name = "O'REILLY"
     website = "https://www.oreilly.com/"
     books().addBy {

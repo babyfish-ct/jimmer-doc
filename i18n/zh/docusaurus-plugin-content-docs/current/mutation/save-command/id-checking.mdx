@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 8
 title: 短关联id检查
 ---
 
@@ -45,7 +45,7 @@ sqlClient.update(
 
 ```kotlin
 sqlClient.update(
-    new(Book::class).by {
+    Book {
         id = 3L
         authors().addBy { id = 1L } // ❶
         authors().addBy { id = 2L } // ❷
@@ -169,7 +169,7 @@ values
 
     ```kotlin
     sqlClient.update(
-        new(BookStore::class).by {
+        BookStore {
             id = 2L
             books().addBy { id = 8L }
             books().addBy { id = 9L }
@@ -233,7 +233,7 @@ values
 
     ```kotlin
     sqlClient.update(
-        new(Book::class).by {
+        Book {
             id = 10L
             store { id = 321L }
         }

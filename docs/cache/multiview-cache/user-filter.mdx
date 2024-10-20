@@ -1255,7 +1255,7 @@ Since `Book-6` belongs to `BookStore-1`, it is foreseeable that the multi-view c
 
     ```kotlin
     sqlClient.save(
-        new(Book::class).by {
+        Book {
             id = 6L
             tenant = "a" 
         }

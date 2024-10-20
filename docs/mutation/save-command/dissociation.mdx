@@ -1,5 +1,5 @@
 ---
-sidebar_position: 6
+sidebar_position: 7
 title: Dissociation Operations
 ---
 
@@ -120,7 +120,7 @@ sqlClient.update(
 
 ```kotlin
 sqlClient.update(
-    new(Book::class).by {
+    Book {
         id = 3L
         authors().addBy { id = 2L } 
         authors().addBy { id = 3L }
@@ -351,7 +351,7 @@ sqlClient.update(
 
 ```kotlin 
 sqlClient.update(
-    new(BookStore::class).by {
+    BookStore {
         id = 2L
         books().addBy { id = 9L }
         books().addBy { id = 10L }

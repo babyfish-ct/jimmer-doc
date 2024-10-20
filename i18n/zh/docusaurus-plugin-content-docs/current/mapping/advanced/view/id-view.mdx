@@ -362,7 +362,7 @@ IdView属性和原始关联属性是联动的，设置一个，必然影响另�
 
     ```kotlin
     // 设置视图属性
-    val book = new(Book::class).by {
+    val book = Book {
         storeId = 10L
         authorIds = listOf(100L, 101L)
     }
@@ -415,7 +415,7 @@ IdView属性和原始关联属性是联动的，设置一个，必然影响另�
 
     ```kotlin
     // 设置原始属性
-    val book = new(Book::class).by {
+    val book = Book {
         store {
             id = 10L
             name = "TURING"

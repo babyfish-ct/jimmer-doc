@@ -83,7 +83,7 @@ TreeNode treeNode = Immutables.createTreeNode(root -> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val treeNode = new(TreeNode::class).by {
+val treeNode = TreeNode {
     name = "Root"
     childNodes().addBy {
         name = "Food"
@@ -137,7 +137,7 @@ System.out.println("newTreeNode:" + newTreeNode);
  *     ...
  * }
  * 其实是
- * val newTreeNode = new(TreeNode::class).by(treeNode) {
+ * val newTreeNode = TreeNode(treeNode) {
  *     ... 
  * }
  * 的简写方式

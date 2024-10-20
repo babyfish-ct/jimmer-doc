@@ -534,12 +534,13 @@ public void setAuthors(long bookId, Collection<Long> authorIds) {
 ```kotlin title="更好的用法示范"
 fun setAuthors(bookId: Long, authorIds: Collection<Long>) {
     sqlClient.save(
-        new(Book::class).by {
+        Book {
             id = bookId
             authorIds = authorIds
         }
     )
 }
 ```
+
 </TabItem>
 </Tabs>

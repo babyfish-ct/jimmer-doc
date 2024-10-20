@@ -1248,7 +1248,7 @@ println(stores)
 
     ```kotlin
     sqlClient.save(
-        new(Book::class).by {
+        Book {
             id = 6L
             tenant = "a"
         }

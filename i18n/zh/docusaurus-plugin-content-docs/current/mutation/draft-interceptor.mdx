@@ -344,7 +344,7 @@ sqlClient.getEntities().save(book);
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val book = new(Book::class).by {
+val book = Book {
     name = "SQL in Action"
     edition = 1
     price = BigDecimal("59")

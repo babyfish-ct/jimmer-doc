@@ -1,0 +1,238 @@
+---
+sidebar_position: 2
+title: 数据分类 
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Key from '../../_shared/key.mdx';
+
+保存指令用于保存任意复杂的数据结构，为了便于讨论，我们有必要对数据结构的形状进行一个基本分类。
+
+## 实体定义
+
+Jimmer实体支持两种表示属性
+
+-   `@Id`: Jimmer的任何实体类型都必须定义的一个属性。技术层面的唯一标识，行业内称其为`Suggrogate Id`
+
+-   [@Key](../../mapping/advanced/key): Jimmer建议为实体类型定义的多个属性。业务层面的唯一标识，行业内称其为`Natural Id`
+
+在本系列文章中，所有实体都定义了`@Id`属性和`@Key`属性，并让Id属性使用数据库的自动编号作为自动增长策略。这里仅以`Book`为例示范如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+@Entity
+public interface Book {
+
+    @Id ❶
+    @GeneratedValue(strategy = GenerationType.IDENTITY) ❷
+    long id();
+
+    @Key ❸
+    String name();
+    
+    @Key ❸
+    int edition();
+
+    BigDecimal price();
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="Book.kt"
+@Entity
+interface Book {
+
+    @Id ❶
+    @GeneratedValue(strategy = GenerationType.IDENTITY) ❷
+    val id: Long
+
+    @Key ❸
+    val name: String
+    
+    @Key ❸
+    val edition: Int
+
+    val price: BigDecimal
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+</Tabs>
+
+-   ❶ Id属性, 即Surrogate Id
+-   ❷ Id属性采用数据库自动编号作为自动增长策略
+-   ❸ Key属性，即Nartual Id
+
+## 数据分类
+
+### 1. Wild对象
+
+如果一个对象的`@Id`属性 *(本文的`Book.id`)* 和 `@Key`属性 *(本文的`Book.name`和`Book.edition`)* 都没有被指定，就被称为wild对象。例如
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setPrice(new BigDecimal("59.9"));
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    price = BigDecimal("59.9")
+}
+```
+
+</TabItem>
+</Tabs>
+
+这里所谓的`@Key`属性没有被指定，包含两种情况
+
+-   实体类型根本没有定义`@Key`属性 *(本文案例未讨论)*
+-   虽然实体类型定义可`@Key`属性，但对象的相关属性被没有被指定
+
+:::caution
+Jimmer不推荐Wild对象，虽然调节API参数可以保存wild对象，但终归会导致幂等性被破坏。
+:::
+
+### 2. Id-specified对象
+
+如果一个对象的`@Id`属性 *(本文的`Book.id`)* 被指定，就被称为id-specified对象。例如
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setId(17L);
+    ...省略其他设置...
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    id = 17L
+    ...省略其他设置...
+}
+```
+
+</TabItem>
+</Tabs>
+
+Jimmer支持`UPSERT`操作，即，用户并不明确指定`insert`或`update`，让Jimmer自行判断。
+
+如果用`UPSERT`模式保存id-specified对象，那么Jimmer通过`@Id`属性判断数据库中是否已经存在相应数据，最终决定应该insert还是update。
+
+### 3. Key-specified对象
+
+对于一个对象而言，如果`@Id`属性 *(本文的`Book.id`)* 没有被指定，但是其`@Key`属性 *(本文的`Book.name`和`Book.edition`)* 被指定了，
+那么该对爱对象为key-specified对象，例如
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setName("GraphQL in Action");
+    draft.setEdition(2);
+    ...省略除了id外的其他属性的设置...
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    name = "GraphQL in Action"
+    edition = 1
+    ...省略除了id外的其他属性的设置...
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::note
+上述代码中，被省略部分不包含对`@Id`属性的设置，因为一旦设置了`@Id`属性，就应该是id-speicified对象，而非key-specified对象。
+:::
+
+Jimmer支持`UPSERT`操作，即，用户并不明确指定`insert`或`update`，让Jimmer自行判断。
+
+如果用`UPSERT`模式保存key-specified对象，那么Jimmer通过`@Key`属性判断数据库中是否已经存在相应数据，最终决定应该insert还是update。
+
+### 4. Id-only对象
+
+对于id-specified对象而言，如果除了id外没有任何属性被指定，称为id-only对象，例如
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setId(17L);
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    id = 17L
+}
+```
+
+</TabItem>
+</Tabs>
+
+在层次化的数据结构中，任何对象都可以持有更深的关联对象。
+
+如果关联对象是id-only对象，那么就表示仅仅修改关联关系，并不会进一步创建或修改关联对象。
+
+### 5. Key-only对象
+
+对于id-specified对象而言，如果除了id外没有任何属性被指定，称为id-only对象，例如
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setName("GraphQL in Action");
+    draft.setEdition(2);
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    name = "GraphQL in Action"
+    edition = 1
+}
+```
+
+</TabItem>
+</Tabs>
+
+在层次化的数据结构中，任何对象都可以持有更深的关联对象。
+
+如果关联对象是key-only对象，那么就表示仅仅修改关联关系，并不会进一步创建或修改关联对象。

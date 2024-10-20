@@ -44,7 +44,7 @@ import SaveCommandAbuse from '../../_shared/save-command-abuse.md';
     ```kotlin
     // highlight-next-line
     sqlClient.save(
-        new(Book::class).by {
+        Book {
             name = "GraphQL in Action"
             edition = 4
             price = BigDecimal("59.9")
@@ -99,7 +99,7 @@ import SaveCommandAbuse from '../../_shared/save-command-abuse.md';
     ```kotlin
     // highlight-next-line
     sqlClient.save(
-        new(Book::class).by {
+        Book {
             name = "GraphQL in Action"
             edition = 4
             price = BigDecimal("59.9")
@@ -165,7 +165,7 @@ Jimmer并没有像传统ORM一样为关联属性提供配置`cascade`选项，�
 
     ```kotlin
     val matched sqlClient.update(
-        new(Book::class).by {
+        Book {
             id = 100L
             price = BigDecimal(60)
             // 除了`id`和`price`外，其他属性都没有被指定

@@ -1,12 +1,14 @@
 ---
 sidebar_position: 2
-title: Core Concept ✦
+title: Key Features ✦
 ---
 
 import { ViewMore } from '@site/src/components/ViewMore';
 import DynamicShape from '../_shared/dynamic-shape.mdx';
 
-## Design Principles
+To help readers better understand the key features, let's first introduce Jimmer's fundamental design philosophy
+
+## Design Philosophy
 
 The core concept of Jimmer is to read and write data structures of arbitrary shapes as a whole, rather than simply processing entity objects.
 
@@ -105,6 +107,7 @@ Based on the aforementioned core concept, Jimmer provides the following features
     -   Output DTO, used as return for complex queries
     -   Input DTO, used as parameter for complex saves
     -   Specification DTO, used as parameter for complex queries
+    -   The DTO supported by the ORM itself can be seamlessly integrated without introducing additional logic into business code
 -   Query arbitrary graph structures
     -   No "N + 1" problem
     -   Objects at any level can be incomplete
@@ -116,6 +119,7 @@ Based on the aforementioned core concept, Jimmer provides the following features
     -   Automatically translates constraint violation exceptions
     -   Saved objects at any level can be incomplete
     -   Can save either entities directly or input DTOs
+    >   This section has undergone a major upgrade, and the documentation is actively being restructured. Please refer to the save-command examples in the accompanying examples.
 -   Powerful caching
     -   Multi-layer caching, technology for each cache layer can be freely chosen
     -   Not just object caching *(associations, computed values, multiple views)*

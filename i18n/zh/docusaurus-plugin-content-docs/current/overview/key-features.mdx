@@ -1,10 +1,12 @@
 ---
 sidebar_position: 2
-title: 核心理念 ✦
+title: 核心功能 ✦
 ---
 
 import { ViewMore } from '@site/src/components/ViewMore';
 import DynamicShape from '../_shared/dynamic-shape.mdx';
+
+为了便于读者更好地理解核心功能，先介绍Jimmer的根本设计理念
 
 ## 设计理念
 
@@ -96,6 +98,7 @@ Jimmer自动生成的DTO支持任意复杂的层级关系，**Jimmer是目前唯
 	-   Output DTO，用作复杂查询的返回
 	-   Input DTO, 用作复杂保存的参数
 	-   Specification DTO, 用作复杂查询的参数
+    -   ORM自身支持的DTO可以与其无缝集成，不会为业务代码引入额外逻辑
 -   查询任意图结构
     -   没有`N + 1`问题
     -   任何层次的对象都可以不完整
@@ -107,6 +110,7 @@ Jimmer自动生成的DTO支持任意复杂的层级关系，**Jimmer是目前唯
     -   自动翻译违背约束的异常
     -   任何层次的被保存对象都可以不完整    
 	-   既可以直接保存实体，也可保存Input DTO
+    >   这部分经过了大升级，文档在积极重构中，可以先看配套例子中关于save-command的例子
 -   强大的缓存
     -   多级缓存，每一级缓存都可以做自由技术选型
     -   不仅仅是对象缓存 *(关联、计算值、多视图)*

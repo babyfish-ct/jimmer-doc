@@ -119,7 +119,7 @@ class BookController(
          * Simple Book DTO which can only access `id` and `name` of `Book` itself
          */
         val SIMPLE_BOOK = ❺
-            newFetcher(Book:::class).by {
+            newFetcher(Book::class).by {
                 name()
             }
 
@@ -128,7 +128,7 @@ class BookController(
          * but also associated `BookStore` and `Author` objects with names
          */
         private val COMPLEX_BOOK = ❻
-            newFetcher(Book:::class).by {
+            newFetcher(Book::class).by {
                 allScalarFields()
                 store {
                     name()

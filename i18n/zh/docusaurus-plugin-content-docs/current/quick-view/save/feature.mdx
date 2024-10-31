@@ -164,7 +164,7 @@ Jimmer并没有像传统ORM一样为关联属性提供配置`cascade`选项，�
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    val matched sqlClient.update(
+    val matched = sqlClient.update(
         Book {
             id = 100L
             price = BigDecimal(60)

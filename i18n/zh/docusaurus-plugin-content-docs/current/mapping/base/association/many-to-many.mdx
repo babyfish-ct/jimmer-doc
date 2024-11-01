@@ -158,6 +158,7 @@ alter table BOOK_AUTHOR_MAPPING
 -   右侧：本节要介绍从动方关联`Author.books`，它是`Book.authors`的镜像
 
 这里，`@ManyToMany(mappedBy = "store")`，指当前属性`BookStore.books`是`Book.store`的镜像。
+这里，`@ManyToMany(mappedBy = "authors")`，指当前属性`Author.books`是`Book.authors`的镜像。
 
 <div style={{display: 'flex', alignItems: 'start'}}>
 <div>

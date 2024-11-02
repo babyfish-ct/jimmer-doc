@@ -495,7 +495,7 @@ public interface Book {
     @JoinTable(
         name = "BOOK_AUTHOR_MAPPING",
         joinColumnName = "BOOK_ID",
-        inverseJoinColumnName = "AUTHOR_id"
+        inverseJoinColumnName = "AUTHOR_ID"
     )
     List<Author> authors();
 }
@@ -519,7 +519,7 @@ interface Book {
     @JoinTable(
         name = "BOOK_AUTHOR_MAPPING",
         joinColumnName = "BOOK_ID",
-        inverseJoinColumnName = "AUTHOR_id"
+        inverseJoinColumnName = "AUTHOR_ID"
     )
     val authors: List<Author>
 }

@@ -191,11 +191,11 @@ public class BookRepository {
         this.sqlClient = sqlClient;
     }
 
-    public <V extends View<Book>> Page<V> findBooks(
+    public <T extends View<Book>> Page<T> findBooks(
         int pageIndex,
         int pageSize,
         @Nullable String sortCode,
-        @Nullable Class<V> viewType,
+        @Nullable Class<T> viewType,
         @Nullable String name,
         @Nullable BigDecimal minPrice,
         @Nullable BigDecimal maxPrice,
@@ -242,14 +242,14 @@ class BookRepository(
         pageIndex: Int,
         pageSize: Int = 10,
         sortCode: String = "name asc, edition desc",
-        viewType: KClass<T>,
+        viewType: KClass<V>,
         name: String? = null,
         minPrice: BigDecimal? = null,
         maxPrice: BigDecimal? = null,
         storeName: String? = null,
         storeWebsite: String? = null,
         name: String? = null
-    ): Page<Book> =
+    ): Page<V> =
         sqlClient
             .createQuery(Book::class) {
                 where(table.name `ilike?` name)

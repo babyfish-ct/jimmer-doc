@@ -80,7 +80,7 @@ class BookRepository(
                 where(table.name `ilike?` name) ❶
                 // highlight-next-line
                 where(table.price.`between?`(minPrice, maxPrice)) ❷
-                .select(table.fetch(table))
+                select(table.fetch(table))
             }
             .execute()
 }
@@ -265,7 +265,7 @@ class BookRepository(
                 where(table.store.name `ilike?` storeName) ❶
                 // highlight-next-line
                 where(table.store.name `ilike?` storeWebsite) ❷
-                .select(table.fetch(table))
+                select(table.fetch(table))
             }
             .execute()
 }
@@ -507,7 +507,7 @@ class BookRepository(
                 where += table.authors { ❷
                     gender `eq?` authorGender
                 }
-                .select(table.fetch(table))
+                select(table.fetch(table))
             }
             .execute()
 }

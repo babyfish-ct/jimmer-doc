@@ -71,8 +71,8 @@ val books = sqlClient
     .createQuery(Book::class) {
         // highlight-next-line
         orderBy(
-            table.name().asc(), 
-            table.edition().desc()
+            table.name.asc(), 
+            table.edition.desc()
         )
         select(table)
     }
@@ -116,7 +116,7 @@ val books = sqlClient
         // highlight-next-line
         orderBy(
             subQuery(Author::class) {
-                where(table.books() eq parentTable)
+                where(table.books eq parentTable)
                 select(rowCount())
             }
             .desc()

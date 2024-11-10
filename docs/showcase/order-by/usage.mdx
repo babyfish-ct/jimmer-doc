@@ -31,9 +31,9 @@ List<Book> books = sqlClient
 val books = sqlClient
     .createQuery(Book::class) {
         // highlight-next-line
-        orderBy(table.name().asc())
+        orderBy(table.name.asc())
         // highlight-next-line
-        orderBy(table.edition().desc())
+        orderBy(table.edition.desc())
         select(table)
     }
     .execute()
@@ -71,8 +71,8 @@ val books = sqlClient
     .createQuery(Book::class) {
         // highlight-next-line
         orderBy(
-            table.name().asc(), 
-            table.edition().desc()
+            table.name.asc(), 
+            table.edition.desc()
         )
         select(table)
     }

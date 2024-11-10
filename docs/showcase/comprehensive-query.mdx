@@ -249,7 +249,7 @@ class BookRepository(
         storeName: String? = null,
         storeWebsite: String? = null,
         name: String? = null
-    ): Page<Book> =
+    ): Page<V> =
         sqlClient
             .createQuery(Book::class) {
                 where(table.name `ilike?` name)

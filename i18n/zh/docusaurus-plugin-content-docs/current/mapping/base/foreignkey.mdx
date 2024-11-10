@@ -231,7 +231,7 @@ Jimmer中外键有两种
 
     此时，已经有了判定结果，提前返回，不会执行步骤2
 
-2.  如果第一步无法完成判定，则参见Jimmer的全局配置`foreign-key-enabled-by-default`。
+2.  如果第一步无法完成判定，则参见Jimmer的全局配置`is-foreign-key-enabled-by-default`。
 
     如果此配置为true，则判定为真外键；否则，判定为伪外键。
 
@@ -239,7 +239,7 @@ Jimmer中外键有两种
 
     -   如果使用SpringBoot
 
-        修改`application.yml`或`application.properties`，将`jimmer.foreign-key-enabled-by-default`设置为false
+        修改`application.yml`或`application.properties`，将`jimmer.is-foreign-key-enabled-by-default`设置为false
 
     -   如果不使用SpringBoot
 

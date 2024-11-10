@@ -95,7 +95,7 @@ Accordingly, for the automatically generated `BookSpecification` class, on the o
     ```java
     public List<Book> find(
         // highlight-next-line  
-        JSpecification<?, BookTable> specification ❶
+        Specification<Book> specification ❶
     ) {
         
         BookTable table = Tables.BOOK_TABLE;
@@ -115,7 +115,7 @@ Accordingly, for the automatically generated `BookSpecification` class, on the o
     ```kotlin 
     fun find(
         // highlight-next-line
-        specification: KSpecification<Book> ❶
+        specification: Specification<Book> ❶
     ): List<Book> =
         sqlClient.createQuery(Book::class) {
             // highlight-next-line
@@ -127,9 +127,7 @@ Accordingly, for the automatically generated `BookSpecification` class, on the o
     </TabItem>
     </Tabs>
 
-    -   ❶ The query parameter type in Java is `JSpecification<?, BookTable>`, and in Kotlin it is `KSpecification<Book>`.
-
-        There are subtle differences between them, but both inherit from the `org.babyfish.jimmer.Specification<Book>` type.
+    -   ❶ The argument whose type is `org.babyfish.jimmer.Specification<Book>` type, which is used to generate dynamic SQL predicates.
 
     -   ❷ No matter how simple or complex the `specification` format is, it can be used with just a simple `where` statement.
 
@@ -167,9 +165,6 @@ Accordingly, for the automatically generated `BookSpecification` class, on the o
 
     </TabItem>
     </Tabs>
-
-    When declaring the specification parameter in the abstract method of the Spring Data Repository, there is no need to distinguish between `JSpecification` and `KSpecification`. 
-    Just use the `org.babyfish.jimmer.Specification` type.
 
 ## Attribute Mapping
 

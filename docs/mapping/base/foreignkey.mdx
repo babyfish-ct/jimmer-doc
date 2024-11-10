@@ -230,7 +230,7 @@ If the authenticity of the foreign key is not explicitly specified, whether the 
 
     At this point, the judgment is completed and it returns early without executing step 2.
 
-2. If step 1 cannot complete the determination, check Jimmer's global configuration `foreign-key-enabled-by-default`.
+2. If step 1 cannot complete the determination, check Jimmer's global configuration `is-foreign-key-enabled-by-default`.
 
     If this configuration is true, it is determined to be a real foreign key; otherwise, it is determined to be a fake foreign key.
     
@@ -238,7 +238,7 @@ If the authenticity of the foreign key is not explicitly specified, whether the 
 
     - When using SpringBoot
         
-        Modify `application.yml` or `application.properties` and set `jimmer.foreign-key-enabled-by-default` to false
+        Modify `application.yml` or `application.properties` and set `jimmer.is-foreign-key-enabled-by-default` to false
 
     - When not using SpringBoot
 

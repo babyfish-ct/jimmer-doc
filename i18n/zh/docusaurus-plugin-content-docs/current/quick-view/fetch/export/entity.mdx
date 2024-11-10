@@ -467,7 +467,7 @@ class BookController(
          * 2. All associated ids, not associated objects.
          */
         val SHALLOW_BOOK =
-            newFetcher(Book:::class).by {
+            newFetcher(Book::class).by {
                 allScalarFields()
                 // highlight-next-line
                 storeId()

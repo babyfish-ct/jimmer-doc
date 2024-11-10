@@ -80,8 +80,8 @@ class BookRepository(
                 where(table.name `ilike?` name) ❶
                 // highlight-next-line 
                 where(table.price.`between?`(minPrice, maxPrice)) ❷
+                select(table.fetch(table))
             }
-            .select(table.fetch(table))
             .execute() 
 }
 ```
@@ -265,8 +265,8 @@ class BookRepository(
                 where(table.store.name `ilike?` storeName) ❶
                 // highlight-next-line
                 where(table.store.name `ilike?` storeWebsite) ❷
+                select(table.fetch(table))
             }
-            .select(table.fetch(table))
             .execute() 
 }
 ``` 
@@ -276,7 +276,7 @@ class BookRepository(
 
 
 :::tip
-The path `table.store()` in Java code or `table.name` in Kotlin code is called a dynamic table join path, which is represented by the following SQL logic
+The path `table.store()` in Java code or `table.store` in Kotlin code is called a dynamic table join path, which is represented by the following SQL logic
 ```sql
 from BOOK b
     /* highlight-next-line */
@@ -516,8 +516,8 @@ class BookRepository(
                 where += table.authors { ❷  
                     gender `eq?` authorGender
                 }
+                select(table.fetch(table))
             }
-            .select(table.fetch(table))
             .execute()  
 }
 ```

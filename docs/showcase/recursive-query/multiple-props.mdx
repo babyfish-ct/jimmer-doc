@@ -30,7 +30,7 @@ TreeNode treeNode = sqlClient
 ```kotlin
 val treeNode = sqlClient
     .findById(
-        newFetcher(Book::class).by {
+        newFetcher(TreeNode::class).by {
             allScalarFields()
                 `parent*`() ❶
                 `childNodes*`() ❷

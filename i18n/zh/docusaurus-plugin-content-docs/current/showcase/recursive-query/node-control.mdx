@@ -45,7 +45,7 @@ val rootNodes = sqlClient
                 `childNodes*` {
                     recursive {
                         // highlight-next-line
-                        it.name != "Clothing"
+                        entity.name != "Clothing"
                     }
                 }
             }

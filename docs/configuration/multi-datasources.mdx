@@ -38,7 +38,7 @@ public class SqlClientConfig {
         ApplicationContext ctx,
         @Qualifier("ds1") DataSource dataSource
     ) {
-        return SqlClients.java(ctx, dataSoruce, null);
+        return SqlClients.java(ctx, dataSource, null);
     }
 
     @Bean
@@ -46,7 +46,7 @@ public class SqlClientConfig {
         ApplicationContext ctx,
         @Qualifier("ds2") DataSource dataSource
     ) {
-        return SqlClients.java(ctx, dataSoruce, null);
+        return SqlClients.java(ctx, dataSource, null);
     }
 }
 ```
@@ -66,14 +66,14 @@ class SqlClientConfig {
         ctx: ApplicationContext,
         @Qualifier("ds1") dataSource: DataSource
     ): KSqlClient =
-        SqlClients.kotlin(ctx, dataSoruce)
+        SqlClients.kotlin(ctx, dataSource)
 
     @Bean
     public fun sqlClient2(
         ctx: ApplicationContext,
         @Qualifier("ds2") dataSource: DataSource
     ): KSqlClient =
-        SqlClients.kotlin(ctx, dataSoruce)
+        SqlClients.kotlin(ctx, dataSource)
 }
 ```
 
@@ -107,7 +107,7 @@ public class SqlClientConfig {
         @Qualifier("ds1") DataSource dataSource
     ) {
         return new JimmerTransactionManager(
-            SqlClients.java(ctx, dataSoruce, null)
+            SqlClients.java(ctx, dataSource, null)
         );
     }
 
@@ -117,13 +117,13 @@ public class SqlClientConfig {
         @Qualifier("ds2") DataSource dataSource
     ) {
         return new JimmerTransactionManager(
-            SqlClients.java(ctx, dataSoruce, null)
+            SqlClients.java(ctx, dataSource, null)
         );
     }
 
     @Bean
     public JSqlClient sqlClient() {  ❸
-        TransactionalSqlClients.java();
+        return TransactionalSqlClients.java();
     }
 }
 ```
@@ -149,7 +149,7 @@ public class SqlClientConfig {
         @Qualifier("ds1") dataSource: DataSource
     ): PlatformTransactionManager = ❶
         JimmerTransactionManager(
-            SqlClients.kotlin(ctx, dataSoruce, null)
+            SqlClients.kotlin(ctx, dataSource, null)
         )
 
     @Bean
@@ -158,7 +158,7 @@ public class SqlClientConfig {
         @Qualifier("ds2") dataSource: DataSource
     ): PlatformTransactionManager = ❷
         JimmerTransactionManager(
-            SqlClients.kotlin(ctx, dataSoruce, null)
+            SqlClients.kotlin(ctx, dataSource, null)
         )
 
     @Bean

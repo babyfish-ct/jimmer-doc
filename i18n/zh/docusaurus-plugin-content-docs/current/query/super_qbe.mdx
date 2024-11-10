@@ -95,7 +95,7 @@ data class BookSpecification(
     ```java
     public List<Book> find(
         // highlight-next-line
-        JSpecification<?, BookTable> specification ❶
+        Specification<Book> specification ❶
     ) {
         
         BookTable table = Tables.BOOK_TABLE;
@@ -115,7 +115,7 @@ data class BookSpecification(
     ```kotlin
     fun find(
         // highlight-next-line
-        specification: KSpecification<Book> ❶
+        specification: Specification<Book> ❶
     ): List<Book> =
         sqlClient.createQuery(Book::class) {
             // highlight-next-line
@@ -127,9 +127,7 @@ data class BookSpecification(
     </TabItem>
     </Tabs>
 
-    -   ❶ Java查询参数类型为`JSpecification<?, BookTable>`，Kolin查询参数为`KSpecification<Book>`。
-
-        二者存在细微差异，但都继承于`org.babyfish.jimmer.Specification<Book>`类型。
+    -   ❶ `org.babyfish.jimmer.Specification<Book>`类型的参数，用于生产各种动态SQL条件。
 
     -   ❷ 无论`specification`格式简单还是复杂，只需一个简单的`where`语句就可以使用。
 
@@ -168,9 +166,6 @@ data class BookSpecification(
 
     </TabItem>
     </Tabs>
-
-    在Spring Data Repository的抽象方法中声明specification参数时，无需区分`JSpecification`和`KSpecification`，
-    统一用`org.babyfish.jimmer.Specification`类型即可。
 
 ## 属性映射
 
@@ -268,7 +263,6 @@ specification用作查询参数，为了支持动态查询，默认情况下，�
     ```sql
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK tb_1_
-    where tb_1_.NAME = ?
     ```
     
     :::info

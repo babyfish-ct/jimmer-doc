@@ -44,6 +44,54 @@ import { ViewMore } from '@site/src/components/ViewMore';
 对于关联对象而言，请参考[关联对象保存模式](./associated-save-mode)。
 :::
 
+## Id-specified对象
+
+按照[数据分类](./data-classification)一文所所言，[@Id](../../mapping/base/basic#id)属性被指定的对象叫做Id-specified对象
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book1 = Immutables.createBook(draft -> {
+    draft.setId(20L);
+    draft.setName("SQL in Action");
+    draft.setEdition(3);
+    draft.setPrice(new BigDecimal("49.9"));
+    draft.setStoreId(2L);
+});
+Book book2 = Immutables.createBook(draft -> {
+    draft.setId(21L);
+    draft.setName("LINQ in Action");
+    draft.setEdition(2);
+    draft.setPrice(new BigDecimal("39.9"));
+    draft.setStoreId(2L);
+});
+
+sqlClient.saveEntities(
+        Arrays.asList(book1, book2)
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    id = 20
+    name = "SQL in Action"
+    edition = 1
+    price = BigDecimal("39.9")
+    store = makeIdOnly(BookStore::class, 2L)
+}
+// highlight-next-line
+sqlClient.save(book)
+```
+
+</TabItem>
+</Tabs>
+
+## Key-specified对象
+
 ## 指定对象的id
 
 让我们来看一个例子

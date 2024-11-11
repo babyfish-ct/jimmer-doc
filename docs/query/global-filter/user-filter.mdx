@@ -157,7 +157,7 @@ In this case, the filter class does not need to be decorated with `@Component`, 
 JSqlClient sqlClient = JSqlBuilder
     .newBuilder()
     // highlight-next-line
-    .addFilter(new CustmerFilter())
+    .addFilter(new CustomerFilter())
     ...Other config omitted...
     .build();
 ```
@@ -169,7 +169,7 @@ JSqlClient sqlClient = JSqlBuilder
 val sqlClient =
     newKSqlClient {
         // highlight-next-line
-        addFilters(new CustmerFilter())
+        addFilters(new CustomerFilter())
         ...Other config omitted...
     }
 ```
@@ -388,13 +388,13 @@ Here we get a temporary `tmpSqlClient`. Queries created from it will ignore the 
 
 In addition to the basic `Filter`/`KFilter` interface, filter classes can also implement more interfaces, including:
 
--   `CachableFilter`/`KCachableFilter`
+-   `CacheableFilter`/`KCacheableFilter`
 
 -   `AssociationIntegrityAssuranceFilter`/`AssociationIntegrityAssuranceFilter`
 
 -   `ShardingFilter`/`KShardingFilter`
 
-### CachableFilter
+### CacheableFilter
 
 Global filters show different data to different users, and for any associated property that takes the filtered type as the target type, different users will naturally see different associations.
 
@@ -404,7 +404,7 @@ This will lead to:
 
 -   Dependent calculated properties also cannot enable <ViewMore buttonText="Calculated Cache"><CalculatedCache/></ViewMore>
 
-To solve this problem, Jimmer supports <ViewMore buttonText="Multi-View Cache"><MultiViewCache/></ViewMore>, but the cost is that related global filters must implement the `CachableFilter`/`KCachableFilter` interface. 
+To solve this problem, Jimmer supports <ViewMore buttonText="Multi-View Cache"><MultiViewCache/></ViewMore>, but the cost is that related global filters must implement the `CacheableFilter`/`KCacheableFilter` interface. 
 This part of the content is explained in detail in the [Cache/Multi-view Cache/User Defined Cacheable Filters](../../cache/multiview-cache/user-filter) article later, and will not be repeated here.
 
 ### AssociationIntegrityAssuranceFilter 

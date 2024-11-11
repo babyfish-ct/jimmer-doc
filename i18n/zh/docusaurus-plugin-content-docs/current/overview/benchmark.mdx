@@ -72,7 +72,7 @@ JDBC有两种编程风格用于从`java.sql.ResultSet`中读取值
 
     这种场景下，Jimmer和`JDBC(ColName)`性能相似。`JDBC(ColName)`的测试代码直接硬编码SQL，而Jimmer采用DSL机制需要动态构建SQL，从这个角度讲Jimmer应该更慢。然而Jimmer把`ResultSet`转化为对象的的过程比`JDBC(ColName)`快，二者抵消。所以性能相近。
 
-    当然Benchamrk中采用的SQL语句不复杂，如果换用更复杂的SQL，直接硬编码SQL的`JDBC(ColName)`会更快，这也是Jimmer后续版本可以优化的空间。
+    当然Benchmark中采用的SQL语句不复杂，如果换用更复杂的SQL，直接硬编码SQL的`JDBC(ColName)`会更快，这也是Jimmer后续版本可以优化的空间。
 
 -   每次查询1000条数据，Jimmer的ops明显高于`JDBC(ColName)`的OPS。
 

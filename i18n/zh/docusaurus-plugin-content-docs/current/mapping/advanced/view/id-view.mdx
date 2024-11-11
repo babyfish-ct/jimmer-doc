@@ -296,7 +296,7 @@ interface Book {
         joinColumnName = "BOOK_ID",
         inverseJoinColumnName = "AUTHOR_id"
     )
-    val authors: List<Auhtor>
+    val authors: List<Author>
 
     // highlight-next-line
     @IdView // 关联对象store的id的视图
@@ -326,7 +326,7 @@ interface Book {
 
         否则，会导致编译错误。
 
--   `Book.authorIds`: 关联`Book.authors`对象集合中，所有Auhtor对象的id形成的视图。
+-   `Book.authorIds`: 关联`Book.authors`对象集合中，所有Author对象的id形成的视图。
 
     `authorIds`本身不以`Id`结尾，必须指定`@IdView`注解的参数，明确表示其原始关联为`Book.authors`。
 

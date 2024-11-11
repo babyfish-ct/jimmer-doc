@@ -649,9 +649,9 @@ Although `@FetchBy` combined with Jimmer's dynamic entities can restore DTO type
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
-```java title="ActiveAutorInfo.java"
+```java title="ActiveAuthorInfo.java"
 @lombok.Data
-public class ActiveAutorInfo {
+public class ActiveAuthorInfo {
 
     private Author raw;
 
@@ -662,8 +662,8 @@ public class ActiveAutorInfo {
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin title="ActiveAutorInfo.kt"
-data class ActiveAutorInfo(
+```kotlin title="ActiveAuthorInfo.kt"
+data class ActiveAuthorInfo(
     val raw: Author,
     val stores: List<BookStore>
 )
@@ -672,7 +672,7 @@ data class ActiveAutorInfo(
 </TabItem>
 </Tabs>
 
-In this example, `ActiveAutorInfo` represents a very active author, containing the original information of the author `raw`, and the collection of all bookstores selling his/her books. 
+In this example, `ActiveAuthorInfo` represents a very active author, containing the original information of the author `raw`, and the collection of all bookstores selling his/her books. 
 
 The corresponding HTTP service interface is:
 
@@ -681,7 +681,7 @@ The corresponding HTTP service interface is:
 
 ```java title="AuthorController.java"
 @GetMapping("/authors/mostActive")
-public List<ActiveAutorInfo> findMostActiveAuthorInfos(
+public List<ActiveAuthorInfo> findMostActiveAuthorInfos(
     @RequestParam(defaultValue = "10") int limit  
 ) {
     ...omitted...
@@ -695,7 +695,7 @@ public List<ActiveAutorInfo> findMostActiveAuthorInfos(
 @GetMapping("/authors/mostActive")
 fun findMostActiveAuthorInfos(
     @RequestParam(defaultValue = "10") limit: Int
-): List<ActiveAutorInfo> {
+): List<ActiveAuthorInfo> {
     ...omitted... 
 }
 ```
@@ -710,19 +710,19 @@ In some cases, the data required by the client may contain multiple entity objec
 
 If such business-level correlations are not generic at all, then defining [complex calculated properties](../mapping/advanced/calculated/transient) for entities is not a good choice either.
 
-At this point, we can break the stereotypical thinking of the entity object graph and use custom data to represent the return results, just like `ActiveAutorInfo` here.
+At this point, we can break the stereotypical thinking of the entity object graph and use custom data to represent the return results, just like `ActiveAuthorInfo` here.
 :::
 
-However, `ActiveAutorInfo` is not a purely custom user data type, it mixes the use of Jimmer entities internally. Let's call it a hybrid type. 
+However, `ActiveAuthorInfo` is not a purely custom user data type, it mixes the use of Jimmer entities internally. Let's call it a hybrid type. 
 
 The `@FetchBy` annotation can be used to decorate the fields of this hybrid type, for example:
 
 <Tabs groupId="language"> 
 <TabItem value="java" label="Java">
 
-```java title="ActiveAutorInfo.java"
+```java title="ActiveAuthorInfo.java"
 @lombok.Data
-public class ActiveAutorInfo {
+public class ActiveAuthorInfo {
 
     // highlight-next-line 
     private @FetchBy("AUTHOR_FETCHER") Author raw;
@@ -743,8 +743,8 @@ public class ActiveAutorInfo {
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin title="ActiveAutorInfo.kt"
-data class ActiveAutorInfo(
+```kotlin title="ActiveAuthorInfo.kt"
+data class ActiveAuthorInfo(
     
     // highlight-next-line
     val raw: @FetchBy("AUTHOR_FETCHER") Author,
@@ -771,23 +771,23 @@ data class ActiveAutorInfo(
 </TabItem>
 </Tabs>
 
-Finally, the TypeScript related types generated for `ActiveAutorInfo` are as follows *(for convenience, the code of multiple TypeScript files is mixed here)*:
+Finally, the TypeScript related types generated for `ActiveAuthorInfo` are as follows *(for convenience, the code of multiple TypeScript files is mixed here)*:
 
 ```ts
-export interface ActiveAutorInfo {
+export interface ActiveAuthorInfo {
 
     // highlight-next-line
-    readonly raw: AuthorDto['ActiveAutorInfo/AUTHOR_FETCHER'];
+    readonly raw: AuthorDto['ActiveAuthorInfo/AUTHOR_FETCHER'];
 
     readonly stores: ReadonlyArray<
         // highlight-next-line 
-        BookStoreDto['ActiveAutorInfo/STORE_FETCHER']
+        BookStoreDto['ActiveAuthorInfo/STORE_FETCHER']
     >;
 }
 
 export type AuthorDto {
     // highlight-next-line
-    'ActiveAutorInfo/AUTHOR_FETCHER': {
+    'ActiveAuthorInfo/AUTHOR_FETCHER': {
         readonly id: number,
         readonly firstName: string,
         readonly lastName: string 
@@ -797,7 +797,7 @@ export type AuthorDto {
 
 export type BookStoreDto {
     // highlight-next-line
-    'ActiveAutorInfo/STORE_FETCHER': {
+    'ActiveAuthorInfo/STORE_FETCHER': {
         readonly id: number,
         readonly name: string
     },

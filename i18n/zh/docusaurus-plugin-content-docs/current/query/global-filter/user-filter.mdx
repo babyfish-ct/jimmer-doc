@@ -138,7 +138,7 @@ Java和Kotlin的过滤器定义略有不同
 
 ### Spring环境下配置过滤器
 
-上文中，我们定义的类`TenantFilter`被`@Compoent`修饰，很明显这是一个Spring托管对象。
+上文中，我们定义的类`TenantFilter`被`@Component`修饰，很明显这是一个Spring托管对象。
 
 :::info
 如果使用Jimmer的SpringBoot Starter且保证过滤器被Spring托管，那么Jimmer就会将注册它，无需额外的配置。
@@ -157,7 +157,7 @@ Java和Kotlin的过滤器定义略有不同
 JSqlClient sqlClient = JSqlBuilder
     .newBuilder()
     // highlight-next-line
-    .addFilter(new CustmerFilter())
+    .addFilter(new CustomerFilter())
     ...省略其他配置...
     .build();
 ```
@@ -169,7 +169,7 @@ JSqlClient sqlClient = JSqlBuilder
 val sqlClient =
     newKSqlClient {
         // highlight-next-line
-        addFilters(new CustmerFilter())
+        addFilters(new CustomerFilter())
         ...省略其他配置...
     }
 ```
@@ -352,7 +352,7 @@ val authors = SqlClient
 
 ## 禁用过滤器
 
-调用`sqlClient.filters`，在不影响当前`sqlClien`的前提下，创建新的临时SqlClient，可以达到禁用过滤器的目的。
+调用`sqlClient.filters`，在不影响当前`sqlClient`的前提下，创建新的临时SqlClient，可以达到禁用过滤器的目的。
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -386,13 +386,13 @@ val tmpSqlClient =
 
 除了最基本的`Filter`/`KFilter`接口外，过滤器类还可以实现更多的接口，包括
 
--   `CachableFilter`/`KCachableFilter`
+-   `CacheableFilter`/`KCacheableFilter`
 
 -   `AssociationIntegrityAssuranceFilter/AssociationIntegrityAssuranceFilter`
 
 -   `ShardingFilter`/`KShardingFilter`
 
-### CachableFilter
+### CacheableFilter
 
 全局过滤器让不同的用户看到不同的数据，对于任何以被过滤类型为目标类型的关联属性而言，不同的用户自然会看到不同的关联。
 
@@ -402,7 +402,7 @@ val tmpSqlClient =
 
 -   依赖这些关联的计算属性也无法启用<ViewMore buttonText="计算缓存"><CalculatedCache/></ViewMore>
 
-为此，Jimmer支持<ViewMore buttonText="多视角缓存"><MultiViewCache/></ViewMore>来解决这个问题，但代价是相关的全局过滤器必须实现`CachableFilter`/`KCachableFilter`接口。
+为此，Jimmer支持<ViewMore buttonText="多视角缓存"><MultiViewCache/></ViewMore>来解决这个问题，但代价是相关的全局过滤器必须实现`CacheableFilter`/`KCacheableFilter`接口。
 这部分内容在后续的[缓存篇/多视角缓存/支持自定义过滤器](../../cache/multiview-cache/user-filter)一文中详细阐述，本文不做重复。
 
 ### AssociationIntegrityAssuranceFilter
@@ -412,7 +412,7 @@ val tmpSqlClient =
 -   Java: `org.babyfish.jimmer.sql.filter.AssociationIntegrityAssuranceFilter<P>`
 -   Kotlin: `org.babyfish.jimmer.sql.kt.filter.KAssociationIntegrityAssuranceFilter<E>`
 
-相比于最基本的`Fitler`/`KFitler`接口而言，此接口并未新加任何方法，仅用作类型标识。
+相比于最基本的`Filter`/`KFilter`接口而言，此接口并未新加任何方法，仅用作类型标识。
 
 对于基于外键的一对一/多对一关联属性而言，即使数据中该字段被设置为非null类型并具备真实的外键约束，也可能因为过滤器的原因导致查询到的关联对象为null。
 
@@ -535,7 +535,7 @@ val tmpSqlClient =
 -   Java: `org.babyfish.jimmer.sql.filter.ShardingFilter<P>`
 -   Kotlin: `org.babyfish.jimmer.sql.kt.filter.KShardingFilter<E>`
 
-相比于最基本的`Fitler`/`KFitler`接口而言，此接口并未新加任何方法，仅用作类型标识。
+相比于最基本的`Filter`/`KFilter`接口而言，此接口并未新加任何方法，仅用作类型标识。
 
 Jimmer提供按照id *(或id集合)* 查询实体 *(或实体集合)* 的简单API。
 

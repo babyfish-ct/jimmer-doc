@@ -531,7 +531,7 @@ interface Book {
         joinColumnName = "BOOK_ID",
         inverseJoinColumnName = "AUTHOR_id"
     )
-    val authors: List<Auhtor>
+    val authors: List<Author>
 
     // highlight-next-line
     @IdView // 关联对象store的id的视图

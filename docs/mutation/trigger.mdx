@@ -289,7 +289,7 @@ But in any case, the user code is quite similar, divided into the following 4 st
     The differences in listening code caused by different choices of database and push technology are reflected in this step. However, it is not difficult after observing the message content for inserts, updates, and deletes.
     :::
     
-4. Call `JSqlClient.getBinLog().accept` or `KSqlCient.binLog.accept` with `tableName`, `oldJsonNode` and `newJsonNode`.
+4. Call `JSqlClient.getBinLog().accept` or `KSqlClient.binLog.accept` with `tableName`, `oldJsonNode` and `newJsonNode`.
 
 The following examples demonstrate `MySQL + Maxwell` and `Postgres + Debezium` respectively.
 

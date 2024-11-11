@@ -234,7 +234,7 @@ Jimmer的APT还是生成4个汇总类型:
 |BookTableEx.$|TableExes.BOOK_TABLE_EX|
 |BookFetcher.$|Fetchers.BOOK_FETCHER|
 
-另外，`Tables`, `TableExes`和`Fetchers`是接口，可以使用imlements语句来进一步简化代码 *(由于Intellij对静态导入支持不友好，实现定义常量的接口仍然是值得推荐的技巧)*，例如
+另外，`Tables`, `TableExes`和`Fetchers`是接口，可以使用implements语句来进一步简化代码 *(由于Intellij对静态导入支持不友好，实现定义常量的接口仍然是值得推荐的技巧)*，例如
 
 ```java
 public interface FetcherConstants
@@ -259,7 +259,7 @@ implements Fetchers {
 
 Java项目常常和Lombok配合使用使用。
 
-默认情况下，如果项目除了lomboka外没有其他APT，只需导入lombok的依赖即可。
+默认情况下，如果项目除了lombok外没有其他APT，只需导入lombok的依赖即可。
 
 然而，一旦引入了其他APT配置*(不一定是Jimmer的APT，任何其他APT)*，则必须明确配置lombok的APT。
 

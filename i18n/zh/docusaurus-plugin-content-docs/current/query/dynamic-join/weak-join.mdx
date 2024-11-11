@@ -88,7 +88,7 @@ private static class BookAuthorJoin implements WeakJoin<BookTable, AuthorTable> 
 
     @Override
     public Predicate on(BookTable source, AuthorTable target) {
-        return Prdicate.and(
+        return Predicate.and(
             source.businessProp1().eq(target.businessPropA()),
             source.businessProp2().eq(target.businessPropB())
         );
@@ -188,7 +188,7 @@ List<Long> bookIds = sqlClient
     .where(
         table
             .asTableEx() ❶
-            .weakJoin(BookAutorJoin.class) ❷
+            .weakJoin(BookAuthorJoin.class) ❷
             .firstName().eq("Alex")
     )
     .select(table.id())
@@ -205,7 +205,7 @@ val bookIds = sqlClient
         where(
             table
                 .asTableEx() ❶
-                .weakJoin(BookAutorJoin::class) ❷
+                .weakJoin(BookAuthorJoin::class) ❷
                 .firstName eq "Alex"
         )
         select(table.id)
@@ -225,7 +225,7 @@ val bookIds = sqlClient
 
 -   ❷处代码调用`weakJoin`，以前文定义的`BookAuthorJoin`类作为连接条件，连接到author表
 
-    -   此处，weakJoin的返回类型是`AuthorTable`/`KNonNullTable<Athor>`
+    -   此处，weakJoin的返回类型是`AuthorTable`/`KNonNullTable<Author>`
 
     -   这里的`weakJoin`表示内连接，可以通过如下方法支持外连接
     

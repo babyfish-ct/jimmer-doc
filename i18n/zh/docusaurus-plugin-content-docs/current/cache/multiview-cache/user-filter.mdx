@@ -24,7 +24,7 @@ import {SwaggerAuthorize} from '@site/src/components/Image';
 
 都无法支持缓存。
 
-Jimmer采用`CacheableFilter/KCacheableFitler接口`如下接口定义缓存友好的过滤器
+Jimmer采用`CacheableFilter/KCacheableFilter接口`如下接口定义缓存友好的过滤器
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -212,7 +212,7 @@ class TenantFilter(
     }
 
     // highlight-next-line
-    overide fun getParameters(): SortedMap<String, Any>? =
+    override fun getParameters(): SortedMap<String, Any>? =
         tenantProvider.tenant?.let {
             sortedMapOf("tenant" to it)
         }
@@ -661,7 +661,7 @@ public class BookStoreAvgPriceResolver implements TransientResolver<Long, BigDec
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="BookStoreAvgPriceResolver.kt"
-@Compoent
+@Component
 class BookStoreAvgPriceResolver(
     private val sqlClient: KSqlClient
 ) : KTransientResolver<Long, BigDecimal> {
@@ -1018,7 +1018,7 @@ println(stores)
 不同租户查询到的数据分别为
 
 <Tabs groupId="language">
-<TabItem value="tenant_null" label="tenent=null">
+<TabItem value="tenant_null" label="tenant=null">
 
 ```json
 [
@@ -1102,7 +1102,7 @@ println(stores)
 ```
 
 </TabItem>
-<TabItem value="tenant_a" label="tenent=a">
+<TabItem value="tenant_a" label="tenant=a">
 
 ```json
 [
@@ -1158,7 +1158,7 @@ println(stores)
 ```
 
 </TabItem>
-<TabItem value="tenant_b" label="tenent=b">
+<TabItem value="tenant_b" label="tenant=b">
 
 ```json
 [

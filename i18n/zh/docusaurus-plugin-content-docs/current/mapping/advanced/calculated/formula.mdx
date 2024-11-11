@@ -111,7 +111,7 @@ System.out.println(author);
 ```kotlin
 val author = authorRepository.findNullable(
     1L,
-    newFetcher(Auhtor::class).by {
+    newFetcher(Author::class).by {
         //查询id(隐含+强制)和fullName
         // highlight-next-line
         fullName() 
@@ -478,7 +478,7 @@ System.out.println(author);
 ```kotlin
 val author = authorRepository.findNullable(
     1L,
-    newFetcher(Auhtor::class).by {
+    newFetcher(Author::class).by {
         //查询id(隐含+强制)和fullName
         // highlight-next-line
         fullName() 

@@ -104,7 +104,7 @@ const EN: ReactNode =
             Compare to GraphQL
             <ul>
                 <li>GraphQL is based on HTTP services, which can only be experienced if it crosses the boundaries of HTTP services. In Jimmer, this is the underlying API for ORM, and you can use this capability in any code logic.</li>
-                <li>Until now, the GraphQL protocol does not support recursive queries on self-associated properties with infinite depth; And Jimer supports</li>
+                <li>Until now, the GraphQL protocol does not support recursive queries on self-associated properties with infinite depth; And Jimmer supports</li>
             </ul>
         </Admonition>
     </>;

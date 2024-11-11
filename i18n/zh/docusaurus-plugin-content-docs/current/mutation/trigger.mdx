@@ -278,7 +278,7 @@ Jimmer对这类选择未做任何限制。但为简化问题讨论，本文假�
     数据库和变更推送技术的不同选择导致的监听代码变化，就是指这个步骤。然而，这并不难，对消息内容稍加观察即可轻松实现。
     :::
 
-4.  以`tableName`、`oldJsonNode`和`newJsonNode`调用`JSqlClient.getBinLog().accept`或`KSqlCient.binLog.accept`
+4.  以`tableName`、`oldJsonNode`和`newJsonNode`调用`JSqlClient.getBinLog().accept`或`KSqlClient.binLog.accept`
 
 下面的例子，分别演示`MySQL + Maxwell`和`Postgres + Debezium`两种情况。
 

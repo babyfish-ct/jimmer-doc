@@ -60,7 +60,7 @@ import { ViewMore } from '@site/src/components/ViewMore';
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
-```java tilte="XController.java"
+```java title="XController.java"
 @RestController
 public class XController {
 
@@ -381,7 +381,7 @@ class BookController {
 
 为了识别`@FetchBy`等Jimmer特有的注解，Jimmer对OpenAPI/Swagger给予了一套极具特色的实现。
 
-无需使用JVM生态中任何其他关于自动生成OpenAPI/Swagger的框架，只需对`application.yml`*(或`applicaiton.properties`)*进行修改如下即可
+无需使用JVM生态中任何其他关于自动生成OpenAPI/Swagger的框架，只需对`application.yml`*(或`application.properties`)*进行修改如下即可
 
 ```yml title="application.yml"
 jimmer:
@@ -753,9 +753,9 @@ export type BookServiceOptions = {
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
-```java title="ActiveAutorInfo.java"
+```java title="ActiveAuthorInfo.java"
 @lombok.Data
-public class ActiveAutorInfo {
+public class ActiveAuthorInfo {
 
     private Author raw;
 
@@ -766,8 +766,8 @@ public class ActiveAutorInfo {
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin title="ActiveAutorInfo.kt"
-data class ActiveAutorInfo(
+```kotlin title="ActiveAuthorInfo.kt"
+data class ActiveAuthorInfo(
     val raw: Author,
     val stores: List<BookStore>
 )
@@ -776,7 +776,7 @@ data class ActiveAutorInfo(
 </TabItem>
 </Tabs>
 
-在这个例子中，`ActiveAutorInfo`表示活跃度很高的作者，里面包含了作者的原始信息`raw`，以及所有售卖他/她的书籍的书店的集合。
+在这个例子中，`ActiveAuthorInfo`表示活跃度很高的作者，里面包含了作者的原始信息`raw`，以及所有售卖他/她的书籍的书店的集合。
 
 对应的HTTP服务接口为
 
@@ -785,7 +785,7 @@ data class ActiveAutorInfo(
 
 ```java title="AuthorController.java"
 @GetMapping("/authors/mostActive")
-public List<ActiveAutorInfo> findMostActiveAuthorInfos(
+public List<ActiveAuthorInfo> findMostActiveAuthorInfos(
     @RequestParam(defaultValue = "10") int limit
 ) {
     ...略...
@@ -799,7 +799,7 @@ public List<ActiveAutorInfo> findMostActiveAuthorInfos(
 @GetMapping("/authors/mostActive")
 fun findMostActiveAuthorInfos(
     @RequestParam(defaultValue = "10") limit: Int
-): List<ActiveAutorInfo> {
+): List<ActiveAuthorInfo> {
     ...略...
 }
 ```
@@ -814,19 +814,19 @@ fun findMostActiveAuthorInfos(
 
 如果这种特定业务层面的联系毫无通用性，那么为实体定义[复杂计算属性](../mapping/advanced/calculated/transient)也并非一个好的选择。
 
-这时，我们可以打破实体对象图的定式思维，用自定义数据表示返回结果，就如同这里的`ActiveAutorInfo`
+这时，我们可以打破实体对象图的定式思维，用自定义数据表示返回结果，就如同这里的`ActiveAuthorInfo`
 :::
 
-然而，`ActiveAutorInfo`并不是纯粹的用户自定义数据类型，其内部混合使用了Jimmer实体。我们不妨称之为为混合类型。
+然而，`ActiveAuthorInfo`并不是纯粹的用户自定义数据类型，其内部混合使用了Jimmer实体。我们不妨称之为为混合类型。
 
 可以用`@FetchBy`注解修饰这种混合类型的字段，比如
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
-```java title="ActiveAutorInfo.java"
+```java title="ActiveAuthorInfo.java"
 @lombok.Data
-public class ActiveAutorInfo {
+public class ActiveAuthorInfo {
 
     // highlight-next-line
     private @FetchBy("AUTHOR_BOOK") Author raw;
@@ -847,8 +847,8 @@ public class ActiveAutorInfo {
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin title="ActiveAutorInfo.kt"
-data class ActiveAutorInfo(
+```kotlin title="ActiveAuthorInfo.kt"
+data class ActiveAuthorInfo(
     
     // highlight-next-line
     val raw: @FetchBy("AUTHOR_BOOK") Author,
@@ -875,23 +875,23 @@ data class ActiveAutorInfo(
 </TabItem>
 </Tabs>
 
-最终，`ActiveAutorInfo`所生成的TypeScript相关类型如下 *(为了方便，这里混合了多个TypeScript文件的代码)*
+最终，`ActiveAuthorInfo`所生成的TypeScript相关类型如下 *(为了方便，这里混合了多个TypeScript文件的代码)*
 
 ```ts
-export interface ActiveAutorInfo {
+export interface ActiveAuthorInfo {
 
     // highlight-next-line
-    readonly raw: AuthorDto['ActiveAutorInfo/AUTHOR_BOOK'];
+    readonly raw: AuthorDto['ActiveAuthorInfo/AUTHOR_BOOK'];
 
     readonly stores: ReadonlyArray<
         // highlight-next-line
-        BookStoreDto['ActiveAutorInfo/STORE_BOOK']
+        BookStoreDto['ActiveAuthorInfo/STORE_BOOK']
     >;
 }
 
 export type AuthorDto {
     // highlight-next-line
-    'ActiveAutorInfo/AUTHOR_BOOK': {
+    'ActiveAuthorInfo/AUTHOR_BOOK': {
         readonly id: number,
         readonly firstName: string,
         readonly lastName: string
@@ -901,7 +901,7 @@ export type AuthorDto {
 
 export type BookStoreDto {
     // highlight-next-line
-    'ActiveAutorInfo/STORE_BOOK': {
+    'ActiveAuthorInfo/STORE_BOOK': {
         readonly id: number,
         readonly name: string
     },

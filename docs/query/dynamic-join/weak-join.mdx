@@ -88,7 +88,7 @@ private static class BookAuthorJoin implements WeakJoin<BookTable, AuthorTable> 
 
     @Override
     public Predicate on(BookTable source, AuthorTable target) {
-        return Prdicate.and(
+        return Predicate.and(
             source.businessProp1().eq(target.businessPropA()),
             source.businessProp2().eq(target.businessPropB())
         );
@@ -188,7 +188,7 @@ List<Long> bookIds = sqlClient
     .where(
         table
             .asTableEx() ❶
-            .weakJoin(BookAutorJoin.class) ❷
+            .weakJoin(BookAuthorJoin.class) ❷
             .firstName().eq("Alex")
     )
     .select(table.id())
@@ -205,7 +205,7 @@ val bookIds = sqlClient
         where(
             table
                 .asTableEx() ❶
-                .weakJoin(BookAutorJoin::class) ❷
+                .weakJoin(BookAuthorJoin::class) ❷
                 .firstName eq "Alex"
         )
         select(table.id)
@@ -225,7 +225,7 @@ val bookIds = sqlClient
 
 -   ❷ Calls `weakJoin` with the `BookAuthorJoin` class defined before as the join condition, joining to the author table
 
-    - Here, the return type of `weakJoin` is `AuthorTable`/`KNonNullTable<Athor>`
+    - Here, the return type of `weakJoin` is `AuthorTable`/`KNonNullTable<Author>`
 
     - The following methods can be used to support outer join:
     

@@ -265,7 +265,7 @@ open class BookView(
     val edition: Int,
     val price: BigDecimal,
     //highlight-next-line
-    val store: LonTargetOf_storeg? = null,
+    val store: LonTargetOf_store? = null,
     //highlight-next-line
     val authors: List<TargetOf_authors> = emptyList()
 ): View<Book> {
@@ -304,7 +304,7 @@ open class BookView(
 export yourpackage.Tree
     -> package yourpackage.dto
 
-RecurisveTreeView {
+RecursiveTreeView {
     #allScalars
     #highlight-next-line
     childNodes*
@@ -317,8 +317,8 @@ RecurisveTreeView {
 <TabItem value="java" label="Java">
 
 ```java
-@GeneratedBy(file = "<yourproject>/yourpackage/RecurisveTreeView.dto")
-public class RecurisveTreeView implements View<TreeNode> {
+@GeneratedBy(file = "<yourproject>/yourpackage/RecursiveTreeView.dto")
+public class RecursiveTreeView implements View<TreeNode> {
 
     private long id;
     
@@ -326,7 +326,7 @@ public class RecurisveTreeView implements View<TreeNode> {
 
     @Nullable
     //highlight-next-line
-    private List<RecurisveTreeView> childNodes;
+    private List<RecursiveTreeView> childNodes;
 
     ... Omit other members...
 }
@@ -337,11 +337,11 @@ public class RecurisveTreeView implements View<TreeNode> {
 
 ```kotlin
 @GeneratedBy(file = "<yourproject>/yourpackage/Book.dto")
-open class RecurisveTreeView(
+open class RecursiveTreeView(
     val id: Long
     val name: String,
     //highlight-next-line
-    val childNodes: List<RecurisveTreeView>? = null
+    val childNodes: List<RecursiveTreeView>? = null
 ): View<TreeNode> {
     
     ... Omit other members...

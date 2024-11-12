@@ -72,7 +72,7 @@ kotlin没有这个问题，其API是统一的
 - `%v`: 即Value，植入一个值
 
 `sql(...)`方法的第二个参数是一个可选的，是一个lambda表达式，lambda表达式的参数是一个对象，该对象支持两个方法：
-- `expression(Expresion<?>)`: 植入一个表达式，和SQL模板中的"%e"匹配。
+- `expression(Expression<?>)`: 植入一个表达式，和SQL模板中的"%e"匹配。
 - `value(Object)`: 植入一个值，和SQL模板中的"%v"匹配。
 
 最终生成的SQL是

@@ -198,7 +198,7 @@ public class BookController {
     ) {
         return sqlClient
             .save(input)
-            .getTotoalAffectedRowCount();
+            .getTotalAffectedRowCount();
     }
 }
 ```
@@ -218,7 +218,7 @@ class BookController(
     ): Int =
         sqlClient
             .save(input)
-            .totoalAffectedRowCount
+            .totalAffectedRowCount
 }
 ```
 
@@ -234,9 +234,9 @@ class BookController(
 
     -   Operator: 仅能修改已有书籍的价格
 
-    -   Adminsitrator: 能新建和编辑书籍的所有信息
+    -   Administrator: 能新建和编辑书籍的所有信息
 
--   对于Adminsitrator角色而言，新建书籍的Web Api和编辑书籍的Web Api需要分开
+-   对于Administrator角色而言，新建书籍的Web Api和编辑书籍的Web Api需要分开
 
 ### 编写DTO
 
@@ -253,7 +253,7 @@ input BookOperatorUpdateInput {
 }
 
 /** 
- * 供`Adminsitrator`角色新建书籍的input, 没有id属性
+ * 供`Administrator`角色新建书籍的input, 没有id属性
  */
 input BookAdministratorCreateInput {
     #allScalars(this)
@@ -261,7 +261,7 @@ input BookAdministratorCreateInput {
 }
 
 /**
- * 供`Adminsitrator`角色修改书籍的input, id属性不能为null
+ * 供`Administrator`角色修改书籍的input, id属性不能为null
  */
 input BookAdministratorUpdateInput {
     #allScalars(this)
@@ -325,7 +325,7 @@ input BookAdministratorUpdateInput {
 
     ```java title="BookAdministratorCreateInput"
     /** 
-     * 供`Adminsitrator`角色新建书籍的input, 没有id属性
+     * 供`Administrator`角色新建书籍的input, 没有id属性
      */
     @GeneratedBy(
             file = "<yourproject>/src/main/dto/Book.dto"
@@ -349,7 +349,7 @@ input BookAdministratorUpdateInput {
 
     ```kotlin title="BookAdministratorCreateInput"
     /** 
-     * 供`Adminsitrator`角色新建书籍的input, 没有id属性
+     * 供`Administrator`角色新建书籍的input, 没有id属性
      */
     @GeneratedBy(
             file = "<yourproject>/src/main/dto/Book.dto"
@@ -373,7 +373,7 @@ input BookAdministratorUpdateInput {
 
     ```java title="BookAdministratorUpdateInput"
     /**
-     * 供`Adminsitrator`角色修改书籍的input, id属性不能为null
+     * 供`Administrator`角色修改书籍的input, id属性不能为null
      */
     @GeneratedBy(
             file = "<yourproject>/src/main/dto/Book.dto"
@@ -399,7 +399,7 @@ input BookAdministratorUpdateInput {
 
     ```kotlin title="BookAdministratorUpdateInput"
     /**
-     * 供`Adminsitrator`角色修改书籍的input, id属性不能为null
+     * 供`Administrator`角色修改书籍的input, id属性不能为null
      */
     @GeneratedBy(
             file = "<yourproject>/src/main/dto/Book.dto"
@@ -441,7 +441,7 @@ public class BookController {
     ) {
         return sqlClient
             .insert(input)
-            .getTotoalAffectedRowCount();
+            .getTotalAffectedRowCount();
     }
 
     // highlight-next-line
@@ -453,7 +453,7 @@ public class BookController {
     ) {
         return sqlClient
             .update(input)
-            .getTotoalAffectedRowCount();
+            .getTotalAffectedRowCount();
     }
 
     // highlight-next-line
@@ -465,7 +465,7 @@ public class BookController {
     ) {
         return sqlClient
             .update(input)
-            .getTotoalAffectedRowCount();
+            .getTotalAffectedRowCount();
     }
 }
 ```
@@ -487,7 +487,7 @@ class BookController(
     ): Int =
         sqlClient
             .insert(input)
-            .totoalAffectedRowCount
+            .totalAffectedRowCount
 
     // highlight-next-line
     @Secured("OPERATOR")
@@ -498,7 +498,7 @@ class BookController(
     ): Int =
         sqlClient
             .update(input)
-            .totoalAffectedRowCount
+            .totalAffectedRowCount
 
     // highlight-next-line
     @Secured("ADMINISTRATOR")
@@ -509,7 +509,7 @@ class BookController(
     ): Int =
         sqlClient
             .update(input)
-            .totoalAffectedRowCount
+            .totalAffectedRowCount
 }
 ```
 

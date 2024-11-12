@@ -30,7 +30,7 @@ A save command persists an arbitrary shaped data structure to the database, for 
     ```java
     Book simpleBook = Immutables.createBook(draft -> {
         draft.setName("SQL in Action");
-        dratt.setEdition(1);
+        draft.setEdition(1);
         draft.setPrice(new BigDecimal("59.9"));
     });
     sqlClient.save(simpleBook);
@@ -59,7 +59,7 @@ A save command persists an arbitrary shaped data structure to the database, for 
     ```java
     Book complexBook = Immutables.createBook(draft -> {
         draft.setName("SQL in Action");
-        dratt.setEdition(1);
+        draft.setEdition(1);
         draft.setPrice(new BigDecimal("59.9"));
         draft.applyStore(store -> {
             store.setName("MANNING");
@@ -269,8 +269,8 @@ TreeNode treeNode = Immutables.createTreeNode(food -> {
         .addIntoChildNodes(drink -> {
             drink
                 .setName("Drink")
-                .addIntoChildNodes(cococola -> {
-                    cococola.setName("Cococola");
+                .addIntoChildNodes(cocacola -> {
+                    cocacola.setName("Cocacola");
                 })
                 .addIntoChildNodes(fanta -> {
                     fanta.setName("Fanta");
@@ -280,8 +280,8 @@ TreeNode treeNode = Immutables.createTreeNode(food -> {
         .addIntoAuthors(bread -> {
             bread
                 .setName("Bread")
-                .addIntoChildNodes(daguette -> {
-                    daguette.setName("Baguette");
+                .addIntoChildNodes(baguette -> {
+                    baguette.setName("Baguette");
                 })
                 .addIntoChildNodes(ciabatta -> {
                     ciabatta.setName("Ciabatta");
@@ -302,7 +302,7 @@ val treeNode = TreeNode {
     childNodes().addBy {
         name = "Drinks"
         childNodes().addBy {
-            name = "Cococola"
+            name = "Cocacola"
         }
         childNodes().addBy {
             name = "Fanta"
@@ -331,7 +331,7 @@ This code tries to save a tree:
 |
 +---+-Drinks
 |   |
-|   +-----Cococola
+|   +-----Cocacola
 |   |
 |   \-----Fanta
 |

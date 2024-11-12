@@ -29,11 +29,11 @@ Jimmer提供了[DTO语言](../../../object/view/dto-language)。
 
 本文侧重于讲解如何保存静态DTO类型，并非系统性介绍DTO语言，请参考[对象篇/DTO转换/DTO语言](../../../object/view/dto-language)以了解完整的DTO语言。
 
-假如`Book`类的全名为`com.yourcompany.yourpoject.model.Book`，你可以
+假如`Book`类的全名为`com.yourcompany.yourproject.model.Book`，你可以
 
 1.  **在实体定义所在项目中**，建立目录`src/main/dto`
 
-2.  在`src/main/dto`下，按实体类型所处的包路径建立子目录`com/yourcompany/yourpoject/model`
+2.  在`src/main/dto`下，按实体类型所处的包路径建立子目录`com/yourcompany/yourproject/model`
 
 3.  在上一步建立的目录下，建立文件`Book.dto`，文件必须和实体类同名，扩展名必须为`dto`
 
@@ -82,12 +82,12 @@ Jimmer负责编译dto文件，自动生成符合这些形状的DTO类型。
 <TabItem value="java" label="Java">
 
 ```java title="BookInput.java"
-package com.yourcompany.yourpoject.model.dto;
+package com.yourcompany.yourproject.model.dto;
 
-import com.yourcompany.yourpoject.model.Book;
+import com.yourcompany.yourproject.model.Book;
 import org.babyfish.jimmer.Input;
 
-@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
+@GeneratedBy(file = "<your_project>/src/main/dto/Book.dto")
 public class BookInput implements Input<Book> {
 
     @Nullable
@@ -133,12 +133,12 @@ public class BookInput implements Input<Book> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="BookInput.kt"
-package com.yourcompany.yourpoject.model.dto
+package com.yourcompany.yourproject.model.dto
 
-import com.yourcompany.yourpoject.model.Book
+import com.yourcompany.yourproject.model.Book
 import org.babyfish.jimmer.Input
 
-@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
+@GeneratedBy(file = "<your_project>/src/main/dto/Book.dto")
 data class BookInput(
     val id: Long? = null, ❶
     val name: String = "", 

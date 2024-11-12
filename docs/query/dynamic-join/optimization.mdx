@@ -21,7 +21,7 @@ In Jimmer SQL DSL, created join objects that are not used will be ignored. For e
 BookTable table = Tables.BOOK_TABLE;
 
 // highlight-next-line
-System.out.println("Unsed join: " + table.store());
+System.out.println("Unused join: " + table.store());
 
 List<Book> books = sqlClient
     .createQuery(table) 
@@ -38,7 +38,7 @@ val books = sqlClient
     .createQuery(Book::class) {
         
         // highlight-next-line
-        println("Unsed join: ${table.store}")
+        println("Unused join: ${table.store}")
 
         orderBy(table.name.asc(), table.edition.desc())
         select(table)

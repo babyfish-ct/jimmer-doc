@@ -115,7 +115,7 @@ class XController() {
         <Tabs groupId="language">
         <TabItem value="java" label="Java">
 
-        ```java tilte="XController.java"
+        ```java title="XController.java"
         @RestController
         public class XController {
 
@@ -334,7 +334,7 @@ companion object {
 ```java title="BookController"
 @RestController
 // highlight-next-line
-@DefautFetcherOwner(FetcherConstants.class)
+@DefaultFetcherOwner(FetcherConstants.class)
 public class BookController {
 
     public List<@FetchBy("SIMPLE_BOOK") Book> getSimpleBooks(...略...) {
@@ -355,10 +355,10 @@ public class BookController {
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
-```kotlin
+```kotlin title="BookController"
 @RestController
 // highlight-next-line
-@DefautFetcherOwner(FetcherConstants.class)
+@DefaultFetcherOwner(FetcherConstants.class)
 class BookController {
 
     fun getSimpleBooks(...略...): List<@FetchBy("SIMPLE_BOOK") Book> =
@@ -858,7 +858,7 @@ data class ActiveAuthorInfo(
 ) {
     companion object {
 
-        private val AUTHOR_FECHER =
+        private val AUTHOR_FETCHER =
             newFetcher(Author::class) {
                 firstName()
                 lastName()

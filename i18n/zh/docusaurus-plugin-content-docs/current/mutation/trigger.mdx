@@ -181,7 +181,7 @@ TriggerType有三个取值
 
 如果使用SpringBoot Starter，设置触发器类型非常简单。
 
-在`application.properties`或`applicaion.yml`中添加一个配置即可。其名称为`jimmer.trigger-type`，其值为`BINLOG_ONLY` | `TRANSACTION_ONLY` | `BOTH`。
+在`application.properties`或`application.yml`中添加一个配置即可。其名称为`jimmer.trigger-type`，其值为`BINLOG_ONLY` | `TRANSACTION_ONLY` | `BOTH`。
 
 ### 不使用Jimmer Spring Boot Starter
 
@@ -194,7 +194,7 @@ JSqlClient sqlClient = JSqlClient
     // highlight-next-line
     .setTriggerType(TriggerType.BOTH)
     ...省略其他配置...
-    .builde();
+    .build();
 ```
 
 </TabItem>
@@ -669,7 +669,7 @@ Jimmer对这类选择未做任何限制。但为简化问题讨论，本文假�
         @EventListener
         fun onAssociationChanged(e: AssociationEvent) {
             if (e.isChanged(Book::store)) {
-                pprintln("The many-to-one association `Book.store` is changed")
+                println("The many-to-one association `Book.store` is changed")
                 println("\tbook id: ${it.sourceId}")
                 println("\tdetached book store id: ${it.detachedTargetId}")
                 println("\tattached book store id: ${it.attachedTargetId}")

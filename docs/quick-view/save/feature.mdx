@@ -157,7 +157,7 @@ This absolute flexibility has many wonderful uses. For example, changing the pri
             // No other properties except `id` and `price` are specified
             // So no other properties except `price` will be affected 
         })  
-    ).getTotoalAffectedRowCount() != 0;
+    ).getTotalAffectedRowCount() != 0;
     ```  
 
     </TabItem>
@@ -171,7 +171,7 @@ This absolute flexibility has many wonderful uses. For example, changing the pri
             // No other properties except `id` and `price` are specified
             // So no other properties except `price` will be affected
         } 
-    ).totoalAffectedRowCount != 0
+    ).totalAffectedRowCount != 0
     ```
 
     </TabItem>
@@ -203,7 +203,7 @@ public class BookController {
     ) {
         return sqlClient
             .save(book)
-            .getTotoalAffectedRowCount();
+            .getTotalAffectedRowCount();
     }  
 }
 ```  
@@ -223,7 +223,7 @@ class BookController(
     ): Int =
         sqlClient
             .save(book)
-            .totoalAffectedRowCount
+            .totalAffectedRowCount
 }  
 ```  
 

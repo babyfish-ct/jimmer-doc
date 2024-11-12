@@ -180,13 +180,13 @@ Jimmer objects allow certain properties to be missing, and an object lacking a p
 
     > For example, in JPA, since Hibernate 3, lazy configuration is no longer limited to associated properties but can also be used for scalar properties. Later, this evolved into the `fetch` parameter of the JPA `@Basic` annotation, please refer [here](https://docs.oracle.com/javaee%2F7%2Fapi%2F%2F/javax/persistence/Basic.html).
     >
-    > This has some similarity to the fact that any property in Jimmer objects can be missing, except that Jimmer generalizes this feature to any property. So, this exception in Jimmer is somewhat similar to [org.hibernate.LazyIntializationException](https://docs.jboss.org/hibernate/orm/5.6/javadocs/org/hibernate/LazyInitializationException.html).
+    > This has some similarity to the fact that any property in Jimmer objects can be missing, except that Jimmer generalizes this feature to any property. So, this exception in Jimmer is somewhat similar to [org.hibernate.LazyInitializationException](https://docs.jboss.org/hibernate/orm/5.6/javadocs/org/hibernate/LazyInitializationException.html).
 
     So, this is not a new problem created by Jimmer, but rather an existing and accepted problem in the static language ORM ecosystem. However, it is undeniable that this does indeed undermine the safety of static languages.
 
     If you want to pursue 100% static language safety, using `DTO` objects is the only way. However, the current DTO mapping technology in the JVM ecosystem has significant flaws.
     -   Either you explicitly map properties *(e.g., pure manual mapping and conversion)*, which is extremely labor-intensive, tedious, and error-prone.
-    -   Or you implicitly map properties *(e.g., using [BeanUilts](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/BeanUtils.html) technology)*, which introduces new safety issues that cannot be detected at compile-time.
+    -   Or you implicitly map properties *(e.g., using [BeanUtils](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/BeanUtils.html) technology)*, which introduces new safety issues that cannot be detected at compile-time.
 
     Even if you use the powerful [mapstruct](https://mapstruct.org/), all you can do is choose between these two extremes.
 

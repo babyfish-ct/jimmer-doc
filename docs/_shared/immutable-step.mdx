@@ -66,8 +66,8 @@ TreeNode treeNode = Immutables.createTreeNode(root -> {
             .addIntoChildNodes(drink -> {
                 drink
                     .setName("Drink")
-                    .addIntoChildNodes(cococola -> {
-                        cococola.setName("Cococola");
+                    .addIntoChildNodes(cocacola -> {
+                        cocacola.setName("Cocacola");
                     })
                     .addIntoChildNodes(fanta -> {
                         fanta.setName("Fanta");
@@ -90,7 +90,7 @@ val treeNode = TreeNode {
         childNodes().addBy {
             name = "Drinks"
             childNodes().addBy {
-                name = "Cococola"
+                name = "Cocacola"
             }
             childNodes().addBy {
                 name = "Fanta"
@@ -116,8 +116,8 @@ TreeNode newTreeNode = Immutables.createTreeNode(
             root
                 .childNodes(false).get(0) // Food
                 .childNodes(false).get(0) // Drink
-                .childNodes(false).get(0) // Cococola
-                .setName("Cococola plus");
+                .childNodes(false).get(0) // Cocacola
+                .setName("Cocacola plus");
         }
 );
 
@@ -146,7 +146,7 @@ System.out.println("newTreeNode:" + newTreeNode);
 val newTreeNode = treeNode.copy {
     childNodes()[0] // Food
         .childNodes()[0] // Drinks
-        .childNodes()[0] // Cococola
+        .childNodes()[0] // Cocacola
         .name += " plus"
 }
 

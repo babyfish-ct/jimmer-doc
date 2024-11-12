@@ -84,7 +84,7 @@ interface BaseEntity {
 :::
 
 :::tip
-当然，用户可以直接拦截实体类型 *(被@Entity修饰)*，而非抽象类型 *(被@MappedSupperclass)* 修饰。
+当然，用户可以直接拦截实体类型 *(被@Entity修饰)*，而非抽象类型 *(被@MappedSupperClass)* 修饰。
 
 然而，如果选择拦截抽象类型，那么所有派生实体类型的保存操作都将会被拦截，这可以极大地提高系统的灵活性，尤其是抽象类型支持多继承时。
 
@@ -213,7 +213,7 @@ implements DraftInterceptor<BaseEntity, BaseEntityDraft> {
     public void beforeSave(
         BaseEntityDraft draft, 
         
-        // The format of `original` is controlled by `dependences()`
+        // The format of `original` is controlled by `dependencies()`
         @Nullable BaseEntity original
     ) {
         ...implementation is omitted...
@@ -242,7 +242,7 @@ class BaseEntityDraftInterceptor(
     override fun beforeSave(
         draft: BaseEntityDraft, 
 
-        // The format of `original` is controlled by `dependences()`
+        // The format of `original` is controlled by `dependencies()`
         original: BaseEntity?
     ) {
         ...implementation is omitted...
@@ -268,7 +268,7 @@ class BaseEntityDraftInterceptor(
 
 ### 使用Jimmer Spring Starter
 
-上文中，我们定义的类`BaseEntityDraftInterceptor`被`@Compnoent`修饰，很明显这是一个Spring托管对象。
+上文中，我们定义的类`BaseEntityDraftInterceptor`被`@Component`修饰，很明显这是一个Spring托管对象。
 
 :::info
 如果使用SpringBoot Starter且保证拦截器被Spring托管，那么Jimmer就会将注册它，无需额外的配置。
@@ -278,7 +278,7 @@ class BaseEntityDraftInterceptor(
 
 ### 不使用Jimmer Spring Starter
 
-未使用SpringBoot时，将拦截器挂接到SqlClinet对象上，即可生效
+未使用SpringBoot时，将拦截器挂接到SqlClient对象上，即可生效
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -292,7 +292,7 @@ public JSqlClient sqlClient(
     return JSqlClient
         .newBuilder()
         // highlight-next-line
-        .addDraftinterceptors(interceptors)
+        .addDraftInterceptors(interceptors)
         ...省略其他配置...
         .build();
 }
@@ -309,7 +309,7 @@ fun sqlClient(
 ): KSqlClient =
     newKSqlClient {
         // highlight-next-line
-        addDraftinterceptors(interceptors)
+        addDraftInterceptors(interceptors)
         ...省略其他配置...
     }
 ```

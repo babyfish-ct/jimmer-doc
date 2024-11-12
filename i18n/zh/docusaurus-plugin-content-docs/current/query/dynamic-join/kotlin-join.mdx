@@ -54,7 +54,7 @@ public val KProps<BookStore>.website: KNullablePropExpression<String>
 :::tip
 在Jimmer的Kotlin SQL DSL中，几乎所有AST类型都具备`NoNull`或`Nullable`两种实现。
 
-这意味着，Kotlin SQL DSL具备和kotlin语言对等的的null safety特性，SQL风格的查询的代码具备完整的null saftey自检能力。
+这意味着，Kotlin SQL DSL具备和kotlin语言对等的的null safety特性，SQL风格的查询的代码具备完整的null safety自检能力。
 :::
 
 让我们先看一个简单的例子
@@ -76,7 +76,7 @@ for ((name, website) in books) { ❷
 }
 ```
 
-1.  由于`BookStore.webiste`是可空的，❶处select的第二列的类型为`String?`而非`String`，
+1.  由于`BookStore.website`是可空的，❶处select的第二列的类型为`String?`而非`String`，
     最终，查询返回的数据的类型为`List<Tuple2<String, String?>>`
 
 2.  ❷处通过循环遍历查询查询到的每一个元祖，将其解构成变量`name`和`website`。

@@ -105,10 +105,10 @@ import TabItem from '@theme/TabItem';
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
 
-    ```java title="BookServiceCommonEnity.java"
+    ```java title="BookServiceCommonEntity.java"
     // highlight-next-line
     @MappedSuperclass(microServiceName = "book-service")
-    public interface BookServiceCommonEnity {
+    public interface BookServiceCommonEntity {
 
         LocalDateTime createdTime();
 
@@ -125,10 +125,10 @@ import TabItem from '@theme/TabItem';
     </TabItem>
     <TabItem value="kotlin" label="Kotlin">
 
-    ```java title="BookServiceCommonEnity.kt"
+    ```java title="BookServiceCommonEntity.kt"
     // highlight-next-line
     @MappedSuperclass(microServiceName = "book-service")
-    interface BookServiceCommonEnity {
+    interface BookServiceCommonEntity {
 
         val createdTime: LocalDateTime
 
@@ -145,17 +145,17 @@ import TabItem from '@theme/TabItem';
     </TabItem>
     </Tabs>
 
-    这里`BookServiceCommonEnity`具备关联属性`createdBy`和`modifiedBy`，但是只有同属于微服务"book-service"的`Entity`或其他`MappedSuperclass`才可以继承它。
+    这里`BookServiceCommonEntity`具备关联属性`createdBy`和`modifiedBy`，但是只有同属于微服务"book-service"的`Entity`或其他`MappedSuperclass`才可以继承它。
 
 -   跨越任何微服务，但不得包含关联属性
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
 
-    ```java title="CommonEnity.java"
+    ```java title="CommonEntity.java"
     // highlight-next-line
     @MappedSuperclass(acrossMicroServices = true)
-    public interface CommonEnity {
+    public interface CommonEntity {
 
         LocalDateTime createdTime();
 
@@ -166,10 +166,10 @@ import TabItem from '@theme/TabItem';
     </TabItem>
     <TabItem value="kotlin" label="Kotlin">
 
-    ```java title="CommonEnity.kt"
+    ```java title="CommonEntity.kt"
     // highlight-next-line
     @MappedSuperclass(acrossMicroServices = true)
-    interface CommonEnity {
+    interface CommonEntity {
 
         val createdTime: LocalDateTime
 
@@ -180,4 +180,4 @@ import TabItem from '@theme/TabItem';
     </TabItem>
     </Tabs>
 
-    这里`CommonEnity`可以跨越任何微服务，任何微服务下的`Entity`或其他`MappedSuperclass`都可以继承它，但其本身不的包含任何关联属性。
+    这里`CommonEntity`可以跨越任何微服务，任何微服务下的`Entity`或其他`MappedSuperclass`都可以继承它，但其本身不的包含任何关联属性。

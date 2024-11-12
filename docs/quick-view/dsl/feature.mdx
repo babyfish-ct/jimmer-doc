@@ -612,7 +612,7 @@ val books = bookRepository.findBooks()
     -   As expressions at ① and ② are null, the `or` expression at ③ will become null    
 
     -   the `or` expression at ③ being null will lead to no SQL conditions for the subquery,
-        so the preicate based on implicit subquery at ④ is null.   
+        so the predicate based on implicit subquery at ④ is null.   
 
     -   The expression at ④  being null make `where` at ⑤ become meaningless, so the whole operation will be ignored.    
 

@@ -6,7 +6,7 @@ title: JSON Converter
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Jimmer实体并非POJO，但可以靠`org.babyish.jimmmer.jackson.ImmutableModule`支持Jackson序列化。
+Jimmer实体并非POJO，但可以靠`org.babyish.jimmer.jackson.ImmutableModule`支持Jackson序列化。
 
 :::tip
 如果使用Jimmer的Spring Boot Starter，该`ImmutableModule`会被自动注册，无需用户关注。
@@ -65,7 +65,7 @@ Jimmer实体并非POJO，但可以靠`org.babyish.jimmmer.jackson.ImmutableModul
 </TabItem>
 </Tabs>
 
-其中`SnowflakIdGenerator`是用户提供的分布式雪花id生成器实现，不是我们讨论的重点。
+其中`SnowflakeIdGenerator`是用户提供的分布式雪花id生成器实现，不是我们讨论的重点。
 
 这里，我们讨论被标记的那行代码：
 
@@ -73,7 +73,7 @@ Jimmer实体并非POJO，但可以靠`org.babyish.jimmmer.jackson.ImmutableModul
 
 -   `org.babyfish.jimmer.jackson.LongToStringConverter`表示将long类型的值按照String来序列化/反序列化。
 
-    `LongToStringConveter`是Jimmer内置的Converter，这里展示一下其源代码，我们就可以快熟了解如何自定义`Converter`。
+    `LongToStringConverter`是Jimmer内置的Converter，这里展示一下其源代码，我们就可以快熟了解如何自定义`Converter`。
 
     ```java
     package org.babyfish.jimmer.jackson;
@@ -421,7 +421,7 @@ interface User {
 ```java
 @Override
 public String input(String value) {
-    retur value;
+    return value;
 }
 ```
 

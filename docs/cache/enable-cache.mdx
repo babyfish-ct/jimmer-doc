@@ -400,7 +400,7 @@ public CacheFactory cacheFactory(
         private Cache<?, ?> createPropCache(
             ImmutableProp prop, 
             Duration caffeineDuration
-            Duration redisduration
+            Duration redisDuration
         ) {
             return new ChainCacheBuilder<K, V>()
                 .add(

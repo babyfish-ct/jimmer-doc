@@ -133,7 +133,7 @@ input BookUpdateInput {
 <TabItem value="java" label="Java">
 
 ```java title="BookUpdateInput.java"
-@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
+@GeneratedBy(file = "<your_project>/src/main/dto/Book.dto")
 public class BookUpdateInput implements Input<Book> {
 
     private long id;
@@ -157,7 +157,7 @@ public class BookUpdateInput implements Input<Book> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="BookUpdateInput.kt"
-@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
+@GeneratedBy(file = "<your_project>/src/main/dto/Book.dto")
 data class BookUpdateInput(
     val id: Long,
     val name: String,
@@ -228,7 +228,7 @@ class BookController {
         @RequestBody input: BookUpdateInput
     ) {
         val book = input.toEntity()
-        pirntln(book)
+        println(book)
         ...后续代码略...
     }
 
@@ -418,9 +418,9 @@ input BookUpdateInput {
 }
 ```
 
--   如果用户选择将DTO的`storeId`属性设定为null，那么最终得到的Jimemr实体对象的`storeId`属性也为null。即，将数据库中对应字段修改为null。
+-   如果用户选择将DTO的`storeId`属性设定为null，那么最终得到的Jimmer实体对象的`storeId`属性也为null。即，将数据库中对应字段修改为null。
 
--   如果用户根本不设置DTO的`storeId`属性，那么最终得到的Jimemr实体对象的`storeId`属性也不会被设置。即，将数据库中对应字段不会被修改。
+-   如果用户根本不设置DTO的`storeId`属性，那么最终得到的Jimmer实体对象的`storeId`属性也不会被设置。即，将数据库中对应字段不会被修改。
 
 客户端提交数据的两种用法如下：
 
@@ -499,9 +499,9 @@ input BookUpdateInput {
 }
 ```
 
--   如果用户把DTO对象的`storeId`指定为非null值，那么最终得到的Jimemr实体对象的`storeId`属性被指定。即，将数据库中对应字段修改为对应的值。
+-   如果用户把DTO对象的`storeId`指定为非null值，那么最终得到的Jimmer实体对象的`storeId`属性被指定。即，将数据库中对应字段修改为对应的值。
 
--   否则 *(无论把DTO对象的`storeId`属性指定为null，还是根本不指定)*，最终得到的Jimemr实体对象的`storeId`属性都不会被指定。即，将数据库中对应字段不会被修改。
+-   否则 *(无论把DTO对象的`storeId`属性指定为null，还是根本不指定)*，最终得到的Jimmer实体对象的`storeId`属性都不会被指定。即，将数据库中对应字段不会被修改。
 
 客户端提交数据的三种用法如下：
 

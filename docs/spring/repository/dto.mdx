@@ -24,11 +24,11 @@ Note that if the data of a certain shape queried by the server is not for its ow
 
 This article focuses on how to query static DTO types, not a systematic introduction to the DTO language. Please refer to [Object/DTO Conversion/DTO Language](../../object/view/dto-language) for a complete DTO language.
 
-Assume the fully qualified name of the `Book` class is `com.yourcompany.yourpoject.model.Book`, you can
+Assume the fully qualified name of the `Book` class is `com.yourcompany.yourproject.model.Book`, you can
 
 1.  **In the project where the entity is defined**, create a directory `src/main/dto`
 
-2.  Under `src/main/dto`, create subdirectories `com/yourcompany/yourpoject/model` according to the package path where the entity is located
+2.  Under `src/main/dto`, create subdirectories `com/yourcompany/yourproject/model` according to the package path where the entity is located
 
 3.  In the directory created in the previous step, create the file `Book.dto`. The file name must be the same as the entity class name, and the extension must be `dto`
 
@@ -72,12 +72,12 @@ Take `BookDetailView` in the above code as an example. After this dto file is su
 <TabItem value="java" label="Java">
 
 ```java title="BookDetailView.java"
-package com.yourcompany.yourpoject.model.dto;
+package com.yourcompany.yourproject.model.dto;
 
-import com.yourcompany.yourpoject.model.Book;
+import com.yourcompany.yourproject.model.Book;
 import org.babyfish.jimmer.View;
 
-@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
+@GeneratedBy(file = "<your_project>/src/main/dto/Book.dto")
 public class BookDetailView implements Input<Book> {
 
     private long id;
@@ -129,12 +129,12 @@ public class BookDetailView implements Input<Book> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="BookDetailView.kt"
-package com.yourcompany.yourpoject.model.dto
+package com.yourcompany.yourproject.model.dto
 
-import com.yourcompany.yourpoject.model.Book 
+import com.yourcompany.yourproject.model.Book 
 import org.babyfish.jimmer.View
 
-@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
+@GeneratedBy(file = "<your_project>/src/main/dto/Book.dto")
 data class BookDetailView(
     val id: Long = 0,
     val name: String = "",
@@ -183,7 +183,7 @@ data class BookDetailView(
 
 There are several ways to query DTO types:
 
--   Use inherited methods from `JRepository/KRepostiory`
+-   Use inherited methods from `JRepository/KRepository`
 
 -   Define abstract methods in custom Repository
 
@@ -196,7 +196,7 @@ There are several ways to query DTO types:
 
 ```java
 public static void main(String[] args) {
-    ApplicationContext ctx = SpringAppliction.run(MyApp.class, args);
+    ApplicationContext ctx = SpringApplication.run(MyApp.class, args);
     BookRepository bookRepository = ctx.getBean(BookRepository.class);
     Book view = bookRepository
         // highlight-next-line
@@ -424,7 +424,7 @@ public interface BookRepository extends JRepository<Book, Long> {
     default <V extends View<Book>> List<V> find(
         @Nullable String name, 
         @Nullable String storeName,
-        @Nullalbe String authorName,
+        @Nullable String authorName,
         // highlight-next-line  
         Class<V> viewType
     ) {

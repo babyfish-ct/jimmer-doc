@@ -95,7 +95,7 @@ fun saveBook(
 }
 ```
 
-假如你提供这个HTTPAPI的本意是，能够被影响的表仅限于`BOOK`, `BOOK_STORE`, `AUTHOR`和`BOOK_AUTHOR_MAPPING`这四张表。
+假如你提供这个HTTP API的本意是，能够被影响的表仅限于`BOOK`, `BOOK_STORE`, `AUTHOR`和`BOOK_AUTHOR_MAPPING`这四张表。
 
 然而，现在客户端提交的数据的波及范围太大，具备远超你所设想的破坏能力。上面的例子，至少存在4个意外破坏：
 

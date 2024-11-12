@@ -84,7 +84,7 @@ The `@OnDissociate(DissociateAction.SET_NULL)` here is to prevent deletion opera
 :::
 
 :::tip
-Of course, user can directly intercept the entity type *(decorated with @Entity)*, rather than an abstract type *(decorated with @MappedSupperclass)*.  
+Of course, user can directly intercept the entity type *(decorated with @Entity)*, rather than an abstract type *(decorated with @MappedSupperClass)*.  
 
 However, if an abstract type is intercepted, the save operations of all derived entity types will be intercepted, which can greatly improve the flexibility of the system, especially when the abstract type supports multiple inheritance.  
 
@@ -203,7 +203,7 @@ implements DraftInterceptor<BaseEntity, BaseEntityDraft> {
     @Override
     public void beforeSave(
         BaseEntityDraft draft, 
-        // The format of `original` is controlled by `dependences()`
+        // The format of `original` is controlled by `dependencies()`
         @Nullable BaseEntity original  
     ) {
         ...implementation is omitted...
@@ -231,7 +231,7 @@ class BaseEntityDraftInterceptor(
 
     override fun beforeSave(
         draft: BaseEntityDraft,
-        // The format of `original` is controlled by `dependences()`  
+        // The format of `original` is controlled by `dependencies()`  
         original: BaseEntity?
     ) {
         ...implementation is omitted...
@@ -280,7 +280,7 @@ public JSqlClient sqlClient(
     return JSqlClient
         .newBuilder()
         // highlight-next-line
-        .addDraftinterceptors(interceptors)
+        .addDraftInterceptors(interceptors)
         ...other config omitted...
         .build();
 }
@@ -298,7 +298,7 @@ fun sqlClient(
 ): KSqlClient =
     newKSqlClient {
         // highlight-next-line
-        addDraftinterceptors(interceptors)
+        addDraftInterceptors(interceptors)
         ...other config omitted...
     }
 ```

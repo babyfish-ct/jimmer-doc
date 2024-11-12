@@ -118,7 +118,7 @@ public class BookController {
     ) {
         return sqlClient
             .save(input)
-            .getTotoalAffectedRowCount();
+            .getTotalAffectedRowCount();
     }
 }
 ```
@@ -138,7 +138,7 @@ class BookController(
     ): Int =
         sqlClient
             .save(input)
-            .totoalAffectedRowCount
+            .totalAffectedRowCount
 }
 ```
 

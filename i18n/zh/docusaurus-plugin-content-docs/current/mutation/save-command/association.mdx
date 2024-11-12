@@ -361,8 +361,8 @@ TreeNode treeNode = Immutables.createTreeNode(food -> {
         .addIntoChildNodes(drink -> {
             drink
                 .setName("Drink")
-                .addIntoChildNodes(cococola -> {
-                    cococola.setName("Cococola");
+                .addIntoChildNodes(cocacola -> {
+                    cocacola.setName("Cocacola");
                 })
                 .addIntoChildNodes(fanta -> {
                     fanta.setName("Fanta");
@@ -372,8 +372,8 @@ TreeNode treeNode = Immutables.createTreeNode(food -> {
         .addIntoAuthors(bread -> {
             bread
                 .setName("Bread")
-                .addIntoChildNodes(daguette -> {
-                    daguette.setName("Baguette");
+                .addIntoChildNodes(baguette -> {
+                    baguette.setName("Baguette");
                 })
                 .addIntoChildNodes(ciabatta -> {
                     ciabatta.setName("Ciabatta");
@@ -395,7 +395,7 @@ val treeNode = TreeNode {
     childNodes().addBy {
         name = "Drinks"
         childNodes().addBy {
-            name = "Cococola"
+            name = "Cocacola"
         }
         childNodes().addBy {
             name = "Fanta"

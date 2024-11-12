@@ -60,7 +60,7 @@ public interface CacheAbandonedCallback {
 
     -   CACHEABLE_FILTER_REQUIRED: 关联对象受到某些全局过滤器的影响，但并非所有过滤器都实现了`CacheableFilter<E>/KCacheableFilter<E>`接口。
 
-    -   PARAMETERIZED_CACHE_REQUIRED: 影响关联属性的某些`CacheableFilter<E>/KCacheableFilter<E>`对象的`getParameters`方法或实现计算属性的`TransientResolver<ID, V>/KTransientResolver<ID, V>`的`getParamterMapRef`方法返回了长度非0的Map，
+    -   PARAMETERIZED_CACHE_REQUIRED: 影响关联属性的某些`CacheableFilter<E>/KCacheableFilter<E>`对象的`getParameters`方法或实现计算属性的`TransientResolver<ID, V>/KTransientResolver<ID, V>`的`getParameterMapRef`方法返回了长度非0的Map，
         但是，开发人员并未为该属性配置的缓存并不是多视图缓存。
 
     -   FIELD_FILTER_USED: 开发人员对属性使用了[对象抓取器](../../query/object-fetcher)中的属性级过滤器。

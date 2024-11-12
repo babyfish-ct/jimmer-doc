@@ -184,13 +184,13 @@ Jimmer对象允许某些属性缺失，对象缺少某个属性 *(其值未知)*
     > 以JPA为例，从Hibernate3开始，lazy配置不再局限于关联属性，而是可以用于标量属性。后来演化为JPA之`@Basic`注解的`fetch`参数，
     > 请参考这[这里](https://docs.oracle.com/javaee%2F7%2Fapi%2F%2F/javax/persistence/Basic.html)。
     >
-    > 这和Jimmer对象任何属性都可以缺失有一定相似性，只是Jimmer将此特征推广到了任何属性。所以，Jimmer的这个异常和[org.hibernate.LazyIntializationException](https://docs.jboss.org/hibernate/orm/5.6/javadocs/org/hibernate/LazyInitializationException.html)有一定相似性。
+    > 这和Jimmer对象任何属性都可以缺失有一定相似性，只是Jimmer将此特征推广到了任何属性。所以，Jimmer的这个异常和[org.hibernate.LazyInitializationException](https://docs.jboss.org/hibernate/orm/5.6/javadocs/org/hibernate/LazyInitializationException.html)有一定相似性。
 
     所以，这并非由Jimmer制造的新问题，而是一个在静态语言ORM生态中早已存在和被接受的问题。然而，不可否认这的确对静态语言的安全性形成了破坏。
 
     如果要追求100%的静态语言安全性，使用`DTO`对象是唯一的方法。然而，目前JVM生态的DTO映射技术存在很大缺陷。
     -   要么显式地映射属性*(例如纯手工映射和转化)*，这种做法工作量巨大，枯燥且容易出错。
-    -   要么隐式地映射属性*(例如采用[BeanUilts](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/BeanUtils.html)技术)*，这种做法会引入新的不安全问题，即，无法在编译发现的问题。
+    -   要么隐式地映射属性*(例如采用[BeanUtils](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/beans/BeanUtils.html)技术)*，这种做法会引入新的不安全问题，即，无法在编译发现的问题。
 
     即使你使用强大的[mapstruct](https://mapstruct.org/)，你所能做的也只是在这两个极端之间作出选择而已。
 

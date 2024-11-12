@@ -313,7 +313,7 @@ const DATA_ZH = `
 
     -   智能分页 [→](@site/query/paging)
 
-        -   用户编写data询，自动生成count查询，并自动优化去掉非必要table join [→](@site/query/paging/unncessary-join)
+        -   用户编写data询，自动生成count查询，并自动优化去掉非必要table join [→](@site/query/paging/unnecessary-join)
 
         -   如果分页查询期望的观察区域在分页前所有数据的后半部分，进行反排序优化 [→](@site/query/paging/reverse-sorting)
 
@@ -423,7 +423,7 @@ const DATA_EN = `
 
     -   Intelligent pagination [→](@site/query/paging)
 
-        -   User writes data query, automatically generates count query, and optimizes unnecessary table joins [→](@site/query/paging/unncessary-join)
+        -   User writes data query, automatically generates count query, and optimizes unnecessary table joins [→](@site/query/paging/unnecessary-join)
 
         -   If the expected observation area of the pagination query is in the second half of all the data before paging, perform reverse sorting optimization [→](@site/query/paging/reverse-sorting)
 

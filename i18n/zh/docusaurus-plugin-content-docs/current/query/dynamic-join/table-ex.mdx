@@ -156,7 +156,7 @@ interface Book {
     |root_id|root_name|associated_id|associated_first_name|associated_last_name|
     |---|---|---|---|---|
     |1|Learning GraphQL|1|Eve|Procello|
-    |1|Learning GaphhQL|2|Alex|Banks|
+    |1|Learning GraphQL|2|Alex|Banks|
 
 ### 查询结果重复的危害
 
@@ -445,7 +445,7 @@ val books = sqlClient
 :::info
 -   Java: `createQuery`的参数由用户指定，只能指定为`Table`类型，如果指定为`TableEx`类型，报错
 
--   Kotlin: `createQuery`自动创建表对象，lamba中的自动变量`table`的类型被自动识别为`Table`而非`TableEx`
+-   Kotlin: `createQuery`自动创建表对象，lambda中的自动变量`table`的类型被自动识别为`Table`而非`TableEx`
 :::
 
 最终生成的SQL如下
@@ -540,7 +540,7 @@ val books = sqlClient
 :::info
 -   Java: `createSubQuery`的参数由用户指定，不强制但建议指定为`TableEx`类型
 
--   Kotlin: `wildSubQuery` *(或`subQuery`)* 自动创建表对象，lamba中的自动变量`table`的类型被自动识别为`TableEx`而非`Table`
+-   Kotlin: `wildSubQuery` *(或`subQuery`)* 自动创建表对象，lambda中的自动变量`table`的类型被自动识别为`TableEx`而非`Table`
 :::
 
 最终生成的SQL如下

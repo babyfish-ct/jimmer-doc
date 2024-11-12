@@ -61,7 +61,7 @@ val rootNode = sqlClient
 export yourpackage.TreeNode 
     -> package yourpackage.dto;
 
-RecurisveTreeNodeView {
+RecursiveTreeNodeView {
     id
     // Recursion upwards
     // highlight-next-line
@@ -72,7 +72,7 @@ RecurisveTreeNodeView {
 }
 ```
 
-After compilation, Java/Kotlin type `RecurisveTreeNodeView` will be automatically generated.
+After compilation, Java/Kotlin type `RecursiveTreeNodeView` will be automatically generated.
 
 </td>
 </tr>
@@ -85,9 +85,9 @@ After compilation, Java/Kotlin type `RecurisveTreeNodeView` will be automaticall
 <TabItem value="java" label="Java">
 
 ```java
-RecurisveTreeNodeView rootNode = sqlClient
+RecursiveTreeNodeView rootNode = sqlClient
     .findById(
-        RecurisveTreeNodeView.class,
+        RecursiveTreeNodeView.class,
         10L
     );
 ```
@@ -98,7 +98,7 @@ RecurisveTreeNodeView rootNode = sqlClient
 ```kotlin
 val rootNode = sqlClient
     .findById(
-        RecurisveTreeNodeView::class,
+        RecursiveTreeNodeView::class,
         10L
     );
 ```

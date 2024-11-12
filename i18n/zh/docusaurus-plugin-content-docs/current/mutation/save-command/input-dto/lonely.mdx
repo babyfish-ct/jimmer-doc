@@ -28,7 +28,7 @@ public void saveBook(
 ) {
     // highlight-next-line
     if (!ImmutableObjects.isLonely(book)) {
-        throw new IllegalArguemntException("The input object is too complex");
+        throw new IllegalArgumentException("The input object is too complex");
     }
     bookRepository.save(book);
 }
@@ -45,7 +45,7 @@ fun saveBook(
 ) {
     // highlight-next-line
     if (!isLonely(book)) {
-        throw IllegalArguemntException("The input object is too complex")
+        throw IllegalArgumentException("The input object is too complex")
     }
     bookRepository.save(input)
 }

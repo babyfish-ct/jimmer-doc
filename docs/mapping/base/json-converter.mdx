@@ -6,7 +6,7 @@ title: JSON Converter
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Although Jimmer entities are not POJOs, Jackson serialization can be supported by `org.babyish.jimmmer.jackson.ImmutableModule`.  
+Although Jimmer entities are not POJOs, Jackson serialization can be supported by `org.babyish.jimmer.jackson.ImmutableModule`.  
 
 :::tip
 If using the Jimmer Spring Boot Starter, this `ImmutableModule` will be automatically registered without user intervention.
@@ -65,7 +65,7 @@ Snowflake IDs lead to very large int64 values that unfortunately cannot be repre
 </TabItem>
 </Tabs>
 
-Where `SnowflakIdGenerator` is a user-provided distributed snowflake ID generator implementation, which is not the focus of our discussion.   
+Where `SnowflakeIdGenerator` is a user-provided distributed snowflake ID generator implementation, which is not the focus of our discussion.   
 
 Here, we discuss the highlighted line:  
 
@@ -73,7 +73,7 @@ Here, we discuss the highlighted line:
 
 -   `org.babyfish.jimmer.jackson.LongToStringConverter` means serialize/deserialize the long value as a String.
 
-    `LongToStringConveter` is a built-in Converter in Jimmer. Here we show its source code to quickly understand how to customize `Converter`.
+    `LongToStringConverter` is a built-in Converter in Jimmer. Here we show its source code to quickly understand how to customize `Converter`.
 
     ```java
     package org.babyfish.jimmer.jackson;
@@ -421,7 +421,7 @@ However, in actual projects, `Input DTO` can be generated based on entity object
 ```java  
 @Override  
 public String input(String value) {
-    retur value;  
+    return value;  
 }  
 ```  
 

@@ -122,7 +122,7 @@ public class UUIDScalarProvider extends AbstractScalarProvider<UUID, String> {
 ```kotlin title="UUIDScalarProvider.kt"
 class UUIDScalarProvider : ScalarProvider<UUID, String> {
 
-    override fun toScalar(sqlValue: Strng): UUID =
+    override fun toScalar(sqlValue: String): UUID =
         UUID.fromString(sqlValue)
 
     override fun toSql(scalarValue: UUID): String =

@@ -157,7 +157,7 @@ Jimmer并没有像传统ORM一样为关联属性提供配置`cascade`选项，�
             // 除了`id`和`price`外，其他属性都没有被指定
             // 所以除了`price`属性会被修改外，其他属性不会被影响
         })
-    ).getTotoalAffectedRowCount() != 0;
+    ).getTotalAffectedRowCount() != 0;
     ```
 
     </TabItem>
@@ -171,7 +171,7 @@ Jimmer并没有像传统ORM一样为关联属性提供配置`cascade`选项，�
             // 除了`id`和`price`外，其他属性都没有被指定
             // 所以除了`price`属性会被修改外，其他属性不会被影响
         }
-    ).totoalAffectedRowCount != 0
+    ).totalAffectedRowCount != 0
     ```
 
     </TabItem>
@@ -202,7 +202,7 @@ public class BookController {
     ) {
         return sqlClient
             .save(book)
-            .getTotoalAffectedRowCount();
+            .getTotalAffectedRowCount();
     }
 }
 ```
@@ -222,7 +222,7 @@ class BookController(
     ): Int =
         sqlClient
             .save(book)
-            .totoalAffectedRowCount
+            .totalAffectedRowCount
 }
 ```
 

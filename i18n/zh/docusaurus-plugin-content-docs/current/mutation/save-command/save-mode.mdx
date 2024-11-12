@@ -54,14 +54,12 @@ import { ViewMore } from '@site/src/components/ViewMore';
 ```java
 List<Book> books = Arrays.asList(
     Immutables.createBook(draft -> {
-        draft.setId(20L);
         draft.setName("SQL in Action");
         draft.setEdition(3);
         draft.setPrice(new BigDecimal("49.9"));
         draft.setStoreId(2L);
     }),
-    Book book2 = Immutables.createBook(draft -> {
-        draft.setId(21L);
+    Immutables.createBook(draft -> {
         draft.setName("LINQ in Action");
         draft.setEdition(2);
         draft.setPrice(new BigDecimal("39.9"));
@@ -69,11 +67,18 @@ List<Book> books = Arrays.asList(
     })
 );
 
-sqlClient
-    .getEntities()
-    .saveEntitiesCommand(books)
-    .setMode(SaveMode.INSERT_ONLY)
-    .execute();
+List<Long> allocatedIds = sqlClient    
+    .saveEntities(
+        books, 
+        // highlight-next-line
+        SaveMode.INSERT_ONLY
+    )
+    .getSimpleResults()
+    .stream()
+    .map(result -> result.getModifiedEntity().id())
+    .collect(Collectors.toList());
+
+System.out.println("Allocated ids: " + allocatedIds);
 ```
 
 </TabItem>
@@ -82,28 +87,52 @@ sqlClient
 ```kotlin
 val books = listOf(
     Book {
-        id = 20L
         name = "SQL in Action"
         edition = 3
         price = BigDecimal("49.9")
         storeId = 2L
     },
     Book {
-        id = 21L
         name = "SQL in Action"
         edition = 2
         price = BigDecimal("39.9")
         storeId = 2L
     }
 )
-// highlight-next-line
-sqlClient.save(books) {
-    setMode(SaveMode.INSERT_ONLY)
-}
+
+val allocatedIds = sqlClient
+    .saveEntities(books) {
+        // highlight-next-line
+        setMode(SaveMode.INSERT_ONLY)
+    }
+    .getSimpleResults
+    .map {
+        it.modifiedEntity.id
+    }
+
+println("Allocated ids: $allocatedIds")
 ```
 
 </TabItem>
 </Tabs>
+
+INSERT_ONLY的工作方式非常简单，不做任何判断，无条件插入。
+
+Jimmer使用JDBC的Batch SQL来完成多条数据的插入操作
+
+生成的SQL
+
+```sql
+insert into BOOK(NAME, EDITION, PRICE, STORE_ID) values(?, ?, ?, ?)
+/* batch-0: SQL in Action, 3, 49.9, 2 */
+/* batch-1: [LINQ in Action, 2, 39.9, 2 */
+```
+
+这个例子中，由于id属性对应的列采用了数据自动编号。因此批量插入完成后，数据库为所有数据分配的id都将被返回，打印结果为
+
+```
+Allocated ids: [100, 101]
+```
 
 ## UPDATE_ONLY
 

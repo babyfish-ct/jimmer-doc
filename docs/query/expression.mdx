@@ -1372,7 +1372,7 @@ List<
     .createQuery(book)
     .select(
         book.count(),
-        book.id().count(/* disintct */ true),
+        book.id().count(/* distinct */ true),
         book.price().sum(),
         book.price().min(),
         book.price().max(),

@@ -27,7 +27,7 @@ Pagination requires executing two SQL queries:
 :::tip
 Jimmer's feature: The developer only needs to write the `data-query` *(actual `data-query` without limit and offset)*, and the framework automatically generates the `count-query`.  
 
-Not only can Jimmer automatically generate `count-query`, it can also optimize `count-query`. This optimization will be discussed in [next article](./unncessary-join).
+Not only can Jimmer automatically generate `count-query`, it can also optimize `count-query`. This optimization will be discussed in [next article](./unnecessary-join).
 :::
 
 ## When Used with Spring Data  
@@ -337,7 +337,7 @@ To simplify the discussion, this pseudocode does not consider [reverse sorting o
     - `withoutSortingAndPaging()`: The `count-query` does not need the sorting clause `order by` nor the paging clause *(such as H2's `limit ? offset ?`)*
     
     :::tip
-    Not only can Jimmer automatically generate `count-query`, it can also automatically optimize `count-query`, please refer to [Join Optimization](./unncessary-join).
+    Not only can Jimmer automatically generate `count-query`, it can also automatically optimize `count-query`, please refer to [Join Optimization](./unnecessary-join).
     :::
   
 -   ❸ `limit(limit, offset)`: Based on the original template query without modification, generate the real `data-query` with pagination limits.
@@ -833,6 +833,6 @@ Finally, in the obtained pagination, each object conforms to the data structure 
     // highlight-next-line
     "totalElements":12, // Total row count before pagination is 12
 
-    ...Spring Data's Page object has too many properties, ommitted...
+    ...Spring Data's Page object has too many properties, omitted...
 }
 ```

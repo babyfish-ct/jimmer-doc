@@ -36,7 +36,7 @@ Jimmer并没有这样设计，采用了更智能处理方式: @Key
 public interface TreeNode {
 
     @Id
-    @GeneratedValue(stragegy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     long id();
 
     // highlight-next-line
@@ -62,7 +62,7 @@ public interface TreeNode {
 interface TreeNode {
 
     @Id
-    @GeneratedValue(stragegy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long
 
     // highlight-next-line

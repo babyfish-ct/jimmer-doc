@@ -117,7 +117,7 @@ const EN: ReactNode =
     <>
         <p><Consistency/></p>
         <p>
-            <b>Left side</b>: modify the data in the database, udpate the foreign key <code>STORE_ID</code> of <code>Book-10</code> from <code>2</code> to <code>1</code>
+            <b>Left side</b>: modify the data in the database, update the foreign key <code>STORE_ID</code> of <code>Book-10</code> from <code>2</code> to <code>1</code>
         </p>
         <p>
             <b>Right side</b>: This action will cause a chain reaction, jimmer will automatically clean up all affected caches, and the actions of cleaning the cache will leave log records in the IDE

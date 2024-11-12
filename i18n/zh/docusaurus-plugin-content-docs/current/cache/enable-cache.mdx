@@ -172,7 +172,7 @@ return object: KCacheFactory {
             )
             .add( ❷
                 RedisValueBinder
-                    .forObject(tytpe)
+                    .forObject(type)
                     .redis(connectionFactory)
                     .objectMapper(objectMapper)
                     .duration(Duration.ofHours(24))

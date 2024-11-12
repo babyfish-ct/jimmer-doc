@@ -32,7 +32,7 @@ long count = sqlClient
 ```kotlin
 val count = sqlClient
     .createQuery(Book::class) {
-        where(table.name.ilike("graphq"))
+        where(table.name.ilike("graphql"))
         select(
             // highlight-next-line
             count(
@@ -57,7 +57,7 @@ from BOOK tb_1_
 inner join BOOK_AUTHOR_MAPPING tb_2_
     on tb_1_.ID = tb_2_.BOOK_ID
 where
-    lower(tb_1_.NAME) like ? /* %graphq% */
+    lower(tb_1_.NAME) like ? /* %graphql% */
 ```
 
 ## 分组

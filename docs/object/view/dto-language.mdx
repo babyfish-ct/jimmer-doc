@@ -520,7 +520,7 @@ input UpdateBookInput {
 -   Specification types do not allow `?`
 
     :::warning
-    Since all properties in `speciciation` are nullable by default, specifying the modifier `?` for properties within `specification` will cause compile errors.
+    Since all properties in `specification` are nullable by default, specifying the modifier `?` for properties within `specification` will cause compile errors.
     :::
 
 -   When the original property in the entity does not allow null
@@ -968,7 +968,7 @@ This code has the exact same function as the previous example, but no longer ass
 
 -   For view and input, the `flat` function can only be used for referential associations *(one-to-one or many-to-one)*, not collection associations *(one-to-many or many-to-many)*. It is used to promote the properties of associated DTOs to the current DTO type to obtain a flattened object without associations.
 
--   For sepecification, the `flat` function does not have the above restrictions and can be used for collection associations. Please check (../../query/super_qbe).
+-   For specification, the `flat` function does not have the above restrictions and can be used for collection associations. Please check (../../query/super_qbe).
 
 Take the `TreeNode` entity in the official example *(in fact, this example is wrong, we will discuss this issue later)*:
 
@@ -1123,7 +1123,7 @@ The difference between custom properties and mapped properties is that custom pr
 
 ### 11.2 Built-in Types  
 
-Custome fields can be defined as built-in types, which are types built into the DTO language that do not require import via `import`.
+Custom fields can be defined as built-in types, which are types built into the DTO language that do not require import via `import`.
 
 -   Primitive and boxed types
 

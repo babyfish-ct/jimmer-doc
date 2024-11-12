@@ -16,9 +16,9 @@ export const QuickDemo: FC = memo(() => {
     const onHoverIdChange = useCallback((value: string) => {
         setHoverId(value);
     }, []);
-    const [activeId, setActivieId] = useState<string>();
+    const [activeId, setActiveId] = useState<string>();
     const onActiveIdChange = useCallback((value: string | undefined) => {
-        setActivieId(value);
+        setActiveId(value);
     }, []);
     const bindProps: BindProps = {
         hoverId,
@@ -28,7 +28,7 @@ export const QuickDemo: FC = memo(() => {
     };
     useEffect(() => {
         const onBodyClickCapture = () => {
-            setActivieId(undefined);
+            setActiveId(undefined);
         };
         document.body.addEventListener("click", onBodyClickCapture, true);
         return () => {
@@ -120,7 +120,7 @@ const EntityQuery: FC<BindProps> = bindProps => {
                         <Line {...bindProps} indent={3}><Type>BookFetcher</Type><Dot/>$<Comment>Or `Fetchers.BOOK_FETCHER`</Comment></Line>
                         <Line mouseId='allScalars' {...bindProps} indent={4} tooltip={allScalarTooltip}><Dot/>allScalarFields<Op>()</Op></Line>
                         <Line mouseId='Book.store' {...bindProps} indent={4} tooltip={tooltip(isZh, 'Book.store', 'MANY-TO-ONE', true)}><Dot/>store<Op>(</Op></Line>
-                        <Line {...bindProps} indent={5}><Type>BookStoreFecher</Type><Dot/>$<Comment>Or `Fetchers.BOOK_STORE_FETCHER`</Comment></Line>
+                        <Line {...bindProps} indent={5}><Type>BookStoreFetcher</Type><Dot/>$<Comment>Or `Fetchers.BOOK_STORE_FETCHER`</Comment></Line>
                         <Line mouseId='BookStore.name' {...bindProps} indent={6} tooltip={tooltip(isZh, 'BookStore.name')}><Dot/>name<Op>()</Op></Line>
                         <Line {...bindProps} indent={4}><Op>)</Op></Line>
                         <Line mouseId='Book.authors' {...bindProps} indent={4} tooltip={tooltip(isZh, 'Book.authors', 'MANY-TO-MANY', true)}><Dot/>authors<Op>(</Op></Line>
@@ -201,12 +201,12 @@ const DtoQuery: FC<BindProps> = bindProps => {
             </div>
             {
                 isZh && <Admonition type="info">
-                    编译后，自动生成Java/Kotlin类型 <ViewMore buttonText="BookDetailView" title="自动生成的类型`BookDetailView`"><GendertedDtoType/></ViewMore>
+                    编译后，自动生成Java/Kotlin类型 <ViewMore buttonText="BookDetailView" title="自动生成的类型`BookDetailView`"><GeneratedDtoType/></ViewMore>
                 </Admonition>
             }
             {
                 !isZh && <Admonition type="info">
-                    After compilation, A new java/kotlin type <ViewMore buttonText="BookDetailView" title="Generated type `BookDetailView`"><GendertedDtoType/></ViewMore> will be automatically generated.
+                    After compilation, A new java/kotlin type <ViewMore buttonText="BookDetailView" title="Generated type `BookDetailView`"><GeneratedDtoType/></ViewMore> will be automatically generated.
                 </Admonition>
             }
             <div>&nbsp;</div>
@@ -498,7 +498,7 @@ function tooltip(isZh: boolean, prop: string, propType: 'SCALAR' | 'MANY-TO-ONE'
             <div>
                 {tooltip(isZh, prop, propType, false)}
                 <div style={{borderLeft: "solid 10px #81c784", color: '#81c784', paddingLeft: '0.5rem'}}>
-                    {isZh ? "注意，关联id被自动抓取" : "Notes: Associated id is fetched automatcially"}
+                    {isZh ? "注意，关联id被自动抓取" : "Notes: Associated id is fetched automatically"}
                 </div>
             </div>
         );
@@ -534,7 +534,7 @@ function isMatched(mouseId: string | undefined, contextId: string | undefined): 
     return false;
 }
 
-const GendertedDtoType: FC = () => {
+const GeneratedDtoType: FC = () => {
     const isZh = useZh();
     const java = useMemo(() => {
         return GENERATED_DTO_JAVA.split("<omit>").join(isZh ? "...省略更多成员..." : "...Omit other members...");

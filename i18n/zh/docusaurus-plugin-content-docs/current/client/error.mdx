@@ -587,7 +587,7 @@ public void registerUser(
 
 ```kotlin title="UserController.kt"
 @PostMapping("/user")
-@Throwss(UserInfoException.IllegalUserName::class)
+@Throws(UserInfoException.IllegalUserName::class)
 fun registerUser(@RequestBody input: RegisterUserInput) {
     if (...某些条件...) {
         val illegalChars: List<Char> = ...略...
@@ -624,7 +624,7 @@ fun registerUser(@RequestBody input: RegisterUserInput) {
 }
 ```
 
-为了方便开发和测试，可以在`application.yml`或`appliction.properties`中配置
+为了方便开发和测试，可以在`application.yml`或`application.properties`中配置
 ```
 jimmer:
     error-translator:
@@ -1022,7 +1022,7 @@ class UserController {
 </table>
 
 :::info
-请注意我们定义了6种具体的异常类型，但是Web Api只`throws`了5种，`PLATFORM_ERROR_CODE`簇中的`DATA_IS_FORZEN`从未被使用，后文会讨论。
+请注意我们定义了6种具体的异常类型，但是Web Api只`throws`了5种，`PLATFORM_ERROR_CODE`簇中的`DATA_IS_FROZEN`从未被使用，后文会讨论。
 :::
 
 生成的TypeScript代码如下

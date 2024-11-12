@@ -50,7 +50,7 @@ dangling pseudo foreign keys of child objects are allowed
 <td>SET_NULL</td>
 <td>
 Set the foreign key of the disassociated child object to null. 
-The prerequisite is that the many-to-one associated propety of the child object is nullable; otherwise, attempting this configuration will lead to an exception. 
+The prerequisite is that the many-to-one associated property of the child object is nullable; otherwise, attempting this configuration will lead to an exception. 
 </td>
 </tr>
 <tr>

@@ -90,7 +90,7 @@ interface BookRepository : KRepository<BookStore, Long> {
 
         这个重命名对当前接口所有default方法都有用，将之声明为接口静态变量较为合适。
 
-    -   Kotlin: `createQuery`接受一个labmda表达式，该lambda表达式切换了`this`的含义，lambda内部代码可以直接使用`table`变量。
+    -   Kotlin: `createQuery`接受一个lambda表达式，该lambda表达式切换了`this`的含义，lambda内部代码可以直接使用`table`变量。
 
 -   ❷
 
@@ -127,7 +127,7 @@ interface BookRepository : KRepository<BookStore, Long> {
     |fetchPage|Page&lt;E&gt;|分页对象|
     |fetchOne|T(不可能为null)|返回一条数据，如果查询结果没有数据或有多条数据，抛出异常|
     |fetchOneOrNull|T(可能为null)|返回一条数据，如果查询结果有多条数据，抛出异常|
-    |fetchOptional(仅Java)|T或null的Optinal包装|返回一条数据，如果查询结果有多条数据，抛出异常|
+    |fetchOptional(仅Java)|T或null的Optional包装|返回一条数据，如果查询结果有多条数据，抛出异常|
     |forEach|无返回值|当查询的数据量很大，不想构建集合只想遍历时使用|
 
     所有这些执行方法都有两个重载版本:
@@ -466,7 +466,7 @@ interface BookRepository : KRepository<BookStore, Long> {
     -   Kotlin: `subQuery`接受一个lambda表达式，`this`被重新定义，内部可以直接使用`table`变量，但是注意:
 
         -   子查询lambda内部：`table`变量表示`KNonNullTableEx<Author>`
-        -   父亲查询labmda内部，子查询lambda外部：`table`变量表示`KNonNullTable<Book>`
+        -   父亲查询lambda内部，子查询lambda外部：`table`变量表示`KNonNullTable<Book>`
         -   如果需要在子查询中引入父查询的表（本例未演示，通常用于写相关子查询）：请使用`parentTable`变量
 
 -   ❷ 创建子查询

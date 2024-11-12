@@ -435,7 +435,7 @@ fun cacheFactory(
         <tr>
             <td rowspan="2">
                 支持自Loading的缓存
-                <div><i>(通常是一级缓存技术：比如Guava, Caffine)</i></div>
+                <div><i>(通常是一级缓存技术：比如Guava, Caffeine)</i></div>
             </td>
             <td>
                 单视图
@@ -964,7 +964,7 @@ println(stores)
 :::info
 对于官方附带例子而言，`TenantProvider`基于HTTP请求头实现，并附有<ViewMore buttonText="swagger界面"><SwaggerAuthorize/></ViewMore>的支持，用三种不同的用户身份执行三次很容易。
 
-其中，`tenant = null`对应swagger UI的unauhtorized/logout状态。
+其中，`tenant = null`对应swagger UI的unauthorized/logout状态。
 :::
 
 打开redis-cli，我们可以验证Redis中的数据

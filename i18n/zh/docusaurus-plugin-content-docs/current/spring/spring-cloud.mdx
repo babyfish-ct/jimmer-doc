@@ -239,7 +239,7 @@ interface Author {
 
     在本例中，实体类型`BookStore`、`Book`和`Author`分别隶属于为服务`store-service`、`book-service`和`author-service`。
 
-    这里的微服务，就是注册中心中每个服务的名称，对于spring-cloud而言，就是全局配置`sping.application.name`。
+    这里的微服务，就是注册中心中每个服务的名称，对于spring-cloud而言，就是全局配置`spring.application.name`。
 
 -   隶属于不同微服务中的实体之间的关联，就是远程关联。
 
@@ -257,7 +257,7 @@ interface Author {
     Jimmer规定远程关联的中间表必须隶属于主动方实体所属的微服务。
     :::
 
-    这里回答了前文留下的问题，为何在本例中中间表`BOOK_AUTOHOR_MAPPING`定义在微服务`book-service`的数据库中，而不定义在`author-service`的数据库中。
+    这里回答了前文留下的问题，为何在本例中中间表`BOOK_AUTHOR_MAPPING`定义在微服务`book-service`的数据库中，而不定义在`author-service`的数据库中。
 
 ## 注册中心
 
@@ -302,7 +302,7 @@ interface Author {
                 defaultZone: http://localhost:7000/eureka/
     ```
 
-    这里，"store-service"既作为当前服务在spring-clound注册中心的名称，又作为Jimmer的微服务配置。
+    这里，"store-service"既作为当前服务在spring-cloud注册中心的名称，又作为Jimmer的微服务配置。
 
 -   使用底层API时
 

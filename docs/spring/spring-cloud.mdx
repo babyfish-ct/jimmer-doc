@@ -238,7 +238,7 @@ interface Author {
 
     In this example, the entity types `BookStore`, `Book` and `Author` belong to the services `store-service`, `book-service` and `author-service` respectively.
 
-    Here the microservice is the name of each service in the registry center, for spring-cloud it is the global configuration `sping.application.name`.
+    Here the microservice is the name of each service in the registry center, for spring-cloud it is the global configuration `spring.application.name`.
 
 -   The associations between entities belonging to different microservices are remote associations.
 
@@ -256,7 +256,7 @@ interface Author {
     Jimmer stipulates that the intermediate table of remote associations must belong to the microservice where the owning side entity belongs.
     :::
 
-    Here the question left in the previous section is answered, why in this example the intermediate table `BOOK_AUTOHOR_MAPPING` is defined in the `book-service` database instead of the `author-service` database.
+    Here the question left in the previous section is answered, why in this example the intermediate table `BOOK_AUTHOR_MAPPING` is defined in the `book-service` database instead of the `author-service` database.
 
 ## Registry Center
 

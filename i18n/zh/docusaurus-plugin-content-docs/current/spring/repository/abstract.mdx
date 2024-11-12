@@ -205,7 +205,7 @@ interface BookRepository : KRepository<Book, Long> {
     ```kotlin
     val books = bookRepository
         .findByNameLikeIgnoreCaseAndPriceBetween(
-            minPice = BigDecimal(40)
+            minPrice = BigDecimal(40)
         )
     ```
 
@@ -239,7 +239,7 @@ interface BookRepository : KRepository<Book, Long> {
     ```kotlin
     val books = bookRepository
         .findByNameLikeIgnoreCaseAndPriceBetween(
-            maxPice = BigDecimal(60)
+            maxPrice = BigDecimal(60)
         )
     ```
 

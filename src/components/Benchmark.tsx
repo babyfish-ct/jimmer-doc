@@ -250,7 +250,7 @@ const opsRows = rows.map(item => ({...item, value: Math.round(item.value)}));
 
 const timeRows = rows.map(item => ({...item, value: Math.round(1000000 / item.value)}));
 
-const HighPreformanceRows =rows.filter(item => !item.framework.startsWith("JDBC("));
+const HighPerformanceRows =rows.filter(item => !item.framework.startsWith("JDBC("));
 
 function compareByDataCount(a: Row, b: Row) : number {
     return parseInt(a.dataCount) - parseInt(b.dataCount);

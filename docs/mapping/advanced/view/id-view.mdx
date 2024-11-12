@@ -555,7 +555,7 @@ Other features make no assumptions about whether an association property has a c
     it is not recommended to use it in the DTO language, as this is a fragile assumption. 
     Once that `@IdView` property is removed, the DTO code cannot be correctly compiled until it is synchronized with the change.
 
-    The DTO language should directly use the association propertes, for example:
+    The DTO language should directly use the association properties, for example:
 
     ```sh
     export yourpackage.Book
@@ -569,7 +569,7 @@ Other features make no assumptions about whether an association property has a c
         id(authors) as authorIds
     }
 
-    specification BookSpecication {
+    specification BookSpecification {
         like/i(name)
         #highlight-next-line
         associatedIdIn(store) as storeIds

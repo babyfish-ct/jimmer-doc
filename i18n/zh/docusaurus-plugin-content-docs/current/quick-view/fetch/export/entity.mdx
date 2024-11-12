@@ -14,7 +14,7 @@ import TabItem from '@theme/TabItem';
 
 为了导出客户端代码，需要先启用Web API分析能力。开发人员有两种选择
 
--   使用`@org.babyfish.jimmer.client.EnableImplicitApi`修饰RestController所属工程中的任何一个类。对于Spring Boot应用而言，Appplication类就是一个不错的选择。
+-   使用`@org.babyfish.jimmer.client.EnableImplicitApi`修饰RestController所属工程中的任何一个类。对于Spring Boot应用而言，Application类就是一个不错的选择。
 
 -   使用`@org.babyfish.jimmer.client.Api`修饰所有需要导出的所有`RestController`类以及它们的`HTTP Mapping`方法。
 
@@ -399,7 +399,7 @@ interface Book {
 
 -   `authorIds`属性并非全新属性，它只是`authors`属性的视图，获取`authors`属性所表示的所有关联对象的`id`属性列表。`authorIds`和`authors`共享相同的数据。
 
-现在，如此编写REST Controll即可
+现在，如此编写REST Controller即可
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">

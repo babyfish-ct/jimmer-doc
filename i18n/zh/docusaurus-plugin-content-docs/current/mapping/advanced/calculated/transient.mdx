@@ -47,7 +47,7 @@ interface BookStore {
 </TabItem>
 </Tabs>
 
-这里，`@Tranisent`注解本身没有任何参数被指定，则当前数据只是一个用户自定义数据，和ORM的任何行为都没关系。
+这里，`@Transient`注解本身没有任何参数被指定，则当前数据只是一个用户自定义数据，和ORM的任何行为都没关系。
 
 :::caution
 只有当`@Transient`注解的参数被指定时，当前属性才是复杂计算属性。
@@ -140,7 +140,7 @@ class BookStoreAvgPriceResolver : KTransientResolver<Long, BigDecimal> {
 
     -   第2个范型参数：计算属性所属返回数据的类型
 
-        本例中，即将被定义的`BookStore.avgPrice`的类型为`BigDecmial`，所以这里范型参数为`BigDecimal`
+        本例中，即将被定义的`BookStore.avgPrice`的类型为`BigDecimal`，所以这里范型参数为`BigDecimal`
 
 -   `resolve`是基接口的一个必须实现的方法，用户靠此方法完成计算。
 
@@ -395,7 +395,7 @@ group by
 
 上小节中我们展示了计算属性`BookStore.avgPrice`，很明显，该计算属性是非关联属性。
 
-本小节中，我们会为`BookStore`添加一个计算属性`BookStore.newestBooks`，其类型为`java.uitl.List<Book>`，很明显这是一个关联属性。
+本小节中，我们会为`BookStore`添加一个计算属性`BookStore.newestBooks`，其类型为`java.util.List<Book>`，很明显这是一个关联属性。
 
 为了说明这个例子为什么要添加一个计算属性`BookStore.newestBooks`，先看一下原始的关联属性`BookStore.books`的特点。
 

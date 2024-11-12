@@ -738,7 +738,7 @@ interface TreeNode {
         :::note
         Jimmer的动态实体唯一的不安全问题是，直接访问不存在的属性会导致异常：`org.babyfish.jimmer.UnloadedException`。
         
-        这个问题并非Jimmer独有的问题，Jimmer对象的动态性其实是把`JPA/Hibernate`中的延迟属性推广到了任何属性，这个异常本质上和`org.hibernate.LazyIntializationException`相似。
+        这个问题并非Jimmer独有的问题，Jimmer对象的动态性其实是把`JPA/Hibernate`中的延迟属性推广到了任何属性，这个异常本质上和`org.hibernate.LazyInitializationException`相似。
 
         即，这是ORM领域早已普遍接受的必要成本。
         :::

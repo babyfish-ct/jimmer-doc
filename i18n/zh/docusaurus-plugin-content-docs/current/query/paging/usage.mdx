@@ -27,7 +27,7 @@ import TabItem from '@theme/TabItem';
 :::tip
 Jimmer分页的特色：开发人员只需编写`data-query`，框架自动生成`count-query`。
 
-Jimmer不但可以自动生成`count-query`，还可以做到优化`count-query`。这个优化会在[下一篇文章](./unncessary-join)中讨论。
+Jimmer不但可以自动生成`count-query`，还可以做到优化`count-query`。这个优化会在[下一篇文章](./unnecessary-join)中讨论。
 :::
 
 ## 配合Spring Data使用时
@@ -118,7 +118,7 @@ interface BookRepository<Book, Long> : KRepository<Book, Long> {
 </TabItem>
 </Tabs>
 
--   ❶ 由于Spring Data的`Pageabe`包含了动态排序，所以需要应用动态排序。
+-   ❶ 由于Spring Data的`Pageable`包含了动态排序，所以需要应用动态排序。
 
 -   ❷ 分页查询，返回`org.springframework.data.domain.Page<Book>`类型的对象
 
@@ -143,7 +143,7 @@ Page<Boo> page = bookRepository.findBooks(
 ```
 
 :::caution
-SpringData中`Pageabe`的页码从0开始，而非从1开始，所以，这里查询的是第二页
+SpringData中`Pageable`的页码从0开始，而非从1开始，所以，这里查询的是第二页
 :::
 
 会生成两条SQL
@@ -294,7 +294,7 @@ ConfigurableRootQuery<Book> query = ❶
 int totalCount = query.fetchUnlimitedCount(); ❷
 int totalPage = (totalCount + pageSize - 1) / pageSize;
 if (pageIndex >= totalPage) {
-    return new Page<Book>(totalCount, totalPage, Collections.emtptyList());
+    return new Page<Book>(totalCount, totalPage, Collections.emptyList());
 }
 List<Book> entities = query
     .limit(pageSize, pageIndex * pageSize) ❸
@@ -338,7 +338,7 @@ return new Page( ❺
     -   `withoutSortingAndPaging()`: `count-query`无需排序子句`order by`和分页子句 *(比如H2的`limit ? offset ?`)*
 
     :::tip
-    Jimmer不但能自动生成`count-query`，还能自动优化`count-query`，请参见[表连接优化](./unncessary-join)
+    Jimmer不但能自动生成`count-query`，还能自动优化`count-query`，请参见[表连接优化](./unnecessary-join)
     :::
 
 -   ❸ `limit(limit, offset)`: 在不修改原样板查询的基础上，生成真正的`data-query`，带上分页限制。

@@ -105,10 +105,10 @@ As a super type, `MappedSuperclass` has two usages:
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
 
-    ```java title="BookServiceCommonEnity.java" 
+    ```java title="BookServiceCommonEntity.java" 
     // highlight-next-line
     @MappedSuperclass(microServiceName = "book-service")
-    public interface BookServiceCommonEnity {
+    public interface BookServiceCommonEntity {
 
         LocalDateTime createdTime();
 
@@ -125,10 +125,10 @@ As a super type, `MappedSuperclass` has two usages:
     </TabItem>
     <TabItem value="kotlin" label="Kotlin">
 
-    ```kotlin title="BookServiceCommonEnity.kt"
+    ```kotlin title="BookServiceCommonEntity.kt"
     // highlight-next-line
     @MappedSuperclass(microServiceName = "book-service") 
-    interface BookServiceCommonEnity {
+    interface BookServiceCommonEntity {
 
         val createdTime: LocalDateTime
 
@@ -145,17 +145,17 @@ As a super type, `MappedSuperclass` has two usages:
     </TabItem>
     </Tabs>
 
-    Here `BookServiceCommonEnity` contains association properties `createdBy` and `modifiedBy`, but only `Entity` or other `MappedSuperclass` belonging to the microservice "book-service" can inherit it.
+    Here `BookServiceCommonEntity` contains association properties `createdBy` and `modifiedBy`, but only `Entity` or other `MappedSuperclass` belonging to the microservice "book-service" can inherit it.
     
 -   Can span any microservices, but must not contain association properties
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
 
-    ```java title="CommonEnity.java"
+    ```java title="CommonEntity.java"
     // highlight-next-line
     @MappedSuperclass(acrossMicroServices = true)
-    public interface CommonEnity {
+    public interface CommonEntity {
 
         LocalDateTime createdTime();
 
@@ -166,10 +166,10 @@ As a super type, `MappedSuperclass` has two usages:
     </TabItem>
     <TabItem value="kotlin" label="Kotlin">
 
-    ```kotlin title="CommonEnity.kt"
+    ```kotlin title="CommonEntity.kt"
     // highlight-next-line
     @MappedSuperclass(acrossMicroServices = true)  
-    interface CommonEnity {
+    interface CommonEntity {
 
         val createdTime: LocalDateTime
 
@@ -180,4 +180,4 @@ As a super type, `MappedSuperclass` has two usages:
     </TabItem>
     </Tabs>
 
-    Here `CommonEnity` can span any microservices. Any `Entity` or other `MappedSuperclass` under any microservice can inherit it, but it itself does not contain any association properties.
+    Here `CommonEntity` can span any microservices. Any `Entity` or other `MappedSuperclass` under any microservice can inherit it, but it itself does not contain any association properties.

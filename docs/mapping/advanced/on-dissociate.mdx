@@ -109,7 +109,7 @@ interface Book {
 :::info
 Although disassociation of child objects is caused by a one-to-many association *(or inverse one-to-one)* *(that is, the parent object abandons some child objects. The one-to-many association here is `BookStore.books`)*, the disassociation mode is configured for the inverse many-to-one association *(here `Book.store`)*. This design is to maintain similarity with configuring cascade properties of foreign keys in database DDLs.
 
-For Jimmr, a one-to-many association must be bidirectional, so the many-to-one association that is the mirror image of a known one-to-many association is always known. So there is no problem with this design.
+For Jimmer, a one-to-many association must be bidirectional, so the many-to-one association that is the mirror image of a known one-to-many association is always known. So there is no problem with this design.
 :::
 
 ## Dissociation Modes
@@ -122,7 +122,7 @@ This article only introduces the configuration of OnDissociate. For how to use i
 
 ## Dynamic Overrides 
 
-Confiugration specified by the annotation `@OnDissociate` is called static configuration.
+Configuration specified by the annotation `@OnDissociate` is called static configuration.
 
 Sometimes, different businesses may have different requirements for dissociation operations. Therefore, dissociation configurations can be dynamically overridden at runtime.
 

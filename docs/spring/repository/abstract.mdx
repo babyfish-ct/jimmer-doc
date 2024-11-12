@@ -207,7 +207,7 @@ Each parameter of this method can be null, look at the 6 possible invocations:
     ```kotlin
     val books = bookRepository
         .findByNameLikeIgnoreCaseAndPriceBetween(
-            minPice = BigDecimal(40)
+            minPrice = BigDecimal(40)
         )
     ```
 
@@ -242,7 +242,7 @@ Each parameter of this method can be null, look at the 6 possible invocations:
     ```kotlin 
     val books = bookRepository
         .findByNameLikeIgnoreCaseAndPriceBetween(
-            maxPice = BigDecimal(60)
+            maxPrice = BigDecimal(60)
         )
     ```
 

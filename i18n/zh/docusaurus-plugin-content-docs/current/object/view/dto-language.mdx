@@ -516,7 +516,7 @@ input UpdateBookInput {
 -   Specification类型不允许使用`?`
 
     :::warning
-    由于`speciciation`默认所有属性可以为null，所以在specification内部为属性指定修饰符`?`将会导致编译错误。
+    由于`specification`默认所有属性可以为null，所以在specification内部为属性指定修饰符`?`将会导致编译错误。
     :::
 
 -   当实体的原属性不允许为null时
@@ -957,7 +957,7 @@ BookView {
 
 -   对view和input而言，`flat`函数只能用于引用关联 *(一对一或多对一)*，不能用于集合关联 *(一对多或多对多)*，用于把关联DTO的属性提升到当前DTO类型，得到不含关联的平坦对象。
 
--   对于sepecification而言，`flat`函数没有上述限制，可以用于集合关联。请查看(../../query/super_qbe)。
+-   对于specification而言，`flat`函数没有上述限制，可以用于集合关联。请查看(../../query/super_qbe)。
 
 以官方例子中的`TreeNode`实体为例 *(事实上，这个例子是错误的，我们稍后会讨论这个问题)*
 

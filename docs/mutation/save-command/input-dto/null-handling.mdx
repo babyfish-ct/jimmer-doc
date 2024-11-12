@@ -136,7 +136,7 @@ The generated code is as follows:
 <TabItem value="java" label="Java">
 
 ```java title="BookUpdateInput.java"
-@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
+@GeneratedBy(file = "<your_project>/src/main/dto/Book.dto")
 public class BookUpdateInput implements Input<Book> {
 
     private long id;
@@ -160,7 +160,7 @@ public class BookUpdateInput implements Input<Book> {
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="BookUpdateInput.kt"
-@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
+@GeneratedBy(file = "<your_project>/src/main/dto/Book.dto")
 data class BookUpdateInput(
     val id: Long,
     val name: String,
@@ -231,7 +231,7 @@ class BookController {
         @RequestBody input: BookUpdateInput
     ) {
         val book = input.toEntity()
-        pirntln(book)
+        println(book)
         ...subsequent code omitted...
     }
 

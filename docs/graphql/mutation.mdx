@@ -56,7 +56,7 @@ Using the DTO language can achieve our goal very efficiently, so this article ad
 
 1.  **In the project where the entity is defined**, create the directory `src/main/dto`
 
-2.  Under `src/main/dto`, create subdirectories `com/yourcompany/yourpoject/model` according to the package path where the entities are located
+2.  Under `src/main/dto`, create subdirectories `com/yourcompany/yourproject/model` according to the package path where the entities are located
 
 3.  Under the directory created in the previous step, create the file `Book.dto`. The file must have the same name as the entity class and the extension must be `dto`
 
@@ -81,7 +81,7 @@ After compilation, the following Input DTO will be generated automatically:
 <TabItem value="java" label="Java">
 
 ```java title="BookInput.java"
-@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
+@GeneratedBy(file = "<your_project>/src/main/dto/Book.dto")
 public class BookInput implements Input<Book> { ❶
 
     @Nullable
@@ -111,7 +111,7 @@ public class BookInput implements Input<Book> { ❶
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin title="BookInput.kt" 
-@GenertedBy(file = "<your_project>/src/main/dto/Book.dto")
+@GeneratedBy(file = "<your_project>/src/main/dto/Book.dto")
 data class BookInput(
     val id: Long? = null,
     val name: String = "",
@@ -153,10 +153,10 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class BookStoreService {
 
-    private final BookStoreRepsitory bookStoreRepsitory;
+    private final BookStoreRepository bookStoreRepository;
 
-    public BookStoreService(BookStoreRepsitory bookStoreRepsitory) {
-        this.bookStoreRepsitory = bookStoreRepsitory;
+    public BookStoreService(BookStoreRepository bookStoreRepository) {
+        this.bookStoreRepository = bookStoreRepository;
     }
 
     @MutationMapping ❶
@@ -185,7 +185,7 @@ import org.springframework.stereotype.Controller
 
 @Controller
 class BookStoreService(
-    private val bookStoreRepository: BookStoreRepsitory
+    private val bookStoreRepository: BookStoreRepository
 ) {
 
     @MutationMapping ❶

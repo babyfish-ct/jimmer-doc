@@ -86,7 +86,7 @@ export const LongAssociation: FC = memo(() => {
         }
     }, [setOrder, userMap]);
 
-    const onPrivinceChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const onProvinceChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         setOrder(order => {
             order.province = e.target.value;
         });
@@ -185,7 +185,7 @@ export const LongAssociation: FC = memo(() => {
                         fullWidth
                         label={isZh ? "省份" : "Province"}
                         value={order.province}
-                        onChange={onPrivinceChange}/>
+                        onChange={onProvinceChange}/>
                     </Grid>
                     <Grid item xs={4}>
                         <TextField

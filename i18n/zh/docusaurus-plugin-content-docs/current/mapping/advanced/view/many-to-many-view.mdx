@@ -168,7 +168,7 @@ alter table order_item
 
 然而，`order-item`并不是中间表，因为它具备其他业务字段，表示商品数量的`quantity`，以及表示下单这一刻商品的价格快照的`unit_price`。
 
-幸运的是，对于经典的`订单-订单明细-产品`关联，更适合人们直觉的思维方式是认为`order_item`是一个独立的实体，持有分别指向`oroder_`和`product`的两个多对一关联；
+幸运的是，对于经典的`订单-订单明细-产品`关联，更适合人们直觉的思维方式是认为`order_item`是一个独立的实体，持有分别指向`order_`和`product`的两个多对一关联；
 而不是将`order-item`视为中间表，认为`order_`和`product`之间存在多对多关系。
 
 正是因为把`order_item`作为一个独立的实体来看待，所以`order_item`采用了独立主键。
@@ -295,7 +295,7 @@ create table learning_link (
     student_id bigint unsigned not null,
     course_id bigint unsigned not null,
     /* highlight-next-line */
-    scroe int
+    score int
 ) engine=innodb;
 alter table learning_link
     add constraint pk_student_course_mapping
@@ -330,7 +330,7 @@ alter table learning_link
 -   当然，我们用场景2的方法来处理这个问题，把`learning_link`视为一个独立实体，用两个多对一关联把三个实体类型串起来。
 
     然而，对于很大一部分上层业务而言，其实只关心`student`和`course`之间的彼此关联，并不关心`learning_link`表的`score`字段
-    *(即，中间表的非外键业务字段`learnning_link`.`score`远没场景2中的相关字段重要)*。
+    *(即，中间表的非外键业务字段`learning_link`.`score`远没场景2中的相关字段重要)*。
     在这种情况下，场景2的解决方式会带来较高的心智负担，很显然，场景1那种思维方式更简单。
 
 :::info
@@ -532,7 +532,7 @@ alter table learning_link
 
     -   ❶ `prop = "learningLinks"`
         
-        首先，通过当前实体的另一个属性`Student.lerningLinks`③ 获得所有的`LearningLink`对象
+        首先，通过当前实体的另一个属性`Student.learningLinks`③ 获得所有的`LearningLink`对象
 
     -   ❷ `deeperProp = "course"`
 
@@ -595,7 +595,7 @@ alter table learning_link
 
     -   ❶ `prop = "learningLinks"`
         
-        首先，通过当前实体的另一个属性`Course.lerningLinks`④ 获得所有的`LearningLink`对象
+        首先，通过当前实体的另一个属性`Course.learningLinks`④ 获得所有的`LearningLink`对象
 
     -   ❷ `deeperProp = "student"`
 

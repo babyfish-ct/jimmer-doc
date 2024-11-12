@@ -19,7 +19,7 @@ save-command功能发生了质变，文档重构中。
 
 Jimmer实体支持两种表示属性
 
--   `@Id`: Jimmer的任何实体类型都必须定义的一个属性。技术层面的唯一标识，行业内称其为`Suggrogate Id`
+-   `@Id`: Jimmer的任何实体类型都必须定义的一个属性。技术层面的唯一标识，行业内称其为`Surrogate Id`
 
 -   [@Key](../../mapping/advanced/key): Jimmer建议为实体类型定义的多个属性。业务层面的唯一标识，行业内称其为`Natural Id`
 
@@ -76,7 +76,7 @@ interface Book {
 
 -   ❶ Id属性, 即Surrogate Id
 -   ❷ Id属性采用数据库自动编号作为自动增长策略
--   ❸ Key属性，即Nartual Id
+-   ❸ Key属性，即Natural Id
 
 ## 数据分类
 
@@ -176,7 +176,7 @@ val book = Book {
 </Tabs>
 
 :::note
-上述代码中，被省略部分不包含对`@Id`属性的设置，因为一旦设置了`@Id`属性，就应该是id-speicified对象，而非key-specified对象。
+上述代码中，被省略部分不包含对`@Id`属性的设置，因为一旦设置了`@Id`属性，就应该是id-specified对象，而非key-specified对象。
 :::
 
 Jimmer支持`UPSERT`操作，即，用户并不明确指定`insert`或`update`，让Jimmer自行判断。

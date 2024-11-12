@@ -99,7 +99,7 @@ If you don't want to support object cache for some entity types, just return nul
 ```java
 @Override
 public Cache<?, ?> createObjectCache(ImmutableType type) {
-    if (type.getJavaClass() == SomeEnitity.class) {
+    if (type.getJavaClass() == SomeEntity.class) {
         // highlight-next-line
         return null;
     }
@@ -112,7 +112,7 @@ public Cache<?, ?> createObjectCache(ImmutableType type) {
 
 ```kotlin
 override fun createObjectCache(type: ImmutableType): Cache<*, *>? =
-    if (type.javaClass === SomeEnitity::class.java) {
+    if (type.javaClass === SomeEntity::class.java) {
         // highlight-next-line
         null
     } else {

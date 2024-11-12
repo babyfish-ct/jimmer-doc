@@ -44,94 +44,127 @@ import { ViewMore } from '@site/src/components/ViewMore';
 对于关联对象而言，请参考[关联对象保存模式](./associated-save-mode)。
 :::
 
-## Id-specified对象
+## INSERT_ONLY
 
-按照[数据分类](./data-classification)一文所所言，[@Id](../../mapping/base/basic#id)属性被指定的对象叫做Id-specified对象
+`INSERT_ONLY`表示无条件插入数据
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
 ```java
-Book book1 = Immutables.createBook(draft -> {
-    draft.setId(20L);
-    draft.setName("SQL in Action");
-    draft.setEdition(3);
-    draft.setPrice(new BigDecimal("49.9"));
-    draft.setStoreId(2L);
-});
-Book book2 = Immutables.createBook(draft -> {
-    draft.setId(21L);
-    draft.setName("LINQ in Action");
-    draft.setEdition(2);
-    draft.setPrice(new BigDecimal("39.9"));
-    draft.setStoreId(2L);
-});
-
-sqlClient.saveEntities(
-        Arrays.asList(book1, book2)
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setId(20L);
+        draft.setName("SQL in Action");
+        draft.setEdition(3);
+        draft.setPrice(new BigDecimal("49.9"));
+        draft.setStoreId(2L);
+    }),
+    Book book2 = Immutables.createBook(draft -> {
+        draft.setId(21L);
+        draft.setName("LINQ in Action");
+        draft.setEdition(2);
+        draft.setPrice(new BigDecimal("39.9"));
+        draft.setStoreId(2L);
+    })
 );
+
+sqlClient
+    .getEntities()
+    .saveEntitiesCommand(books)
+    .setMode(SaveMode.INSERT_ONLY)
+    .execute();
 ```
 
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val book = Book {
-    id = 20
-    name = "SQL in Action"
-    edition = 1
-    price = BigDecimal("39.9")
-    store = makeIdOnly(BookStore::class, 2L)
-}
+val books = listOf(
+    Book {
+        id = 20L
+        name = "SQL in Action"
+        edition = 3
+        price = BigDecimal("49.9")
+        storeId = 2L
+    },
+    Book {
+        id = 21L
+        name = "SQL in Action"
+        edition = 2
+        price = BigDecimal("39.9")
+        storeId = 2L
+    }
+)
 // highlight-next-line
-sqlClient.save(book)
+sqlClient.save(books) {
+    setMode(SaveMode.INSERT_ONLY)
+}
 ```
 
 </TabItem>
 </Tabs>
 
-## Key-specified对象
+## UPDATE_ONLY
 
-## 指定对象的id
-
-让我们来看一个例子
+## UPSERT
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
 ```java
-Book book = Immutables.createBook(draft -> {
-    draft.setId(20L);
-    draft.setName("SQL in Action");
-    draft.setEdition(1);
-    draft.setPrice(new BigDecimal("39.9"));
-    draft.setStore(
-        ImmutableObjects.makeIdOnly(BookStore.class, 2L)
-    );
-});
-// highlight-next-line
-sqlClient.save(book);
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setId(20L);
+        draft.setName("SQL in Action");
+        draft.setEdition(3);
+        draft.setPrice(new BigDecimal("49.9"));
+        draft.setStoreId(2L);
+    }),
+    Book book2 = Immutables.createBook(draft -> {
+        draft.setId(21L);
+        draft.setName("LINQ in Action");
+        draft.setEdition(2);
+        draft.setPrice(new BigDecimal("39.9"));
+        draft.setStoreId(2L);
+    })
+);
+
+sqlClient
+    .getEntities()
+    .saveEntitiesCommand(books)
+    .setMode(SaveMode.INSERT_ONLY)
+    .execute();
 ```
 
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val book = Book {
-    id = 20
-    name = "SQL in Action"
-    edition = 1
-    price = BigDecimal("39.9")
-    store = makeIdOnly(BookStore::class, 2L)
-}
+val books = listOf(
+    Book {
+        id = 20L
+        name = "SQL in Action"
+        edition = 3
+        price = BigDecimal("49.9")
+        storeId = 2L
+    },
+    Book {
+        id = 21L
+        name = "SQL in Action"
+        edition = 2
+        price = BigDecimal("39.9")
+        storeId = 2L
+    }
+)
 // highlight-next-line
-sqlClient.save(book)
+sqlClient.save(books) {
+    setMode(SaveMode.INSERT_ONLY)
+}
 ```
 
 </TabItem>
 </Tabs>
-
-在这个例子中，`save(book)`是一个简写方式，和`save(book, SaveMode.UPSERT)`等价，因为`UPSERT`是默认的保存方式。
 
 执行代码会生成两句SQL
 

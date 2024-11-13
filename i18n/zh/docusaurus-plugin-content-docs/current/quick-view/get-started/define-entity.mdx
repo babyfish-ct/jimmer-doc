@@ -312,7 +312,7 @@ import TabItem from '@theme/TabItem';
     如果Java/Kotlin属性名和数据库列名无法自动匹配，请用`@org.babyfish.jimmer.sql.Column`修饰属性。
 
     :::note
-    注意：改注解即可用于修饰非关联字段，而非下文要讨论的外键字段
+    注意：该注解仅可用于修饰非关联字段，而非下文要讨论的外键字段
     :::
 
 -   Jimmer实体是动态对象，没有id的对象，就是id未被设置的对象，而非id被设置为null的对象。Jimmer不需要让id可以为null。

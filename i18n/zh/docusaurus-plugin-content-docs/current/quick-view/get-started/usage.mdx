@@ -119,7 +119,8 @@ public class BookRepository {
             @Nullable BigDecimal maxPrice,
             @Nullable String storeName,
             @Nullable String storeWebsite,
-            @Nullable String authorName
+            @Nullable String authorName,
+            @Nullable Gender authorGender
     ) {
         return sqlClient
                 .createQuery(T)

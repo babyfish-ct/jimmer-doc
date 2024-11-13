@@ -41,7 +41,7 @@ Jimmer提供了[DTO语言](../../../object/view/dto-language)。
 
     ```sh title="Book.dto"
     # highlight-next-line
-    BookInput {
+    input BookInput {
         
         #allScalars(Book)
         
@@ -53,7 +53,7 @@ Jimmer提供了[DTO语言](../../../object/view/dto-language)。
         }
     }
 
-    SimpleBookInput { ...略... }
+    input SimpleBookInput { ...略... }
 
     ...省略其他Input DTO形状定义...
     ```

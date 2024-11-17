@@ -1,10 +1,237 @@
 ---
 sidebar_position: 3
-title: Data Classification 
+title: Data Classification
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Key from '../../_shared/key.mdx';
 
-**No article will come soon**
+The save command is used to store data structures of any complexity. To facilitate discussion, we need to establish a basic classification of data structure shapes.
+
+## Entity Definition
+
+Jimmer entities support two types of property representation:
+
+- `@Id`: A property that must be defined for any Jimmer entity type. It serves as a technical unique identifier, known in the industry as a `Surrogate Id`.
+
+- [@Key](../../mapping/advanced/key): Multiple properties that Jimmer recommends defining for entity types. They serve as business-level unique identifiers, known in the industry as `Natural Id`.
+
+In this series of articles, all entities have both `@Id` and `@Key` properties defined, with the Id property using the database's auto-increment strategy. Here's an example using `Book`:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+@Entity
+public interface Book {
+
+    @Id ❶
+    @GeneratedValue(strategy = GenerationType.IDENTITY) ❷
+    long id();
+
+    @Key ❸
+    String name();
+    
+    @Key ❸
+    int edition();
+
+    BigDecimal price();
+
+    ...other properties omitted...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="Book.kt"
+@Entity
+interface Book {
+
+    @Id ❶
+    @GeneratedValue(strategy = GenerationType.IDENTITY) ❷
+    val id: Long
+
+    @Key ❸
+    val name: String
+    
+    @Key ❸
+    val edition: Int
+
+    val price: BigDecimal
+
+    ...other properties omitted...
+}
+```
+
+</TabItem>
+</Tabs>
+
+- ❶ Id property, i.e., Surrogate Id
+- ❷ Id property uses database auto-numbering as the auto-increment strategy
+- ❸ Key property, i.e., Natural Id
+
+## Data Classification
+
+### 1. Wild Objects
+
+An object is called a wild object if neither its `@Id` property *(Book.id in this article)* nor its `@Key` properties *(Book.name and Book.edition in this article)* are specified. For example:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setPrice(new BigDecimal("59.9"));
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    price = BigDecimal("59.9")
+}
+```
+
+</TabItem>
+</Tabs>
+
+When we say `@Key` properties are not specified, this includes two situations:
+
+- The entity type doesn't define any `@Key` properties *(not discussed in this article)*
+- Although the entity type defines `@Key` properties, these properties are not specified in the object
+
+:::caution
+Jimmer does not recommend wild objects. Although API parameters can be adjusted to save wild objects, this will ultimately compromise idempotency.
+:::
+
+### 2. Id-specified Objects
+
+An object is called an id-specified object if its `@Id` property *(Book.id in this article)* is specified. For example:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setId(17L);
+    ...other settings omitted...
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    id = 17L
+    ...other settings omitted...
+}
+```
+
+</TabItem>
+</Tabs>
+
+Jimmer supports `UPSERT` operations, where users don't explicitly specify `insert` or `update`, letting Jimmer make the determination.
+
+When saving an id-specified object in `UPSERT` mode, Jimmer uses the `@Id` property to determine whether corresponding data already exists in the database, ultimately deciding whether to insert or update.
+
+### 3. Key-specified Objects
+
+An object is called a key-specified object if its `@Id` property *(Book.id in this article)* is not specified, but its `@Key` properties *(Book.name and Book.edition in this article)* are specified. For example:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setName("GraphQL in Action");
+    draft.setEdition(2);
+    ...setting other properties except id...
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    name = "GraphQL in Action"
+    edition = 1
+    ...setting other properties except id...
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::note
+In the code above, the omitted parts do not include setting the `@Id` property, because once the `@Id` property is set, it should be an id-specified object, not a key-specified object.
+:::
+
+Jimmer supports `UPSERT` operations, where users don't explicitly specify `insert` or `update`, letting Jimmer make the determination.
+
+When saving a key-specified object in `UPSERT` mode, Jimmer uses the `@Key` properties to determine whether corresponding data already exists in the database, ultimately deciding whether to insert or update.
+
+### 4. Id-only Objects
+
+An id-specified object is called an id-only object if no properties other than id are specified. For example:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setId(17L);
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    id = 17L
+}
+```
+
+</TabItem>
+</Tabs>
+
+In hierarchical data structures, any object can have deeper associated objects.
+
+If an associated object is an id-only object, it indicates that only the association relationship is being modified, without further creating or modifying the associated object.
+
+### 5. Key-only Objects
+
+A key-specified object is called a key-only object if no properties other than key properties are specified. For example:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setName("GraphQL in Action");
+    draft.setEdition(2);
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    name = "GraphQL in Action"
+    edition = 1
+}
+```
+
+</TabItem>
+</Tabs>
+
+In hierarchical data structures, any object can have deeper associated objects.
+
+If an associated object is a key-only object, it indicates that only the association relationship is being modified, without further creating or modifying the associated object.

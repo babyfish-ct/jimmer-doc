@@ -10,4 +10,4 @@ title: 视图属性
 在这里，你会了解到这些注解
 
 -   org.babyfish.jimmer.sql.IdView
--   org.babyfish.jimmer.sql.ManyToView
+-   org.babyfish.jimmer.sql.ManyToManyView

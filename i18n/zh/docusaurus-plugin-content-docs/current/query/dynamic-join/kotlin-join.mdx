@@ -79,7 +79,7 @@ for ((name, website) in books) { ❷
 1.  由于`BookStore.website`是可空的，❶处select的第二列的类型为`String?`而非`String`，
     最终，查询返回的数据的类型为`List<Tuple2<String, String?>>`
 
-2.  ❷处通过循环遍历查询查询到的每一个元祖，将其解构成变量`name`和`website`。
+2.  ❷处通过循环遍历查询查询到的每一个元组，将其解构成变量`name`和`website`。
     由于`tuples`的类型为`List<Tuple2<String, String?>>`，这里`website`的类型是`String?`
 
 3.  ❸处对可能为null的`website`进行`.length`运算，导致编译错误。

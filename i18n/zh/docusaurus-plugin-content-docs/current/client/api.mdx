@@ -12,7 +12,7 @@ import { ViewMore } from '@site/src/components/ViewMore';
 
 默认情况下，自动生成客户端的能力是关闭的。要启用这种个功能，有两种选择
 
-1.  采用`@EnableExplicitApi`修饰项目中任何一个类。
+1.  采用`@EnableImplicitApi`修饰项目中任何一个类。
 
     对于Spring Boot应用而言，Application是一个不错的选择。由于过于简单，无需示范。
 
@@ -108,7 +108,7 @@ class XController() {
 
 -   如果大部分Api都是客户端友好的，只有个别Api才是不友好的，推荐
 
-    1.  先用`@EnableExplicitApi`修饰任何一个类，比如SpringBoot的主类。由于过于简单，不必示范。
+    1.  先用`@EnableImplicitApi`修饰任何一个类，比如SpringBoot的主类。由于过于简单，不必示范。
 
     2.  再用`@ApiIgnore`修饰无法支持的类或方法，比如
         

@@ -10,4 +10,4 @@ View properties and original properties share the same underlying data, the only
 In this article, you will learn about these annotations:
 
 -   org.babyfish.jimmer.sql.IdView
--   org.babyfish.jimmer.sql.ManyToView
+-   org.babyfish.jimmer.sql.ManyToManyView

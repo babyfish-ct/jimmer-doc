@@ -28,15 +28,11 @@ import { ViewMore } from '@site/src/components/ViewMore';
 
 -   UPDATE_ONLY: 无条件执行UPDATE语句
 
--   NON_IDEMPOTENT_UPSERT: 
+-   NON_IDEMPOTENT_UPSERT *(不推荐)*: 
 
     -   如果对象的@Id属性或@Key属性被指定，执行与UPSERT等价的行为
 
     -   否则，执行INSERT操作
-
-    :::note
-    此行为和JPA的`merge`或Hibernate的`saveOrUpdate`等价，但是，在Jimmer中并不被推荐。
-    :::
 
 :::caution
 保存模式仅影响聚合根对象，不影响其他关联对象。
@@ -44,7 +40,7 @@ import { ViewMore } from '@site/src/components/ViewMore';
 对于关联对象而言，请参考[关联对象保存模式](./associated-save-mode)。
 :::
 
-## INSERT_ONLY
+## 1. INSERT_ONLY
 
 `INSERT_ONLY`表示无条件插入数据
 
@@ -133,7 +129,7 @@ insert into BOOK(NAME, EDITION, PRICE, STORE_ID) values(?, ?, ?, ?)
 Allocated ids: [100, 101]
 ```
 
-## UPDATE_ONLY
+## 2. UPDATE_ONLY
 
 `INSERT_ONLY`表示无条件更新数据，分为两种情况
 
@@ -372,7 +368,7 @@ Data is updated, updated id is 3
 Data is not updated
 ```
 
-## UPSERT
+## 3. UPSERT
 
 `UPSERT`表示先判断数据是否存在，如果存在则更新，否则即插入
 
@@ -395,7 +391,7 @@ List<Book> books = Arrays.asList(
         draft.setStoreId(2L);
     }),
     Immutables.createBook(draft -> {
-        draft.setId(90L);
+        draft.setId(100L);
         draft.setName("LINQ in Action");
         draft.setEdition(2);
         draft.setPrice(new BigDecimal("39.9"));
@@ -424,7 +420,7 @@ val books = listOf(
         storeId = 2L
     },
     Book {
-        id = 90L
+        id = 100L
         name = "SQL in Action"
         edition = 2
         price = BigDecimal("39.9")
@@ -462,7 +458,7 @@ merge into BOOK(
     ?, ?, ?, ?, ?
 )
 /* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
-/* batch-1: [90, LINQ in Action, 2, 39.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
 ```
 
 </td>
@@ -481,7 +477,7 @@ on duplicate key update
     PRICE = values(PRICE), 
     STORE_ID = values(STORE_ID)
 /* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
-/* batch-1: [90, LINQ in Action, 2, 39.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
 ```
 
 </td>
@@ -500,7 +496,7 @@ on conflict(ID) do update set
     PRICE = excluded.PRICE, 
     STORE_ID = excluded.STORE_ID)
 /* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
-/* batch-1: [90, LINQ in Action, 2, 39.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
 ```
 
 </td>
@@ -603,7 +599,7 @@ println(ids)
 
 1. 查询，并给出原因
     ```sql
-    /* highlight-next-line */
+    // highlight-next-line
     Purpose: COMMAND(KEY_UNIQUE_CONSTRAINT_REQUIRED)
     SQL: select
         tb_1_.ID,
@@ -850,10 +846,441 @@ returning ID
 -   3和12表示被更新的数据id
 -   100和101表示数据库为被插入数据分配的新id
 
-## INSERT_IF_ABSENT
+## 4. INSERT_IF_ABSENT
 
-稍后继续
+按照id或key判断数据在数据库中是否存在，如果不存在，就插入；否则忽略操作。
 
-## NON_IDEMPOTENT_UPSERT
+### 按照Id判断数据是否存在
 
-稍后继续
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setId(3L); // Matched
+        draft.setName("SQL in Action");
+        draft.setEdition(3);
+        draft.setPrice(new BigDecimal("49.9"));
+        draft.setStoreId(2L);
+    }),
+    Immutables.createBook(draft -> {
+        draft.setId(100L); // Not matched
+        draft.setName("LINQ in Action");
+        draft.setEdition(2);
+        draft.setPrice(new BigDecimal("39.9"));
+        draft.setStoreId(2L);
+    })
+);
+BatchSaveResult<Book> result = sqlClient
+    .saveEntities(
+        books,
+        // highlight-next-line
+        SaveMode.INSERT_IF_ABSENT
+    );
+System.out.println("Affected row count: " + result.getTotalAffectedRowCount());
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        id = 3L // Matched
+        name = "SQL in Action"
+        edition = 3
+        price = BigDecimal("49.9")
+        storeId = 2L
+    },
+    Book {
+        id = 100L // Not matched
+        name = "SQL in Action"
+        edition = 2
+        price = BigDecimal("39.9")
+        storeId = 2L
+    }
+)
+val result = sqlClient
+    .saveEntities(
+        books,
+        // highlight-next-line
+        SaveMode.INSERT_IF_ABSENT
+    )
+println("Affected row count: ${result.totalAffectedRowCount}")
+```
+
+</TabItem>
+</Tabs>
+
+Jimmer会优先使用数据库本身的能力进行`INSERT_IF_ABSENT`操作，因此，会为不同的数据库生成不同的SQL
+
+<table>
+<thead>
+<tr>
+<th>数据库</th>
+<th>生成的SQL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H2</td>
+<td>
+
+```sql
+merge into BOOK tb_1_ 
+using(values(?, ?, ?, ?, ?)) tb_2_(
+    ID, NAME, EDITION, PRICE, STORE_ID
+) on tb_1_.ID = tb_2_.ID 
+// highlight-next-line
+when not matched then 
+    insert(ID, NAME, EDITION, PRICE, STORE_ID)
+values
+    (tb_2_.ID, tb_2_.NAME, tb_2_.EDITION, tb_2_.PRICE, tb_2_.STORE_ID)
+/* batch-0: [3, SQL in Action, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>
+
+```sql
+insert 
+// highlight-next-line
+ignore 
+into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
+values(?, ?, ?, ?, ?)
+/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+<tr>
+<td>Postgres</td>
+<td>
+
+```sql
+insert into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
+values(?, ?, ?, ?, ?)
+on conflict(ID) 
+// highlight-next-line
+do nothing
+/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+</tbody>
+</table>
+
+假设插入一条数据忽略一条数据，打印结果为
+```
+1
+```
+
+### 按照Key判断数据是否存在
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setName("SQL in Action");
+        draft.setEdition(3);
+        draft.setPrice(new BigDecimal("49.9"));
+        draft.setStoreId(2L);
+    }),
+    Immutables.createBook(draft -> {
+        draft.setName("LINQ in Action");
+        draft.setEdition(2);
+        draft.setPrice(new BigDecimal("39.9"));
+        draft.setStoreId(2L);
+    })
+);
+List<Long> ids = sqlClient
+    .saveEntities(
+        books,
+        SaveMode.INSERT_IF_ABSENT
+    )
+    .getItems()
+    .stream()
+    .map(it -> it.getModifiedEntity().id())
+    .collect(Collectors.toList());
+System.out.println(ids);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        name = "SQL in Action"
+        edition = 3
+        price = BigDecimal("49.9")
+        storeId = 2L
+    },
+    Book {
+        name = "SQL in Action"
+        edition = 2
+        price = BigDecimal("39.9")
+        storeId = 2L
+    }
+)
+val ids = sqlClient
+    .saveEntities(
+        books,
+        // highlight-next-line
+        SaveMode.INSERT_IF_ABSENT
+    )
+    .items
+    .map { it.originalEntity.id }
+println(ids)
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+在这种情况下，Jimmer会尽可能利用数据库本身的能力来实现`INSERT_IF_ABSENT`操作。
+如果做不到，Jimmer会执行查询来决定应该继续执行插入操作还是忽略操作，并告诉开发人员查询原因。
+
+然而，不得不借助查询以帮助判断的这种情况已经在前面讲`UPSERT`时讲解过了。
+为了简化本文，这里不妨假设无需借助查询，直接利用数据本身的`INSERT_IF_ABSENT`能力。
+:::
+
+Jimmer会为不同的数据库生成不同的SQL
+
+<table>
+<thead>
+<tr>
+<th>数据库</th>
+<th>生成的SQL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H2</td>
+<td>
+
+```sql
+merge into BOOK tb_1_ 
+using(values(?, ?, ?, ?, ?)) tb_2_(
+    ID, NAME, EDITION, PRICE, STORE_ID
+) on 
+    // highlight-next-line
+    tb_1_.NAME = tb_2_.NAME 
+and 
+    // highlight-next-line
+    tb_1_.EDITION = tb_2_.EDITION 
+when
+    // highlight-next-line
+    not matched then 
+    insert(ID, NAME, EDITION, PRICE, STORE_ID)
+values
+    (tb_2_.ID, tb_2_.NAME, tb_2_.EDITION, tb_2_.PRICE, tb_2_.STORE_ID)
+/* batch-0: [3, SQL in Action, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>
+
+```sql
+insert 
+// highlight-next-line
+ignore 
+into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
+values(?, ?, ?, ?, ?)
+/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+<tr>
+<td>Postgres</td>
+<td>
+
+```sql
+insert into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
+values(?, ?, ?, ?, ?)
+on conflict(
+    // highlight-next-line
+    NAME, EDITION
+)
+// highlight-next-line
+do nothing
+returning ID
+/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+</tbody>
+</table>
+
+打印结果为
+
+```
+[3, 100]
+```
+
+其中
+-   第一条数据已经存在，插入操作被忽略，已有数据id为3
+-   第二条数据不经存在，执行插入操作，新分配的自动编号为100
+
+## 5. NON_IDEMPOTENT_UPSERT
+
+之前我们已经展示了`INSERT_ONLY`、`UPDATE_ONLY`、`UPSERT`和`INSERT_IF_ABSENT`这四种模式。
+在前面的例子中，被保存的对象不是Id-specified对象，就是Key-specified对象。
+
+现在，让我们讨论保存Wild对象，即既无id也无key的对象。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setPrice(new BigDecimal("49.9"));
+        draft.setStoreId(2L);
+    }),
+    Immutables.createBook(draft -> {
+        draft.setPrice(new BigDecimal("39.9"));
+        draft.setStoreId(2L);
+    })
+);
+List<Long> ids = sqlClient
+    .saveEntities(
+        books,
+        // 默认SaveMode.UPSERT
+    )
+    .getItems()
+    .stream()
+    .map(it -> it.getModifiedEntity().id())
+    .collect(Collectors.toList());
+System.out.println(ids);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        price = BigDecimal("49.9")
+        storeId = 2L
+    },
+    Book {
+        price = BigDecimal("39.9")
+        storeId = 2L
+    }
+)
+val ids = sqlClient
+    .saveEntities(
+        books,
+        // 默认SaveMode.UPSERT
+    )
+    .items
+    .map { it.originalEntity.id }
+println(ids)
+```
+
+</TabItem>
+</Tabs>
+
+这段代码会导致如下异常 *(为了便于阅读，这里进行了格式化)*
+
+```sh
+Save error caused by the path: "<root>": 
+    Cannot save illegal entity object whose type is 
+    "com.yourproject.model.Book", entity with 
+    // highlight-next-line
+    neither id nor key 
+    cannot be accepted. 
+    There are 3 ways to fix this problem: 
+    1. Specify the id property "id" for save objects; 
+    2. Use the annotation "org.babyfish.jimmer.sql.Key" 
+        to decorate some scalar or foreign key properties in entity type, 
+        or call "setKeyProps" of the save command, to specify the key 
+        properties of "com.yourproject.model.Book", 
+        and finally specified the values of key properties of saved objects; 
+    3. Specify the aggregate-root save mode of the save command to 
+        "INSERT_ONLY"(function changed)", 
+        or 
+        // highlight-next-line
+        "NON_IDEMPOTENT_UPSERT"
+```
+
+为了能保存wild对象，可以使用`NON_IDEMPOTENT_UPSERT`，该模式具备如下功能
+
+-   如果被保存的对象是wild对象，和`INSERT_ONLY`模式等价，这是非幂等操作
+
+-   否则，和`UPSERT`模式等价，这是幂等性操作
+
+:::caution
+此行为和JPA的`merge`或Hibernate的`saveOrUpdate`等价。
+
+但是，该模式可能混合幂等性操作和非幂等操作。因此并不推荐。
+:::
+
+## 多样的保存方法
+
+Jimmer提供了多样的保存方法，其中，很多方法都是等价的
+
+-   保存单个实体对象
+
+    |原始方法|等价的快捷方法|
+    |---|---|
+    |save(entity, SaveMode.UPSERT)|save(entity)|
+    |save(entity, SaveMode.INSERT_ONLY)|insert(entity)|
+    |save(entity, SaveMode.UPDATE_ONLY)|update(entity)|
+    |save(entity, SaveMode.INSERT_IF_ABSENT)|insertIfAbsent(entity)|
+
+-   保存单个InputDTO对象
+
+    |原始方法|等价的快捷方法|
+    |---|---|
+    |save(inputDTO, SaveMode.UPSERT)|save(inputDTO)|
+    |save(eninputDTOtity, SaveMode.INSERT_ONLY)|insert(inputDTO)|
+    |save(inputDTO, SaveMode.UPDATE_ONLY)|update(inputDTO)|
+    |save(inputDTO, SaveMode.INSERT_IF_ABSENT)|insertIfAbsent(inputDTO)|
+
+-   批量保存多个实体对象
+
+    |原始方法|等价的快捷方法|
+    |---|---|
+    |saveEntities(entities, SaveMode.UPSERT)|saveEntities(entities)|
+    |saveEntities(entities, SaveMode.INSERT_ONLY)|insertEntities(entities)|
+    |saveEntities(entities, SaveMode.UPDATE_ONLY)|updateEntities(entities)|
+    |saveEntities(entities, SaveMode.INSERT_IF_ABSENT)|insertEntitiesIfAbsent(entities)|
+
+-   批量保存多个InputDTO对象
+
+    |原始方法|等价的快捷方法|
+    |---|---|
+    |saveInputs(inputDTOs, SaveMode.UPSERT)|saveInputs(inputDTOs)|
+    |saveInputs(inputDTOs, SaveMode.INSERT_ONLY)|insertInputs(inputDTOs)|
+    |saveInputs(inputDTOs, SaveMode.UPDATE_ONLY)|updateInputs(inputDTOs)|
+    |saveInputs(inputDTOs, SaveMode.INSERT_IF_ABSENT)|insertInputsIfAbsent(inputDTOs)|
+
+## 批量保存不同格式的对象
+
+为了更好地演示Jimmer的批量修改特性，本文的所有例子都通过`saveEntities`方法保存多个对象，而非通过`save`方法保存一个对象。
+
+这些例子灵活地调整被保存对象的格式，以展示不同的功能。但是，具体到每一个例子，`saveEntities`方法所保存的所有对象的格式都是一样的。
+
+如果试图用`saveEntities`方法保存多个格式不同的对象，会发生什么呢？
+
+Jimmer会先对这些对象按照格式分组，再对每一组实施上述所有功能。

@@ -44,7 +44,7 @@ Save modes only affect the aggregate root object, not other associated objects.
 For associated objects, please refer to [Associated Object Save Mode](./associated-save-mode).
 :::
 
-## INSERT_ONLY
+## 1. INSERT_ONLY
 
 `INSERT_ONLY` means unconditionally inserting data
 
@@ -133,7 +133,7 @@ In this example, since the id property's corresponding column uses database auto
 Allocated ids: [100, 101]
 ```
 
-## UPDATE_ONLY
+## 2. UPDATE_ONLY
 
 `UPDATE_ONLY` means unconditionally updating data, and it has two scenarios:
 
@@ -372,7 +372,7 @@ Data is updated, updated id is 3
 Data is not updated
 ```
 
-## UPSERT
+## 3. UPSERT
 
 `UPSERT` means first checking if the data exists - if it exists then update it, otherwise insert it
 
@@ -395,7 +395,7 @@ List<Book> books = Arrays.asList(
         draft.setStoreId(2L);
     }),
     Immutables.createBook(draft -> {
-        draft.setId(90L);
+        draft.setId(100L);
         draft.setName("LINQ in Action");
         draft.setEdition(2);
         draft.setPrice(new BigDecimal("39.9"));
@@ -424,7 +424,7 @@ val books = listOf(
         storeId = 2L
     },
     Book {
-        id = 90L
+        id = 100L
         name = "SQL in Action"
         edition = 2
         price = BigDecimal("39.9")
@@ -462,7 +462,7 @@ merge into BOOK(
     ?, ?, ?, ?, ?
 )
 /* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
-/* batch-1: [90, LINQ in Action, 2, 39.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
 ```
 
 </td>
@@ -481,7 +481,7 @@ on duplicate key update
     PRICE = values(PRICE), 
     STORE_ID = values(STORE_ID)
 /* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
-/* batch-1: [90, LINQ in Action, 2, 39.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
 ```
 
 </td>
@@ -500,7 +500,7 @@ on conflict(ID) do update set
     PRICE = excluded.PRICE, 
     STORE_ID = excluded.STORE_ID)
 /* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
-/* batch-1: [90, LINQ in Action, 2, 39.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
 ```
 
 </td>
@@ -849,10 +849,440 @@ Where:
 - 3 and 12 represent the ids of updated data
 - 100 and 101 represent new ids assigned by the database for inserted data
 
-## INSERT_IF_ABSENT
+## 4. INSERT_IF_ABSENT
 
-To be continued
+Check if data exists in the database based on id or key. If it doesn't exist, insert it; otherwise, ignore the operation.
 
-## NON_IDEMPOTENT_UPSERT
+### Check Data Existence by Id
 
-To be continued
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setId(3L); // Matched
+        draft.setName("SQL in Action");
+        draft.setEdition(3);
+        draft.setPrice(new BigDecimal("49.9"));
+        draft.setStoreId(2L);
+    }),
+    Immutables.createBook(draft -> {
+        draft.setId(100L); // Not matched
+        draft.setName("LINQ in Action");
+        draft.setEdition(2);
+        draft.setPrice(new BigDecimal("39.9"));
+        draft.setStoreId(2L);
+    })
+);
+BatchSaveResult<Book> result = sqlClient
+    .saveEntities(
+        books,
+        // highlight-next-line
+        SaveMode.INSERT_IF_ABSENT
+    );
+System.out.println("Affected row count: " + result.getTotalAffectedRowCount());
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        id = 3L // Matched
+        name = "SQL in Action"
+        edition = 3
+        price = BigDecimal("49.9")
+        storeId = 2L
+    },
+    Book {
+        id = 100L // Not matched
+        name = "SQL in Action"
+        edition = 2
+        price = BigDecimal("39.9")
+        storeId = 2L
+    }
+)
+val result = sqlClient
+    .saveEntities(
+        books,
+        // highlight-next-line
+        SaveMode.INSERT_IF_ABSENT
+    )
+println("Affected row count: ${result.totalAffectedRowCount}")
+```
+
+</TabItem>
+</Tabs>
+
+Jimmer will prioritize using the database's native capabilities for `INSERT_IF_ABSENT` operations, generating different SQL for different databases:
+
+<table>
+<thead>
+<tr>
+<th>Database</th>
+<th>Generated SQL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H2</td>
+<td>
+
+```sql
+merge into BOOK tb_1_ 
+using(values(?, ?, ?, ?, ?)) tb_2_(
+    ID, NAME, EDITION, PRICE, STORE_ID
+) on tb_1_.ID = tb_2_.ID 
+// highlight-next-line
+when not matched then 
+    insert(ID, NAME, EDITION, PRICE, STORE_ID)
+values
+    (tb_2_.ID, tb_2_.NAME, tb_2_.EDITION, tb_2_.PRICE, tb_2_.STORE_ID)
+/* batch-0: [3, SQL in Action, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>
+
+```sql
+insert 
+// highlight-next-line
+ignore 
+into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
+values(?, ?, ?, ?, ?)
+/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+<tr>
+<td>Postgres</td>
+<td>
+
+```sql
+insert into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
+values(?, ?, ?, ?, ?)
+on conflict(ID) 
+// highlight-next-line
+do nothing
+/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+</tbody>
+</table>
+
+Assuming one record is inserted and one is ignored, the output will be:
+```
+1
+```
+
+### Check Data Existence by Key
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setName("SQL in Action");
+        draft.setEdition(3);
+        draft.setPrice(new BigDecimal("49.9"));
+        draft.setStoreId(2L);
+    }),
+    Immutables.createBook(draft -> {
+        draft.setName("LINQ in Action");
+        draft.setEdition(2);
+        draft.setPrice(new BigDecimal("39.9"));
+        draft.setStoreId(2L);
+    })
+);
+List<Long> ids = sqlClient
+    .saveEntities(
+        books,
+        SaveMode.INSERT_IF_ABSENT
+    )
+    .getItems()
+    .stream()
+    .map(it -> it.getModifiedEntity().id())
+    .collect(Collectors.toList());
+System.out.println(ids);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        name = "SQL in Action"
+        edition = 3
+        price = BigDecimal("49.9")
+        storeId = 2L
+    },
+    Book {
+        name = "SQL in Action"
+        edition = 2
+        price = BigDecimal("39.9")
+        storeId = 2L
+    }
+)
+val ids = sqlClient
+    .saveEntities(
+        books,
+        // highlight-next-line
+        SaveMode.INSERT_IF_ABSENT
+    )
+    .items
+    .map { it.originalEntity.id }
+println(ids)
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+In this case, Jimmer will try to utilize the database's native capabilities for `INSERT_IF_ABSENT` operations whenever possible.
+If this isn't possible, Jimmer will perform a query to determine whether to proceed with insertion or ignore the operation, and will inform developers of the query reason.
+
+However, the scenario where a query is needed for determination has already been discussed in the previous `UPSERT` section.
+To simplify this article, let's assume no query is needed and we can directly use the database's native `INSERT_IF_ABSENT` capability.
+:::
+
+Jimmer generates different SQL for different databases:
+
+<table>
+<thead>
+<tr>
+<th>Database</th>
+<th>Generated SQL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H2</td>
+<td>
+
+```sql
+merge into BOOK tb_1_ 
+using(values(?, ?, ?, ?, ?)) tb_2_(
+    ID, NAME, EDITION, PRICE, STORE_ID
+) on 
+    // highlight-next-line
+    tb_1_.NAME = tb_2_.NAME 
+and 
+    // highlight-next-line
+    tb_1_.EDITION = tb_2_.EDITION 
+when
+    // highlight-next-line
+    not matched then 
+    insert(ID, NAME, EDITION, PRICE, STORE_ID)
+values
+    (tb_2_.ID, tb_2_.NAME, tb_2_.EDITION, tb_2_.PRICE, tb_2_.STORE_ID)
+/* batch-0: [3, SQL in Action, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>
+
+```sql
+insert 
+// highlight-next-line
+ignore 
+into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
+values(?, ?, ?, ?, ?)
+/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+<tr>
+<td>Postgres</td>
+<td>
+
+```sql
+insert into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
+values(?, ?, ?, ?, ?)
+on conflict(
+    // highlight-next-line
+    NAME, EDITION
+)
+// highlight-next-line
+do nothing
+returning ID
+/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
+/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+```
+
+</td>
+</tr>
+</tbody>
+</table>
+
+The output will be:
+
+```
+[3, 100]
+```
+
+Where:
+- The first record already exists, so the insert operation is ignored, and the existing ID is 3
+- The second record doesn't exist, so insertion is performed with a new auto-generated ID of 100
+
+## 5. NON_IDEMPOTENT_UPSERT
+
+We've already demonstrated four modes: `INSERT_ONLY`, `UPDATE_ONLY`, `UPSERT`, and `INSERT_IF_ABSENT`.
+In the previous examples, the saved objects were either Id-specified or Key-specified objects.
+
+Now, let's discuss saving Wild objects, which have neither id nor key.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setPrice(new BigDecimal("49.9"));
+        draft.setStoreId(2L);
+    }),
+    Immutables.createBook(draft -> {
+        draft.setPrice(new BigDecimal("39.9"));
+        draft.setStoreId(2L);
+    })
+);
+List<Long> ids = sqlClient
+    .saveEntities(
+        books,
+        // Default SaveMode.UPSERT
+    )
+    .getItems()
+    .stream()
+    .map(it -> it.getModifiedEntity().id())
+    .collect(Collectors.toList());
+System.out.println(ids);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        price = BigDecimal("49.9")
+        storeId = 2L
+    },
+    Book {
+        price = BigDecimal("39.9")
+        storeId = 2L
+    }
+)
+val ids = sqlClient
+    .saveEntities(
+        books,
+        // Default SaveMode.UPSERT
+    )
+    .items
+    .map { it.originalEntity.id }
+println(ids)
+```
+
+</TabItem>
+</Tabs>
+
+This code will result in the following exception *(formatted for readability)*:
+
+```sh
+Save error caused by the path: "<root>": 
+    Cannot save illegal entity object whose type is 
+    "com.yourproject.model.Book", entity with 
+    // highlight-next-line
+    neither id nor key 
+    cannot be accepted. 
+    There are 3 ways to fix this problem: 
+    1. Specify the id property "id" for save objects; 
+    2. Use the annotation "org.babyfish.jimmer.sql.Key" 
+        to decorate some scalar or foreign key properties in entity type, 
+        or call "setKeyProps" of the save command, to specify the key 
+        properties of "com.yourproject.model.Book", 
+        and finally specified the values of key properties of saved objects; 
+    3. Specify the aggregate-root save mode of the save command to 
+        "INSERT_ONLY"(function changed)", 
+        or 
+        // highlight-next-line
+        "NON_IDEMPOTENT_UPSERT"
+```
+
+To save wild objects, you can use `NON_IDEMPOTENT_UPSERT`, which provides the following functionality:
+
+- If the saved object is a wild object, it's equivalent to `INSERT_ONLY` mode, which is a non-idempotent operation
+- Otherwise, it's equivalent to `UPSERT` mode, which is an idempotent operation
+
+:::caution
+This behavior is equivalent to JPA's `merge` or Hibernate's `saveOrUpdate`.
+
+However, this mode may mix idempotent and non-idempotent operations, so it's not recommended.
+:::
+
+## Various Save Methods
+
+Jimmer provides various save methods, many of which are equivalent:
+
+-   Save a single entity object
+
+    |Original Method|Equivalent Shortcut Method|
+    |---|---|
+    |save(entity, SaveMode.UPSERT)|save(entity)|
+    |save(entity, SaveMode.INSERT_ONLY)|insert(entity)|
+    |save(entity, SaveMode.UPDATE_ONLY)|update(entity)|
+    |save(entity, SaveMode.INSERT_IF_ABSENT)|insertIfAbsent(entity)|
+
+-   Save a single InputDTO object
+
+    |Original Method|Equivalent Shortcut Method|
+    |---|---|
+    |save(inputDTO, SaveMode.UPSERT)|save(inputDTO)|
+    |save(inputDTO, SaveMode.INSERT_ONLY)|insert(inputDTO)|
+    |save(inputDTO, SaveMode.UPDATE_ONLY)|update(inputDTO)|
+    |save(inputDTO, SaveMode.INSERT_IF_ABSENT)|insertIfAbsent(inputDTO)|
+
+-   Batch save multiple entity objects
+
+    |Original Method|Equivalent Shortcut Method|
+    |---|---|
+    |saveEntities(entities, SaveMode.UPSERT)|saveEntities(entities)|
+    |saveEntities(entities, SaveMode.INSERT_ONLY)|insertEntities(entities)|
+    |saveEntities(entities, SaveMode.UPDATE_ONLY)|updateEntities(entities)|
+    |saveEntities(entities, SaveMode.INSERT_IF_ABSENT)|insertEntitiesIfAbsent(entities)|
+
+-   Batch save multiple InputDTO objects
+
+    |Original Method|Equivalent Shortcut Method|
+    |---|---|
+    |saveInputs(inputDTOs, SaveMode.UPSERT)|saveInputs(inputDTOs)|
+    |saveInputs(inputDTOs, SaveMode.INSERT_ONLY)|insertInputs(inputDTOs)|
+    |saveInputs(inputDTOs, SaveMode.UPDATE_ONLY)|updateInputs(inputDTOs)|
+    |saveInputs(inputDTOs, SaveMode.INSERT_IF_ABSENT)|insertInputsIfAbsent(inputDTOs)|
+
+## Batch Saving Objects of Different Formats
+
+To better demonstrate Jimmer's batch modification features, all examples in this article use the `saveEntities` method to save multiple objects, rather than using the `save` method to save a single object.
+
+These examples flexibly adjust the format of the objects being saved to demonstrate different functionalities. However, for each specific example, all objects saved by the `saveEntities` method have the same format.
+
+What happens if you try to use the `saveEntities` method to save multiple objects with different formats?
+
+Jimmer will first group these objects by format, then apply all the above functionalities to each group.

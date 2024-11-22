@@ -205,3 +205,91 @@ Next, we show how to override the global configuration:
 
     </TabItem>
     </Tabs>
+
+## Work with TypeScript Client and Jackson
+
+The serialization of a type to JSON and its storage in the database are two independent matters. The content described above focuses on how Jimmer handles enum mapping in the database, which is unrelated to JSON.
+
+By default, Jackson converts enums to its name, so when generating the TypeScript Client, Jimmer maps the enum according to its name.
+
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    enum Gender {
+        MAN,
+        WOMAN
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    enum class Gender {
+        MAN,
+        WOMAN
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+The generated TypeScript code is as follows:
+
+    ```TypeScript
+    export const GenderEnum_CONSTANTS = [
+        'MAN',
+        'WOMAN'
+    ] as const;
+    export type GenderEnum = typeof GenderEnum_CONSTANTS[number];
+
+    //usage
+    export type PersonDto = {
+        gender: GenderEnum;
+    }
+    ```
+
+If you want to customize the JSON serialization, you need to use the @JsonValue annotation from Jackson.
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    enum Gender {
+        MAN,
+        WOMAN;
+
+        @JsonValue
+        public String getValue() {
+            return name().toLowerCase();
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    enum class Gender {
+        MAN,
+        WOMAN;
+
+        @JsonValue
+        fun getValue(): String {
+            return name().toLowerCase();
+        }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+When detects the presence of annotations like @JsonValue, Jimmer not knowing how the enum will be converted during JSON serialization, so jimmer will translates the enum type to a string. The generated TypeScript code in this case is as follows:
+
+    ```TypeScript
+    export type PersonDto = {
+        gender: string;
+    }
+    ```

@@ -1,0 +1,572 @@
+---
+sidebar_position: 2
+title: 拥有方特有功能
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 基本概念
+
+所畏拥有方，只具备`mappedBy`的`@OneToMany`或`@OneToOne`对象。以`@OneToMany`为例
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface BookStore {
+
+    // highlight-next-line
+    @OneToMany(mappedBy = true)
+    List<Book> books();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface BookStore {
+
+    // highlight-next-line
+    @OneToMany(mappedBy = true)
+    val books: List<Book>
+}
+```
+
+</TabItem>
+</Tabs>
+
+这种关联具备一个特殊功能
+
+-   自动设置子对象的逆关联
+
+-   配置是否允许不同父对象抢夺子对象
+
+## 1. 自动设置子对象的逆关联
+
+假设有如下实体
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="TreeNode.java"
+@Entity
+public interface TreeNode {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    long id();
+
+    // highlight-next-line
+    @Key
+    String name();
+
+    // highlight-next-line
+    @Key
+    @ManyToOne
+    @Nullable
+    TreeNode parent();
+
+    @OneToMany(mappedBy = "parent")
+    List<TreeNode> childNodes();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="TreeNode.kt"
+@Entity
+interface TreeNode {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long
+
+    // highlight-next-line
+    @Key
+    val name: String
+
+    // highlight-next-line
+    @Key
+    @ManyToOne
+    val parent: TreeNode?
+
+    @OneToMany(mappedBy = "parent")
+    val childNodes: List<TreeNode>
+}
+```
+
+</TabItem>
+</Tabs>
+
+`TreeNode`的`@Key`属性为`name`和`parent`，除了明确抗可接受wild对象的保持模式外，被保存对象需要
+
+-   要么指定`TreeNode.id`属性
+
+-   要么指定`TreeNode.name`和`TreeNode.parent`属性
+
+然而，如下代码可以正常运行
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNode rootNode = Immutables.createTreeNode(root -> {
+    root.setName("Root");
+    root.setParent(null);
+    root.addIntoChildNodes(child -> {
+        child.setName("Child-1");
+        // 对于非根对象而言，无需指定`parent`属性
+    });
+    root.addIntoChildNodes(child -> {
+        child.setName("Child-2");
+        // 对于非根对象而言，无需指定`parent`属性
+    });
+});
+sqlClient
+    .saveCommand(rootNode)
+    .setTargetTransferModeAll(TargetTransferMode.ALLOWED)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNode = TreeNode {
+    name = "Root"
+    parent = null
+    childNodes().addBy {
+        name = "Child-1"
+        // 对于非根对象而言，无需指定`parent`属性
+    }
+    childNodes().addBy {
+        name = "Child-2"
+        // 对于非根对象而言，无需指定`parent`属性
+    }
+}
+sqlClient.save(rootNode) {
+    setTargetTransferModeAll(TargetTransferMode.ALLOWED)
+}
+```
+
+</TabItem>
+</Tabs>
+
+代码中的`setTargetTransferModeAll(TargetTransferMode.ALLOWED)`并非这里关注的焦点，并读者先行忽略之。
+
+这里，虽然根对象 *(`Root`)* 的`name`和`parent`属性都被指定了，
+但是对于非根对象 *(`Child-1`, `Child-2`)* 而言，只有`name`属性被指定了，但`parent`属性并未被指定。
+
+`TreeNode.childNodes`属性是`TreeNode.parent`属性互为逆向关联。
+
+:::info
+对于主动端的多对一 *(或一对一)* 关联 *(这里的`TreeNode.parent`)* 而言，
+一旦通过其从动端的一对多 *(或一对一)* 关联 *(这里的`TreeNode.childNodes`)* 为父对象指定了子对象集合，
+那么集合中的每一个子对象的父对象引用都会被自动设置。
+:::
+
+在本例子中，用户原本期望保存的对象树为
+
+```json
+{
+    "name":"Root",
+    "parent":null,
+    "childNodes":[
+        {"name":"Child-1"},
+        {"name":"Child-2"}
+    ]
+}
+```
+
+假设根元素被插入后数据库为根对象分配的自动编号为`100`，Jimmer会自动调整这颗树
+
+```json
+{
+    "id": 100,
+    "name":"Root",
+    "parent":null,
+    "childNodes":[
+        {
+            "name":"Child-1",
+            // highlight-next-line
+            "parent": {"id": 100}
+        },
+        {
+            "name":"Child-2",
+            // highlight-next-line
+            "parent": {"id": 100}
+        }
+    ]
+}
+```
+
+可见，一旦完成了对父对象的保存，所有子对象的`TreeNode.parent`属性都会被自动设置。即，在`id`属性未被指定的情况下
+
+-   从Jimmer的角度看，所有`TreeNode`对象的`name`和`parent`属性都被指定了，即`@Key`属性都被指定了
+
+-   从用户的角度看，除了根对象需要同时指定`name`和`parent`属性外，其他所有对象都只需要指定`name`属性
+
+上诉例子会生成三条SQL
+
+1.  按`@Key`查询根对象是否存在
+
+    ```sql
+    Purpose: COMMAND(NULL_NOT_DISTINCT_REQUIRED)
+    select
+        tb_1_.NODE_ID,
+        tb_1_.NAME,
+        tb_1_.PARENT_ID
+    from TREE_NODE tb_1_
+    where
+            tb_1_.PARENT_ID is null
+        and
+            tb_1_.NAME = ? /* Root */
+    ```
+
+    这里，并没有使用数据库本身的`UPSERT`能力，而是通过而外查询来决定后续操作应该是`INSERT`还是`UPDATE`。
+
+    这是因为数据库本身的`UPSERT`能力依赖于唯一性约束 *(或唯一索引)*，这里，被保存的根对象的`parent`属性为null，
+    并非所有数据库都具备为唯一约束定义null的行为的能力。
+    
+    因此，默认情况下下，如果被保存对象的`@Key`属性为null，Jimmer会放弃使用数据本身的UPSERT能力，
+    执行额外的查询来判断后续操作应该是`INSERT`或`UPDATE`，并向开发人员报告`QueryReason.NULL_NOT_DISTINCT_REQUIRED`。
+
+    :::info
+    某些数据库，例如Postgres，可以为唯一约束定义null的行为。
+    如何在这类数据库中解决此问题并非本文关注点，请查阅`QueryReason.NULL_NOT_DISTINCT_REQUIRED`的文档注释以了解更多。
+    :::
+
+2.  假设上述查询判断被保存对象在数据库中不存在，直接插入根对象即可
+
+    ```sql
+    insert into TREE_NODE(NAME, PARENT_ID) 
+    values(?, ?)
+    /* batch-0: [Root, DbNull{type=long}] */
+    ```
+
+3.  保存子对象 *(假设保存根对象后得知其id为100)*
+
+    ```sql
+    merge into TREE_NODE(
+        NAME, PARENT_ID
+    ) key(
+        NAME, PARENT_ID
+    ) values(?, ?)
+    /* batch-0: [Child-1, 100] */
+    /* batch-1: [Child-2, 100] */
+    ```
+
+## 2. 配置是否允许不同父对象抢夺子对象
+
+### 保守的默认行为
+
+让我们先来看一个案例
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookStore store = Immutables.createBookStore(draft -> {
+    draft.setName("MANNING");
+    draft.addIntoBooks(book -> {
+        book.setId(12L);
+    });
+    draft.addIntoBooks(book -> {
+        book.setId(1L);
+    });
+});
+sqlClient.save(store);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val store = BookStore {
+    name = "MANNING"
+    books().addBy {
+        id = 12L
+    }
+    books().addBy {
+        id = 1L
+    }
+}
+sqlClient.save(store)
+```
+
+</TabItem>
+</Tabs>
+
+执行这样的代码，执行如下SQL并导致异常
+
+1.  保存根对象`BookStore`
+
+    ```sql
+    merge into BOOK_STORE(
+        NAME
+    ) key(NAME) values(?)
+    /* batch-0: [MANNING] */
+    ```
+
+2.  保存子对`Book`
+
+    ```sql
+    // highlight-next-line
+    Purpose: COMMAND(TARGET_NOT_TRANSFERABLE)
+    select
+        tb_1_.ID,
+        tb_1_.NAME,
+        tb_1_.EDITION,
+        tb_1_.STORE_ID
+    from BOOK tb_1_
+    where
+        tb_1_.ID = any(? /* [12, 1] */)
+    ```
+
+    奇怪的是，尽管子对象的id属性被指定了 *(这通常意味着Jimmer会利用数据库本身的`UPSERT`能力)*，
+    但Jimmer仍然尝试通过查询来判断后续操作应该是`INSERT`还是`UPDATE`，而非利用数据库本身的`UPSERT能力`。
+    更重要的是，Jimmer报告了`QueryReason.TARGET_NOT_TRANSFERABLE`。
+
+3.  最终，上述代码还会导致如下异常
+
+    ```sh
+    Save error caused by the path: "<root>.books": 
+    Can the move the child object whose type is "org.doc.j.model.Book" 
+    and id is "1" to another parent object because the property 
+    "org.doc.j.model.BookStore.books" 
+    // highlight-next-line
+    does not support target transfer
+    ```
+
+`Book.store`是多对一关联，一个`Book`对象，只可能隶属于一个`BookStore`对象，而无法同时隶属于多个`BookStore`对象。
+
+因此，通过逆向的一对多关联`BookStore.books`保存数据结构，就是建立从当前`BookStore`父对象到另外一个已经存在的`Book`对象之间的关联，
+如果`Book`对象已经隶属于另外一个父对象，会导致当前父对象从其他父对象抢夺子对象。或者说，子对象在不同父对象之间发生了迁移。
+
+如果这是开发人员预料之中的行为，那自然没有问题。但是，如果这并非开发人员预料中的行为，可能导致无意的疏忽。
+
+默认情况下，Jimmer采用保守的策略，禁止子对象在不同父对象之间发生了迁移。
+
+在此例中，企图让`BookStore(MANNING)`和`Book(12)`和`Book(1)`关联起来，
+Jimmer以`QueryReason.TARGET_NOT_TRANSFERABLE`为由执行额外的查询，检查是否有子对象在不同父对象之间发生了迁移。
+
+-   `Book(12)`已经隶属于`BookStore(MANNING)`，未发生迁移，没问题
+-   `Book(1)`并不隶属于`BookStore(MANNING)`，而隶属于`BookStore(O'REILLY)`，发生了迁移，因此最终抛出异常。
+
+默认行为非常保守，虽然避免了不同父对象对子对象的抢夺 *(如果开发人员认为这种无意抢夺对业务是有害的)*，
+但导致了额外的查询，并未充分发挥数据库本身`UPSERT`能力，性能不佳。
+
+如果你认为更优的性能比这种保守的防御行为更重要，Jimmer提供额外配置，改变这种行为。
+
+### 覆盖默认行为，不加限制
+
+为性能优先，要取消这种限制，有两种方法
+
+1.  保存指令级配置，又可分为两种
+
+    1.  精确配置，对某个关联放开限制
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        BookStore store = ...略...;
+        sqlClient
+            .saveCommand(store)
+            // highlight-next-line
+            .setTargetTransferMode(
+                BookStoreProps.BOOKS, 
+                TargetTransferMode.ALLOWED
+            )
+            .execute();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val store = BookStore {...略...}
+        sqlClient.save(store) {
+            // highlight-next-line
+            setTargetTransferMode(
+                BookStore::books, 
+                TargetTransferMode.ALLOWED
+            )
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+    2.  盲目配置，对所有关联放开限制
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        BookStore store = ...略...;
+        sqlClient
+            .saveCommand(store)
+            // highlight-next-line
+            .setTargetTransferModeAll(
+                TargetTransferMode.ALLOWED
+            )
+            .execute();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val store = BookStore {...略...}
+        sqlClient.save(store) {
+            // highlight-next-line
+            setTargetTransferModeAll(
+                TargetTransferMode.ALLOWED
+            )
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+    无论精确配置，还是盲目配置，最后一个参数都是`TargetTransferMode`枚举，具有一下三个取值
+
+    -   **ALLOWD**: 允许子对象迁移，并尽可能采用数据库本身的`UPSERT能力`
+
+    -   **NOT_ALLOWED**: 不允许子对象迁移，以`QueryReason.TARGET_NOT_TRANSFERABLE`为由发起而外查询加以验证。
+        如果发生了子对象迁移，抛出异常
+
+    -   **AUTO**(默认)：当前配置无效，参考优先级更低的配置
+
+        -   对于精确配置而言，转而参考盲目配置
+
+        -   对于盲目配置而言，转而参考全局配置
+
+2.  全局配置，又可分为两种
+
+    1.  基于Jimmer Api的全局配置
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        JSqlClient sqlCient = JSqlClient
+            .newBuilder()
+            // highlight-next-line
+            .setTargetTransferable(true)
+            ...省略其他配置...
+            .build();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val sqlClient = sqlClient {
+            // highlight-next-line
+            setTargetTransferable(true)
+            ...省略其他配置...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+    2.  如果采用Jimmer提供的spring-boot-starter，基于Spring Boot的全局配置
+
+        以`application.yml`文件为例
+
+        ```sh title = "application.yml"
+        jimmer:
+            // highlight-next-line
+            target-transferable: true
+            ...省略其他配置...
+        ```
+
+一旦通过以上任何配置手段让Jimmer认为无需对`BookStore.books`关联禁止子对象迁移，修改代码如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+public interface Book {
+
+    @ManyToOne
+    @Nullable
+    // 于本文讨论内容无关，请读者先行忽略
+    // highlight-next-line
+    @OnDissociate(DissociateAction.SET_NULL)
+    BookStore store();
+
+    ...省略其他代码...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="Book.kt"
+public interface Book {
+
+    @ManyToOne
+    // 于本文讨论内容无关，请读者先行忽略
+    // highlight-next-line
+    @OnDissociate(DissociateAction.SET_NULL)
+    val store: BookStore?
+
+    ...省略其他代码...
+}
+```
+
+</TabItem>
+</Tabs>
+
+重新执行代码，将会生成如下SQL
+
+1.  保存根对象
+
+    ```sql
+    merge into BOOK_STORE(
+        NAME
+    ) key(NAME) values(?)
+    /* batch-0: [MANNING] */
+    ```
+
+2.  建立根对象和子对象之间的关联
+
+    ```sql
+    merge into BOOK(
+        ID, STORE_ID
+    ) key(ID) values(?, ?)
+    /* batch-0: [12, 2] */
+    /* batch-1: [1, 2] */
+    ```
+
+3.  断开根对象和不再需要的子对象之间的关联
+
+    ```sql
+    update BOOK
+    set
+        STORE_ID = null
+    where
+        STORE_ID = ?
+        and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [2, [12, 1]] */
+    ```
+
+:::info
+为了向用户展示性能优先的场景，附带例子
+[jimmer-examples/java/save-command](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/save-command)
+和
+[jimmer-examples/kotlin/save-command-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/save-command-kt)
+均利用全局配置允许了子对象迁移。
+:::

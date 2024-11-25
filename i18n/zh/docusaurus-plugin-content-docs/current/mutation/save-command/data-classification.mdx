@@ -142,7 +142,7 @@ Jimmer支持`UPSERT`操作，即，用户并不明确指定`insert`或`update`�
 ### 3. Key-specified对象
 
 对于一个对象而言，如果`@Id`属性 *(本文的`Book.id`)* 没有被指定，但是其`@Key`属性 *(本文的`Book.name`和`Book.edition`)* 被指定了，
-那么该对爱对象为key-specified对象，例如
+那么该对象为key-specified对象，例如
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -208,7 +208,7 @@ val book = Book {
 
 ### 5. Key-only对象
 
-对于id-specified对象而言，如果除了id外没有任何属性被指定，称为id-only对象，例如
+对于key-specified对象而言，如果除了id外没有任何属性被指定，称为id-only对象，例如
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">

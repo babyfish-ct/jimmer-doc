@@ -205,3 +205,87 @@ enum class Gender {
 
     </TabItem>
     </Tabs>
+
+## 与 Typescript Client and Jackson一起使用
+
+一个类型的Json序列化与数据库中的存储是独立的两件事。上述所描述的内容只是Jimmer在数据库中如何处理枚举映射，与Json无关。
+
+在默认情况下，Jackson将枚举转换为枚举名字符串，所以Jimmer会在生成TypeScript Client的时候按照枚举的Name映射
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    enum Gender {
+        MAN,
+        WOMAN
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    enum class Gender {
+        MAN,
+        WOMAN
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+ 生成的TypeScript代码如下：
+    ```TypeScript
+    export const GenderEnum_CONSTANTS = [
+        'MAN',
+        'WOMAN'
+    ] as const;
+    export type GenderEnum = typeof GenderEnum_CONSTANTS[number];
+
+    //使用
+    export type PersonDto = {
+        gender: GenderEnum;
+    }
+    ```
+如果想要自定义Json序列化，需要使用Jackson的@JsonValue注解
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    enum Gender {
+        MAN,
+        WOMAN;
+
+        @JsonValue
+        public String getValue() {
+            return name().toLowerCase();
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    enum class Gender {
+        MAN,
+        WOMAN;
+
+        @JsonValue
+        fun getValue(): String {
+            return name().toLowerCase();
+        }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+在检测到存在@JsonValue等注解后，因为jimmer不知道在Json序列化时，枚举会被转换为什么，所以Jimmer会把枚举类型翻译成string，生成的TypeScript代码如下：
+
+    ```TypeScript
+    export type PersonDto = {
+        gender: string;
+    }
+    ```

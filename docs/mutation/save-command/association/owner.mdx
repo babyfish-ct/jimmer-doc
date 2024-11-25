@@ -1,0 +1,576 @@
+---
+sidebar_position: 2
+title: Owner side
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Basic Concepts
+
+The owned side only has `@OneToMany` or `@OneToOne` objects with `mappedBy`. Taking `@OneToMany` as an example:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Entity
+public interface BookStore {
+
+    // highlight-next-line
+    @OneToMany(mappedBy = true)
+    List<Book> books();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Entity
+interface BookStore {
+
+    // highlight-next-line
+    @OneToMany(mappedBy = true)
+    val books: List<Book>
+}
+```
+
+</TabItem>
+</Tabs>
+
+This association has a special functionality:
+
+-   Automatically sets reverse associations for child objects
+
+-   Configures whether different parent objects can snatch for child objects
+
+## 1. Automatically Setting Reverse Associations for Child Objects
+
+Assume we have the following entity:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="TreeNode.java"
+@Entity
+public interface TreeNode {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    long id();
+
+    // highlight-next-line
+    @Key
+    String name();
+
+    // highlight-next-line
+    @Key
+    @ManyToOne
+    @Nullable
+    TreeNode parent();
+
+    @OneToMany(mappedBy = "parent")
+    List<TreeNode> childNodes();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="TreeNode.kt"
+@Entity
+interface TreeNode {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long
+
+    // highlight-next-line
+    @Key
+    val name: String
+
+    // highlight-next-line
+    @Key
+    @ManyToOne
+    val parent: TreeNode?
+
+    @OneToMany(mappedBy = "parent")
+    val childNodes: List<TreeNode>
+}
+```
+
+</TabItem>
+</Tabs>
+
+The `@Key` properties of `TreeNode` are `name` and `parent`. Apart from explicitly accepting the persistence mode for wild objects, the object being saved needs to either:
+
+-   Specify the `TreeNode.id` property
+
+-   Specify both `TreeNode.name` and `TreeNode.parent` properties
+
+However, the following code works normally:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNode rootNode = Immutables.createTreeNode(root -> {
+    root.setName("Root");
+    root.setParent(null);
+    root.addIntoChildNodes(child -> {
+        child.setName("Child-1");
+        // For non-root objects, no need to specify the `parent` property
+    });
+    root.addIntoChildNodes(child -> {
+        child.setName("Child-2");
+        // For non-root objects, no need to specify the `parent` property
+    });
+});
+sqlClient
+    .saveCommand(rootNode)
+    .setTargetTransferModeAll(TargetTransferMode.ALLOWED)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rootNode = TreeNode {
+    name = "Root"
+    parent = null
+    childNodes().addBy {
+        name = "Child-1"
+        // For non-root objects, 
+        // no need to specify the `parent` property
+    }
+    childNodes().addBy {
+        name = "Child-2"
+        // For non-root objects, 
+        // no need to specify the `parent` property
+    }
+}
+sqlClient.save(rootNode) {
+    setTargetTransferModeAll(TargetTransferMode.ALLOWED)
+}
+```
+
+</TabItem>
+</Tabs>
+
+The `setTargetTransferModeAll(TargetTransferMode.ALLOWED)` is not the focus here, readers can ignore it for now.
+
+Here, although the root object *(`Root`)* has both `name` and `parent` properties specified,
+for non-root objects *(`Child-1`, `Child-2`)*, only the `name` property is specified, while the `parent` property is not.
+
+The `TreeNode.childNodes` property is the reverse association of the `TreeNode.parent` property.
+
+:::info
+For the owning side of many-to-one *(or one-to-one)* associations *(here `TreeNode.parent`)*,
+once child objects are specified for the parent object through its inverse one-to-many *(or one-to-one)* association *(here `TreeNode.childNodes`)*,
+the parent object reference for each child object in the collection will be automatically set.
+:::
+
+In this example, the object tree that the user originally expected to save was:
+
+```json
+{
+    "name":"Root",
+    "parent":null,
+    "childNodes":[
+        {"name":"Child-1"},
+        {"name":"Child-2"}
+    ]
+}
+```
+
+Assuming the database assigns auto-number 100 to the root element after insertion, Jimmer will automatically adjust this tree to:
+
+```json
+{
+    "id": 100,
+    "name":"Root",
+    "parent":null,
+    "childNodes":[
+        {
+            "name":"Child-1",
+            // highlight-next-line
+            "parent": {"id": 100}
+        },
+        {
+            "name":"Child-2",
+            // highlight-next-line
+            "parent": {"id": 100}
+        }
+    ]
+}
+```
+
+As you can see, once the parent object is saved, the `TreeNode.parent` property of all child objects will be automatically set. That is, when the `id` property is not specified:
+
+-   From Jimmer's perspective, both `name` and `parent` properties of all `TreeNode` objects are specified, meaning all `@Key` properties are specified
+
+-   From the user's perspective, only the root object needs to specify both `name` and `parent` properties, while all other objects only need to specify the `name` property
+
+The above example will generate three SQL statements:
+
+1.  Query whether the root object exists based on `@Key`:
+
+    ```sql
+    Purpose: COMMAND(NULL_NOT_DISTINCT_REQUIRED)
+    select
+        tb_1_.NODE_ID,
+        tb_1_.NAME,
+        tb_1_.PARENT_ID
+    from TREE_NODE tb_1_
+    where
+            tb_1_.PARENT_ID is null
+        and
+            tb_1_.NAME = ? /* Root */
+    ```
+
+    Here, the database's own `UPSERT` capability is not used, instead an additional query is made to determine whether the subsequent operation should be `INSERT` or `UPDATE`.
+
+    This is because the database's own `UPSERT` capability relies on unique constraints *(or unique indexes)*, and here, the `parent` property of the root object being saved is null,
+    and not all databases have the ability to define null behavior for unique constraints.
+    
+    Therefore, by default, if the `@Key` property of the object being saved is null, Jimmer will give up using the database's own UPSERT capability,
+    execute an additional query to determine whether the subsequent operation should be `INSERT` or `UPDATE`, and report `QueryReason.NULL_NOT_DISTINCT_REQUIRED` to developers.
+
+    :::info
+    Some databases, such as Postgres, can define null behavior for unique constraints.
+    How to solve this problem in such databases is not the focus of this article, please refer to the documentation comments of `QueryReason.NULL_NOT_DISTINCT_REQUIRED` to learn more.
+    :::
+
+2.  Assuming the above query determines that the object being saved does not exist in the database, simply insert the root object:
+
+    ```sql
+    insert into TREE_NODE(NAME, PARENT_ID) 
+    values(?, ?)
+    /* batch-0: [Root, DbNull{type=long}] */
+    ```
+
+3.  Save child objects *(assuming the id is known to be 100 after saving the root object)*:
+
+    ```sql
+    merge into TREE_NODE(
+        NAME, PARENT_ID
+    ) key(
+        NAME, PARENT_ID
+    ) values(?, ?)
+    /* batch-0: [Child-1, 100] */
+    /* batch-1: [Child-2, 100] */
+    ```
+
+## 2. Configuring Whether Different Parent Objects Can Snatch for Child Objects
+
+### Conservative Default Behavior
+
+Let's look at an example first:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookStore store = Immutables.createBookStore(draft -> {
+    draft.setName("MANNING");
+    draft.addIntoBooks(book -> {
+        book.setId(12L);
+    });
+    draft.addIntoBooks(book -> {
+        book.setId(1L);
+    });
+});
+sqlClient.save(store);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val store = BookStore {
+    name = "MANNING"
+    books().addBy {
+        id = 12L
+    }
+    books().addBy {
+        id = 1L
+    }
+}
+sqlClient.save(store)
+```
+
+</TabItem>
+</Tabs>
+
+Executing this code will generate the following SQL and result in an exception:
+
+1.  Saving the root object `BookStore`:
+
+    ```sql
+    merge into BOOK_STORE(
+        NAME
+    ) key(NAME) values(?)
+    /* batch-0: [MANNING] */
+    ```
+
+2.  Saving the child objects `Book`:
+
+    ```sql
+    // highlight-next-line
+    Purpose: COMMAND(TARGET_NOT_TRANSFERABLE)
+    select
+        tb_1_.ID,
+        tb_1_.NAME,
+        tb_1_.EDITION,
+        tb_1_.STORE_ID
+    from BOOK tb_1_
+    where
+        tb_1_.ID = any(? /* [12, 1] */)
+    ```
+
+    Strangely, even though the id property of child objects is specified *(which usually means Jimmer will utilize the database's own `UPSERT` capability)*,
+    Jimmer still tries to determine whether the subsequent operation should be `INSERT` or `UPDATE` through a query, rather than using the database's own `UPSERT` capability.
+    More importantly, Jimmer reports `QueryReason.TARGET_NOT_TRANSFERABLE`.
+
+3.  Finally, the above code will result in the following exception:
+
+    ```sh
+    Save error caused by the path: "<root>.books": 
+    Can the move the child object whose type is "org.doc.j.model.Book" 
+    and id is "1" to another parent object because the property 
+    "org.doc.j.model.BookStore.books" 
+    // highlight-next-line
+    does not support target transfer
+    ```
+
+`Book.store` is a many-to-one association, a `Book` object can only belong to one `BookStore` object and cannot belong to multiple `BookStore` objects simultaneously.
+
+Therefore, saving the data structure through the inverse one-to-many association `BookStore.books` establishes an association between the current `BookStore` parent object and another existing `Book` object.
+If the `Book` object already belongs to another parent object, it will cause the current parent object to snatch for the child object from other parent objects. In other words, the child object migrates between different parent objects.
+
+If this is expected behavior by the developers, then there's no problem. However, if this is not expected behavior, it may lead to unintended oversights.
+
+By default, Jimmer adopts a conservative strategy that prohibits child objects from transfering between different parent objects.
+
+In this example, attempting to associate `BookStore(MANNING)` with `Book(12)` and `Book(1)`,
+Jimmer executes an additional query with `QueryReason.TARGET_NOT_TRANSFERABLE` to check if any child objects are transfering between different parent objects.
+
+-   `Book(12)` already belongs to `BookStore(MANNING)`, no transfer occurs, no problem
+-   `Book(1)` doesn't belong to `BookStore(MANNING)` but belongs to `BookStore(O'REILLY)`, transfer occurs, therefore an exception is thrown.
+
+The default behavior is very conservative. While it prevents competition for child objects between different parent objects *(if developers consider such unintended competition harmful to business)*,
+it leads to additional queries and doesn't fully utilize the database's own `UPSERT` capability, resulting in suboptimal performance.
+
+If you believe better performance is more important than this conservative defensive behavior, Jimmer provides additional configuration to change this behavior.
+
+### Overriding Default Behavior Without Restrictions
+
+To prioritize performance and remove these restrictions, there are two methods:
+
+1.  Save command level configuration, which can be divided into two types:
+
+    1.  Precise configuration, removing restrictions for specific associations:
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        BookStore store = ...omitted...;
+        sqlClient
+            .saveCommand(store)
+            // highlight-next-line
+            .setTargetTransferMode(
+                BookStoreProps.BOOKS, 
+                TargetTransferMode.ALLOWED
+            )
+            .execute();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val store = BookStore {...omitted...}
+        sqlClient.save(store) {
+            // highlight-next-line
+            setTargetTransferMode(
+                BookStore::books, 
+                TargetTransferMode.ALLOWED
+            )
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+    2.  Blind configuration, removing restrictions for all associations:
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        BookStore store = ...omitted...;
+        sqlClient
+            .saveCommand(store)
+            // highlight-next-line
+            .setTargetTransferModeAll(
+                TargetTransferMode.ALLOWED
+            )
+            .execute();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val store = BookStore {...omitted...}
+        sqlClient.save(store) {
+            // highlight-next-line
+            setTargetTransferModeAll(
+                TargetTransferMode.ALLOWED
+            )
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+    Whether precise or blind configuration, the last parameter is the `TargetTransferMode` enum, which has three values:
+
+    -   **ALLOWED**: Allows child object transfer and tries to use the database's own `UPSERT` capability whenever possible
+
+    -   **NOT_ALLOWED**: Prohibits child object transfer, initiates additional queries with `QueryReason.TARGET_NOT_TRANSFERABLE` for verification.
+        If child object transfer occurs, throws an exception
+
+    -   **AUTO** (default): Current configuration is invalid, refers to lower priority configuration
+
+        -   For precise configuration, refers to blind configuration
+
+        -   For blind configuration, refers to global configuration
+
+2.  Global configuration, which can be divided into two types:
+
+    1.  Global configuration based on Jimmer API:
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        JSqlClient sqlCient = JSqlClient
+            .newBuilder()
+            // highlight-next-line
+            .setTargetTransferable(true)
+            ...other configurations omitted...
+            .build();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val sqlClient = sqlClient {
+            // highlight-next-line
+            setTargetTransferable(true)
+            ...other configurations omitted...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+    2.  Global configuration based on Spring Boot if using Jimmer's spring-boot-starter:
+
+        Using `application.yml` as an example:
+
+        ```sh title = "application.yml"
+        jimmer:
+            // highlight-next-line
+            target-transferable: true
+            ...other configurations omitted...
+        ```
+
+Once Jimmer is configured through any of the above methods to not restrict child object transfer for the `BookStore.books` association, modify the code as follows:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+public interface Book {
+
+    @ManyToOne
+    @Nullable
+    // Not related to the current discussion, 
+    // please ignore for now
+    // highlight-next-line
+    @OnDissociate(DissociateAction.SET_NULL)
+    BookStore store();
+
+    ...other code omitted...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="Book.kt"
+public interface Book {
+
+    @ManyToOne
+    // Not related to the current discussion, 
+    // please ignore for now
+    // highlight-next-line
+    @OnDissociate(DissociateAction.SET_NULL)
+    val store: BookStore?
+
+    ...other code omitted...
+}
+```
+
+</TabItem>
+</Tabs>
+
+Re-executing the code will generate the following SQL:
+
+1.  Saving the root object:
+
+    ```sql
+    merge into BOOK_STORE(
+        NAME
+    ) key(NAME) values(?)
+    /* batch-0: [MANNING] */
+    ```
+
+2.  Establishing associations between root object and child objects:
+
+    ```sql
+    merge into BOOK(
+        ID, STORE_ID
+    ) key(ID) values(?, ?)
+    /* batch-0: [12, 2] */
+    /* batch-1: [1, 2] */
+    ```
+
+3.  Breaking associations between root object and no longer needed child objects:
+
+    ```sql
+    update BOOK
+    set
+        STORE_ID = null
+    where
+        STORE_ID = ?
+        and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [2, [12, 1]] */
+    ```
+
+:::info
+To demonstrate performance-priority scenarios to users, the examples
+[jimmer-examples/java/save-command](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/save-command)
+and
+[jimmer-examples/kotlin/save-command-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/save-command-kt)
+both use global configuration to allow child object transfer.
+:::

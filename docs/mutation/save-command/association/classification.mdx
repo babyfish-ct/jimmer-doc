@@ -1,0 +1,668 @@
+---
+sidebar_position: 1
+title: Association classification
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ShortAssociation } from '@site/src/components/ShortAssociation';
+import { LongAssociation } from '@site/src/components/LongAssociation';
+import { ViewMore } from '@site/src/components/ViewMore';
+
+## Basic Concepts
+
+Association objects can be classified from two perspectives, with two types of associations from each perspective, totaling 4 types
+
+-   Classification by association object shape
+
+    -   **Short Association**
+
+        Only modifies the association relationship between the current object and other objects, without further saving the associated objects.
+
+        > The recursive saving behavior is terminated and will not continue deeper.
+
+    -   **Long Association**
+
+        Not only modifies the association relationship between the current object and other objects but also further saves the associated objects.
+
+        > The recursive saving behavior will not be terminated and will continue deeper.
+
+-   Classification by save order
+
+    -   **Forward Association**
+
+        Associated objects are saved earlier than the current object, which is actually based on foreign keys *(whether true or false)*.
+        
+        For example: `Book.store` in this tutorial.
+
+    -   **Backward Association**
+
+        Associated objects are saved later than the current object, including two situations
+
+        -   The inverse association of forward associations.
+        
+            For example: `BookStore.books` in this tutorial
+
+        -   Associations based on intermediate tables.
+        
+            For example: `Book.authors` and `Author.books` in this tutorial
+
+## 1. Classification by Association Object Shape
+
+### 1.1. Short Association
+
+A short association means only modifying the association itself between the current object and other objects, with no interest in modifying the associated objects.
+
+Typically, UI design will use radio buttons *(association reference)* or checkboxes *(association collection)*.
+
+<ShortAssociation/>
+
+<div>&nbsp;</div>
+
+Where:
+
+-   Radio buttons correspond to many-to-one association `Book.store`
+
+-   Checkboxes correspond to many-to-many association `Book.authors`
+
+:::note
+In real projects, when there is a lot of data to choose from, it might not be suitable to design as a dropdown UI. In this case, an object selector with filtering conditions and pagination capabilities can be used instead of a dropdown, which is a common workaround.
+:::
+
+Since users only want to modify the association between the current object and other objects, without further modifying the associated objects, the UI cannot have multiple levels of association nesting. This is why it's called a **short association**.
+
+When passing any shaped data structure as a parameter to the save command, there are two methods to specify short associations:
+
+-   Use Id-Only objects as associated objects
+
+-   Use Key-Only objects as associated objects with special configuration enabled
+
+#### 1.1.1. Using Id-Only Objects as Associated Objects
+
+Make associated objects have only the id property
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setName("SQL in Action");
+    draft.setEdition(1);
+    draft.setPrice(new BigDecimal("39.9"));
+    
+    // Associated object has only id property
+    // highlight-next-line
+    draft.setStoreId(2L);
+
+    draft.addIntoAuthors(author -> {
+        // Associated object has only id property
+        // highlight-next-line
+        author.setId(4L);
+    });
+    draft.addIntoAuthors(author -> {
+        // Associated object has only id property
+        // highlight-next-line
+        author.setId(5L);
+    });
+});
+sqlClient.save(book);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    name = "SQL in Action"
+    edition = 1
+    price = BigDecimal("39.9")
+
+    // Associated object has only id property
+    // highlight-next-line
+    storeId = 2L
+
+    authors().addBy {
+        // Associated object has only id property
+        // highlight-next-line
+        id = 4L
+    }
+    authors().addBy {
+        // Associated object has only id property
+        // highlight-next-line
+        id = 5L
+    }
+}
+sqlClient.save(book)
+```
+
+</TabItem>
+</Tabs>
+
+:::note
+The hardcoding of the data structure being saved here is only for demonstration. In actual projects, the data structure being saved is submitted by the frontend interface.
+
+Of course, if the user has defined the `authorIds` property according to the [Mapping/Advanced Mapping/View Properties/IdView](../../../mapping/advanced/view/id-view) article, the above code can be simplified, for example:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = ImmutableObjects.createBook(draft -> {
+    draft.setAuthorIds(Arrays.asList(4L, 5L));
+});
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    authorIds = listOf(4L, 5L)
+}
+```
+
+</TabItem>
+</Tabs>
+
+However, this is not mandatory. To make the example more universal, we don't assume that users have defined [IdView](../../../mapping/advanced/view/id-view) properties for entity types. All subsequent documentation will follow this approach without further reminders.
+:::
+
+Assuming the current database is H2, the generated SQL would be:
+
+1.  Save the aggregate root.
+
+    ```sql
+    merge into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) key(
+        NAME, EDITION
+    ) values(?, ?, ?, ?)
+    /* batch-0: [SQL in Action, 1, 39.9, 2] */
+    ```
+
+    Since `Book.store` is a many-to-one relationship directly based on foreign key *(STORE_ID)*, the association between the current object and `BookStore(2)` object will be automatically created by the execution of this SQL.
+
+2.  If there are `Author` objects associated with the current object *(newly inserted data is `Book(100)`)* other than just `Author(4)` and `Author(5)`, break the associations with those other objects.
+
+    ```sql
+    delete from BOOK_AUTHOR_MAPPING
+    where 
+        BOOK_ID = ? /* 100 */
+    and
+        not (
+            AUTHOR_ID = any(? /* [4, 5] */)
+        )
+    ```
+
+    > This step is called unhooking, which will be introduced in subsequent documentation. Readers can ignore this for now.
+
+3.  Establish associations between the object *(newly inserted data is `Book(100)`)* and the two objects `Author(4)` and `Author(5)`
+
+    ```sql
+    merge into BOOK_AUTHOR_MAPPING tb_1_ 
+    using(values(?, ?)) tb_2_(
+        BOOK_ID, AUTHOR_ID
+    ) 
+    on 
+        tb_1_.BOOK_ID = tb_2_.BOOK_ID
+    and
+        tb_1_.AUTHOR_ID = tb_2_.AUTHOR_ID 
+    when not matched then insert(BOOK_ID, AUTHOR_ID)
+    values(tb_2_.BOOK_ID, tb_2_.AUTHOR_ID)
+    /* batch-0: [100, 4] */
+    /* batch-1: [100, 5] */
+    ```
+
+:::info
+Through this example, it's not hard to see that short associations only create or destroy the association relationships between the current object and other objects, without further saving the associated objects.
+
+Short associations always assume that the referenced objects exist. If the referenced objects *(in this example, `BookStore(2)`, `Author(4)`, and `Author(5)`)* don't exist, it will cause an exception!
+:::
+
+#### 1.1.2. Using Key-Only Objects as Associated Objects with Special Configuration Enabled
+
+In the code below, assume:
+
+-   The key property for the `BookStore` type is `name` 
+
+    <ViewMore buttonText="View" title="BookStore Key Definition">
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java title="BookStore.java"
+    @Entity
+    public interface BookStore {
+
+        // highlight-next-line
+        @Key
+        String name();
+
+        ...other members omitted...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin title="BookStore.kt"
+    @Entity
+    interface BookStore {
+
+        // highlight-next-line
+        @Key
+        val name: String
+
+        ...other members omitted...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+    </ViewMore>
+
+-   The key properties for the `Author` type are `firstName` and `lastName` 
+
+    > In actual business scenarios, this uniqueness constraint might not be reasonable, but let's assume this for the sake of simplifying the example.
+
+    <ViewMore buttonText="View" title="Author Key Definition">
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java title="Author.java"
+    @Entity
+    public interface Author {
+
+        // highlight-next-line
+        @Key
+        String firstName();
+
+        // highlight-next-line
+        @Key
+        String lastName();
+
+        ...other members omitted...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin title="Author.kt"
+    @Entity
+    interface Author {
+
+        // highlight-next-line
+        @Key
+        val firstName: String
+
+        // highlight-next-line
+        @Key
+        val lastName: String
+
+        ...other members omitted...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+    </ViewMore>
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setName("SQL in Action");
+    draft.setEdition(1);
+    draft.setPrice(new BigDecimal("39.9"));
+    draft.applyStore(store -> {
+        // Associated object has only key property, i.e., `BookStore.name`
+        // highlight-next-line
+        store.setName("MANNING");
+    });
+    draft.addIntoAuthors(author -> {
+        // Associated object has only key properties, i.e., `Author.firstName` and `Author.lastName`
+        // highlight-next-line
+        author.setFirstName("Boris").setLastName("Cherny");
+    });
+    draft.addIntoAuthors(author -> {
+        // Associated object has only key properties, i.e., `Author.firstName` and `Author.lastName`
+        // highlight-next-line
+        author.setFirstName("Samer").setLastName("Buna");
+    });
+});
+sqlClient
+    .saveCommand(book)
+    // highlight-next-line
+    .setKeyOnlyAsReference(BookProps.STORE)
+    // highlight-next-line
+    .setKeyOnlyAsReference(BookProps.AUTHORS)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    name = "SQL in Action"
+    edition = 1
+    price = BigDecimal("39.9")
+    store {
+        // Associated object has only key property, i.e., `BookStore.name`
+        // highlight-next-line
+        name = "MANNING"
+    }
+    authors().addBy {
+        // Associated object has only key properties, i.e., `Author.firstName` and `Author.lastName`
+        // highlight-next-line
+        firstName = "Boris"
+        // highlight-next-line
+        lastName = "Cherny"
+    }
+    authors().addBy {
+        // Associated object has only key properties, i.e., `Author.firstName` and `Author.lastName`
+        // highlight-next-line
+        firstName = "Samer"
+        // highlight-next-line
+        lastName = "Buna"
+    }
+}
+sqlClient.save(book) {
+    // highlight-next-line
+    setKeyOnlyAsReference(Book::store)
+    // highlight-next-line
+    setKeyOnlyAsReference(Book::authors)
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+**By default, key-only associated objects are treated as long associations**
+
+However, developers can treat key-only associated objects as short associations by calling the `setKeyOnlyAsReference` method.
+
+-   Here, `setKeyOnlyAsReference` is called twice to explicitly configure the associations `Book.store` and `Book.authors`.
+
+    In fact, you can also call `setKeyOnlyAsReferenceAll` once to blindly configure all associations.
+
+-   Compared to Kotlin, the Java API is slightly less convenient for advanced configuration of save commands.
+
+    First call the `saveCommand` method to create a save command without executing it immediately, then call the `execute` method to actually execute it after completing the advanced configuration.
+:::
+
+### 1.2. Long Association
+
+A long association means not only modifying the association itself between the current object and other objects but also further modifying the associated objects.
+
+Typically, orders and order items are the best examples of such scenarios. The UI design will use embedded tables, for example:
+
+<LongAssociation/>
+
+<div>&nbsp;</div>
+
+Since users not only want to modify the association between the current object and other objects but also want to further modify the associated objects, and the associated objects can contain deeper associations, theoretically, the UI can have multiple levels of association nesting. This is why it's called a **long association**.
+
+:::note
+Although designers will intentionally avoid nesting deeper embedded tables within embedded tables to maintain UI simplicity, there are still scenarios in real projects where maintaining multi-level nested associations in the UI is necessary, such as:
+
+-   The form itself is a tree structure, which is saved as a whole after editing.
+
+-   Visual UI design, because UI components themselves are tree structures, after users perform a series of visual drag-and-drop designs, the UI component tree is saved as a whole.
+
+Jimmer can directly save long association data structures of any shape. If we call a long association data structure with unknown depth a complex form, **the save command is designed for complex forms.**
+:::
+
+Here's an example:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java 
+Order order = Immutables.createOrder(draft -> {
+    draft.setCustomerId(1L);
+    draft.setProvince("Prenzlauer Berg");
+    draft.setCity("Berlin");
+    draft.setAddress("Brandenburgische Straße 9, Prenzlauer Berg, Berlin, Germany");
+    draft.addIntoItems(item -> {
+        item.setProductId(8L);
+        // Property neither id nor key  
+        // highlight-next-line
+        item.setQuantity(2);
+    });
+    draft.addIntoItems(item -> {
+        item.setProductId(9L);
+        // Property neither id nor key
+        // highlight-next-line
+        item.setQuantity(1);
+    });
+});
+sqlClient.save(order);
+```
+
+</TabItem>
+
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val order = Order {
+    customerId = 1L
+    province = "Prenzlauer Berg"
+    city = "Berlin" 
+    address = "Brandenburgische Straße 9, Prenzlauer Berg, Berlin, Germany"
+    items().addBy {
+        productId = 8L
+        // Property neither id nor key
+        // highlight-next-line
+        quantity = 2
+    }
+    items().addBy {
+        productId = 9L
+        // Property neither id nor key
+        // highlight-next-line
+        quantity = 1
+    }
+}
+sqlClient.save(order)
+```
+
+</TabItem>
+</Tabs>
+
+In this example, we can see many short associations, such as `Order.customer`, `OrderItem.product`, but these are not the focus here.
+
+Here, we should focus on the association `Order.items`, which is clearly a long association.
+
+This operation generates two SQL statements:
+
+1.  Insert the root object `Order`
+
+    ```sql
+    insert into order_(
+        PROVINCE, CITY, ADDRESS, CUSTOMER_ID
+    ) values(?, ?, ?, ?)
+    /*batch-0: [Prenzlauer Berg, Berlin, Brandenburgische Straße 9, Prenzlauer Berg, Berlin, Germany, 1] */
+    ```
+
+2.  Insert all child objects `OrderItem`
+
+    ```sql
+    insert into ORDER_ITEM(
+        ORDER_ID, 
+        PRODUCT_ID, 
+        QUANTITY
+    ) values(?, ?, ?)
+    /* batch-0: [100, 8, 2] */
+    /* batch-1: [100, 9, 1] */
+    ```
+
+:::info
+As we can see, long associations not only modify the association relationship between the current object and other objects but also cause the associated objects to be saved.
+
+If the associated objects also have long associations, they will be saved recursively until there are no more association properties or until a short association is encountered.
+:::
+
+## 2. Classification by Save Order
+
+### 2.1. Forward Association
+
+Forward association is based on foreign keys *(whether true or false)*. Its working mode is to save the associated objects first, then save the root object.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setName("SQL in Action");
+    draft.setEdition(1);
+    draft.setPrice(new BigDecimal("49.9"));
+    draft.applyStore(store -> {
+        store.setName("TURING");
+        store.setWebsite("https://www.turing.com");
+    });
+});
+sqlClient.save(book);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    name = "SQL in Action"
+    edition = 1
+    price = BigDecimal("49.9")
+    store {
+        name = "TURING"
+        website = "https://www.turing.com"
+    }
+}
+sqlClient.save(book)
+```
+
+</TabItem>
+</Tabs>
+
+Taking H2 as an example, it generates two SQL statements:
+
+1.  First save the associated object `BookStore`
+
+    ```sql
+    merge into BOOK_STORE(
+        NAME, WEBSITE
+    ) key(NAME) values(?, ?)
+    /* batch-0: [TURING, https://www.turing.com] */
+    ```
+
+2.  Then save the current object `Book`
+
+    ```sql
+    merge into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) key(
+        NAME, EDITION
+    ) values(?, ?, ?, ?)
+    /* batch-0: [SQL in Action, 1, 49.9, 100] */
+    ```
+
+:::caution
+When discussing forward associations in work communication, it's recommended to use expressions like "current object/associated object" rather than "parent object/child object".
+
+This is because, for forward associations, the parent-child relationship at the ORM level is completely opposite to that at the database modeling level, which can easily cause confusion and misunderstanding.
+:::
+
+### 2.2. Backward Association
+
+Other associations, such as:
+
+-   Inverse associations of forward associations *(like `BookStore.books` in this tutorial)*
+-   Associations based on intermediate tables *(like `Book.authors` and `Author.books` in this tutorial)*
+
+can all be categorized as backward associations, which are more common scenarios.
+
+The working mode of backward associations is easier to understand: save the current object first, then save the associated objects.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookStore store = Immutables.createBookStore(draft -> {
+    draft.setName("TURING");
+    draft.setWebsite("https://www.turing.com");
+    draft.addIntoBooks(book -> {
+        book.setName("SQL in Action");
+        book.setEdition(1);
+        book.setPrice(new BigDecimal("49.9"));
+    });
+    draft.addIntoBooks(book -> {
+        book.setName("RUST programming");
+        book.setEdition(2);
+        book.setPrice(new BigDecimal("39.9"));
+    });
+});
+sqlClient
+    .saveCommand(store)
+    // Please ignore this configuration for now
+    .setTargetTransferModeAll(TargetTransferMode.ALLOWED)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val store = BookStore {
+    name = "TURING"
+    website = "https://www.turing.com"
+    books().addBy {
+        name = "SQL in Action"
+        edition = 1
+        price = BigDecimal("49.9")
+    }
+    books().addBy {
+        name = "RUST programming"
+        edition = 2
+        price = BigDecimal("39.9")
+    }
+}
+sqlClient.save(store) {
+    // Please ignore this configuration for now
+    setTargetTransferModeAll(TargetTransferMode.ALLOWED)
+}
+```
+
+</TabItem>
+</Tabs>
+
+Taking H2 as an example, it generates three SQL statements:
+
+1.  First save the current object `BookStore`
+
+    ```sql
+    merge into BOOK_STORE(
+        NAME, WEBSITE
+    ) key(
+        NAME
+    ) values(?, ?)
+    /* batch-0: [TURING, https://www.turing.com] */
+    ```
+
+2.  Then save the associated objects `Book`
+
+    ```sql
+    merge into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) key(
+        NAME, EDITION
+    ) values(?, ?, ?, ?)
+    /* batch-0: [SQL in Action, 1, 49.9, 100] */
+    /* batch-1: [RUST programming, 2, 39.9, 100] */
+    ```
+
+3.  The third SQL statement is not relevant to the topic being discussed here, so it's omitted
+
+:::info
+Backward associations have richer functionality than forward associations. This tutorial will focus on discussing backward associations.
+:::

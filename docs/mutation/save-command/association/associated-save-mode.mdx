@@ -1,0 +1,1463 @@
+---
+sidebar_position: 3
+title: Associated Save Mode
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ViewMore } from '@site/src/components/ViewMore';
+import { Save } from '@site/src/components/Image';
+import Dissociate from './_dissociate.md';
+import MergeRoots from './_merge-roots.mdx';
+
+## Basic Concepts
+
+In [the previous article](../save-mode), we introduced how to control the save mode of aggregate root objects.
+
+This article will discuss how to control the save mode of associated objects. Associated objects support the following save modes:
+
+<table>
+<thead>
+<tr>
+<th>Association Save Mode</th>
+<th>Applicable Scope</th>
+<th>Accept Wild Objects</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><b>APPEND</b></td>
+<td>All associations</td>
+<td>Yes</td>
+<td>Unconditionally perform INSERT operation on associated objects</td>
+</tr>
+<tr>
+<td><b>APPEND_IF_ABSENT</b></td>
+<td>All associations</td>
+<td>No</td>
+<td>
+
+1. First check if the associated object exists in the database
+
+-   If the id property of the associated object is specified, check existence by id
+-   Otherwise, check existence by key
+
+2. Execute subsequent operations based on the check result
+
+-   If the associated object already exists, ignore the operation and do nothing
+-   Otherwise, insert the associated object
+
+:::note
+Jimmer will try to utilize the database's native UPSERT capability to combine these two steps. If not possible, it will inform the user why
+:::
+
+</td>
+</tr>
+<tr>
+<td><b>UPDATE</b></td>
+<td>All associations</td>
+<td>Yes</td>
+<td>
+
+-   If the id property of the associated object is specified, update the associated object by id
+-   Otherwise, update the associated object by key
+
+</td>
+</tr>
+<tr>
+<td><b>MERGE</b></td>
+<td>All associations</td>
+<td>No</td>
+<td>
+
+1. First check if the associated object exists in the database
+
+-   If the id property of the associated object is specified, check existence by id
+-   Otherwise, check existence by key
+
+2. Execute subsequent operations based on the check result
+
+-   If the associated object already exists, update it
+-   Otherwise, insert the associated object
+
+:::note
+Jimmer will try to utilize the database's native UPSERT capability to combine these two steps. If not possible, it will inform the user why
+:::
+
+</td>
+</tr>
+<tr>
+<td><b>REPLACE</b></td>
+<td>Post associations</td>
+<td>No</td>
+<td>Based on `MERGE`, perform dissociate operation on no longer needed associated objects</td>
+</tr>
+<tr>
+<td><b>VIOLENTLY_REPLACE</b></td>
+<td>Post associations</td>
+<td>Yes</td>
+<td>
+
+Make Jimmer no longer search for changes in associations *(or association collections)* by id or key, but execute the following two operations
+
+1.  First delete all old associations and related objects of the current object
+2.  Then reinsert all associated objects and rebuild associations with the current object
+
+This is a very aggressive association update approach with the following pros and cons
+
+-   Pros: Accepts wild associated objects, no longer requires associated objects to either specify id or key
+-   Cons:
+    -   If there are many associated objects, in most cases, this is a low-performance solution
+    -   If associated objects have deeper associations, the deletion in step 1 may cause too deep cascade deletion, leading to loss of too much data
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## Methods with Specified Association Mode
+
+You can set the `AssociatedSaveMode` for save instructions in two ways
+
+-   Set parameters for the save method *(this is the simpler choice)*
+
+-   Call configuration methods on the save instruction *(this is the more powerful choice)*
+
+:::info
+Jimmer's API design only allows users to choose one of these methods, preventing confusion from having both methods appear simultaneously
+:::
+
+### Setting Save Method Parameters
+
+Many save methods support this, for example
+
+For `save`, `saveEntities` and `saveInputs`, the default `AssociatedSaveMode` is `REPLACE`. Now, let's modify it to `MERGE`.
+
+-   **save**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    Book book = ...omitted...;
+    sqlClient.save(book, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val book = Book { ...omitted... }
+    sqlCient.save(book, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   **saveEntities**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = ...omitted...;
+    sqlClient.saveEntities(books, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = listOf<Book>(...omitted...)
+    sqlCient.saveEntities(books, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   **saveInputs**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<BookInput> inputs = ...omitted...;
+    sqlClient.saveInputs(inputs, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val inputs = listOf<BookInput>(...omitted...)
+    sqlCient.saveInputs(inputs, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    Here, the `BookInput` class is not an entity type, but rather an automatically generated [Input DTO](../input-dto) type by Jimmer.
+    
+    This related content hasn't been introduced before, please ignore it for now.
+
+Besides `save`, `saveEntities` and `saveInputs`, Jimmer has other shortcut methods, such as
+
+-   `insert`, `insertEntities`, `insertInputs`
+-   `insertIfAbsent`, `mergeEntitiesIfAbsent`, `mergeInputsIfAbsent`
+-   `update`, `updateEntities`, `updateInputs`
+-   `merge`, `mergeEntities`, `mergeInputs`
+
+Taking `insert`, `insertEntities` and `insertInputs` as examples, the default `AssociatedSaveMode` is `APPEND`. Now, let's modify it to `MERGE`.
+
+-   **insert**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    Book book = ...omitted...;
+    sqlClient.insert(book, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val book = Book { ...omitted... }
+    sqlCient.insert(book, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   **insertEntities**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = ...omitted...;
+    sqlClient.insertEntities(books, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = listOf<Book>(...omitted...)
+    sqlCient.insertEntities(books, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   **insertInputs**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<BookInput> inputs = ...omitted...;
+    sqlClient.insertInputs(inputs, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val inputs = listOf<BookInput>(...omitted...)
+    sqlCient.insertInputs(inputs, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+### Calling Save Instruction Configuration Methods
+
+Besides setting save method parameters, we can also modify `AssociatedSaveMode` by calling configuration methods on the save instruction.
+
+-   Precisely set `AssociatedSaveMode` for specific associations
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    Book book = ...omitted...;
+    sqlClient
+        .saveCommand(book)
+        // highlight-next-line
+        .setAssociatedMode(
+            BookProps.AUTHORS, 
+            AssociatedSaveMode.MERGE
+        )
+        .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val book = Book { ...omitted... }
+    sqlCient.save(book) {
+        // highlight-next-line
+        setAssociatedMode(
+            Book::authors,
+            AssociatedSaveMode.MERGE
+        )
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    -   **Java**
+    
+        Calls the `saveCommand` method instead of `save` method, indicating creation of a save instruction without immediate execution.
+
+        After configuration with `setAssociatedMode`, finally calls the `execute` method to actually execute.
+
+    -   **Kotlin**
+
+        The syntax is relatively concise, still calling the `save` method that can directly execute save instructions, just with a lambda for additional configuration.
+
+-   Blindly set `AssociatedSaveMode` for all associations
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    Book book = ...omitted...;
+    sqlClient
+        .saveCommand(book)
+        // highlight-next-line
+        .setAssociatedModeAll(
+            AssociatedSaveMode.MERGE
+        )
+        .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val book = Book { ...omitted... }
+    sqlCient.save(book) {
+        // highlight-next-line
+        setAssociatedModeAll(
+            AssociatedSaveMode.MERGE
+        )
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    -   **Java**
+    
+        Calls the `saveCommand` method instead of `save` method, indicating creation of a save instruction without immediate execution.
+
+        After configuration with `setAssociatedModeAll`, finally calls the `execute` method to actually execute.
+
+    -   **Kotlin**
+
+        The syntax is relatively concise, still calling the `save` method that can directly execute save instructions, just with a lambda for additional configuration.
+
+:::info
+Obviously, for specific associations, precise configuration has higher priority than blind configuration.
+:::
+
+## 1. APPEND
+
+Unconditionally perform INSERT operations on associated objects
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.APPEND
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.APPEND
+)
+```
+
+</TabItem>
+</Tabs>
+
+To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner#2-configuring-whether-different-parent-objects-can-seize-child-objects)
+
+Two SQL statements will be generated:
+
+1. Perform UPSERT *(insert or update)* operations on two root objects
+
+    <MergeRoots/>
+
+2. Perform INSERT operations on 4 associated objects
+
+    Assuming after the previous SQL saves the root objects:
+    
+    - The id of `MANNING` is `2`
+    - The id of `AMAZON` is `100`
+
+    The following SQL is generated:
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(?, ?, ?, ?)
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+## 2. APPEND_IF_ABSENT
+
+1. First check if the associated object exists in the database
+
+- If the id property of the associated object is specified, check existence by id
+- Otherwise, check existence by key
+
+2. Execute subsequent operations based on the check result
+
+- If the associated object already exists, ignore the operation and do nothing
+- Otherwise, insert the associated object
+
+:::note
+Jimmer will try to utilize the database's native UPSERT capabilities to combine these two steps. If this is not possible, it will inform the user of the reason
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.APPEND_IF_ABSENT
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.APPEND_IF_ABSENT
+)
+```
+
+</TabItem>
+</Tabs>
+
+To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner#2-configuring-whether-different-parent-objects-can-seize-child-objects)
+
+Two SQL statements will be generated:
+
+1. Perform UPSERT *(insert or update)* operations on two root objects
+
+    <MergeRoots/>
+
+2. Perform INSERT_IF_ABSENT operations on 4 associated objects
+
+    Assuming:
+    
+    - The key for Book objects is `Book.name` and `Book.edition`, and the `Book` entity is annotated with `@KeyUniqueConstraint` 
+        *(For MySQL, `@KeyUniqueConstraint(noMoreUniqueConstraints = true)` is needed)*
+
+    - After the previous SQL saves the root objects:
+    
+        - The id of `MANNING` is `2`
+        - The id of `AMAZON` is `100`
+
+    The following SQL is generated:
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    merge into BOOK tb_1_ 
+    using(values(?, ?, ?, ?)) tb_2_(
+        NAME, EDITION, PRICE, STORE_ID
+    ) 
+    on 
+        tb_1_.NAME = tb_2_.NAME
+    and
+        tb_1_.EDITION = tb_2_.EDITION 
+    // highlight-next-line
+    when not matched then 
+        insert(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            tb_2_.NAME, tb_2_.EDITION, tb_2_.PRICE, tb_2_.STORE_ID
+        )
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert 
+    // highlight-next-line
+    ignore
+    into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ?, ?, ?, ?
+    )
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ?, ?, ?, ?
+    ) on conflict(
+        NAME, EDITION
+        // highlight-next-line
+    ) do nothing
+    returning ID
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+## 3. UPDATE
+
+- If the id property of the associated object is specified, update the associated object by id
+- Otherwise, update the associated object by key
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.UPDATE
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.UPDATE
+)
+```
+
+</TabItem>
+</Tabs>
+
+To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner#2-configuring-whether-different-parent-objects-can-seize-child-objects)
+
+Two SQL statements will be generated:
+
+1. Perform UPSERT *(insert or update)* operations on two root objects
+
+    <MergeRoots/>
+
+2. Perform INSERT operations on 4 associated objects
+
+    Assuming after the previous SQL saves the root objects:
+    
+    - The id of `MANNING` is `2`
+    - The id of `AMAZON` is `100`
+
+    The following SQL is generated:
+
+    ```sql
+    update BOOK
+    set
+        PRICE = ?,
+        STORE_ID = ?
+    where
+        NAME = ?
+    and
+        EDITION = ?
+    /* batch-0: [49.9, 2, SQL in Action, 1] */
+    /* batch-1: [39.9, 2, LINQ in Action, 1] */
+    /* batch-2: [44.02, 100, C++ Primer, 5] */
+    /* batch-3: [71.99, 100, Programming RUST, 1] */
+    ```
+
+## 4. MERGE
+
+1. First check if the associated object exists in the database
+
+- If the id property of the associated object is specified, check existence by id
+- Otherwise, check existence by key
+
+2. Execute subsequent operations based on the check result
+
+- If the associated object already exists, update it
+- Otherwise, insert it
+
+:::note
+Jimmer will try to utilize the database's native UPSERT capabilities to combine these two steps. If this is not possible, it will inform the user of the reason
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.MERGE
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.MERGE
+)
+```
+
+</TabItem>
+</Tabs>
+
+To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner#2-configuring-whether-different-parent-objects-can-seize-child-objects)
+
+Two SQL statements will be generated:
+
+1. Perform UPSERT *(insert or update)* operations on two root objects
+
+    <MergeRoots/>
+
+2. Perform MERGE operations on 4 associated objects
+
+    Assuming:
+    
+    - The key for Book objects is `Book.name` and `Book.edition`, and the `Book` entity is annotated with `@KeyUniqueConstraint` 
+        *(For MySQL, `@KeyUniqueConstraint(noMoreUniqueConstraints = true)` is needed)*
+
+    - After the previous SQL saves the root objects:
+    
+        - The id of `MANNING` is `2`
+        - The id of `AMAZON` is `100`
+
+    The following SQL is generated:
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    // highlight-next-line
+    merge into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) key(NAME, EDITION) values(
+        ?, ?, ?, ?
+    )
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ?, ?, ?, ?
+    ) on duplicate key 
+    // highlight-next-line
+    update
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        NAME = values(NAME),
+        EDITION = values(EDITION),
+        PRICE = values(PRICE),
+        STORE_ID = values(STORE_ID)
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ?, ?, ?, ?
+    ) on conflict(
+        NAME, EDITION
+        // highlight-next-line
+    ) do update set
+        NAME = excluded.NAME, 
+        EDITION = excluded.EDITION, 
+        PRICE = excluded.PRICE, 
+        STORE_ID = excluded.STORE_ID
+    returning ID
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+## 5. REPLACE
+
+The `MERGE` mode performs INSERT or UPDATE operations on associated objects, so after saving, the number of associated objects either remains the same or increases, but never decreases.
+
+The `REPLACE` mode does not have this characteristic because `REPLACE` performs dissociate operations on no-longer-needed associated objects in addition to the `MERGE` functionality.
+
+The dissociate operation removes associations that the current object no longer needs, for example:
+
+<Dissociate/>
+
+:::info
+The dissociate operation will be explained in detail in subsequent tutorials, so this article provides a highly simplified example
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(book -> {
+        book.setId(1L);
+        book.addIntoAuthors(author -> author.setId(2L));
+        book.addIntoAuthors(author -> author.setId(3L));
+    }),
+    Immutables.createBook(book -> {
+        book.setId(2L);
+        book.addIntoAuthors(author -> author.setId(2L));
+        book.addIntoAuthors(author -> author.setId(4L));
+    })
+);
+sqlClient.saveEntities(
+    books,
+    // This parameter can be removed because for the `saveEntities` method,
+    // `AssociatedSaveMode.REPLACE` is the default behavior
+    // highlight-next-line
+    AssociatedSaveMode.REPLACE
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        id = 1L
+        authors().addBy { id = 2L }
+        authors().addBy { id = 3L }
+    },
+    Book {
+        id = 2L
+        authors().addBy { id = 2L }
+        authors().addBy { id = 4L }
+    }
+)
+sqlClient.saveEntities(
+    books,
+    // This parameter can be removed because for the `saveEntities` method,
+    // `AssociatedSaveMode.REPLACE` is the default behavior
+    // highlight-next-line
+    AssociatedSaveMode.REPLACE
+)
+```
+
+</TabItem>
+</Tabs>
+
+Assuming the existing database structure is shown in the left column of the table below:
+
+<table>
+<thead>
+<tr>
+<th>Existing Database Structure</th>
+<th>Desired Data Structure to Save</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+
+```sh
+--+-Book(1)
+  |
+  +---Author(1)
+  |
+  \---Author(2)
+
+
+
+--+-Book(2)
+  |
+  +---Author(1)
+  |
+  \---Author(2)
+
+
+```
+
+</td>
+<td>
+
+```sh
+--+-Book(1)
+  |
+  |
+  |
+  +---Author(2)
+  |
+  \---Author(3)
+
+--+-Book(2)
+  |
+  |
+  |
+  +---Author(2)
+  |
+  \---Author(4)
+```
+
+</td>
+</tr>
+</tbody>
+</table>
+
+Obviously, there should be 4 behaviors:
+
+- Dissociate operations specific to `REPLACE`:
+
+    - Dissociate the association between `Book-1` and `Author-1`
+    - Dissociate the association between `Book-2` and `Author-1`
+
+- Capabilities inherited from `MERGE`:
+
+    - Create a new association between `Book-1` and `Author-3`
+    - Create a new association between `Book-2` and `Author-4`
+
+Finally, two SQL statements will be generated:
+
+1. The dissociate operation specific to `REPLACE` mode, removing old associations:
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    delete from BOOK_AUTHOR_MAPPING
+    where
+        BOOK_ID = ?
+    and
+        not (AUTHOR_ID = any(?))
+    /* batch-0: [1, [2, 3]] */
+    /* batch-1: [2, [2, 4]] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    delete from BOOK_AUTHOR_MAPPING
+    where
+        BOOK_ID in (
+            ? /* 1 */, ? /* 2 */
+        )
+    and
+        (BOOK_ID, AUTHOR_ID) not in (
+            (? /* 1 */, ? /* 2 */), 
+            (? /* 1 */, ? /* 3 */), 
+            (? /* 2 */, ? /* 2 */), 
+            (? /* 2 */, ? /* 4 */)
+        )
+    ```
+    
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    delete from BOOK_AUTHOR_MAPPING
+    where
+        BOOK_ID = ?
+    and
+        not (AUTHOR_ID = any(?))
+    /* batch-0: [1, [2, 3]] */
+    /* batch-1: [2, [2, 4]] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    The purpose of this SQL is:
+
+    - For `Book-1`, delete its associations with Authors other than `Author-2` and `Author-3`
+
+        In this case, it means dissociating `Book-1` from `Author-1`
+
+    - For `Book-2`, delete its associations with Authors other than `Author-2` and `Author-4`
+
+        In this case, it means dissociating `Book-2` from `Author-1`
+
+    We can see significant differences between different databases:
+
+    - `H2` and `Postgres` use simple batched SQL
+    - `MySQL` uses a single complex SQL statement
+
+    :::info
+    This is because `H2` and `Postgres` support the `=any(array)` syntax, while MySQL does not.
+    :::
+
+2. Capabilities inherited by `REPLACE` mode from `MERGE` mode to establish new associations
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    merge into BOOK_AUTHOR_MAPPING tb_1_ 
+    using(values(?, ?)) tb_2_(
+        BOOK_ID, AUTHOR_ID
+    ) 
+    on 
+        tb_1_.BOOK_ID = tb_2_.BOOK_ID
+    and
+        tb_1_.AUTHOR_ID = tb_2_.AUTHOR_ID 
+    // highlight-next-line
+    when not matched then 
+        insert(BOOK_ID, AUTHOR_ID)
+        values(tb_2_.BOOK_ID, tb_2_.AUTHOR_ID)
+    /* batch-0: [1, 2] */
+    /* batch-1: [1, 3] */
+    /* batch-2: [2, 2] */
+    /* batch-3: [2, 3] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert 
+    // highlight-next-line
+    ignore
+    into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
+    values(?, ?)
+    /* batch-0: [1, 2] */
+    /* batch-1: [1, 3] */
+    /* batch-2: [2, 2] */
+    /* batch-3: [2, 3] */
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert 
+    into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
+    values(?, ?)
+    on conflict(BOOK_ID, AUTHOR_ID)
+    // highlight-next-line
+    do nothing
+    /* batch-0: [1, 2] */
+    /* batch-1: [1, 3] */
+    /* batch-2: [2, 2] */
+    /* batch-3: [2, 3] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+## 6. VIOLENTLY_REPLACE
+
+The previous examples can be simplified because the dissociate operation included in the `REPLACE` mode will be explained in more detail in subsequent documents, as it's not the focus of this article.
+
+However, it's not hard to see that the `REPLACE` mode integrates `INSERT`, `UPDATE`, and `DELETE` operations into one, expecting to replace all associated relationships completely *(if the association relationship is a deep long association, then it's replacing an entire subtree)*.
+
+However, `REPLACE` mode has one limitation: it expects objects to either have an `id` or a `key`.
+It expects to cleverly find the parts where the new and old data structures have changed through `id` and `key`, thereby minimizing the impact range of `INSERT`, `UPDATE`, and `DELETE` operations to achieve maximum performance.
+
+:::tip
+If readers are familiar with the web domain, it's not hard to see that this is the same principle as specifying the `key` attribute when using loop rendering in React.
+
+In fact, the save instruction design was inspired by React.
+:::
+
+However, what should we do when dealing with wild objects, i.e., associated objects that have neither `id` nor `key`?
+
+In this case, we can use the `VIOLENTLY_REPLACE` mode. Once this mode is adopted, Jimmer no longer looks for changes in associations *(or association collections)* based on id or key, but performs the following two operations:
+
+1. First, delete all old associations and related objects of the current object
+2. Then reinsert all associated objects and rebuild associations with the current object
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.VIOLENTLY_REPLACE
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.VIOLENTLY_REPLACE
+)
+```
+
+</TabItem>
+</Tabs>
+
+To demonstrate simpler SQL generation, let's assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously introduced, please refer to [here](./owner#2-configure-whether-to-allow-different-parent-objects-to-seize-child-objects)
+
+Three SQL statements will be generated:
+
+1. Perform UPSERT *(insert or update)* operations on the two root objects
+
+    <MergeRoots/>
+
+2. Delete all old associated objects
+
+    Assuming after saving the root objects in the previous SQL
+    
+    - The id of `MANNING` is `2`
+    - The id of `AMAZON` is `100`
+
+    ```sql
+    delete from BOOK 
+    where STORE_ID in (
+        ? /* 2 */, ? /* 100 */
+    )
+    ```
+
+    :::info
+    If there are other tables in the database that reference the `BOOK` table through foreign keys, a simple `DELETE` statement cannot delete all associated objects.
+
+    To simplify the discussion, let's assume this scenario doesn't exist.
+    :::
+
+3. Create all new associations and associated objects
+
+    Assuming after saving the root objects in the previous SQL
+    
+    - The id of `MANNING` is `2`
+    - The id of `AMAZON` is `100`
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(?, ?, ?, ?)
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+Not comparing old and new data in detail, but simply deleting associated objects and rebuilding them is a very violent mode with the following disadvantages:
+
+- If there are many associated objects, in most cases, this is a low-performance solution
+- If the associated objects have deeper associations, the deletion behavior in step 1 may lead to too deep cascade deletion, resulting in the loss of too much data
+
+:::caution
+Therefore, it is not recommended, please use with caution
+:::
+
+## Default Mode
+
+The save instruction provides not only `save`, `saveEntities`, and `saveInputs` methods, but also other shortcut methods for various application scenarios.
+
+Different save instructions have different default values for `AssociatedSaveMode`, please refer to this table:
+
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Default AssociatedSaveMode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>save</td>
+<td rowspan="3">REPLACE</td>
+</tr>
+<tr>
+<td>saveEntities</td>
+</tr>
+<tr>
+<td>saveInputs</td>
+</tr>
+<tr>
+<td>insert</td>
+<td rowspan="3">APPEND</td>
+</tr>
+<tr>
+<td>insertEntities</td>
+</tr>
+<tr>
+<td>insertInputs</td>
+</tr>
+<tr>
+<td>insertIfAbsent</td>
+<td rowspan="3">APPEND_IF_ABSENT</td>
+</tr>
+<tr>
+<td>insertEntitiesIfAbsent</td>
+</tr>
+<tr>
+<td>insertInputsIfAbsent</td>
+</tr>
+<tr>
+<td>update</td>
+<td rowspan="3">UPDATE</td>
+</tr>
+<tr>
+<td>updateEntities</td>
+</tr>
+<tr>
+<td>updateInputs</td>
+</tr>
+<tr>
+<td>merge</td>
+<td rowspan="3">MERGE</td>
+</tr>
+<tr>
+<td>mergeEntities</td>
+</tr>
+<tr>
+<td>mergeInputs</td>
+</tr>
+</tbody>
+</table>

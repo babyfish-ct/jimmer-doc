@@ -1,0 +1,1467 @@
+---
+sidebar_position: 3
+title: 关联对象保存模式
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ViewMore } from '@site/src/components/ViewMore';
+import { Save } from '@site/src/components/Image';
+import Dissociate from './_dissociate.md';
+import MergeRoots from './_merge-roots.mdx';
+
+## 基本概念
+
+在[之前的文章中](../save-mode)中，我们介绍了如何控制聚合根对象的保存模式。
+
+本文将讨论如何控制关联对象的保存模式，关联对象支持如下保存模式：
+
+<table>
+<thead>
+<tr>
+<th>关联保存模式</th>
+<th>适用范围</th>
+<th>接受Wild对象</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><b>APPEND</b></td>
+<td>所有关联</td>
+<td>是</td>
+<td>无条件地对关联对象进行INSERT操作</td>
+</tr>
+<tr>
+<td><b>APPEND_IF_ABSENT</b></td>
+<td>所有关联</td>
+<td>否</td>
+<td>
+
+1. 先判断关联对象在数据库中是否存在
+
+-   如果关联对象的id属性被指定了，按照id判断关联对象在数据库中是否存在
+-   否则，按照key判断关联对象在数据库中是否存在
+
+2. 根据判断结果执行后续操作
+
+-   如果关联对象已经存在，忽略操作是么也不做
+-   否则，插入关联对象
+
+:::note
+Jimmer会尽量利用数据库本身的UPSERT的能力，将两个步骤合并。如果做不到，告诉用户原因
+:::
+
+</td>
+</tr>
+<tr>
+<td><b>UPDATE</b></td>
+<td>所有关联</td>
+<td>是</td>
+<td>
+
+-   如果关联对象的id属性被指定了，按照id更新关联对象
+-   否则，按照key更新关联对象
+
+</td>
+</tr>
+<tr>
+<td><b>MERGE</b></td>
+<td>所有关联</td>
+<td>否</td>
+<td>
+
+1. 先判断关联对象在数据库中是否存在
+
+-   如果关联对象的id属性被指定了，按照id判断关联对象在数据库中是否存在
+-   否则，按照key判断关联对象在数据库中是否存在
+
+2. 根据判断结果执行后续操作
+
+-   如果关联对象已经存在，更新关联对象
+-   否则，插入关联对象
+
+:::note
+Jimmer会尽量利用数据库本身的UPSERT的能力，将两个步骤合并。如果做不到，告诉用户原因
+:::
+
+</td>
+</tr>
+<tr>
+<td><b>REPLACE</b></td>
+<td>后置关联</td>
+<td>否</td>
+<td>在`MERGE`的基础上，对不再需要的关联对象进行脱钩操作</td>
+</tr>
+<tr>
+<td><b>VIOLENTLY_REPLACE</b></td>
+<td>后置关联</td>
+<td>是</td>
+<td>
+
+让Jimmer不再根据id或key去查找关联 *(或关联集合)* 的变化部分，而执行如下两个操作
+
+1.  先删除当前对象的所有旧关联和相关对象
+2.  再重新插入所有关联对象，并重建和当前对象的关联
+
+这是一个非常暴力的关联更新手段，优缺点如下
+
+-   优点：接受wild关联对象，不再要求关联对象要么指定id要么指定key
+-   缺点：
+    -   如果关联对象数量多，大部分情况下，这是一种低性能的方案
+    -   如果关联对象还有更深的关联，第1步中的删除行为可能会导致过深的级联删除，导致过多数据的丢失
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## 指定了关联模式的方法
+
+可以为保存指令设置关联关系的`AssociatedSaveMode`，支持两种方法
+
+-   设置保存方法的参数 *(这是更简单的选择)*
+
+-   调用保存指令的配置方法 *(这是更强大的选择)*
+
+:::info
+Jimmer的API设计让用户只能选者其中一种方法，不会导致导致两种方法同时出现引起混淆
+:::
+
+### 设置保存方法的参数
+
+很多保存方法都支持，例如
+
+对于`save`、`saveEntities`和`saveInputs`而言，默认的`AssociatedSaveMode`是`REPLACE`，现在，我们将其修改为`MERGE`。
+
+-   **save**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    Book book = ...略...;
+    sqlClient.save(book, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val book = Book { ...略... }
+    sqlCient.save(book, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   **saveEntities**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = ...略...;
+    sqlClient.saveEntities(books, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = listOf<Book>(...略...)
+    sqlCient.saveEntities(books, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   **saveInputs**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<BookInput> inputs = ...略...;
+    sqlClient.saveInputs(inputs, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val inputs = listOf<BookInput>(...略...)
+    sqlCient.saveInputs(inputs, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    其中，`BookInput`类并非实体类型，而是Jimmer自动生成的[Input DTO](../input-dto)类型。
+    
+    相关内容之前并未介绍，请读者先行忽略。
+
+
+除了`save`、`saveEntities`和`saveInputs`外，Jimmer还是有其他快捷方法，例如
+
+-   `insert`、`insertEntities`、`insertInputs`
+-   `insertIfAbsent`、`mergeEntitiesIfAbsent`、`mergeInputsIfAbsent`
+-   `update`、`updateEntities`、`updateInputs`
+-   `merge`、`mergeEntities`、`mergeInputs`
+
+以为`insert`、`insertEntities`和`insertInputs`为例，，默认的`AssociatedSaveMode`是`APPEND`，现在，我们将其修改为`MERGE`。
+
+-   **insert**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    Book book = ...略...;
+    sqlClient.insert(book, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val book = Book { ...略... }
+    sqlCient.insert(book, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   **insertEntities**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = ...略...;
+    sqlClient.insertEntities(books, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = listOf<Book>(...略...)
+    sqlCient.insertEntities(books, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   **insertInputs**
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<BookInput> inputs = ...略...;
+    sqlClient.insertInputs(inputs, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val inputs = listOf<BookInput>(...略...)
+    sqlCient.insertInputs(inputs, AssociatedSaveMode.MERGE);
+    ```
+
+    </TabItem>
+    </Tabs>
+
+### 调用保存指令的配置方法
+
+除了通过设置保存方法的参数外，我们还可以调用保存指令的配置方法修改`AssociatedSaveMode`。
+
+-   精确设置特定关联的`AssociatedSaveMode`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    Book book = ...略...;
+    sqlClient
+        .saveCommand(book)
+        // highlight-next-line
+        .setAssociatedMode(
+            BookProps.AUTHORS, 
+            AssociatedSaveMode.MERGE
+        )
+        .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val book = Book { ...略... }
+    sqlCient.save(book) {
+        // highlight-next-line
+        setAssociatedMode(
+            Book::authors,
+            AssociatedSaveMode.MERGE
+        )
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    -   **Java**
+    
+        调用的是`saveCommand`方法，而非`save`方法，表示先创建保存指令，但并不马上执行。
+
+        通过`setAssociatedMode`完成配置后，最后调用`execute`方法真正执行。
+
+    -   **Kotlin**
+
+        语法相对简洁，仍然调用能直接执行保存指令的`save`方法，只是附带一个lambda完成更多配置。
+
+-   盲目设置所有关联的`AssociatedSaveMode`
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    Book book = ...略...;
+    sqlClient
+        .saveCommand(book)
+        // highlight-next-line
+        .setAssociatedModeAll(
+            AssociatedSaveMode.MERGE
+        )
+        .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val book = Book { ...略... }
+    sqlCient.save(book) {
+        // highlight-next-line
+        setAssociatedModeAll(
+            AssociatedSaveMode.MERGE
+        )
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    -   **Java**
+    
+        调用的是`saveCommand`方法，而非`save`方法，表示先创建保存指令，但并不马上执行。
+
+        通过`setAssociatedModeAll`完成配置后，最后调用`execute`方法真正执行。
+
+    -   **Kotlin**
+
+        语法相对简洁，仍然调用能直接执行保存指令的`save`方法，只是附带一个lambda完成更多配置。
+
+:::info
+显然，对于特定的关关系而言，精确配置的优先级比盲目配置的优先级高。
+:::
+
+## 1. APPEND
+
+无条件地对关联对象进行INSERT操作
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.APPEND
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.APPEND
+)
+```
+
+</TabItem>
+</Tabs>
+
+为了演示更简单的SQL生成，我们假设`sqlClient`的`targetTransferable`功能被打开，这是之前已经介绍过的内容，请参见[这里](./owner#2-配置是否允许不同父对象抢夺子对象)
+
+将会生成两条SQL
+
+1.  对两个根对象进行UPSERT *(insert或update)* 操作
+
+    <MergeRoots/>
+
+2.  对4个关联对象进行INSERT操作
+
+    假设上个SQL保存根对象后
+    
+    -   `MANING`的id为`2`
+    -   `AMAZON`的id为`100`
+
+    生成如下SQL
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(?, ?, ?, ?)
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+## 2. APPEND_IF_ABSENT
+
+1. 先判断关联对象在数据库中是否存在
+
+-   如果关联对象的id属性被指定了，按照id判断关联对象在数据库中是否存在
+-   否则，按照key判断关联对象在数据库中是否存在
+
+2. 根据判断结果执行后续操作
+
+-   如果关联对象已经存在，忽略操作是么也不做
+-   否则，插入关联对象
+
+:::note
+Jimmer会尽量利用数据库本身的UPSERT的能力，将两个步骤合并。如果做不到，告诉用户原因
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.APPEND_IF_ABSENT
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.APPEND_IF_ABSENT
+)
+```
+
+</TabItem>
+</Tabs>
+
+为了演示更简单的SQL生成，我们假设`sqlClient`的`targetTransferable`功能被打开，这是之前已经介绍过的内容，请参见[这里](./owner#2-配置是否允许不同父对象抢夺子对象)
+
+将会生成两条SQL
+
+1.  对两个根对象进行UPSERT *(insert或update)* 操作
+
+    <MergeRoots/>
+
+2.  对4个关联对象进行INSERT_IF_ABSENT操作
+
+    假设
+    
+    -   Book对象的key为`Book.name`和`Book.edition`，且`Book`实体被`@KeyUniqueConstraint`注解修饰 
+        *(对于MySQL而言，需要`@KeyUniqueConstraint(noMoreUniqueConstraints = true)`)*
+
+    -   上个SQL保存根对象后
+    
+        -   `MANING`的id为`2`
+        -   `AMAZON`的id为`100`
+
+    生成如下SQL
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    merge into BOOK tb_1_ 
+    using(values(?, ?, ?, ?)) tb_2_(
+        NAME, EDITION, PRICE, STORE_ID
+    ) 
+    on 
+        tb_1_.NAME = tb_2_.NAME
+    and
+        tb_1_.EDITION = tb_2_.EDITION 
+    // highlight-next-line
+    when not matched then 
+        insert(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            tb_2_.NAME, tb_2_.EDITION, tb_2_.PRICE, tb_2_.STORE_ID
+        )
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert 
+    // highlight-next-line
+    ignore
+    into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ?, ?, ?, ?
+    )
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ?, ?, ?, ?
+    ) on conflict(
+        NAME, EDITION
+        // highlight-next-line
+    ) do nothing
+    returning ID
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+## 3. UPDATE
+
+-   如果关联对象的id属性被指定了，按照id更新关联对象
+-   否则，按照key更新关联对象
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.UPDATE
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.UPDATE
+)
+```
+
+</TabItem>
+</Tabs>
+
+为了演示更简单的SQL生成，我们假设`sqlClient`的`targetTransferable`功能被打开，这是之前已经介绍过的内容，请参见[这里](./owner#2-配置是否允许不同父对象抢夺子对象)
+
+将会生成两条SQL
+
+1.  对两个根对象进行UPSERT *(insert或update)* 操作
+
+    <MergeRoots/>
+
+2.  对4个关联对象进行INSERT操作
+
+    假设上个SQL保存根对象后
+    
+    -   `MANING`的id为`2`
+    -   `AMAZON`的id为`100`
+
+    生成如下SQL
+
+    ```sql
+    update BOOK
+    set
+        PRICE = ?,
+        STORE_ID = ?
+    where
+        NAME = ?
+    and
+        EDITION = ?
+    /* batch-0: [49.9, 2, SQL in Action, 1] */
+    /* batch-1: [39.9, 2, LINQ in Action, 1] */
+    /* batch-2: [44.02, 100, C++ Primer, 5] */
+    /* batch-3: [71.99, 100, Programming RUST, 1] */
+    ```
+
+## 4. MERGE
+
+1. 先判断关联对象在数据库中是否存在
+
+-   如果关联对象的id属性被指定了，按照id判断关联对象在数据库中是否存在
+-   否则，按照key判断关联对象在数据库中是否存在
+
+2. 根据判断结果执行后续操作
+
+-   如果关联对象已经存在，更新关联对象
+-   否则，插入关联对象
+
+:::note
+Jimmer会尽量利用数据库本身的UPSERT的能力，将两个步骤合并。如果做不到，告诉用户原因
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.MERGE
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.MERGE
+)
+```
+
+</TabItem>
+</Tabs>
+
+为了演示更简单的SQL生成，我们假设`sqlClient`的`targetTransferable`功能被打开，这是之前已经介绍过的内容，请参见[这里](./owner#2-配置是否允许不同父对象抢夺子对象)
+
+将会生成两条SQL
+
+1.  对两个根对象进行UPSERT *(insert或update)* 操作
+
+    <MergeRoots/>
+
+2.  对4个关联对象进行INSERT_IF_ABSENT操作
+
+    假设
+    
+    -   Book对象的key为`Book.name`和`Book.edition`，且`Book`实体被`@KeyUniqueConstraint`注解修饰 
+        *(对于MySQL而言，需要`@KeyUniqueConstraint(noMoreUniqueConstraints = true)`)*
+
+    -   上个SQL保存根对象后
+    
+        -   `MANING`的id为`2`
+        -   `AMAZON`的id为`100`
+
+    生成如下SQL
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    // highlight-next-line
+    merge into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) key(NAME, EDITION) values(
+        ?, ?, ?, ?
+    )
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ?, ?, ?, ?
+    ) on duplicate key 
+    // highlight-next-line
+    update
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        NAME = values(NAME),
+        EDITION = values(EDITION),
+        PRICE = values(PRICE),
+        STORE_ID = values(STORE_ID)
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ?, ?, ?, ?
+    ) on conflict(
+        NAME, EDITION
+        // highlight-next-line
+    ) do update set
+        NAME = excluded.NAME, 
+        EDITION = excluded.EDITION, 
+        PRICE = excluded.PRICE, 
+        STORE_ID = excluded.STORE_ID
+    returning ID
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+## 5. REPLACE
+
+`MERGE`模式对关联对象`INSERT`或`UPDATE`操作，所以，保存执行后，关联对象的数量要么不变，要么变多，但不可能变少。
+
+`REPLACE`模式不再有次特性，因为`REPLACE`在`MERGE`的基础上，对不再需要的关联对象进行脱钩操作。
+
+脱钩操作会去除当前对象不再需要的关联，例如
+
+<Dissociate/>
+
+:::info
+脱钩操作会在后续教程中详细解介绍，因此，本文给出一个简化到极致的例子
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(book -> {
+        book.setId(1L);
+        book.addIntoAuthors(author -> author.setId(2L));
+        book.addIntoAuthors(author -> author.setId(3L));
+    }),
+    Immutables.createBook(book -> {
+        book.setId(2L);
+        book.addIntoAuthors(author -> author.setId(2L));
+        book.addIntoAuthors(author -> author.setId(4L));
+    })
+);
+sqlClient.saveEntities(
+    books,
+    // 可以删除此参数，因为对`saveEntities`方法而言，
+    // `AssociatedSaveMode.REPLACE`是默认行为
+    // highlight-next-line
+    AssociatedSaveMode.REPLACE
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        id = 1L
+        authors().addBy { id = 2L }
+        authors().addBy { id = 3L }
+    },
+    Book {
+        id = 2L
+        authors().addBy { id = 2L }
+        authors().addBy { id = 4L }
+    }
+)
+sqlClient.saveEntities(
+    books,
+    // 可以删除此参数，因为对`saveEntities`方法而言，
+    // `AssociatedSaveMode.REPLACE`是默认行为
+    // highlight-next-line
+    AssociatedSaveMode.REPLACE
+)
+```
+
+</TabItem>
+</Tabs>
+
+假设数据库中现有数据结构为下表左列
+
+<table>
+<thead>
+<tr>
+<th>数据库已有数据结构</th>
+<th>用户期望保存的数据结构</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+
+```sh
+--+-Book(1)
+  |
+  +---Author(1)
+  |
+  \---Author(2)
+
+
+
+--+-Book(2)
+  |
+  +---Author(1)
+  |
+  \---Author(2)
+
+
+```
+
+</td>
+<td>
+
+```sh
+--+-Book(1)
+  |
+  |
+  |
+  +---Author(2)
+  |
+  \---Author(3)
+
+--+-Book(2)
+  |
+  |
+  |
+  +---Author(2)
+  |
+  \---Author(4)
+```
+
+</td>
+</tr>
+</tbody>
+</table>
+
+显然，应该包含4个行为
+
+-   `REPLACE`特有的脱钩操作
+
+    -   断开`Book-1`和`Author-1`之间的关联
+
+    -   断开`Book-2`和`Author-1`之间的关联
+
+-   `REPLACE`从`MERGE`那里继承的能力
+
+    -   新建`Book-1`和`Author-3`之间的关联
+
+    -   新建`Book-2`和`Author-4`之间的关联
+
+最终会生成如下两条语句
+
+1.  `REPLACE`模式特有的脱钩操作，消除旧关联
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    delete from BOOK_AUTHOR_MAPPING
+    where
+        BOOK_ID = ?
+    and
+        not (AUTHOR_ID = any(?))
+    /* batch-0: [1, [2, 3]] */
+    /* batch-1: [2, [2, 4]] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    delete from BOOK_AUTHOR_MAPPING
+    where
+        BOOK_ID in (
+            ? /* 1 */, ? /* 2 */
+        )
+    and
+        (BOOK_ID, AUTHOR_ID) not in (
+            (? /* 1 */, ? /* 2 */), 
+            (? /* 1 */, ? /* 3 */), 
+            (? /* 2 */, ? /* 2 */), 
+            (? /* 2 */, ? /* 4 */)
+        )
+    ```
+    
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    delete from BOOK_AUTHOR_MAPPING
+    where
+        BOOK_ID = ?
+    and
+        not (AUTHOR_ID = any(?))
+    /* batch-0: [1, [2, 3]] */
+    /* batch-1: [2, [2, 4]] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    此SQL的目的在于
+
+    -   对于`Book-1`而言，删除它和除了`Author-2`和`Author-3`之外的其他Author关联 
+
+        对于目前这个案例而言，其实就是断开`Book-1`和`Author-1`之间的关联
+
+    -   对于`Book-2`而言，删除它和除了`Author-2`和`Author-4`之外的其他Author关联 
+
+        对于目前这个案例而言，其实就是断开`Book-2`和`Author-1`之间的关联
+
+    同时我们能看到，不同数据库的差异巨大
+
+    -   `H2`和`Postgres`采用了批量化的简单SQL
+
+    -   `MySQL`采用了单条复杂SQL
+
+    :::info
+    这是`H2`和`Posgres`支持`=any(数组)`的语法，MySQL不支持。
+    :::
+
+2.  `REPLACE`模式从`MERGE`模式继承的能力，建立新关联
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    merge into BOOK_AUTHOR_MAPPING tb_1_ 
+    using(values(?, ?)) tb_2_(
+        BOOK_ID, AUTHOR_ID
+    ) 
+    on 
+        tb_1_.BOOK_ID = tb_2_.BOOK_ID
+    and
+        tb_1_.AUTHOR_ID = tb_2_.AUTHOR_ID 
+    // highlight-next-line
+    when not matched then 
+        insert(BOOK_ID, AUTHOR_ID)
+        values(tb_2_.BOOK_ID, tb_2_.AUTHOR_ID)
+    /* batch-0: [1, 2] */
+    /* batch-1: [1, 3] */
+    /* batch-2: [2, 2] */
+    /* batch-3: [2, 3] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert 
+    // highlight-next-line
+    ignore
+    into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
+    values(?, ?)
+    /* batch-0: [1, 2] */
+    /* batch-1: [1, 3] */
+    /* batch-2: [2, 2] */
+    /* batch-3: [2, 3] */
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert 
+    into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
+    values(?, ?)
+    on conflict(BOOK_ID, AUTHOR_ID)
+    // highlight-next-line
+    do nothing
+    /* batch-0: [1, 2] */
+    /* batch-1: [1, 3] */
+    /* batch-2: [2, 2] */
+    /* batch-3: [2, 3] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+## 6. VIOLENTLY_REPLACE
+
+前面的例子经过可以简化，因为`REPLACE`模式所包含的脱钩操作会在后续文档中更详细地讲解，非本文重点。
+
+然而，不难发现，`REPLACE`模式整合了`INSERT`、`UPDATE`和`DELETE`操作于一体，期望全量替换关联关系 *(如果关联关系是深度很深的长关联，那就是全量一颗子树)*。
+
+然而，`REPLACE`模式有一个限制，那就是它期望对象要么具备`id`，要么具备`key`。
+期望通过`id`和`key`巧妙地找到新旧数据结构发生变化的部分，从而把`INSERT`、`UPDATE`和`DELETE`操作的影响范围最小化，以达到最高性能。
+
+:::tip
+如果读者对web领域有所了解的话，不难发现，这和react使用循环渲染时指定标签的`key`属性是一个道理。
+
+事实上，保持指令的设计就是受react其他而来。
+:::
+
+然而，如果要处理wild对象，即，关联对象既无`id`也无`key`，该怎么办呢？
+
+此时可以使用`VIOLENTLY_REPLACE`模式。一旦采用此模式，让Jimmer不再根据id或key去查找关联 *(或关联集合)* 的变化部分，而执行如下两个操作
+
+1.  先删除当前对象的所有旧关联和相关对象
+2.  再重新插入所有关联对象并，并重建和当前对象的关联
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.VIOLENTLY_REPLACE
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.saveEntities(
+    stores,
+    // highlight-next-line
+    AssociatedSaveMode.VIOLENTLY_REPLACE
+)
+```
+
+</TabItem>
+</Tabs>
+
+为了演示更简单的SQL生成，我们假设`sqlClient`的`targetTransferable`功能被打开，这是之前已经介绍过的内容，请参见[这里](./owner#2-配置是否允许不同父对象抢夺子对象)
+
+将会生成三条SQL
+
+1.  对两个根对象进行UPSERT *(insert或update)* 操作
+
+    <MergeRoots/>
+
+2.  删除所有就的关联对象
+
+    假设上个SQL保存根对象后
+    
+    -   `MANING`的id为`2`
+    -   `AMAZON`的id为`100`
+
+    ```sql
+    delete from BOOK 
+    where STORE_ID in (
+        ? /* 2 */, ? /* 100 */
+    )
+    ```
+
+    :::info
+    如果数据库有其他表通过外键引用`BOOK`表，简单的的`DELETE`语句并不能删除所有关联对象。
+
+    为了简化讨论，这里假设这种场景并不存在。
+    :::
+
+3.  新建所有关联，以及关联对象
+
+    假设上个SQL保存根对象后
+    
+    -   `MANING`的id为`2`
+    -   `AMAZON`的id为`100`
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(?, ?, ?, ?)
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```
+
+不对新旧数据进行细致的比较，只是简单地先删除关联对象再重建，这是一个非常暴力的模式，存在如下缺点
+
+-   如果关联对象数量多，大部分情况下，这是一种低性能的方案
+-   如果关联对象还有更深的关联，第1步中的删除行为可能会导致过深的级联删除，导致过多数据的丢失
+
+:::caution
+因此，不推荐，请慎用
+:::
+
+## 默认模式
+
+保持指令提供的方法不仅有`save`、`saveEntities`和`saveInputs`，为了方便各种应用场景，还其他了快捷方法。
+
+不同的保存指令，`AssociatedSaveMode`的默认值并不相同，请参考此表
+
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>默认的AssociatedSaveMode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>save</td>
+<td rowspan="3">REPLACE</td>
+</tr>
+<tr>
+<td>saveEntities</td>
+</tr>
+<tr>
+<td>saveInputs</td>
+</tr>
+<tr>
+<td>insert</td>
+<td rowspan="3">APPEND</td>
+</tr>
+<tr>
+<td>insertEntities</td>
+</tr>
+<tr>
+<td>insertInputs</td>
+</tr>
+<tr>
+<td>insertIfAbsent</td>
+<td rowspan="3">APPEND_IF_ABSENT</td>
+</tr>
+<tr>
+<td>insertEntitiesIfAbsent</td>
+</tr>
+<tr>
+<td>insertInputsIfAbsent</td>
+</tr>
+<tr>
+<td>update</td>
+<td rowspan="3">UPDATE</td>
+</tr>
+<tr>
+<td>updateEntities</td>
+</tr>
+<tr>
+<td>updateInputs</td>
+</tr>
+<tr>
+<td>merge</td>
+<td rowspan="3">MERGE</td>
+</tr>
+<tr>
+<td>mergeEntities</td>
+</tr>
+<tr>
+<td>mergeInputs</td>
+</tr>
+</tbody>
+</table>

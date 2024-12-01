@@ -1,0 +1,48 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<details>
+<summary>保存根对象并非本文的讨论重点，默认折叠</summary>
+<Tabs groupId="database">
+<TabItem value="h2" label="H2">
+
+```sql
+merge into BOOK_STORE(
+    NAME
+) key(NAME) values(
+    ?
+)
+/* batch-0: [MANNING] */
+/* batch-1: [AMAZON] */
+```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+```
+TBD
+```
+
+</TabItem>
+<TabItem value="posgres" label="Postgres">
+
+```sql
+insert into BOOK_STORE(
+    NAME
+) values(
+    ?
+) on conflict(
+    NAME
+) do nothing
+returning ID
+/* batch-0: [MANNING] */
+/* batch-1: [AMAZON] */
+```
+
+</TabItem>
+</Tabs>
+
+-   假设`MANNING`存在，现有id为`2`
+-   假设`AMAZON`存在，插入后，数据库自动编号新分配的id为`100`
+
+</details>

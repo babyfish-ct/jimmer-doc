@@ -1,0 +1,48 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<details>
+<summary>Saving the root object is not the focus of this article, collapsed by default</summary>
+<Tabs groupId="database">
+<TabItem value="h2" label="H2">
+
+```sql
+merge into BOOK_STORE(
+    NAME
+) key(NAME) values(
+    ?
+)
+/* batch-0: [MANNING] */
+/* batch-1: [AMAZON] */
+```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+```
+TBD
+```
+
+</TabItem>
+<TabItem value="posgres" label="Postgres">
+
+```sql
+insert into BOOK_STORE(
+    NAME
+) values(
+    ?
+) on conflict(
+    NAME
+) do nothing
+returning ID
+/* batch-0: [MANNING] */
+/* batch-1: [AMAZON] */
+```
+
+</TabItem>
+</Tabs>
+
+- Assume `MANNING` exists with an id of `2`
+- Assume `AMAZON` exists, after insertion, the database automatically assigns a new id of `100`
+
+</details>

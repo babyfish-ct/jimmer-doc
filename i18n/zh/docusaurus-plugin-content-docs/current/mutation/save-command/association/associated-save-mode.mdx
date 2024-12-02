@@ -615,7 +615,7 @@ sqlClient.saveEntities(
         tb_1_.NAME = tb_2_.NAME
     and
         tb_1_.EDITION = tb_2_.EDITION 
-    // highlight-next-line
+    /* highlight-next-line */
     when not matched then 
         insert(
             NAME, EDITION, PRICE, STORE_ID
@@ -633,7 +633,7 @@ sqlClient.saveEntities(
 
     ```sql
     insert 
-    // highlight-next-line
+    /* highlight-next-line */
     ignore
     into BOOK(
         NAME, EDITION, PRICE, STORE_ID
@@ -656,7 +656,7 @@ sqlClient.saveEntities(
         ?, ?, ?, ?
     ) on conflict(
         NAME, EDITION
-        // highlight-next-line
+        /* highlight-next-line */
     ) do nothing
     returning ID
     /* batch-0: [SQL in Action, 1, 49.9, 2] */
@@ -913,7 +913,7 @@ sqlClient.saveEntities(
     <TabItem value="h2" label="H2">
 
     ```sql
-    // highlight-next-line
+    /* highlight-next-line */
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) key(NAME, EDITION) values(
@@ -934,7 +934,7 @@ sqlClient.saveEntities(
     ) values(
         ?, ?, ?, ?
     ) on duplicate key 
-    // highlight-next-line
+    /* highlight-next-line */
     update
         /* fake update to return all ids */ ID = last_insert_id(ID),
         NAME = values(NAME),
@@ -957,7 +957,7 @@ sqlClient.saveEntities(
         ?, ?, ?, ?
     ) on conflict(
         NAME, EDITION
-        // highlight-next-line
+        /* highlight-next-line */
     ) do update set
         NAME = excluded.NAME, 
         EDITION = excluded.EDITION, 
@@ -1196,7 +1196,7 @@ sqlClient.saveEntities(
         tb_1_.BOOK_ID = tb_2_.BOOK_ID
     and
         tb_1_.AUTHOR_ID = tb_2_.AUTHOR_ID 
-    // highlight-next-line
+    /* highlight-next-line */
     when not matched then 
         insert(BOOK_ID, AUTHOR_ID)
         values(tb_2_.BOOK_ID, tb_2_.AUTHOR_ID)
@@ -1211,7 +1211,7 @@ sqlClient.saveEntities(
 
     ```sql
     insert 
-    // highlight-next-line
+    /* highlight-next-line */
     ignore
     into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
     values(?, ?)
@@ -1229,7 +1229,7 @@ sqlClient.saveEntities(
     into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
     values(?, ?)
     on conflict(BOOK_ID, AUTHOR_ID)
-    // highlight-next-line
+    /* highlight-next-line */
     do nothing
     /* batch-0: [1, 2] */
     /* batch-1: [1, 3] */
@@ -1240,22 +1240,21 @@ sqlClient.saveEntities(
     </TabItem>
     </Tabs>
 
-## 6. VIOLENTLY_REPLACE
-
-前面的例子经过可以简化，因为`REPLACE`模式所包含的脱钩操作会在后续文档中更详细地讲解，非本文重点。
-
-然而，不难发现，`REPLACE`模式整合了`INSERT`、`UPDATE`和`DELETE`操作于一体，期望全量替换关联关系 *(如果关联关系是深度很深的长关联，那就是全量一颗子树)*。
+`REPLACE`模式整合了`INSERT`、`UPDATE`和`DELETE`操作于一体，期望全量替换关联关系 *(如果关联关系是深度很深的长关联，那就是全量替换一颗子树)*。
 
 然而，`REPLACE`模式有一个限制，那就是它期望对象要么具备`id`，要么具备`key`。
-期望通过`id`和`key`巧妙地找到新旧数据结构发生变化的部分，从而把`INSERT`、`UPDATE`和`DELETE`操作的影响范围最小化，以达到最高性能。
+
+其实，`REPALCE`期望通过`id`和`key`巧妙地找到新旧数据结构发生变化的部分，从而把`INSERT`、`UPDATE`和`DELETE`操作的影响范围最小化，以达到最高性能。
 
 :::tip
 如果读者对web领域有所了解的话，不难发现，这和react使用循环渲染时指定标签的`key`属性是一个道理。
 
-事实上，保持指令的设计就是受react其他而来。
+事实上，保持指令的设计就是受react启发而来。
 :::
 
-然而，如果要处理wild对象，即，关联对象既无`id`也无`key`，该怎么办呢？
+## 6. VIOLENTLY_REPLACE
+
+我们已经讨论了`REPLACE`模式。然而，如果要处理wild对象，即，关联对象既无`id`也无`key`，该怎么办呢？
 
 此时可以使用`VIOLENTLY_REPLACE`模式。一旦采用此模式，让Jimmer不再根据id或key去查找关联 *(或关联集合)* 的变化部分，而执行如下两个操作
 

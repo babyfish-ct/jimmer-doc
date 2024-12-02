@@ -8,458 +8,510 @@ import TabItem from '@theme/TabItem';
 import { LongAssociation } from '@site/src/components/LongAssociation';
 import Grid from '@mui/material/Grid';
 import {SaveCommandPanel} from '@site/src/components/HomepageFeatures/SaveCommand';
-import SaveCommandAbuse from '@site/docs/_shared/save-command-abuse.md';
 
 ## Introduction
 
-:::tip
-One statement to save complex data of arbitrary shape, find DIFF to change database, like React/Vue
-:::
-
 <SaveCommandPanel/>
 
-## Basic Concepts
+## 1. Flexibility of Single Entity Objects
 
-A save command persists an arbitrary shaped data structure to the database, for example:
+### 1.1. Flexible Control Over Simple Property Modifications
 
--   Saving a simple object
+Let's look at how Jimmer distinguishes between the following two requirements:
 
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
+1. Not updating a certain property of an object
 
-    ```java
-    Book simpleBook = Immutables.createBook(draft -> {
-        draft.setName("SQL in Action");
-        draft.setEdition(1);
-        draft.setPrice(new BigDecimal("59.9"));
-    });
-    sqlClient.save(simpleBook);
-    ```
+2. Updating a property of an object to null
 
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
+For traditional static language ORMs, this is a very tricky problem. However, Jimmer can easily distinguish between these two different behaviors.
 
-    ```kotlin
-    val simpleBook = Book {
-        name = "SQL in Action"
-        edition = 1
-        price = BigDecimal("59.9")
-    }
-    sqlClient.save(simpleBook)
-    ```
-
-    </TabItem>
-    </Tabs>
-
--   Saving a complex data structure
-
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-
-    ```java
-    Book complexBook = Immutables.createBook(draft -> {
-        draft.setName("SQL in Action");
-        draft.setEdition(1);
-        draft.setPrice(new BigDecimal("59.9"));
-        draft.applyStore(store -> {
-            store.setName("MANNING");
-        })
-        draft.addIntoAuthors(author -> {
-            author.setFirstName("Dmitry");
-            author.setLastName("Jamerov");
-            author.setGender(Gender.MALE); 
-        });
-        draft.addIntoAuthors(author -> {
-            author.setFirstName("Svetlana");
-            author.setLastName("Isakova");
-            author.setGender(Gender.FEMALE);
-        })
-    });
-    sqlClient.save(simpleBook);
-    ```
-
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
-
-    ```kotlin
-    val complexBook = Book {
-        name = "SQL in Action"
-        edition = 1
-        price = BigDecimal("59.9")
-        store {
-            name = MANNING;
-        }
-        authors().addBy {
-            firstName = "Dmitry"
-            lastName = "Jamerov"
-            gender = Gender.MALE
-        }
-        authors().addBy {
-            firstName = "Svetlana"
-            lastName = "Isakova"
-            gender = Gender.FEMALE
-        }
-    }
-    sqlClient.save(complexBook)
-    ```
-
-    </TabItem>
-    </Tabs>
-
-## APIs
-
-Save commands provide multiple APIs for different languages and coding patterns, but with the same functionality:
-
-<table>
-    <thead>
-        <tr>
-            <th rowspan="2"></th>
-            <th rowspan="2">Spring Data API</th>
-            <th colspan="2">Low-level API</th>
-        </tr>
-        <tr>
-            <th>APIs focused on conciseness</th>
-            <th>APIs focused on configurability</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Java</td>
-            <td>
-                <ul>
-                    <li>JRepository.save</li>
-                    <li>JRepository.saveCommand</li>
-                    <li>JRepository.saveAll</li>
-                    <li>JRepository.saveAllCommand</li>
-                    <li>JRepository.insert</li>
-                    <li>JRepository.update</li>
-                    <li>JRepository.merge</li>
-                    <li>JRepository.append</li>
-                </ul>
-            </td>
-            <td>
-                <ul>
-                    <li>JSqlClient.save</li>
-                    <li>JSqlClient.insert</li>
-                    <li>JSqlClient.update</li>
-                    <li>JSqlClient.merge</li>
-                    <li>JSqlClient.append</li>
-                </ul>
-            </td>
-            <td>
-                <li>JSqlClient.getEntities().save</li>
-                <li>JSqlClient.getEntities().saveCommand</li>
-                <li>JSqlClient.getEntities().saveAll</li>
-                <li>JSqlClient.getEntities().saveAllCommand</li>
-            </td>
-        </tr>
-        <tr>
-            <td>Kotlin</td>
-            <td>
-                <ul>
-                    <li>KRepository.save</li>
-                    <li>KRepository.saveAll</li>
-                    <li>KRepository.insert</li>
-                    <li>KRepository.update</li>
-                    <li>KRepository.merge</li>
-                    <li>KRepository.append</li>
-                </ul>
-            </td>
-            <td>
-                <ul>
-                    <li>KSqlClient.save</li>
-                    <li>KSqlClient.insert</li>
-                    <li>KSqlClient.update</li>
-                    <li>KSqlClient.merge</li>
-                    <li>KSqlClient.append</li>
-                </ul>
-            </td>
-            <td>
-                <li>KSqlClient.entities.save</li>
-                <li>KSqlClient.entities.saveAll</li>
-            </td>
-        </tr>
-    </tbody>
-</table>
-
-Among them:
-
--   Java methods containing `Command` are special. Unlike other methods that execute save commands immediately, these methods only create the command without immediate execution. The user can configure them and finally call `execute` to execute the command. For example:
-
-    ```java
-    BookStore store = ...
-    sqlClient
-        .getEntities()
-        .saveCommand(store) ❶
-        .setPessimisticLock() ❷
-        .execute(); ❸
-    ```
-
-    - ❶ Create save command, do not execute immediately
-
-    - ❷ Make some configurations 
-
-    - ❸ After configuration is done, finally call `execute` to execute the save command
-
-    Kotlin does not need `saveCommand` methods, it uses a different syntax:
-
-    ```kotlin
-    val store = ...
-    sqlClient.save(store) {
-        setPessimisticLock()
-    }
-    ```
-
--   Methods containing `saveAll` indicate saving multiple objects rather than one object
-
--   For the aggregate root being saved, there are 3 save modes: UPSERT (default), INSERT_ONLY, UPDATE_ONLY *(see [Save Modes](./save-mode) for more details)*. This is configured like:
-
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-
-    ```java
-    BookStore store = ...
-    sqlClient.save(store, SaveMode.INSERT_ONLY);
-    ```
-
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
-
-    ```kotlin
-    val store = ...
-    sqlClient.save(store, SaveMode.INSERT_ONLY)
-    ```
-
-    </TabItem>
-    </Tabs>
-
-    The `insert` and `update` methods are shorthand for `INSERT_ONLY` and `UPDATE_ONLY`. The above can be simplified to:
-
-    <Tabs groupId="language">
-    <TabItem value="java" label="Java">
-
-    ```java
-    BookStore store = ...
-    sqlClient.insert(store);
-    ```
-
-    </TabItem>
-    <TabItem value="kotlin" label="Kotlin">
-
-    ```kotlin
-    BookStore store = ...
-    sqlClient.insert(store);
-    ```
-
-    </TabItem>
-    </Tabs>
-
-## Important Concepts: Full Replacement vs Incremental Change
-
-<SaveCommandAbuse/>
+#### 1.1.1. Not Updating a Certain Property
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
 
 ```java
-TreeNode treeNode = Immutables.createTreeNode(food -> {
-    food
-        .setParent(null)
-        .setName("Food")
-        .addIntoChildNodes(drink -> {
-            drink
-                .setName("Drink")
-                .addIntoChildNodes(cocacola -> {
-                    cocacola.setName("Cocacola");
-                })
-                .addIntoChildNodes(fanta -> {
-                    fanta.setName("Fanta");
-                });
-            ;
-        })
-        .addIntoAuthors(bread -> {
-            bread
-                .setName("Bread")
-                .addIntoChildNodes(baguette -> {
-                    baguette.setName("Baguette");
-                })
-                .addIntoChildNodes(ciabatta -> {
-                    ciabatta.setName("Ciabatta");
-                })
-        });
-    ;
-});
-sqlClient.save(treeNode);
+sqlClient.update(
+    Immutables.createBook(draft -> {
+        draft.setId(8L);
+        draft.setPrice(new BigDecimal("33.9"));
+        // highlight-next-line
+        // `store` or `storeId` property not specified
+    })
+);
 ```
 
 </TabItem>
 <TabItem value="kotlin" label="Kotlin">
 
 ```kotlin
-val treeNode = TreeNode {
-    parent = null
-    name = "Food"
-    childNodes().addBy {
-        name = "Drinks"
-        childNodes().addBy {
-            name = "Cocacola"
-        }
-        childNodes().addBy {
-            name = "Fanta"
-        }
+sqlClient.update(
+    Book {
+        id = 8L
+        price = BigDecimal("33.9")
+        // highlight-next-line
+        // `store` or `storeId` property not specified
     }
-    childNodes().addBy {
-        name = "Bread"
-        childNodes().addBy {
-            name = "Baguette"
-        }
-        childNodes().addBy {
-            name = "Ciabatta"
-        }
-    }
-}
-sqlClient.save(treeNode)
+);
 ```
 
 </TabItem>
 </Tabs>
 
-This code tries to save a tree:
+Generates the following SQL:
 
-```
-+-Food
-|
-+---+-Drinks
-|   |
-|   +-----Cocacola
-|   |
-|   \-----Fanta
-|
-\---+-Bread
-    |
-    +-----Baguette
-    |
-    \-----Ciabatta
+```sql
+update BOOK
+set
+    PRICE = ? /* 33.9 */
+where
+    ID = ? /* 8 */
 ```
 
-Where `Food` is the aggregate root, and all other associated objects are child nodes.
+As you can see, only the specified field `PRICE` is modified, while other unspecified fields *(including `STORE_ID`)* remain unchanged.
 
--   Aggregate root node
+#### 1.1.2. Updating a Property to Null
 
-    Corresponds to incremental change, ultimately generating one INSERT or UPDATE statement.
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
 
--   Child nodes (or associated objects)
+```java
+sqlClient.update(
+    Immutables.createBook(draft -> {
+        draft.setId(8L);
+        draft.setPrice(BigDecimal("33.9"))
+        // highlight-next-line
+        draft.setStore(null);
+        // Can also be written as `draft.setStoreId(null)`
+    })
+);
+```
 
-    By default correspond to full replacement operations.
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
 
-    Take `Food` as an example. It has two child nodes `Drinks` and `Bread`. This does not simply mean inserting or updating `Drinks` and `Bread`.  
-    When `Food` already exists in the database, we also need to consider whether it has other child nodes besides `Drinks` and `Bread`, and dissociate these child nodes from the parent (e.g. deleting them).
+```kotlin
+sqlClient.update(
+    Book {
+        id = 8L
+        price = BigDecimal("33.9")
+        // highlight-next-line
+        store = null
+        // Can also be written as `storeId = null`
+    }
+);
+```
 
-    For example:
+</TabItem>
+</Tabs>
 
-    <table>
-    <thead>
-    <tr>
-    <th>Existing data structure in database</th>
-    <th>Data structure user wants to save</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr>
-    <td>
+Generates the following SQL:
 
+```sql
+update BOOK
+set
+    PRICE = ? /* 33.9 */
+    /* highlight-next-line */
+    STORE_ID = ? /* <null: long> */
+where
+    ID = ? /* 8 */
+```
+
+### 1.2. Using Incomplete Objects to Avoid Query-Before-Update
+
+In real business projects, there's often a requirement to update only some properties of an entity, not all of them.
+
+However, in traditional ORM development patterns, developers rarely use ORM update statements for convenience. Instead, they often choose to query the object first, then modify it, and finally save it. Here's a JPA example:
+
+```java title="JPA Example"
+EntityManager entityManager = ...obtain JPA session object from current transaction context, omitted...
+Book book = entityManager.find(Book.class, 8L);
+
+book.setStore(null); // In JPA, entities are mutable, setting association to null
+
+// Calling merge here is just for clarity, it can be omitted since JPA will modify the database when the transaction commits
+entityManager.merge(book);
+```
+
+Actually, besides wanting to modify `Book.store` to null, this scenario has no interest in other properties of the object.
+
+Obviously, this is wasteful. If the entity object has many properties, it becomes even more apparent.
+
+Jimmer's entity objects don't require all properties to be specified, meaning Jimmer supports incomplete objects.
+
+Therefore, you can **create from scratch** an incomplete Book object, only specifying its `id` property and `store` property, and let Jimmer update it directly.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+sqlClient.update(
+    Immutables.createBook(draft -> {
+        draft.setId(8L);
+        draft.setStore(null);
+    })
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.update(
+    Book {
+        id = 8L
+        store = null
+    }
+);
+```
+
+</TabItem>
+</Tabs>
+
+Generates the following SQL:
+
+```sql
+update BOOK
+set
+    STORE_ID = ? /* <null: long> */
+where
+    ID = ? /* 8 */
+```
+
+## 2. Flexibility of Association Properties
+
+Through the single object case, we have gained a basic understanding of the flexibility of save commands.
+
+Next, let's introduce the control capabilities of save commands over association properties.
+
+### 2.1. Whether to Cascade Save Associated Properties
+
+In most ORMs, the `cascade` configuration of association properties determines whether to save associated objects when saving an object.
+
+Taking JPA as an example, this can be achieved through 4 configurations:
+
+- [OneToOne.cascade](https://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html#cascade--)
+- [ManyToOne.cascade](https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#cascade--)
+- [OneToMany.cascade](https://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html#cascade--)
+- [ManyToMany.cascade](https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html#cascade--)
+
+However, deciding on these configurations is painful. No matter how they are configured, they solidify the behavioral patterns of the model at the entity modeling stage, making the entity design too tightly coupled with business requirements.
+
+Jimmer doesn't have similar configurations. The specific behavior depends on the format of the data structure being saved itself. For example:
+
+- Only saving the `BookStore` object
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    BookStore store = Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.setWebsite("https://www.amazon.com");
+    });
+    sqlClient.save(store);
     ```
-    +-Food
-    |
-    |
-    |
-    +-----Meat(ignore child nodes)
-    |
-    \-----Bread(ignore child nodes)
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val store = BookStore {
+        name = "AMAZON"
+        website = "https://www.amazon.com"
+    }
+    sqlCient.save(store)
     ```
 
-    </td>
-    <td>
+    </TabItem>
+    </Tabs>
 
+- Saving the `BookStore` object while cascading to save related `Book` objects
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    BookStore store = Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.setWebsite("https://www.amazon.com");
+        // highlight-next-line
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        // highlight-next-line
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    });
+
+    sqlClient.save(store);
     ```
-    +-Food
-    |
-    +-----Drinks(ignore child nodes)
-    |
-    |
-    |
-    \-----Bread(ignore child nodes)
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val store = BookStore {
+        name = "AMAZON"
+        website = "https://www.amazon.com"
+        // highlight-next-line
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        // highlight-next-line
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+
+    sqlCient.save(store)
     ```
 
-    </td>
-    </tr>
-    </tbody>
-    </table>
+    </TabItem>
+    </Tabs>
 
-    Ultimately, for the child nodes, the operations are:
-    -   `Drinks` does not exist in old data structure but exists in new data structure, so insert `Drinks`.
-    -   Both old and new data structures have `Bread`, so update `Bread`. 
-    -   Old data structure has `Meat` while new data structure does not, so delete `Meat`.
+### 2.2. Symmetry of Bidirectional Associations
 
-        > There are multiple ways to dissociate child nodes. Here we assume delete operations are used.
-        
-As you can see, by default, operations on child nodes other than the aggregate root correspond to full replacement rather than incremental modification.
+ORM has an important concept: bidirectional associations. In this tutorial, `Book.authors` and `Author.books` are bidirectional associations of each other.
 
-## Q & A
+Whether in JPA or Jimmer, both ends of a bidirectional association are divided into active and passive sides:
 
-As discussed above, by default, associated objects other than the aggregate root correspond to full replacement operations rather than incremental modification.
+- Active side: The `mappedBy` property of the association annotation is not specified
+- Passive side: The `mappedBy` property of the association annotation is specified
 
-<Grid container spacing={3}>
-<Grid item xs={1}>
+However, there is a huge difference between Jimmer and JPA:
 
-**Q:**
+- In JPA, you must make the active side object act as the parent object and the passive side object act as the associated object. Otherwise, modifications will be ineffective.
 
-</Grid>
-<Grid item xs={11}>
-Why do all associated objects other than the aggregate root default to full replacement operations?
-</Grid>
-<Grid item xs={1}>
+    Choosing the active side for JPA bidirectional associations is also very painful, essentially solidifying the model's behavior pattern at the entity modeling stage, making entity design too tightly coupled with business requirements.
 
-**A:** 
+- In Jimmer, regardless of how you choose the active and passive sides, it has no impact on save commands.
 
-</Grid>
-<Grid item xs={11}>
+    - If the active side choice of bidirectional association is restricted by Jimmer *(for example, when building bidirectional associations based on one-to-many and many-to-one associations, Jimmer requires the one-to-many association to be the passive side)*, define the bidirectional association according to Jimmer's requirements
+    - Otherwise, freely define bidirectional associations according to your preferences
 
-INSERT, UPDATE, and DELETE statements in relational databases are incremental operations themselves. Even using the simplest SQL scheme with just basic CRUD capabilities, incrementally modifying the database is never the real difficulty in application development.
+In Jimmer, you can freely manipulate bidirectional associations according to your preferences, for example:
 
-The truly complex problem is to save an entire complex data structure in one go. If Jimmer does not provide such capabilities, developers have to write complex code to compare new and old data to find differences and determine what needs to change. This makes saving complex data structure very difficult.
+- Saving a `Book` object and modifying its association with `Author`, i.e., implementing association modification through `Book.authors`
 
-There is another benefit - ensuring idempotency. 
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
 
-</Grid>
-<Grid item xs={1}>
+    ```java
+    Book book = Immutables.createBook(draft -> {
+        draft.setName("C++ Primer");
+        draft.setEdition(5);
+        draft.setPrice(new BigDecimal("44.02"));
+        draft.addIntoAuthors(author -> author.setId(10L));
+        draft.addIntoAuthors(author -> author.setId(11L));
+        draft.addIntoAuthors(author -> author.setId(12L));
+    })
 
-**Q:**
+    sqlCient.save(book);
+    ```
 
-</Grid>
-<Grid item xs={11}>
-What are the use cases?
-</Grid> 
-<Grid item xs={1}>
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
 
-**A:**
+    ```kotlin
+    val book = Book {
+        name = "C++ Primer"
+        edition = 5
+        price = BigDecimal("44.02")
+        authors().addBy { id = 10L }
+        authors().addBy { id = 11L }
+        authors().addBy { id = 12L }
+    }
 
-</Grid>
-<Grid item xs={11}>
+    sqlCient.save(book);
+    ```
 
-Any scenario requiring saving an entire complex data structure in one go. One typical case is complex forms, for example: 
+    </TabItem>
+    </Tabs>
 
-<LongAssociation/>
+- Saving an `Author` object and modifying its association with `Book`, i.e., implementing association modification through `Author.books`
 
-<div>&nbsp;</div>
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
 
-In this example, the form embeds child object tables. The user can perform arbitrarily complex operations on the form, including the embedded child tables, and finally submit the entire form as a whole to the server.
+    ```java
+    Author author = Immutables.createAuthor(draft -> {
+        draft.setFirstName("Stanley");
+        draft.setLastName("Lippman");
+        draft.setGender(Gender.MALE);
+        draft.addIntoBooks(book -> book.setId(40L));
+        draft.addIntoBooks(book -> book.setId(41L));
+        draft.addIntoBooks(book -> book.setId(42L));
+        draft.addIntoBooks(book -> book.setId(43L));
+        draft.addIntoBooks(book -> book.setId(44L));
+        draft.addIntoBooks(book -> book.setId(45L));
+    });
 
-With save commands, the server can persist this data structure in one line of code, without considering how the data structure submitted by the client differs from the database.
+    sqlClient.save(author);
+    ```
 
-:::tip 
-No matter how complex the form, or how deeply nested the associations, the entire structure can be saved in one line of code.
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val author = Author { 
+        firstName = "Stanley"
+        lastName = "Lippman"
+        gender = Gender.MALE
+        books().addBy { id = 40L }
+        books().addBy { id = 41 }
+        books().addBy { id = 42L }
+        books().addBy { id = 43L }
+        books().addBy { id = 44L }
+        books().addBy { id = 45L }
+    }
+    
+    sqlCient.save(author)
+    ```
+
+    </TabItem>
+    </Tabs>
+
+## 3. Deciding Functionality Complexity
+
+Save commands are very flexible and can manifest as either very powerful advanced features or very simple basic features. It's all up to you.
+
+In daily project development, there are two distinctly different requirements:
+
+- Full data replacement for complex forms
+
+- Incremental modification for simple data
+
+In terms of development task complexity, one is very complex, and the other is very simple. However, Jimmer treats them equally and implements them quickly.
+
+### 3.1. Full Data Replacement for Complex Forms
+
+Complex forms usually include associations *(such as orders and order details)*, and may even include recursive data structures *(such as UI drag-and-drop systems, UML drawing tools)*.
+
+No matter how complex, viewing this data structure as a whole, it can be saved with a single command.
+
+To make the example representative, we'll use [Input DTO](./input-dto) that hasn't been explained yet. Although the related content hasn't been covered yet, readers can guess its purpose.
+
+Using Jimmer's DTO language, define a type called `BookStoreInput`.
+
+```title = "BookStore.dto"
+export com.yourcompany.yourproject.BookStore
+    -> pacage com.yourcompany.yourproject.dto;
+
+input BookStoreInput {
+    #allScalars
+    books {
+        #allScalars
+        id(authors) as authorIds
+    }
+}
+```
+
+After Jimmer compilation, a Java or Kotlin class named `BookStoreInput` is automatically generated.
+
+`BookStoreInput` is similar to POJO, a highly static type used to regulate, restrict, and accept client HTTP request content.
+
+At the same time, this class can automatically transform into `BookStore` entity objects and related associated objects.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@PutMapping("/store")
+public void saveBookStore(
+    @RequestBody BookStoreInput input
+) {
+    sqlCient.save(input);
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@PutMapping("/store")
+fun saveBookStore(
+    @RequestBody input: BookStoreInput
+) {
+    sqlCient.save(input);
+}
+```
+
+</TabItem>
+</Tabs>
+
+Here, `sqlClient.save(input)` first converts the input DTO to `BookStore` entity objects and related associated objects, then directly saves the entire data structure, completing the full replacement of complex form data.
+
+The save command recursively processes objects at all levels in the entire data structure, comparing the data structure being saved with the existing data structure in the database, finding inconsistencies and making modifications.
+
+However, no matter how complex the internal details of this process are, it's transparent to users.
+
+### 3.2. Incremental Modification for Simple Data
+
+Now, let's implement a very simple requirement: adding a book to a bookstore.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@PutMapping("/store/{storeId}/books/{bookId}")
+public void addBook(
+    @PathVariable long storeId,
+    @PathVariable long bookId
+) {
+    sqlClient.save(
+        Immutables.createBook(
+            draft.setId(bookId);
+            draft.setStoreId(storeId);
+        )
+    )
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@PutMapping("/store/{storeId}/books/{bookId}")
+fun addBook(
+    @PathVariable storeId: Long,
+    @PathVariable bookId: Long
+) {
+    sqlClient.save(
+        Book {
+            id = bookId
+            storeId = storeId
+        }
+    )
+}
+```
+
+</TabItem>
+</Tabs>
+
+This is a very simple example, while the previous example was completely different, completing very complex work.
+
+:::info
+Save commands can manifest as either very powerful advanced features or very simple basic features. Everything is possible, depending entirely on how you use them.
 :::
 
-</Grid>
-</Grid>
+## Security
+
+Save commands bring absolute flexibility to data saving operations, however, overly powerful flexibility often means compromising security.
+
+That is, the client can freely write arbitrary complex data structures to the server, even if this far exceeds its permission scope.
+
+For this, Jimmer adopts a divide-and-conquer approach:
+
+- The save command itself serves as underlying support, accepting Jimmer's dynamic entities, providing absolute flexibility and unlimited possibilities.
+
+- Introducing [InputDTO](./input-dto), automatically generating static types similar to POJO, standardizing and limiting client behavior, and being responsible for accepting request data. Finally, it automatically transforms into an entity object tree, handled by the save command.

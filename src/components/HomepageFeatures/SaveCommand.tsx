@@ -8,10 +8,10 @@ import { Save } from "../Image";
 export const SaveCommand: FC = memo(() => {
     const zh = useZh();
     return zh ? 
-        <ViewMore buttonText="简要了解" title="保存任意形状的数据结构">
+        <ViewMore buttonText="简要了解" title="保存任意形状的数据结构" large={false}>
             {ZH}
         </ViewMore> : 
-        <ViewMore buttonText="A Brief Introduction" title="Save data structure of any shape">
+        <ViewMore buttonText="A Brief Introduction" title="Save data structure of any shape" large={false}>
             {EN}
         </ViewMore>;
 });
@@ -37,34 +37,23 @@ export const SaveCommandPanel: FC = memo(() => {
 
 const ZH: ReactNode = 
     <>
+        <p>保存指令允许开发人员保持任意形状的数据结构，而非保持简单的对象。</p>
+        
+        <p>在默认情况下，即在<i>AssociatedSaveMode</i>为<b>REPLACE</b>情况下，Jimmer会用被保存结构去权量替换数据库中已有的数据结构，如图所示：</p>
+
         <Save/>
+
         <ul>
             <li>
                 <p>
                     <b>右上角: </b>用户传入一个任意形状的数据结构，让Jimmer写入数据库。 
-                </p>
-                <p>
-                    这和其他ORM框架的save方法之间存在本质差异。
-                    以JPA/Hibernate为例，对象的普通属性是否需要被保存通过
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/Column.html#insertable--">Column.insertable</a>和
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/Column.html#updatable--">Column.updatable</a>控制，
-                    关联属性是否需要被保存通过
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html#cascade--">OneToOne.cascade</a>、
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#cascade--">ManyToOne.cascade</a>、
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html#cascade--">OenToMany.cascade</a>和
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html#cascade--">ManyToOne.cascade</a>控制。
-                    然而，无论如何开发人员如何配置，JPA/Hibernate能够为你保存的数据结构的形状是固定的。
-                </p>
-                <p>
-                    Jimmer采用完全不同方法，被保存的Jimmer对象虽然是强类型的，但具备动态性 <i>(即, 不设置对象属性和把对象对象属性设置为null是完全同的两码事)</i>，
-                    被设置的属性会被保存，而未被设置的属性会被忽略，这样，就可以保存任意形状的数据结构。
                 </p>
             </li>
             <li>
                 <p>
                     <b>左上角: </b>从数据库中查询已有的数据结构，用于和用户传入的新数据结构对比。
                 </p>
-                <p>
+                <p style={{fontStyle:"italic", color: "gray"}}>
                     用户传入什么形状的数据结构，就从数据查询什么形状的数据结构，新旧数据结构的形状完全一致。所以，查询成本和对比成本由用户传入的数据结构的复杂度决定。
                 </p>
             </li>
@@ -89,72 +78,119 @@ const ZH: ReactNode =
             </li>
         </ul>
         <Admonition type='tip'>
-            <p>此功能的目的：把任意形状的数据结构作为一个整体，使用一行代码写入数据库，无论中间细节多复杂，都不用关心。</p>
-            <p>如果你了解Web领域的<a href="https://react.dev/">React</a>或<a href="https://vuejs.org/">Vue</a>，不难看出这个功能很像`Virtual DOM diff`。</p>
+            <p>
+            和其他ORM不同，Jimmer无需在实体模型上描述数据如何保存
+            <ul>
+                <li>
+                    某些标量属性是否需要被保存
+                    <div style={{fontStyle: "italic", color: "gray"}}>
+                        以JPA为例，通过
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/Column.html#insertable--">Column.insertable</a>和
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/Column.html#updatable--">Column.updatable</a>控制。
+                    </div>
+                </li>
+                <li>
+                    某些关联属性是否需要被保存
+                    <div style={{fontStyle: "italic", color: "gray"}}>
+                        以JPA为例，通过
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html#cascade--">OneToOne.cascade</a>、
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#cascade--">ManyToOne.cascade</a>、
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html#cascade--">OenToMany.cascade</a>和
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html#cascade--">ManyToOne.cascade</a>控制。
+                    </div>
+                </li>
+            </ul>
+            </p>
+            <p>
+                Jimmer采用完全不同的策略，其实体对象并非POJO，可以灵活地控制数据结构的形状。
+            </p>
+            <p>
+                即，实体对象具备动态性，不为实体对象指定某个属性和将实体的某个属性指定为null，是完全不同的事情。
+            </p>
+            <p>
+                <b>对于任何一个实体对象而言，Jimmer只会保存被指定的属性，而忽略未指定的属性。</b>
+            </p>
+            <p>
+                因此，Jimmer无需在实体建模时考虑数据的保存行为，而是在运行时通过被保存的数据结构自身来描述期望的行为，具备绝对的灵活性。
+            </p>
         </Admonition>
-        &nbsp;
-        &nbsp;
-        &nbsp;
     </>;
 
 const EN =
     <>
+        <p>Save instructions allow developers to maintain data structures of any shape, rather than maintaining simple objects.</p>
+
+        <p>By default, when <i>AssociatedSaveMode</i> is set to <b>REPLACE</b>, Jimmer will completely replace the existing data structure in the database with the structure being saved, as shown in the figure:</p>
+
         <Save/>
+        
         <ul>
             <li>
-                <p>
-                    <b>Upper right corner: </b> The user passes in a data structure of any shape, and asks Jimmer to save it.
-                </p>
-                <p>
-                    There is an essential difference between this and the save method of other ORM frameworks.
-                    Taking JPA/Hibernate as an example, whether the scalar properties of the entity need to be saved is controlled by 
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/Column.html#insertable--">Column.insertable</a> and
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/Column.html#updatable--">Column.updatable</a>,
-                    and whether association properties need to be saved is controlled by
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html#cascade--">OneToOne.cascade</a>,
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#cascade--">ManyToOne.cascade</a>,
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html#cascade--">OenToMany.cascade</a> and
-                    <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html#cascade--">ManyToOne.cascade</a>.
-                    However, no matter how the developer configures it, the shape of the data structure that JPA/Hibernate can save for you is fixed.
-                </p>
-                <p>
-                    Jimmer adopts a completely different approach. Although the saved jimmer object is strongly typed, it is dynamic <i>(that is, not setting the object property and setting the object property to null are completely different things)</i>,
-                    Properties that are set are saved and properties that are not set are ignored, so that data structures of any shapes can be saved.
-                </p>
+               <b>Top right:</b>  Users pass in a data structure of any shape for Jimmer to write to the database.
             </li>
             <li>
                 <p>
-                    <b>Upper left corner: </b>Query the existing data structure from the database for comparison with the new data structure specified    by the user.
+                    <b>Top left:</b> Query the existing data structure from the database to compare with the new data structure passed in by users.
                 </p>
-                <p>
-                    The shape of the data structure queried from database is same with the shape of new data structure give by user. Therefore, the query cost and comparison cost are determined by the complexity of the data structure specified    by the user.
+                <p style={{fontStyle: "italic", color: "gray"}}>
+                    Whatever shape of data structure the user passes in, the same shape will be queried from the database, ensuring the shapes of old and new data structures are identical. Therefore, the querying and comparison costs are determined by the complexity of the user-provided data structure.
                 </p>
             </li>
             <li>
-                <p>
-                    <b>Below: </b> Compare the old and new data structures, find <code>DIFF</code> and execute the corresponding SQL operations:
-                </p>
+                <b>Below:</b>
+                Compare the new and old data structures, find the DIFF and execute corresponding SQL operations to make them consistent:
                 <ul>
                     <li>
-                        <span style={{color:"orange"}}>Orange part</span>: For entity objects that exist in both old and new data structures, if some scalar properties change, modify the data
+                        <span style={{color:"orange"}}>Orange parts</span>: For entity objects that exist in both new and old data structures, modify data if scalar properties have changed
                     </li>
                     <li>
-                        <span style={{color:"blue"}}>Blue part</span>: For entity objects that exist in both old and new data structures, if some associations change, modify the association
+                        <span style={{color:"blue"}}>Blue parts</span>: For entity objects that exist in both new and old data structures, modify associations if they have changed
                     </li>
                     <li>
-                        <span style={{color:"green"}}>Green part</span>: For entity objects that exist in the new data structure but do not exist in the old data structure, insert data and create the association
+                        <span style={{color:"green"}}>Green parts</span>: For entity objects that exist in the old data structure but not in the new one, decouple this object, clear associations and possibly delete data
                     </li>
                     <li>
-                        <span style={{color:"red"}}>Red part</span>: For entity objects that exist in the old data structure but not in the new data structure, dissociate this object, clear the association and possibly delete the data
+                        <span style={{color:"red"}}>Red parts</span>: For entity objects that exist in the new data structure but not in the old one, insert data and establish associations
                     </li>
                 </ul>
             </li>
         </ul>
+
         <Admonition type='tip'>
-            <p>The purpose of this function: take the data structure of any shape as a whole, and use one line of code to write it into the database, no matter how complicated the intermediate details are, you don't have to care. </p>
-            <p>If you know <a href="https://react.dev/">React</a> or <a href="https://vuejs.org/">Vue</a> in the web field, it is not difficult to see that this function is very similar to `Virtual DOM diff`. </p>
+            <p>
+            Unlike other ORMs, Jimmer doesn't require describing how data should be saved in the entity model
+            <ul>
+                <li>
+                    Whether certain scalar properties need to be saved
+                    <div style={{fontStyle: "italic", color: "gray"}}>
+                        Taking JPA as an example, this is controlled through
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/Column.html#insertable--">Column.insertable</a> and
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/Column.html#updatable--">Column.updatable</a>.
+                    </div>
+                </li>
+                <li>
+                    Whether certain association properties need to be saved
+                    <div style={{fontStyle: "italic", color: "gray"}}>
+                        Taking JPA as an example, this is controlled through
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/OneToOne.html#cascade--">OneToOne.cascade</a>, 
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToOne.html#cascade--">ManyToOne.cascade</a>, 
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/OneToMany.html#cascade--">OenToMany.cascade</a> and
+                        <a href="https://docs.oracle.com/javaee/7/api/javax/persistence/ManyToMany.html#cascade--">ManyToOne.cascade</a>.
+                    </div>
+                </li>
+            </ul>
+            </p>
+            <p>
+                Jimmer adopts a completely different strategy - its entity objects are not POJOs and can flexibly control the shape of data structures.
+            </p>
+            <p>
+                That is, entity objects have dynamic properties - not specifying a property for an entity object and setting an entity's property to null are completely different things.
+            </p>
+            <p>
+                <b>For any entity object, Jimmer will only save the specified properties while ignoring unspecified ones.</b>
+            </p>
+            <p>
+                Therefore, Jimmer doesn't need to consider data saving behavior during entity modeling, but rather describes the expected behavior at runtime through the data structure being saved itself, providing absolute flexibility.
+            </p>
         </Admonition>
-        &nbsp;
-        &nbsp;
-        &nbsp;
     </>;

@@ -118,11 +118,11 @@ This is a very aggressive association update approach with the following pros an
 
 ## Methods with Specified Association Mode
 
-You can set the `AssociatedSaveMode` for save instructions in two ways
+You can set the `AssociatedSaveMode` for save commands in two ways
 
 -   Set parameters for the save method *(this is the simpler choice)*
 
--   Call configuration methods on the save instruction *(this is the more powerful choice)*
+-   Call configuration methods on the save command *(this is the more powerful choice)*
 
 :::info
 Jimmer's API design only allows users to choose one of these methods, preventing confusion from having both methods appear simultaneously
@@ -275,7 +275,7 @@ Taking `insert`, `insertEntities` and `insertInputs` as examples, the default `A
 
 ### Calling Save Instruction Configuration Methods
 
-Besides setting save method parameters, we can also modify `AssociatedSaveMode` by calling configuration methods on the save instruction.
+Besides setting save method parameters, we can also modify `AssociatedSaveMode` by calling configuration methods on the save command.
 
 -   Precisely set `AssociatedSaveMode` for specific associations
 
@@ -313,13 +313,13 @@ Besides setting save method parameters, we can also modify `AssociatedSaveMode` 
 
     -   **Java**
     
-        Calls the `saveCommand` method instead of `save` method, indicating creation of a save instruction without immediate execution.
+        Calls the `saveCommand` method instead of `save` method, indicating creation of a save command without immediate execution.
 
         After configuration with `setAssociatedMode`, finally calls the `execute` method to actually execute.
 
     -   **Kotlin**
 
-        The syntax is relatively concise, still calling the `save` method that can directly execute save instructions, just with a lambda for additional configuration.
+        The syntax is relatively concise, still calling the `save` method that can directly execute save commands, just with a lambda for additional configuration.
 
 -   Blindly set `AssociatedSaveMode` for all associations
 
@@ -355,13 +355,13 @@ Besides setting save method parameters, we can also modify `AssociatedSaveMode` 
 
     -   **Java**
     
-        Calls the `saveCommand` method instead of `save` method, indicating creation of a save instruction without immediate execution.
+        Calls the `saveCommand` method instead of `save` method, indicating creation of a save command without immediate execution.
 
         After configuration with `setAssociatedModeAll`, finally calls the `execute` method to actually execute.
 
     -   **Kotlin**
 
-        The syntax is relatively concise, still calling the `save` method that can directly execute save instructions, just with a lambda for additional configuration.
+        The syntax is relatively concise, still calling the `save` method that can directly execute save commands, just with a lambda for additional configuration.
 
 :::info
 Obviously, for specific associations, precise configuration has higher priority than blind configuration.
@@ -614,7 +614,7 @@ Two SQL statements will be generated:
         tb_1_.NAME = tb_2_.NAME
     and
         tb_1_.EDITION = tb_2_.EDITION 
-    // highlight-next-line
+    /* highlight-next-line */
     when not matched then 
         insert(
             NAME, EDITION, PRICE, STORE_ID
@@ -632,7 +632,7 @@ Two SQL statements will be generated:
 
     ```sql
     insert 
-    // highlight-next-line
+    /* highlight-next-line */
     ignore
     into BOOK(
         NAME, EDITION, PRICE, STORE_ID
@@ -655,7 +655,7 @@ Two SQL statements will be generated:
         ?, ?, ?, ?
     ) on conflict(
         NAME, EDITION
-        // highlight-next-line
+        /* highlight-next-line */
     ) do nothing
     returning ID
     /* batch-0: [SQL in Action, 1, 49.9, 2] */
@@ -912,7 +912,7 @@ Two SQL statements will be generated:
     <TabItem value="h2" label="H2">
 
     ```sql
-    // highlight-next-line
+    /* highlight-next-line */
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) key(NAME, EDITION) values(
@@ -933,7 +933,7 @@ Two SQL statements will be generated:
     ) values(
         ?, ?, ?, ?
     ) on duplicate key 
-    // highlight-next-line
+    /* highlight-next-line */
     update
         /* fake update to return all ids */ ID = last_insert_id(ID),
         NAME = values(NAME),
@@ -956,7 +956,7 @@ Two SQL statements will be generated:
         ?, ?, ?, ?
     ) on conflict(
         NAME, EDITION
-        // highlight-next-line
+        /* highlight-next-line */
     ) do update set
         NAME = excluded.NAME, 
         EDITION = excluded.EDITION, 
@@ -1192,7 +1192,7 @@ Finally, two SQL statements will be generated:
         tb_1_.BOOK_ID = tb_2_.BOOK_ID
     and
         tb_1_.AUTHOR_ID = tb_2_.AUTHOR_ID 
-    // highlight-next-line
+    /* highlight-next-line */
     when not matched then 
         insert(BOOK_ID, AUTHOR_ID)
         values(tb_2_.BOOK_ID, tb_2_.AUTHOR_ID)
@@ -1207,7 +1207,7 @@ Finally, two SQL statements will be generated:
 
     ```sql
     insert 
-    // highlight-next-line
+    /* highlight-next-line */
     ignore
     into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
     values(?, ?)
@@ -1225,7 +1225,7 @@ Finally, two SQL statements will be generated:
     into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
     values(?, ?)
     on conflict(BOOK_ID, AUTHOR_ID)
-    // highlight-next-line
+    /* highlight-next-line */
     do nothing
     /* batch-0: [1, 2] */
     /* batch-1: [1, 3] */
@@ -1236,22 +1236,21 @@ Finally, two SQL statements will be generated:
     </TabItem>
     </Tabs>
 
-## 6. VIOLENTLY_REPLACE
-
-The previous examples can be simplified because the dissociate operation included in the `REPLACE` mode will be explained in more detail in subsequent documents, as it's not the focus of this article.
-
-However, it's not hard to see that the `REPLACE` mode integrates `INSERT`, `UPDATE`, and `DELETE` operations into one, expecting to replace all associated relationships completely *(if the association relationship is a deep long association, then it's replacing an entire subtree)*.
+The `REPLACE` mode integrates `INSERT`, `UPDATE`, and `DELETE` operations into one, expecting to replace all associated relationships completely *(if the association relationship is a deep long association, then it's replacing an entire subtree)*.
 
 However, `REPLACE` mode has one limitation: it expects objects to either have an `id` or a `key`.
-It expects to cleverly find the parts where the new and old data structures have changed through `id` and `key`, thereby minimizing the impact range of `INSERT`, `UPDATE`, and `DELETE` operations to achieve maximum performance.
+
+Because it expects to cleverly find the parts where the new and old data structures have changed through `id` and `key`, thereby minimizing the impact range of `INSERT`, `UPDATE`, and `DELETE` operations to achieve maximum performance.
 
 :::tip
 If readers are familiar with the web domain, it's not hard to see that this is the same principle as specifying the `key` attribute when using loop rendering in React.
 
-In fact, the save instruction design was inspired by React.
+In fact, the save command design was inspired by React.
 :::
 
-However, what should we do when dealing with wild objects, i.e., associated objects that have neither `id` nor `key`?
+## 6. VIOLENTLY_REPLACE
+
+We've dissucess `REPLACE`, however, what should we do when dealing with wild objects, i.e., associated objects that have neither `id` nor `key`?
 
 In this case, we can use the `VIOLENTLY_REPLACE` mode. Once this mode is adopted, Jimmer no longer looks for changes in associations *(or association collections)* based on id or key, but performs the following two operations:
 
@@ -1397,9 +1396,9 @@ Therefore, it is not recommended, please use with caution
 
 ## Default Mode
 
-The save instruction provides not only `save`, `saveEntities`, and `saveInputs` methods, but also other shortcut methods for various application scenarios.
+The save command provides not only `save`, `saveEntities`, and `saveInputs` methods, but also other shortcut methods for various application scenarios.
 
-Different save instructions have different default values for `AssociatedSaveMode`, please refer to this table:
+Different save commands have different default values for `AssociatedSaveMode`, please refer to this table:
 
 <table>
 <thead>

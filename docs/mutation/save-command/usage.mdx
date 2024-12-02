@@ -468,7 +468,7 @@ public void addBook(
     @PathVariable long storeId,
     @PathVariable long bookId
 ) {
-    sqlClient.save(
+    sqlClient.update(
         Immutables.createBook(
             draft.setId(bookId);
             draft.setStoreId(storeId);
@@ -486,7 +486,7 @@ fun addBook(
     @PathVariable storeId: Long,
     @PathVariable bookId: Long
 ) {
-    sqlClient.save(
+    sqlClient.update(
         Book {
             id = bookId
             storeId = storeId

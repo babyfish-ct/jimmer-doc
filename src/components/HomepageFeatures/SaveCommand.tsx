@@ -37,7 +37,7 @@ export const SaveCommandPanel: FC = memo(() => {
 
 const ZH: ReactNode = 
     <>
-        <p>保存指令允许开发人员保持任意形状的数据结构，而非保持简单的对象。</p>
+        <p>保存指令允许开发人员保存任意形状的数据结构，而非保存简单的对象。</p>
         
         <p>在默认情况下，即在<i>AssociatedSaveMode</i>为<b>REPLACE</b>情况下，Jimmer会用被保存结构去权量替换数据库中已有的数据结构，如图所示：</p>
 
@@ -118,12 +118,12 @@ const ZH: ReactNode =
 
 const EN =
     <>
-        <p>Save instructions allow developers to maintain data structures of any shape, rather than maintaining simple objects.</p>
+        <p>Save instructions allow developers to save data structures of any shape, rather than save simple objects.</p>
 
         <p>By default, when <i>AssociatedSaveMode</i> is set to <b>REPLACE</b>, Jimmer will completely replace the existing data structure in the database with the structure being saved, as shown in the figure:</p>
 
         <Save/>
-        
+
         <ul>
             <li>
                <b>Top right:</b>  Users pass in a data structure of any shape for Jimmer to write to the database.

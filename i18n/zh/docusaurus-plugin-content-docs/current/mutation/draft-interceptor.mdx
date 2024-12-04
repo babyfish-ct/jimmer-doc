@@ -197,7 +197,7 @@ class BaseEntityDraftInterceptor(
 
 上文谈到，如果当前操作为`UPDATE`，`beforeSave`方法的`original`参数非null，表示数据库中的旧值。
 
-`original`是Jimmer动态对象，默认情况下，只有`id`和`key`属性是已加载和可访问的。然而，是否能够控制`original`对象的格式让跟多的属性可以被访问呢？
+`original`是Jimmer动态对象，默认情况下，只有`id`和`key`属性是已加载和可访问的。然而，是否能够控制`original`对象的格式让更多的属性可以被访问呢？
 
 `DraftInterceptor`接口提供了另外一个default方法`dependencies`，返回一个属性集合，以表示除了id属性和key属性外，`original`对象还有那些属性需要被加载。
 

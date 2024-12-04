@@ -572,7 +572,7 @@ input UpdateBookInput {
     ```
 
     :::info
-    对于一个实体对象而言，如果改属性对应的值为null，在使用Input DTO的构造方法将其转化为Input DTO对象是，由于DTO中对应的属性不允许为null，将会导致一场。
+    对于一个实体对象而言，如果改属性对应的值为null，在使用Input DTO的构造方法将其转化为Input DTO对象是，由于DTO中对应的属性不允许为null，将会导致异常。
 
     这就是`unsafe`关键字的意义。
     :::

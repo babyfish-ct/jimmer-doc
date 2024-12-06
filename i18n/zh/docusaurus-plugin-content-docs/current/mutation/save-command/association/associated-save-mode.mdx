@@ -937,8 +937,6 @@ sqlClient.saveEntities(
     /* highlight-next-line */
     update
         /* fake update to return all ids */ ID = last_insert_id(ID),
-        NAME = values(NAME),
-        EDITION = values(EDITION),
         PRICE = values(PRICE),
         STORE_ID = values(STORE_ID)
     /* batch-0: [SQL in Action, 1, 49.9, 2] */
@@ -959,8 +957,6 @@ sqlClient.saveEntities(
         NAME, EDITION
         /* highlight-next-line */
     ) do update set
-        NAME = excluded.NAME, 
-        EDITION = excluded.EDITION, 
         PRICE = excluded.PRICE, 
         STORE_ID = excluded.STORE_ID
     returning ID
@@ -984,7 +980,7 @@ sqlClient.saveEntities(
 <Dissociate/>
 
 :::info
-脱钩操作会在后续教程中详细解介绍，因此，本文给出一个简化到极致的例子
+脱钩操作会在[后续教程](./dissociation)中详细解介绍，因此，本文给出一个简化到极致的例子
 :::
 
 <Tabs groupId="language">

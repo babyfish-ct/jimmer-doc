@@ -1,0 +1,757 @@
+---
+sidebar_position: 4
+title: 脱钩操作
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ShortAssociation } from '@site/src/components/ShortAssociation';
+import { LongAssociation } from '@site/src/components/LongAssociation';
+import { ViewMore } from '@site/src/components/ViewMore';
+import DissociateMode from '../../../_shared/dissociate-mode.md';
+import Dissociate from './_dissociate.md';
+import MergeRoots from './_merge-roots.mdx';
+import MergeAssociations from './_merge-associations.mdx';
+
+在采用关联模式`AssociatedSaveMode.REPLACE`保存关联对象时，会涉及一个重要的概念：脱勾操作。
+
+## 概念
+
+<Dissociate/>
+
+脱勾针对两种关联
+
+-   中间表关联
+
+    所谓中间表的关联，显然，指的就是本教程中`Book.authors`和`Author.books`这类关联。
+    
+    其脱钩操作非常简单，只是简单地删除中间表的关联而已，关联对象本身不受任何影响。
+
+-   子表关联
+
+    所谓子表关联，指基于外键 *(无论真伪)* 关联的逆关联，例如本教程中的`BookStore.books`。
+
+    其脱钩操作非常简单相对复杂。开发人员可以通过配置来控制具体脱钩行为。
+
+接下来，我们讨论这两种脱勾操作。
+
+## 脱勾中间表关联
+
+在介绍关联对象的[REPLACE](./associated-save-mode#5-replace)保存模式时，我们已经展示了这种最简单的脱钩行为。
+
+因此，本文不再赘述。
+
+## 脱勾子表关联
+
+所谓子表关联，指基于外键 *(无论真伪)* 关联的逆向关联，例如`BookStore.books`。
+
+其脱钩操作非常简单相对复杂。开发人员可以为外键所对应的属性 *(例如这里的`Book.store`)* 配置脱钩模式，来实现不同的脱钩行为。
+
+### 脱勾模式
+
+<DissociateMode/>
+
+配置脱勾模式有两种方法
+
+-   在实体上用注解静态配置，静态配置是全局的。
+
+-   在代码中代码动态配置，动态配置可以覆盖静态配置，但只影响当前保存指令。
+
+以`SET_NULL`为例
+
+-   基于实体的静态配置 *(大部分情况下的选择，供绝大部分业务使用)*
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java title="Book.java"
+    @Entity
+    public interface Book {
+
+        //highlight-next-line
+        @OnDissociate(DissociateAction.SET_NULL)
+        @Nullable
+        @ManyToOne
+        BookStore store();
+
+        ...省略其他代码...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin  title="Book.kt"
+    @Entity
+    interface Book {
+
+        //highlight-next-line
+        @OnDissociate(DissociateAction.SET_NULL)
+        @ManyToOne
+        val store: BookStore?
+
+        ...省略其他代码...        
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   基于保存指令的动态配置 *(仅针对单条保存指令，极少数有特殊需求的业务使用)*
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    sqlClient
+        .getEntities()
+        .saveCommand(book)
+        // highlight-next-line
+        .setDissociateAction(
+            BookProps.STORE, 
+            DissociateAction.SET_NULL
+        )
+        .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    sqlClient.save(book) {
+        // highlight-next-line
+        setDissociateAction(
+            Book::store, 
+            DissociateAction.SET_NULL
+        )
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+### 保存代码
+
+接下来，我们通过保存包含一对多关联`BookStore.books`的数据结构来讲解各种脱钩模式。
+
+编写保存代码如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("O'REILLY");
+        draft.addIntoBooks(book -> {
+            book.setName("Learning GraphQL");
+            book.setEdition(3);
+            book.setPrice(new BigDecimal("51.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Learning GraphQL");
+            book.setEdition(4);
+            book.setPrice(new BigDecimal("43.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Effective TypeScript");
+            book.setEdition(3);
+            book.setPrice(new BigDecimal("88.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Effective TypeScript");
+            book.setEdition(4);
+            book.setPrice(new BigDecimal("85.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming TypeScript");
+            book.setEdition(3);
+            book.setPrice(new BigDecimal("48.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming TypeScript");
+            book.setEdition(4);
+            book.setPrice(new BigDecimal("47.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("GraphQL in Action");
+            book.setEdition(3);
+            book.setPrice(new BigDecimal("80.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("GraphQL in Action");
+            book.setEdition(4);
+            book.setPrice(new BigDecimal("81.9"));
+        });
+    })
+);
+sqlClient.saveEntities(
+    stores,
+    // 也可以不指定次参数，对`save`方法而言，
+    // AssociatedSaveMode默认为REPLACE
+    AssociatedSaveMode.REPLACE
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "O'REILLY"
+        books().addBy {
+            name = "Learning GraphQL"
+            edition = 3
+            price = BigDecimal("51.9")
+        }
+        books().addBy {
+            name = "Learning GraphQL"
+            edition = 4
+            price = BigDecimal("32.9")
+        }
+        books().addBy {
+            name = "Effective TypeScript"
+            edition = 3
+            price = BigDecimal("88.9")
+        }
+        books().addBy {
+            name = "Effective TypeScript"
+            edition = 4
+            price = BigDecimal("85.9")
+        }
+        books().addBy {
+            name = "Programming TypeScript"
+            edition = 3
+            price = BigDecimal("48.9")
+        }
+        books().addBy {
+            name = "Programming TypeScript"
+            edition = 4
+            price = BigDecimal("47.9")
+        }
+    },
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "GraphQL in Action"
+            edition = 3
+            price = BigDecimal("80.9")
+        }
+        books().addBy {
+            name = "GraphQL in Action"
+            edition = 4
+            price = BigDecimal("81.9")
+        }
+    }
+)
+sqlClient.saveEntities(
+    stores,
+    // 也可以不指定次参数，对`save`方法而言，
+    // AssociatedSaveMode默认为REPLACE
+    AssociatedSaveMode.REPLACE
+)
+```
+
+</TabItem>
+</Tabs>
+新旧对象对比如下
+<table>
+<thead>
+<tr>
+<th>数据库现有数据</th>
+<th>用户期望保存的数据</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+
+```sh
+--+-O'REILLY
+  |
+  # highlight-next-line
+  +---Learn GraphQL(edition = 1)
+  |
+  # highlight-next-line
+  +---Learn GraphQL(edition = 2)
+  |
+  +---Learn GraphQL(edition = 3)
+  |
+  |
+  |
+  # highlight-next-line
+  +---Effective TypeScript(edition = 1)
+  |
+  # highlight-next-line
+  +---Effective TypeScript(edition = 2)
+  |
+  +---Effective TypeScript(edition = 3)
+  |
+  |
+  |
+  # highlight-next-line
+  +---Programming TypeScript(edition = 1)
+  |
+  # highlight-next-line
+  +---Programming TypeScript(edition = 2)
+  |
+  \---Programming TypeScript(edition = 3)
+
+
+```
+
+</td>
+<td>
+
+```sh
+--+-O'REILLY
+  |
+  |
+  |
+  |
+  |
+  +---Learn GraphQL(edition = 3)
+  |
+  +---Learn GraphQL(edition = 4)
+  |
+  |
+  |
+  |
+  |
+  +---Effective TypeScript(edition = 3)
+  |
+  +---Effective TypeScript(edition = 4)
+  |
+  |
+  |
+  |
+  |
+  +---Programming TypeScript(edition = 3)
+  |
+  \---Programming TypeScript(edition = 4)
+```
+
+</td>
+</tr>
+<tr>
+<td>
+
+```sh
+--+-MANNING
+  |
+  # highlight-next-line
+  +---GraphQL in Action(edition = 1)
+  |
+  # highlight-next-line
+  +---GraphQL in Action(edition = 2)
+  |
+  \---GraphQL in Action(edition = 3)
+  
+
+```
+
+</td>
+<td>
+
+```sh
+--+-MANNING
+  |
+  |
+  |
+  |
+  |
+  +---GraphQL in Action(edition = 3)
+  |
+  \---GraphQL in Action(edition = 4)
+```
+
+</td>
+</tr>
+</tbody>
+</table>
+
+:::info
+其中，不再需的8个关联对象，即，需要被脱钩的8个对象，被高亮显示。
+
+那么，Jimmer会如何脱钩这些关联对象呢？
+
+其实，不同的脱钩配置会导致不同的脱钩行为。
+:::
+
+### 1. NONE *(默认)*
+
+NONE的行为并不是固化的，而是视全局配置`jimmer.default-dissociate-action-check`而定：
+
+-   如果`jimmer.default-dissociate-action-check`为true *(默认)* 或 当前关联所基于的外键是真的 *(数据库中存在相应的外键约束，请参见[真假外键](../../../mapping/base/foreignkey))*，视为[CHECK](#3-check)。
+
+-   如果`jimmer.default-dissociate-action-check`为false且当前关联所基于的外键是假的 (数据库中没有相应的外键约束，请参见[真假外键](../../../mapping/base/foreignkey))，视为[LAX](#2-lax)。
+
+### 2. LAX
+
+-   脱钩模式`LAX`表示脱钩操作什么也不做，。
+
+-   关联保存模式`AssociatedSaveMode.REPLACE`表示不再需要的关联关系需要被丢弃。
+
+很明显，两个规则发生了冲突。此时，`AssociatedSaveMode.REPLACE`更为优先，`LAX`被无视，最终被视为[CHECK](#3-check)。
+
+所以，无法通过本文的例子演示`LAX`。如果要了解`LAX`的作用，请参见[删除指令](../../delete-command)。
+
+### 3. CHECK
+
+`CHECK`模式不允许脱钩关联对象。Jimmer会查询是否存在需要被脱钩的关联对象，如果存在，则抛出异常。
+
+脱钩模式的设置，既可以通过实体定义来设置，也可以通过保存指令来设置。
+
+这里，我们通过实体配置来设置`Book.store`的脱钩模式
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+public interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.CHECK)
+    @Nullable
+    @ManyToOne
+    BookStore store();
+
+    ...省略其他代码...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin  title="Book.kt"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.CHECK)
+    @ManyToOne
+    val store: BookStore?
+
+    ...省略其他代码...        
+}
+```
+
+</TabItem>
+</Tabs>
+
+为了演示更简单的SQL生成，我们假设`sqlClient`的`targetTransferable`功能被打开，这是之前已经介绍过的内容，请参见[这里](./owner#2-配置是否允许不同父对象抢夺子对象)
+
+运行前文的保存代码，最终会生成三条SQL
+
+1.  <MergeRoots/>
+
+2.  <MergeAssociations/>
+
+3.  查询是否有需要脱钩的对象 *(如果有，抛出异常组织保持指令)*
+
+    ```sql
+    select
+        tb_1_.ID
+    from BOOK tb_1_
+    where
+        tb_1_.STORE_ID in (
+            ? /* 1 */, ? /* 2 */
+        )
+    and
+        (tb_1_.STORE_ID, tb_1_.ID) not in (
+            (? /* 1 */, ? /* 3 */), 
+            (? /* 1 */, ? /* 100 */), 
+            (? /* 1 */, ? /* 6 */), 
+            (? /* 1 */, ? /* 101 */), 
+            (? /* 1 */, ? /* 9 */), 
+            (? /* 1 */, ? /* 102 */), 
+            (? /* 2 */, ? /* 12 */), 
+            (? /* 2 */, ? /* 103 */)
+        )
+    limit ? /* 1 */
+    ```
+
+    经过这条SQL判定，被保存的`BookStore`对象通过关联属性`Book.authors`可以找到一些即将被脱钩的`Book`对象。但是，他们不同意被脱钩，抛出如下异常
+
+    ```sh
+    Save error caused by the path: "<root>.books": 
+    #highlight-next-line
+    Cannot dissociate child objects 
+    because the 
+    dissociation action of the many-to-one property 
+    "com.yourcommany.yourproject.model.Book.store" 
+    is not configured as "set null" or "cascade". 
+    There are two ways to resolve this issue: 
+    Decorate the many-to-one property 
+    "com.yourcommany.yourproject.model.Bookstore" by 
+    @org.babyfish.jimmer.sql.OnDissociate whose argument 
+    is `DissociateAction.SET_NULL` or `DissociateAction.DELETE`, 
+    or use save command's runtime configuration to override it
+    ```
+
+### 4. SET_NULL
+
+`SET_NULL`模式通过把关联对象的外键属性设置为null来达到脱钩目的。
+
+:::caution
+`SET_NULL`模式要求基于外键的关联属性 *(这里的`Book.store`)* 必须可为null，否则会编译报错
+:::
+
+脱钩模式的设置，既可以通过实体定义来设置，也可以通过保存指令来设置。
+
+这里，我们通过实体配置来设置`Book.store`的脱钩模式
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+public interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.SET_NULL)
+    @Nullable
+    @ManyToOne
+    BookStore store();
+
+    ...省略其他代码...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin  title="Book.kt"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.SET_NULL)
+    @ManyToOne
+    val store: BookStore?
+
+    ...省略其他代码...        
+}
+```
+
+</TabItem>
+</Tabs>
+
+为了演示更简单的SQL生成，我们假设`sqlClient`的`targetTransferable`功能被打开，这是之前已经介绍过的内容，请参见[这里](./owner#2-配置是否允许不同父对象抢夺子对象)
+
+运行前文的保存代码，最终会生成三条SQL
+
+1.  <MergeRoots/>
+
+2.  <MergeAssociations/>
+
+3.  将所有被脱钩对象的外键设置为null
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    update BOOK
+    set STORE_ID = null
+    where
+        STORE_ID = ?
+    and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [1, [3, 100, 6, 101, 9, 102]] */
+    /* batch-1: [2, [12, 103]] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    update BOOK
+    set STORE_ID = null
+    where
+        STORE_ID in (
+            ? /* 1 */, ? /* 2 */
+        )
+    and
+        (STORE_ID, ID) not in (
+            (? /* 1 */, ? /* 3 */), 
+            (? /* 1 */, ? /* 100 */), 
+            (? /* 1 */, ? /* 6 */), 
+            (? /* 1 */, ? /* 101 */), 
+            (? /* 1 */, ? /* 9 */), 
+            (? /* 1 */, ? /* 102 */), 
+            (? /* 2 */, ? /* 12 */), 
+            (? /* 2 */, ? /* 103 */)
+        )
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    update BOOK
+    set STORE_ID = null
+    where
+        STORE_ID = ?
+    and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [1, [3, 100, 6, 101, 9, 102]] */
+    /* batch-1: [2, [12, 103]] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    同时我们能看到，不同数据库的差异巨大
+
+    -   `H2`和`Postgres`采用了批量化的简单SQL
+
+    -   `MySQL`采用了单条复杂SQL
+
+    :::info
+    这是`H2`和`Posgres`支持`=any(数组)`的语法，MySQL不支持。
+    :::
+
+### 5. DELETE
+
+`DELETE`模式通过删除关联对象来达到脱钩目的。
+
+:::info
+这里保存`BookStore`，对`BookStore.books`关联进行脱钩操作，`DELETE`模式表示期望删除不再需要的`Book`对象。
+
+然而，`Book`实体存在更深的关联`Book.authors`，所以删除`Book`对象之前需要考虑如何对`Author`对象进行脱钩。
+
+事实上，如果因脱钩操作而需要被删除的对象还有更深的关联，那么就演化成了递归删除的问题。
+该行为在[删除指令](../../delete-command)中有详细阐述，本文不讨论此问题。
+
+因此，为了简化讨论，我们暂时忽略`Author`实体，假设当前系统只有`BookStore`和`Book`两个实体类型。
+:::
+
+脱钩模式的设置，既可以通过实体定义来设置，也可以通过保存指令来设置。
+
+这里，我们通过实体配置来设置`Book.store`的脱钩模式
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+public interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.DELETE)
+    @Nullable
+    @ManyToOne
+    BookStore store();
+
+    ...省略其他代码...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin  title="Book.kt"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.DELETE)
+    @ManyToOne
+    val store: BookStore?
+
+    ...省略其他代码...        
+}
+```
+
+</TabItem>
+</Tabs>
+
+为了演示更简单的SQL生成，我们假设`sqlClient`的`targetTransferable`功能被打开，这是之前已经介绍过的内容，请参见[这里](./owner#2-配置是否允许不同父对象抢夺子对象)
+
+运行前文的保存代码，最终会生成三条SQL
+
+1.  <MergeRoots/>
+
+2.  <MergeAssociations/>
+
+3.  删除所有需要被脱钩的对象
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    delete from BOOK
+    where
+        STORE_ID = ?
+    and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [1, [3, 100, 6, 101, 9, 102]] */
+    /* batch-1: [2, [12, 103]] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    delete from BOOK
+    where
+        STORE_ID in (
+            ? /* 1 */, ? /* 2 */
+        )
+    and
+        (STORE_ID, ID) not in (
+            (? /* 1 */, ? /* 3 */), 
+            (? /* 1 */, ? /* 100 */), 
+            (? /* 1 */, ? /* 6 */), 
+            (? /* 1 */, ? /* 101 */), 
+            (? /* 1 */, ? /* 9 */), 
+            (? /* 1 */, ? /* 102 */), 
+            (? /* 2 */, ? /* 12 */), 
+            (? /* 2 */, ? /* 103 */)
+        )
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    delete from BOOK
+    where
+        STORE_ID = ?
+    and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [1, [3, 100, 6, 101, 9, 102]] */
+    /* batch-1: [2, [12, 103]] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    同时我们能看到，不同数据库的差异巨大
+
+    -   `H2`和`Postgres`采用了批量化的简单SQL
+
+    -   `MySQL`采用了单条复杂SQL
+
+    :::info
+    这是`H2`和`Posgres`支持`=any(数组)`的语法，MySQL不支持。
+    :::

@@ -1,0 +1,76 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<details>
+<summary>Saving associations and associated objects is also not the focus of this article, collapsed by default</summary>
+<Tabs groupId="database">
+<TabItem value="h2" label="H2">
+
+```sql
+merge into BOOK(
+    NAME, EDITION, PRICE, STORE_ID
+) key(
+    NAME, EDITION
+) values(
+    ?, ?, ?, ?
+)
+/* batch-0: [Learning GraphQL, 3, 51.9, 1] */
+/* batch-1: [Learning GraphQL, 4, 43.9, 1] */
+/* batch-2: [Effective TypeScript, 3, 88.9, 1] */
+/* batch-3: [Effective TypeScript, 4, 85.9, 1] */
+/* batch-4: [Programming TypeScript, 3, 48.9, 1] */
+/* batch-5: [Programming TypeScript, 4, 47.9, 1] */
+/* batch-6: [GraphQL in Action, 3, 80.9, 2] */
+/* batch-7: [GraphQL in Action, 4, 81.9, 2] */
+```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+```
+insert into BOOK(
+    NAME, EDITION, PRICE, STORE_ID
+) values(
+    ?, ?, ?, ?
+) on duplicate key udpate
+    /* fake update to return all ids */ ID = last_insert_id(ID),
+    PRICE = values(PRICE),
+    STORE_ID = values(STORE_ID)
+/* batch-0: [Learning GraphQL, 3, 51.9, 1] */
+/* batch-1: [Learning GraphQL, 4, 43.9, 1] */
+/* batch-2: [Effective TypeScript, 3, 88.9, 1] */
+/* batch-3: [Effective TypeScript, 4, 85.9, 1] */
+/* batch-4: [Programming TypeScript, 3, 48.9, 1] */
+/* batch-5: [Programming TypeScript, 4, 47.9, 1] */
+/* batch-6: [GraphQL in Action, 3, 80.9, 2] */
+/* batch-7: [GraphQL in Action, 4, 81.9, 2] */
+```
+
+</TabItem>
+<TabItem value="posgres" label="Postgres">
+
+```sql
+insert into BOOK(
+    NAME, EDITION, PRICE, STORE_ID
+) values(
+    ?, ?, ?, ?
+) on conflict(
+    NAME, EDITION
+) do update set
+    PRICE = excluded.PRICE,
+    STORE_ID = excluded.STORE_ID
+returning ID
+/* batch-0: [Learning GraphQL, 3, 51.9, 1] */
+/* batch-1: [Learning GraphQL, 4, 43.9, 1] */
+/* batch-2: [Effective TypeScript, 3, 88.9, 1] */
+/* batch-3: [Effective TypeScript, 4, 85.9, 1] */
+/* batch-4: [Programming TypeScript, 3, 48.9, 1] */
+/* batch-5: [Programming TypeScript, 4, 47.9, 1] */
+/* batch-6: [GraphQL in Action, 3, 80.9, 2] */
+/* batch-7: [GraphQL in Action, 4, 81.9, 2] */
+```
+
+</TabItem>
+</Tabs>
+
+</details>

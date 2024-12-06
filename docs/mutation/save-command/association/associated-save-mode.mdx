@@ -936,8 +936,6 @@ Two SQL statements will be generated:
     /* highlight-next-line */
     update
         /* fake update to return all ids */ ID = last_insert_id(ID),
-        NAME = values(NAME),
-        EDITION = values(EDITION),
         PRICE = values(PRICE),
         STORE_ID = values(STORE_ID)
     /* batch-0: [SQL in Action, 1, 49.9, 2] */
@@ -958,8 +956,6 @@ Two SQL statements will be generated:
         NAME, EDITION
         /* highlight-next-line */
     ) do update set
-        NAME = excluded.NAME, 
-        EDITION = excluded.EDITION, 
         PRICE = excluded.PRICE, 
         STORE_ID = excluded.STORE_ID
     returning ID

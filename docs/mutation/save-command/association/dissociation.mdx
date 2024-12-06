@@ -1,0 +1,757 @@
+---
+sidebar_position: 7
+title: Dissociation Operations
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import { ShortAssociation } from '@site/src/components/ShortAssociation';
+import { LongAssociation } from '@site/src/components/LongAssociation';
+import { ViewMore } from '@site/src/components/ViewMore';
+import DissociateMode from '../../../_shared/dissociate-mode.md';
+import Dissociate from './_dissociate.md';
+import MergeRoots from './_merge-roots.mdx';
+import MergeAssociations from './_merge-associations.mdx';
+
+When saving associated objects using the association mode `AssociatedSaveMode.REPLACE`, 
+there is an important concept: dissociation operation.
+
+## Concept
+
+<Dissociate/>
+
+Dissociation applies to two types of associations:
+
+-   Middle table associations
+
+    Obviously, middle table associations refer to associations like `Book.authors` and `Author.books` in this tutorial.
+    
+    Their dissociation operation is very simple, just deleting the association in the middle table, without affecting the associated objects themselves.
+
+-   Child table associations
+
+    Child table associations refer to inverse associations based on foreign keys *(whether real or fake)*, such as `BookStore.books` in this tutorial.
+
+    Their dissociation operation is relatively complex. Developers can control specific dissociation behavior through configuration.
+
+Next, let's discuss these two types of dissociation operations.
+
+## Dissociating Middle Table Associations
+
+We've already demonstrated this simplest form of dissociation when introducing the [REPLACE](./associated-save-mode#5-replace) save mode for associated objects.
+
+Therefore, we won't repeat it here.
+
+## Dissociating Child Table Associations
+
+Child table associations refer to inverse associations based on foreign keys *(whether real or fake)*, such as `BookStore.books`.
+
+Their dissociation operation is relatively complex. Developers can configure the dissociation mode for properties corresponding to foreign keys *(such as `Book.store` here)* to achieve different dissociation behaviors.
+
+### Dissociation Modes
+
+<DissociateMode/>
+
+There are two ways to configure dissociation mode:
+
+-   Static configuration using annotations on entities, which is global.
+
+-   Dynamic configuration in code, which can override static configuration but only affects the current save command.
+
+Taking `SET_NULL` as an example:
+
+-   Static entity-based configuration *(chosen in most cases, used by the majority of business logic)*
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java title="Book.java"
+    @Entity
+    public interface Book {
+
+        //highlight-next-line
+        @OnDissociate(DissociateAction.SET_NULL)
+        @Nullable
+        @ManyToOne
+        BookStore store();
+
+        ...omitted other code...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin  title="Book.kt"
+    @Entity
+    interface Book {
+
+        //highlight-next-line
+        @OnDissociate(DissociateAction.SET_NULL)
+        @ManyToOne
+        val store: BookStore?
+
+        ...omitted other code...        
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   Dynamic save command-based configuration *(only for individual save commands, used by very few businesses with special requirements)*
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    sqlClient
+        .getEntities()
+        .saveCommand(book)
+        // highlight-next-line
+        .setDissociateAction(
+            BookProps.STORE, 
+            DissociateAction.SET_NULL
+        )
+        .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    sqlClient.save(book) {
+        // highlight-next-line
+        setDissociateAction(
+            Book::store, 
+            DissociateAction.SET_NULL
+        )
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+### Save Code
+
+Next, let's explain various dissociation modes through saving data structures containing one-to-many association `BookStore.books`.
+
+Here's the save code:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("O'REILLY");
+        draft.addIntoBooks(book -> {
+            book.setName("Learning GraphQL");
+            book.setEdition(3);
+            book.setPrice(new BigDecimal("51.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Learning GraphQL");
+            book.setEdition(4);
+            book.setPrice(new BigDecimal("43.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Effective TypeScript");
+            book.setEdition(3);
+            book.setPrice(new BigDecimal("88.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Effective TypeScript");
+            book.setEdition(4);
+            book.setPrice(new BigDecimal("85.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming TypeScript");
+            book.setEdition(3);
+            book.setPrice(new BigDecimal("48.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming TypeScript");
+            book.setEdition(4);
+            book.setPrice(new BigDecimal("47.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("GraphQL in Action");
+            book.setEdition(3);
+            book.setPrice(new BigDecimal("80.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("GraphQL in Action");
+            book.setEdition(4);
+            book.setPrice(new BigDecimal("81.9"));
+        });
+    })
+);
+sqlClient.saveEntities(
+    stores,
+    // This parameter can be omitted, for the `save` method,
+    // AssociatedSaveMode defaults to REPLACE
+    AssociatedSaveMode.REPLACE
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "O'REILLY"
+        books().addBy {
+            name = "Learning GraphQL"
+            edition = 3
+            price = BigDecimal("51.9")
+        }
+        books().addBy {
+            name = "Learning GraphQL"
+            edition = 4
+            price = BigDecimal("32.9")
+        }
+        books().addBy {
+            name = "Effective TypeScript"
+            edition = 3
+            price = BigDecimal("88.9")
+        }
+        books().addBy {
+            name = "Effective TypeScript"
+            edition = 4
+            price = BigDecimal("85.9")
+        }
+        books().addBy {
+            name = "Programming TypeScript"
+            edition = 3
+            price = BigDecimal("48.9")
+        }
+        books().addBy {
+            name = "Programming TypeScript"
+            edition = 4
+            price = BigDecimal("47.9")
+        }
+    },
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "GraphQL in Action"
+            edition = 3
+            price = BigDecimal("80.9")
+        }
+        books().addBy {
+            name = "GraphQL in Action"
+            edition = 4
+            price = BigDecimal("81.9")
+        }
+    }
+)
+sqlClient.saveEntities(
+    stores,
+    // This parameter can be omitted, for the `save` method,
+    // AssociatedSaveMode defaults to REPLACE
+    AssociatedSaveMode.REPLACE
+)
+```
+
+</TabItem>
+</Tabs>
+
+Comparison between old and new objects:
+<table>
+<thead>
+<tr>
+<th>Existing Database Data</th>
+<th>Data User Wants to Save</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+
+```sh
+--+-O'REILLY
+  |
+  # highlight-next-line
+  +---Learn GraphQL(edition = 1)
+  |
+  # highlight-next-line
+  +---Learn GraphQL(edition = 2)
+  |
+  +---Learn GraphQL(edition = 3)
+  |
+  |
+  |
+  # highlight-next-line
+  +---Effective TypeScript(edition = 1)
+  |
+  # highlight-next-line
+  +---Effective TypeScript(edition = 2)
+  |
+  +---Effective TypeScript(edition = 3)
+  |
+  |
+  |
+  # highlight-next-line
+  +---Programming TypeScript(edition = 1)
+  |
+  # highlight-next-line
+  +---Programming TypeScript(edition = 2)
+  |
+  \---Programming TypeScript(edition = 3)
+
+
+```
+
+</td>
+<td>
+
+```sh
+--+-O'REILLY
+  |
+  |
+  |
+  |
+  |
+  +---Learn GraphQL(edition = 3)
+  |
+  +---Learn GraphQL(edition = 4)
+  |
+  |
+  |
+  |
+  |
+  +---Effective TypeScript(edition = 3)
+  |
+  +---Effective TypeScript(edition = 4)
+  |
+  |
+  |
+  |
+  |
+  +---Programming TypeScript(edition = 3)
+  |
+  \---Programming TypeScript(edition = 4)
+```
+
+</td>
+</tr>
+<tr>
+<td>
+
+```sh
+--+-MANNING
+  |
+  # highlight-next-line
+  +---GraphQL in Action(edition = 1)
+  |
+  # highlight-next-line
+  +---GraphQL in Action(edition = 2)
+  |
+  \---GraphQL in Action(edition = 3)
+  
+
+```
+
+</td>
+<td>
+
+```sh
+--+-MANNING
+  |
+  |
+  |
+  |
+  |
+  +---GraphQL in Action(edition = 3)
+  |
+  \---GraphQL in Action(edition = 4)
+```
+
+</td>
+</tr>
+</tbody>
+</table>
+
+:::info
+Among them, the 8 associated objects that are no longer needed, i.e., the 8 objects that need to be dissociated, are highlighted.
+
+So, how will Jimmer dissociate these associated objects?
+
+In fact, different dissociation configurations will lead to different dissociation behaviors.
+:::
+
+### 1. NONE *(Default)*
+
+NONE's behavior is not fixed, but depends on the global configuration `jimmer.default-dissociate-action-check`:
+
+- If `jimmer.default-dissociate-action-check` is true *(default)* or if the current association is based on a real foreign key *(foreign key constraint exists in database, see [Real vs Fake Foreign Keys](../../../mapping/base/foreignkey))*, treated as [CHECK](#3-check).
+
+- If `jimmer.default-dissociate-action-check` is false and the current association is based on a fake foreign key (no corresponding foreign key constraint in database, see [Real vs Fake Foreign Keys](../../../mapping/base/foreignkey)), treated as [LAX](#2-lax).
+
+### 2. LAX
+
+- Dissociate mode `LAX` means the dissociation operation does nothing.
+
+- Associated save mode `AssociatedSaveMode.REPLACE` means unnecessary associations need to be discarded.
+
+Clearly, these two rules conflict. In this case, `AssociatedSaveMode.REPLACE` takes precedence, `LAX` is ignored, and it's ultimately treated as [CHECK](#3-check).
+
+Therefore, we cannot demonstrate `LAX` through this article. To understand how `LAX` works, please see [Delete Command](../../delete-command).
+
+### 3. CHECK
+
+`CHECK` mode does not allow dissociating associated objects. Jimmer will check if there are objects that need to be dissociated, and if they exist, throws an exception.
+
+The dissociate mode can be set either through the entity definition or through the save command.
+
+Here, we set the dissociate mode for `Book.store` through entity configuration:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+public interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.CHECK)
+    @Nullable
+    @ManyToOne
+    BookStore store();
+
+    ...omitted other code...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin  title="Book.kt"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.CHECK)
+    @ManyToOne
+    val store: BookStore?
+
+    ...omitted other code...        
+}
+```
+
+</TabItem>
+</Tabs>
+
+To demonstrate simpler SQL generation, let's assume `sqlClient`'s `targetTransferable` feature is enabled, which was previously discussed, see [here](./owner#2-配置是否允许不同父对象抢夺子对象)
+
+Running the save code from before will generate three SQL statements:
+
+1. <MergeRoots/>
+
+2. <MergeAssociations/>
+
+3. Check if there are objects that need to be dissociated *(if any exist, throws exception to prevent save command)*
+
+    ```sql
+    select
+        tb_1_.ID
+    from BOOK tb_1_
+    where
+        tb_1_.STORE_ID in (
+            ? /* 1 */, ? /* 2 */
+        )
+    and
+        (tb_1_.STORE_ID, tb_1_.ID) not in (
+            (? /* 1 */, ? /* 3 */), 
+            (? /* 1 */, ? /* 100 */), 
+            (? /* 1 */, ? /* 6 */), 
+            (? /* 1 */, ? /* 101 */), 
+            (? /* 1 */, ? /* 9 */), 
+            (? /* 1 */, ? /* 102 */), 
+            (? /* 2 */, ? /* 12 */), 
+            (? /* 2 */, ? /* 103 */)
+        )
+    limit ? /* 1 */
+    ```
+
+    After this SQL check, some `Book` objects that will be dissociated are found through the saved `BookStore` objects' `Book.authors` property. However, they do not agree to be dissociated and throw the following exception:
+
+    ```sh
+    Save error caused by the path: "<root>.books": 
+    #highlight-next-line
+    Cannot dissociate child objects 
+    because the 
+    dissociation action of the many-to-one property 
+    "com.yourcommany.yourproject.model.Book.store" 
+    is not configured as "set null" or "cascade". 
+    There are two ways to resolve this issue: 
+    Decorate the many-to-one property 
+    "com.yourcommany.yourproject.model.Bookstore" by 
+    @org.babyfish.jimmer.sql.OnDissociate whose argument 
+    is `DissociateAction.SET_NULL` or `DissociateAction.DELETE`, 
+    or use save command's runtime configuration to override it
+    ```
+
+### 4. SET_NULL
+
+`SET_NULL` mode achieves dissociation by setting the associated object's foreign key property to null.
+
+:::caution
+`SET_NULL` mode requires that the foreign key-based property *(here `Book.store`)* must be nullable, otherwise it will cause a compilation error
+:::
+
+The dissociate mode can be set either through the entity definition or through the save command.
+
+Here, we set the dissociate mode for `Book.store` through entity configuration:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+public interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.SET_NULL)
+    @Nullable
+    @ManyToOne
+    BookStore store();
+
+    ...omitted other code...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin  title="Book.kt"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.SET_NULL)
+    @ManyToOne
+    val store: BookStore?
+
+    ...omitted other code...        
+}
+```
+
+</TabItem>
+</Tabs>
+
+To demonstrate simpler SQL generation, let's assume `sqlClient`'s `targetTransferable` feature is enabled, which was previously discussed, see [here](./owner#2-配置是否允许不同父对象抢夺子对象)
+
+Running the save code from before will generate three SQL statements:
+
+1. <MergeRoots/>
+
+2. <MergeAssociations/>
+
+3. Set foreign keys to null for all objects being dissociated
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    update BOOK
+    set STORE_ID = null
+    where
+        STORE_ID = ?
+    and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [1, [3, 100, 6, 101, 9, 102]] */
+    /* batch-1: [2, [12, 103]] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="MySQL">
+
+    ```sql
+    update BOOK
+    set STORE_ID = null
+    where
+        STORE_ID in (
+            ? /* 1 */, ? /* 2 */
+        )
+    and
+        (STORE_ID, ID) not in (
+            (? /* 1 */, ? /* 3 */), 
+            (? /* 1 */, ? /* 100 */), 
+            (? /* 1 */, ? /* 6 */), 
+            (? /* 1 */, ? /* 101 */), 
+            (? /* 1 */, ? /* 9 */), 
+            (? /* 1 */, ? /* 102 */), 
+            (? /* 2 */, ? /* 12 */), 
+            (? /* 2 */, ? /* 103 */)
+        )
+    ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    update BOOK
+    set STORE_ID = null
+    where
+        STORE_ID = ?
+    and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [1, [3, 100, 6, 101, 9, 102]] */
+    /* batch-1: [2, [12, 103]] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    We can see significant differences between databases:
+
+    - `H2` and `Postgres` use batched simple SQL
+    - `MySQL` uses a single complex SQL
+
+    :::info
+    This is because `H2` and `Postgres` support the `=any(array)` syntax, while MySQL does not.
+    :::
+
+### 5. DELETE
+
+`DELETE` mode achieves dissociation by deleting the associated objects.
+
+:::info
+Here when saving `BookStore`, we perform dissociation on the `BookStore.books` association, where `DELETE` mode indicates we want to delete unnecessary `Book` objects.
+
+However, since the `Book` entity has a deeper association `Book.authors`, we need to consider how to dissociate `Author` objects before deleting `Book` objects.
+
+In fact, if objects that need to be deleted due to dissociation have deeper associations, it evolves into a recursive deletion problem.
+This behavior is detailed in [Delete Command](../../delete-command), which we won't discuss here.
+
+Therefore, to simplify the discussion, we'll temporarily ignore the `Author` entity and assume the current system only has `BookStore` and `Book` entity types.
+:::
+
+The dissociate mode can be set either through the entity definition or through the save command.
+
+Here, we set the dissociate mode for `Book.store` through entity configuration:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Book.java"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+public interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.DELETE)
+    @Nullable
+    @ManyToOne
+    BookStore store();
+
+    ...omitted other code...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin  title="Book.kt"
+@Entity
+@KeyUniqueConstraint(noMoreUniqueConstraints = true)
+interface Book {
+
+    //highlight-next-line
+    @OnDissociate(DissociateAction.DELETE)
+    @ManyToOne
+    val store: BookStore?
+
+    ...omitted other code...        
+}
+```
+
+</TabItem>
+</Tabs>
+
+To demonstrate simpler SQL generation, let's assume `sqlClient`'s `targetTransferable` feature is enabled, which was previously discussed, see [here](./owner#2-配置是否允许不同父对象抢夺子对象)
+
+Running the save code from before will generate three SQL statements:
+
+1. <MergeRoots/>
+
+2. <MergeAssociations/>
+
+3. Delete all objects that need to be dissociated
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    delete from BOOK
+    where
+        STORE_ID = ?
+    and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [1, [3, 100, 6, 101, 9, 102]] */
+    /* batch-1: [2, [12, 103]] */
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="MySQL">
+
+    ```sql
+    delete from BOOK
+    where
+        STORE_ID in (
+            ? /* 1 */, ? /* 2 */
+        )
+    and
+        (STORE_ID, ID) not in (
+            (? /* 1 */, ? /* 3 */), 
+            (? /* 1 */, ? /* 100 */), 
+            (? /* 1 */, ? /* 6 */), 
+            (? /* 1 */, ? /* 101 */), 
+            (? /* 1 */, ? /* 9 */), 
+            (? /* 1 */, ? /* 102 */), 
+            (? /* 2 */, ? /* 12 */), 
+            (? /* 2 */, ? /* 103 */)
+        )
+    ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    delete from BOOK
+    where
+        STORE_ID = ?
+    and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [1, [3, 100, 6, 101, 9, 102]] */
+    /* batch-1: [2, [12, 103]] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    We can see significant differences between databases:
+
+    - `H2` and `Postgres` use batched simple SQL
+    - `MySQL` uses a single complex SQL
+
+    :::info
+    This is because `H2` and `Postgres` support the `=any(array)` syntax, while MySQL does not.
+    :::

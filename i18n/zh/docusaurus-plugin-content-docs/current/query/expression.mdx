@@ -57,7 +57,7 @@ val tuples = sqlClient
 </Tabs>
 
 生成的SQL如下
-```sql
+```csharp
 select ?, ?, ?, ?, null from BOOK as tb_1_
 ```
 
@@ -171,7 +171,7 @@ val constants = sqlClient
 
 生成的SQL如下
 
-```sql
+```csharp
 select 
     /* highlight-next-line */
     1 
@@ -569,7 +569,7 @@ A: 因为静态谓词对null也有特殊处理。
     </Tabs>
 
     最终生成的SQL条件
-    ```sql
+    ```csharp
     where tb_1_.NAME like ?
     ```
     相应的JDBC参数: `%Ab%`
@@ -597,13 +597,13 @@ A: 因为静态谓词对null也有特殊处理。
 
     -   如果数据库方言支持`ilike`
         
-        ```sql
+        ```csharp
         where tb_1_.NAME ilike ? 
         ```
 
     -   否则
         
-        ```sql
+        ```csharp
         where lower(tb_1_.NAME) like ? 
         ```
     
@@ -765,7 +765,7 @@ where(
 </Tabs>
 
 生成的SQL条件
-```sql
+```csharp
 where tb_1_.NAME in (?, ?)
 ```
 
@@ -811,7 +811,7 @@ where(
 </Tabs>
 
 生成的SQL条件
-```sql
+```csharp
 where (tb_1_.NAME, tb_1_.EDITION) in (
     (? /* SQL in Action */, ? /* 1 */), 
     (? /* SQL in Action */, ? /* 2 */), 
@@ -872,7 +872,7 @@ Jimmer为`in list`表达式提供了3个优化：
     </Tabs>
 
     生成的SQL条件
-    ```sql
+    ```csharp
     where 
         (tb_1_.NAME, tb_1_.EDITION) = 
         (? /* SQL in Action */, ? /* 1 */)
@@ -959,7 +959,7 @@ Jimmer为`in list`表达式提供了3个优化：
 
     此例子中，列表长度为3，并非2的幂次方。离3最近的2的幂次方是4，所以，Jimmer会重复列表中最后一项，最终让列表长度为4。生成的如下SQL条件
 
-    ```sql
+    ```csharp
     where (tb_1_.NAME, tb_1_.EDITION) in (
 
         // 原始列表
@@ -1060,7 +1060,7 @@ Jimmer为`in list`表达式提供了3个优化：
 
     生成的SQL条件
     
-    ```sql
+    ```csharp
     where tb_1_.NAME = any(
         ? /* [SQL in Action, Java in Action] */
     )
@@ -1242,7 +1242,7 @@ where(
 </Tabs>
 
 实际生成的SQL却是
-```sql
+```csharp
 where tb_1_1.PRICE < ?
 ```
 jimmer-sql尽量避免在SQL中直接使用not，但无论如何，最终SQL逻辑和你想要的逻辑等价。
@@ -1397,7 +1397,7 @@ val tuples = sqlClient
 
 最终生成的SQL如下
 
-```sql
+```csharp
 select 
     count(tb_1_.ID), 
     count(distinct tb_1_.ID), 
@@ -1464,7 +1464,7 @@ Kotlin-API 引入了 kotlin 对 SQL 的 null-safety，`table.name` 是一个非 
 <Tabs groupId="language">
 <TabItem value="java" label="SQL for java">
 
-```sql
+```csharp
 select 
     /* highlight-next-line */
     coalesce(
@@ -1478,7 +1478,7 @@ from BOOK_STORE as tb_1_
 </TabItem>
 <TabItem value="kotlin" label="SQL for kotlin">
 
-```sql
+```csharp
 select 
     /* highlight-next-line */
     coalesce(
@@ -1527,7 +1527,7 @@ var results = sqlClient
 
 最终生成的SQL如下
 
-```sql
+```csharp
 select 
     /* highlight-next-line */
     coalesce(tb_1_.WEBSITE, tb_1_.NAME) 
@@ -1585,7 +1585,7 @@ var fullNames = sqlClient
 
 最终生成的SQL
 
-```sql
+```csharp
 select 
     /* highlight-next-line */
     concat(
@@ -1645,7 +1645,7 @@ val results = sqlClient
 
 最终生成的SQL如下
 
-```sql
+```csharp
 select 
     /* highlight-next-line */
     case tb_1_.NAME 
@@ -1706,7 +1706,7 @@ val results = sqlClient
 </Tabs>
 
 最终生成的SQL如下
-```sql
+```csharp
 select 
     /* highlight-next-line */
     case 

@@ -48,9 +48,9 @@ In the above code, Java's `table.store()` and Kotlin's `table.store` represent t
 
 That is, the following SQL logic is represented:
 
-````sql
+```csharp
 from BOOK b inner join BOOK_STORE s on b.STORE_ID = s.ID
-````
+```
 
 In fact, if the entity model is richer, longer paths can be written, such as `table.store().city().province()`.
 
@@ -65,7 +65,7 @@ If both `storeName` and `storeWebsite` are null, it will cause the dynamic table
 
 At this time, the following SQL is generated:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -81,7 +81,7 @@ If `storeName` is specified as non-null while `storeWebsite` remains null, the d
 
 At this time, the following SQL is generated:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -104,7 +104,7 @@ Jimmer can automatically merge conflicting table joins. The two joins will be me
 Ultimately, only one SQL join will be rendered 
 :::
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

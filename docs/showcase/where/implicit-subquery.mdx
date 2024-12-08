@@ -73,7 +73,7 @@ If both `authorName` and `authorGender` are null, it will cause the subqueries c
 
 At this time, the following SQL is generated:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -89,7 +89,7 @@ If `authorName` is specified as non-null while `authorGender` remains null, the 
 
 At this time, the following SQL is generated:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -124,7 +124,7 @@ Jimmer can automatically merge conflicting implicit subqueries. The two implicit
 Ultimately, only one SQL subquery will be rendered.
 :::
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

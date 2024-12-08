@@ -125,7 +125,7 @@ println(author)
 
 执行的SQL为
 
-```sql
+```csharp
 select 
     tb_1_.ID, 
     /* highlight-start */
@@ -343,7 +343,7 @@ val books = sqlClient
 执行，生成如下两条SQL语句
 
 1.
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -355,7 +355,7 @@ val books = sqlClient
         tb_1_.EDITION desc
     ```
 
-2.  ```sql
+2.  ```csharp
     select
         tb_2_.BOOK_ID,
         tb_1_.ID,
@@ -492,7 +492,7 @@ println(author)
 
 生成SQL如下:
 
-```sql
+```csharp
 select 
     tb_1_.ID, 
     /* 这里，@Formula.sql中的`alias`被替换成了`tb_1_` */

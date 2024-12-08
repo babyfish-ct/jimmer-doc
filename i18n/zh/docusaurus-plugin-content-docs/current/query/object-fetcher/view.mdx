@@ -158,7 +158,7 @@ println(bookWithIdViews)
 
 为了示例方便，这里使用的是H2数据库，首先使用以下sql建立表结构和初始化数据：
 
-```sql
+```csharp
 drop table course if exists;
 drop table learning_link if exists;
 drop table student if exists;
@@ -432,7 +432,7 @@ val books = sqlClient
 
 1.  查询`Student`
 
-    ```sql
+    ```csharp
     select 
         tb_1_.ID, tb_1_.NAME 
     from STUDENT tb_1_
@@ -441,7 +441,7 @@ val books = sqlClient
 
 2.  查询`LearningLink`
 
-    ```sql
+    ```csharp
     select 
         tb_1_.STUDENT_ID, 
         tb_1_.ID, tb_1_.COURSE_ID
@@ -451,7 +451,7 @@ val books = sqlClient
 
 3.  查询`Course`
 
-    ```sql
+    ```csharp
     select 
         tb_1_.ID, tb_1_.NAME 
     from COURSE tb_1_ 

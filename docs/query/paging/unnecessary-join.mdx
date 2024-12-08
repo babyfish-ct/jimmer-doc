@@ -117,7 +117,7 @@ Although `table.store()` is only used by `orderBy` clause without being used by 
 
 So the optimization rules do not apply. The count-query still needs to retain `table.store()` and ultimately generates JOIN clause in SQL:
 
-```sql 
+```csharp 
 select
     count(tb_1_.ID)
 from BOOK as tb_1_
@@ -185,7 +185,7 @@ val rowCount = query.fetchUnlimitedCount()
 
 Now optimization can take effect. The final count-query generates SQL:
 
-```sql
+```csharp
 select
     count(tb_1_.ID)  
 from BOOK as tb_1_

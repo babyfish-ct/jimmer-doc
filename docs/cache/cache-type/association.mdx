@@ -333,7 +333,7 @@ println(stores)
 
     First, query the aggregate root object, executing the following SQL:
     
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -366,7 +366,7 @@ println(stores)
     ```
 
     So the following SQL is executed to load data from the database:
-    ```sql
+    ```csharp
     select
         tb_1_.STORE_ID,
         tb_1_.ID,
@@ -424,7 +424,7 @@ In cache mode, this example has three execution steps:
 
     If no related data exists in the cache, the following SQL will be executed:
 
-    ```sql
+    ```csharp
     select
         ...omit...
     from BOOK tb_1_ 
@@ -440,7 +440,7 @@ In cache mode, this example has three execution steps:
 3.  Based on the `Book` object cache, map the associated object id to the associated object
 
     If no related data exists in the cache, the following SQL will be executed:
-    ```sql 
+    ```csharp 
     select
         ...omit...
     from BOOK tb_1_
@@ -454,7 +454,7 @@ In cache mode, this example has three execution steps:
 
 If association cache is not enabled, this query only needs two steps. The first step is exactly the same. The second step executes the following SQL query:
 
-```sql
+```csharp
 select
     ...omit...
 from BOOK tb_1_ 
@@ -604,7 +604,7 @@ println(books)
 
     First, query the aggregate root object, executing the following SQL:
     
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -642,7 +642,7 @@ println(books)
 
     So the following SQL is executed to load data from the database:
 
-    ```sql
+    ```csharp
     select
         tb_1_.BOOK_ID,
         tb_1_.AUTHOR_ID
@@ -710,7 +710,7 @@ In cache mode, this example has three execution steps:
 
     If no related data exists in the cache, the following SQL will be executed:
 
-    ```sql
+    ```csharp
     select
         tb_1_.BOOK_ID,
         tb_1_.AUTHOR_ID 
@@ -730,7 +730,7 @@ In cache mode, this example has three execution steps:
 
     If no related data exists in the cache, the following SQL will be executed:
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.FIRST_NAME,
@@ -747,7 +747,7 @@ In cache mode, this example has three execution steps:
 
 If cache is not enabled, this query only needs two steps. The first step is exactly the same. The second step executes the following SQL query:
 
-```sql
+```csharp
 select
     tb_2_.BOOK_ID,
     tb_1_.ID,
@@ -839,7 +839,7 @@ Modify the foreign key `STORE_ID` of the BOOK table, Jimmer automatically delete
 
 -   If BinLog trigger is enabled, modifying the database by any means can lead to Jimmer's cache consistency intervention. For example, directly execute the following SQL in the SQL IDE:
 
-    ```sql
+    ```csharp
     update BOOK
     /* Old value: 1, New value: 2 */
     set STORE_ID = 2
@@ -900,7 +900,7 @@ Deleting data from the join table can achieve the same effect. Here insertion is
 
 -   If BinLog trigger is enabled, modifying the database by any means can lead to Jimmer's cache consistency intervention. For example, directly execute the following SQL in the SQL IDE:
 
-    ```sql
+    ```csharp
     insert into
     BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
     values(10, 3);

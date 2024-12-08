@@ -105,7 +105,7 @@ val books = bookRepository.findBooks()
 
 No where condition will be generated, the SQL is as follows
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -147,7 +147,7 @@ val books = bookRepository.findBooks(
 
 All where conditions will be generated, the SQL is as follows
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

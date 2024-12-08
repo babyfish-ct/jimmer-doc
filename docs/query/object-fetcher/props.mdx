@@ -57,7 +57,7 @@ For Java, the Annotation processor will automatically generate a Fetcher class f
 
 The generated SQL is:
 
-```sql
+```csharp
 select 
     tb_1_.ID, 
     /* highlight-next-line */
@@ -146,7 +146,7 @@ Object fetchers can be freely shared using static variables since they are immut
 
 The generated SQL is: 
 
-```sql
+```csharp
 select
     tb_1_.ID,
     /* highlight-next-line */  
@@ -216,7 +216,7 @@ val books = sqlClient
 
 The generated SQL is:
 
-```sql  
+```csharp  
 select
     tb_1_.ID,
     // highlight-start 
@@ -310,7 +310,7 @@ So in combination, the finally fetched properties are `id + name + price`
 
 The generated SQL is:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME, 

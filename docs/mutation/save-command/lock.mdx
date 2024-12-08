@@ -447,7 +447,7 @@ This generates 6 SQL statements:
 
 1.  Check if the book store exists
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME
@@ -462,7 +462,7 @@ This generates 6 SQL statements:
 
 3.  Check if the 1st book exists 
     
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -480,7 +480,7 @@ This generates 6 SQL statements:
     
 5.  Check if the 2nd book exists
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -624,7 +624,7 @@ Once pessimistic lock is enabled, the generated query statements will change sig
 
 1.  Check if the book store exists
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME 
@@ -641,7 +641,7 @@ Once pessimistic lock is enabled, the generated query statements will change sig
 
 3.  Check if the 1st book exists
     
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -660,7 +660,7 @@ Once pessimistic lock is enabled, the generated query statements will change sig
 
 5.  Check if the 2nd book exists
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID, 
         tb_1_.NAME,

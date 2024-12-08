@@ -48,7 +48,7 @@ println("Affected row count: $affectedRowCount")
 
 最终生成的SQL
 
-```sql
+```csharp
 update AUTHOR tb_1_ 
 set FIRST_NAME = concat(tb_1_.FIRST_NAME, ?) 
 where tb_1_.FIRST_NAME = ?
@@ -213,7 +213,7 @@ println("Affected row count: $affectedRowCount")
 
 最终生成针对MySQL的SQL语句，如下：
 
-```sql
+```csharp
 update 
     AUTHOR tb_1_ 
     inner join BOOK_AUTHOR_MAPPING as tb_2_ 
@@ -322,7 +322,7 @@ println("Affected row count: $affectedRowCount")
 
 最终生成针对Postgres的SQL语句，如下：
 
-```sql
+```csharp
 update 
     AUTHOR tb_1_ 
 set 

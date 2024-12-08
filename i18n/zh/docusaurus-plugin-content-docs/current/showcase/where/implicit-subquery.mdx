@@ -73,7 +73,7 @@ val books = sqlClient
 
 这时，生成如下SQL:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -89,7 +89,7 @@ from BOOK tb_1_
 
 这时，生成如下SQL:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -123,7 +123,7 @@ where
 Jimmer能自动合并冲突的隐式子查询，两个隐式子查询会被合并为一个隐式子查询，最终，只有一个SQL子查询被渲染
 :::
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

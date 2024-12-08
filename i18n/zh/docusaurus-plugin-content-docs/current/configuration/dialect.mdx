@@ -107,13 +107,13 @@ import TabItem from '@theme/TabItem';
     
 -   至于其他数据库，用户可以自行扩展方言。但需要数据库支持多列`in`表达式，比如
 
-    ```sql
+    ```csharp
     where (a, b) in ((3, 4), (8, 13))
     ```
 
     或
 
-    ```sql
+    ```csharp
     where (a, b) in (select x, y from ...)
     ```
 

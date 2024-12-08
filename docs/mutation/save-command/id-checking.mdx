@@ -70,7 +70,7 @@ This example mixes long associations and short associations.
 
 The generated SQL is:
 
-```sql
+```csharp
 
 // Check if associated object exists
 select
@@ -196,7 +196,7 @@ Here, let's not discuss how to configure for now, but look at whether enabling t
 
         Jimmer will execute the following query to check all short associated ids:
 
-        ```sql
+        ```csharp
         select
             tb_1_.ID 
         from BOOK tb_1_
@@ -255,7 +255,7 @@ Here, let's not discuss how to configure for now, but look at whether enabling t
 
         Regardless of whether the foreign key is fake or not, Jimmer will execute the following query to check the short associated id:
 
-        ```sql
+        ```csharp
         select
             tb_1_.ID 
         from BOOK_STORE tb_1_

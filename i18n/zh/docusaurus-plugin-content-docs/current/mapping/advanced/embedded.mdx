@@ -92,7 +92,7 @@ interface Author {
 
 `Author`对应的表结构如下
 
-```sql
+```csharp
 create table author(
     id bigint unsigned not null auto_increment primary key,
     /* highlight-next-line */
@@ -239,7 +239,7 @@ create table author(
 
 `Transition`对应的表结构如下
 
-```sql
+```csharp
 create table transition(
     id bigint unsigned not null auto_increment primary key,
     millis int not null,
@@ -334,7 +334,7 @@ interface Book {
 
 由于`Book.id`未使用`@PropOverride`对`UniqueId`类型中列名配置进行覆盖，所以采用`UniqueId`中配置的列名，对应的DDL为
 
-```sql
+```csharp
 create table book(
     unique_id_day_no int not null,
     unique_id_seq_no int not null,
@@ -403,7 +403,7 @@ interface Chapter {
 
 如果外键是真的，对应的约束为
 
-```sql
+```csharp
 alter table chapter
     add constraint fk_chapter__book
         foreign key(
@@ -482,7 +482,7 @@ interface Book {
 
 如果外键是真的，中间表的DDL如下
 
-```sql
+```csharp
 create table book_author_mapping(
     book_id_day_no int not null,
     book_id_seq_id int not null,

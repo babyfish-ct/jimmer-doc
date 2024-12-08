@@ -149,7 +149,7 @@ Each parameter of this method can be null, look at the 6 possible invocations:
     
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_
     ```
@@ -181,7 +181,7 @@ Each parameter of this method can be null, look at the 6 possible invocations:
     
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_
     where lower(tb_1_.NAME) like ? /* %g% */ 
@@ -216,7 +216,7 @@ Each parameter of this method can be null, look at the 6 possible invocations:
     
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_  
     where tb_1_.PRICE >= ? /* 40 */
@@ -251,7 +251,7 @@ Each parameter of this method can be null, look at the 6 possible invocations:
     
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_  
     where tb_1_.PRICE <= ? /* 60 */
@@ -288,7 +288,7 @@ Each parameter of this method can be null, look at the 6 possible invocations:
     
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_  
     where 
@@ -326,7 +326,7 @@ Each parameter of this method can be null, look at the 6 possible invocations:
     
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_  
     where
@@ -420,7 +420,7 @@ Let's see how to use it:
     
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_ 
     where tb_1_.NAME like ? /* G% */
@@ -449,7 +449,7 @@ Let's see how to use it:
     
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_
     /* highlight-next-line */  
@@ -599,7 +599,7 @@ val sort = SortUtils.toSort(
     
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_
     /* highlight-next-line */
@@ -637,7 +637,7 @@ val sort = SortUtils.toSort(
 
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_
     /* highlight-next-line */
@@ -847,7 +847,7 @@ The returned Page object is like:
 
 The generated SQL is (formatted for readability):
 
-```sql 
+```csharp 
 /* Step 1: Query total rows before paging */
 select count(tb_1_.ID) from BOOK as tb_1_
 
@@ -1155,7 +1155,7 @@ The returned Page object is:
 
 The generated SQL is (formatted for readability):  
 
-```sql
+```csharp
 /* Step 1: Query total rows before paging */ 
 select count(tb_1_.ID) from BOOK as tb_1_
 

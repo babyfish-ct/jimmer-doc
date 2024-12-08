@@ -109,7 +109,7 @@ The Java code demo here uses `AssociationTable` type with complex generic argume
 
 The generated SQL is:
 
-```sql
+```csharp
 select 
     tb_1_.BOOK_ID, 
     tb_1_.AUTHOR_ID  
@@ -247,7 +247,7 @@ associations.forEach(::println)
 
 The generated SQL is:
 
-```sql
+```csharp
 select
 
     /* source() */
@@ -419,7 +419,7 @@ Where:
 
 The final generated SQL is:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME, 
@@ -492,7 +492,7 @@ val books = sqlClient
 
 The final generated SQL is:
 
-```sql
+```csharp
 select
 
     tb_1_.ID,

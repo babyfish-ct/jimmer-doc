@@ -70,7 +70,7 @@ The unique constraint defined by `@Key` is only for non-hidden data, not all dat
 
     In this case, combine the columns corresponding to `@Key` *(for this example, `NAME`)* and the logical deletion flag column *(for this example, `DELETED_TIME`)* to define the uniqueness constraint, e.g.:
 
-    ```sql
+    ```csharp
     alter table BOOK
         add constraint UQ_BOOK
             unique(NAME, DELETED_TIME);
@@ -127,7 +127,7 @@ The unique constraint defined by `@Key` is only for non-hidden data, not all dat
     Here, PostgresSQL is used as an example:
     :::
 
-    ```sql
+    ```csharp
     create unique index BOOK_KEY_INDEX 
         on BOOK(NAME)
         // highlight-next-line

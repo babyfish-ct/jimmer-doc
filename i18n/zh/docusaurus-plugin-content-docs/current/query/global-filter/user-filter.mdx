@@ -227,7 +227,7 @@ val books = SqlClient
 
 生成的SQL如下
 
-```sql
+```csharp
 select 
     tb_1_.ID, 
     tb_1_.TENANT, 
@@ -325,14 +325,14 @@ val authors = SqlClient
 这会导致如下两句SQL被生成
 
 1.  查询聚合根
-    ```sql
+    ```csharp
     select 
         tb_1_.ID, tb_1_.FIRST_NAME, tb_1_.LAST_NAME, tb_1_.GENDER 
     from AUTHOR as tb_1_
     ```
 
 2.  查询关联对象
-    ```sql
+    ```csharp
     select 
         tb_2_.AUTHOR_ID, 
         tb_1_.ID, 

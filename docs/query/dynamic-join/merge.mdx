@@ -97,7 +97,7 @@ There are two ways to solve this problem. This article demonstrates the first so
 
         In this case, the code at ❶ and ❷ will not execute. The final generated SQL does not contain any joins.
 
-        ```sql
+        ```csharp
         select 
             tb_1_.ID, 
             tb_1_.NAME,  
@@ -112,7 +112,7 @@ There are two ways to solve this problem. This article demonstrates the first so
 
         In this case, the join at ❶ takes effect but the code at ❷ does not execute. The final generated SQL is:
 
-        ```sql
+        ```csharp
         select
             tb_1_.ID,
             tb_1_.NAME, 
@@ -140,7 +140,7 @@ There are two ways to solve this problem. This article demonstrates the first so
         So in the final generated SQL, there will be no duplicate join operations.
         :::
 
-        ```sql
+        ```csharp
         select
             tb_1_.ID,
             tb_1_.NAME,

@@ -471,7 +471,7 @@ Two SQL statements will be generated:
 
     The following SQL is generated:
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(?, ?, ?, ?)
@@ -605,7 +605,7 @@ Two SQL statements will be generated:
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     merge into BOOK tb_1_ 
     using(values(?, ?, ?, ?)) tb_2_(
         NAME, EDITION, PRICE, STORE_ID
@@ -630,7 +630,7 @@ Two SQL statements will be generated:
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```sql
+    ```csharp
     insert 
     /* highlight-next-line */
     ignore
@@ -648,7 +648,7 @@ Two SQL statements will be generated:
     </TabItem>
     <TabItem value="posgres" label="Postgres">
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(
@@ -772,7 +772,7 @@ Two SQL statements will be generated:
 
     The following SQL is generated:
 
-    ```sql
+    ```csharp
     update BOOK
     set
         PRICE = ?,
@@ -911,7 +911,7 @@ Two SQL statements will be generated:
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     /* highlight-next-line */
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
@@ -927,7 +927,7 @@ Two SQL statements will be generated:
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(
@@ -947,7 +947,7 @@ Two SQL statements will be generated:
     </TabItem>
     <TabItem value="postgres" label="Postgres">
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(
@@ -1111,7 +1111,7 @@ Finally, two SQL statements will be generated:
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     delete from BOOK_AUTHOR_MAPPING
     where
         BOOK_ID = ?
@@ -1124,7 +1124,7 @@ Finally, two SQL statements will be generated:
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```sql
+    ```csharp
     delete from BOOK_AUTHOR_MAPPING
     where
         BOOK_ID in (
@@ -1142,7 +1142,7 @@ Finally, two SQL statements will be generated:
     </TabItem>
     <TabItem value="postgres" label="Postgres">
 
-    ```sql
+    ```csharp
     delete from BOOK_AUTHOR_MAPPING
     where
         BOOK_ID = ?
@@ -1179,7 +1179,7 @@ Finally, two SQL statements will be generated:
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     merge into BOOK_AUTHOR_MAPPING tb_1_ 
     using(values(?, ?)) tb_2_(
         BOOK_ID, AUTHOR_ID
@@ -1201,7 +1201,7 @@ Finally, two SQL statements will be generated:
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```sql
+    ```csharp
     insert 
     /* highlight-next-line */
     ignore
@@ -1216,7 +1216,7 @@ Finally, two SQL statements will be generated:
     </TabItem>
     <TabItem value="posgres" label="Postgres">
 
-    ```sql
+    ```csharp
     insert 
     into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
     values(?, ?)
@@ -1351,7 +1351,7 @@ Three SQL statements will be generated:
     - The id of `MANNING` is `2`
     - The id of `AMAZON` is `100`
 
-    ```sql
+    ```csharp
     delete from BOOK 
     where STORE_ID in (
         ? /* 2 */, ? /* 100 */
@@ -1371,7 +1371,7 @@ Three SQL statements will be generated:
     - The id of `MANNING` is `2`
     - The id of `AMAZON` is `100`
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(?, ?, ?, ?)

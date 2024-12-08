@@ -133,7 +133,7 @@ class BookRepository(
 
     不会生成任何where条件，SQL如下
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -175,7 +175,7 @@ class BookRepository(
 
     会生成所有where条件，SQL如下
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -276,7 +276,7 @@ class BookRepository(
 
 :::tip
 Java代码中的路径`table.store()`或Kotlin代码中的路径`table.store`叫做动态表连接，表示如下SQL逻辑
-```sql
+```csharp
 from BOOK b
 /* highlight-next-line */
 inner join BOOK_STORE s on b.STORE_ID = s.ID
@@ -337,7 +337,7 @@ val books = bookRepository.findBooks()
 
 生成的SQL如下
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -388,7 +388,7 @@ val books = bookRepository.findBooks(
 
 生成的SQL如下
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -612,7 +612,7 @@ val books = bookRepository.findBooks()
 
 最终生成的SQL不包含任何子查询
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -665,7 +665,7 @@ val books = bookRepository.findBooks(
 
 最终生成的SQL为
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

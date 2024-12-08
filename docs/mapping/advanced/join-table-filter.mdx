@@ -121,7 +121,7 @@ interface Shop {
 
 In this example, `Shop.customers`, `Shop.vipCustomers`, and `Shop.ordinaryCustomers` share the same join table
 
-```sql
+```csharp
 create table SHOP_CUSTOMER_MAPPING(
     SHOP_ID bigint not null,
     CUSTOMER_ID bigint not null,
@@ -262,7 +262,7 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
 
     The generated SQL is:  
 
-    ```sql
+    ```csharp
     select distinct tb_1_.ID, tb_1_.NAME 
     from SHOP tb_1_
     inner join SHOP_CUSTOMER_MAPPING tb_2_
@@ -319,7 +319,7 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
 
     The generated SQL is:
 
-    ```sql
+    ```csharp
     select distinct tb_1_.ID, tb_1_.NAME
     from SHOP tb_1_
     inner join SHOP_CUSTOMER_MAPPING tb_2_
@@ -380,7 +380,7 @@ Finally, let's look at the difference in JOIN behavior between these three assoc
 
     The generated SQL is:  
 
-    ```sql
+    ```csharp
     select distinct tb_1_.ID, tb_1_.NAME
     from SHOP tb_1_
     inner join SHOP_CUSTOMER_MAPPING tb_2_
@@ -618,7 +618,7 @@ the other foreign key `SOURCE_ID` does not have a fixed target - it could refere
 
 Therefore we cannot add a foreign key constraint on `SOURCE_ID`.  
 
-```sql  
+```csharp  
 create table SOURCE_TAG_MAPPING(
     SOURCE_ID bigint not null,
     TAG_ID bigint not null,
@@ -788,7 +788,7 @@ Clearly:
 
 ### Conditional Indexes  
 
-```sql
+```csharp
 create table BOOK_AUTHOR_MAPPING(
     BOOK_ID bigint not null,
     AUTHOR_ID bigint not null,

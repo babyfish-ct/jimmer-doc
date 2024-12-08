@@ -95,7 +95,7 @@ fun findBooks(authorName: String?): List<BookStore> =
 
 调用上面的方法，并指定参数为非null，比如`findBooks("alex")`，生成的SQL如下
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.CREATED_TIME,
@@ -207,7 +207,7 @@ fun findBooks(authorName: String?): List<BookStore> =
 
 然而，当我们把两个参数都指定成非null时，比如*findBooks("alex", Gender.MALE)`，*最终SQL中只会出现一个子查询，如下
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.CREATED_TIME,

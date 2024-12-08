@@ -217,7 +217,7 @@ The above example will generate three SQL statements:
 
 1.  Query whether the root object exists based on `@Key`:
 
-    ```sql
+    ```csharp
     Purpose: COMMAND(NULL_NOT_DISTINCT_REQUIRED)
     select
         tb_1_.NODE_ID,
@@ -245,7 +245,7 @@ The above example will generate three SQL statements:
 
 2.  Assuming the above query determines that the object being saved does not exist in the database, simply insert the root object:
 
-    ```sql
+    ```csharp
     insert into TREE_NODE(NAME, PARENT_ID) 
     values(?, ?)
     /* batch-0: [Root, DbNull{type=long}] */
@@ -253,7 +253,7 @@ The above example will generate three SQL statements:
 
 3.  Save child objects *(assuming the id is known to be 100 after saving the root object)*:
 
-    ```sql
+    ```csharp
     merge into TREE_NODE(
         NAME, PARENT_ID
     ) key(
@@ -308,7 +308,7 @@ Executing this code will generate the following SQL and result in an exception:
 
 1.  Saving the root object `BookStore`:
 
-    ```sql
+    ```csharp
     merge into BOOK_STORE(
         NAME
     ) key(NAME) values(?)
@@ -317,7 +317,7 @@ Executing this code will generate the following SQL and result in an exception:
 
 2.  Saving the child objects `Book`:
 
-    ```sql
+    ```csharp
     // highlight-next-line
     Purpose: COMMAND(TARGET_NOT_TRANSFERABLE)
     select
@@ -535,7 +535,7 @@ Re-executing the code will generate the following SQL:
 
 1.  Saving the root object:
 
-    ```sql
+    ```csharp
     merge into BOOK_STORE(
         NAME
     ) key(NAME) values(?)
@@ -544,7 +544,7 @@ Re-executing the code will generate the following SQL:
 
 2.  Establishing associations between root object and child objects:
 
-    ```sql
+    ```csharp
     merge into BOOK(
         ID, STORE_ID
     ) key(ID) values(?, ?)
@@ -554,7 +554,7 @@ Re-executing the code will generate the following SQL:
 
 3.  Breaking associations between root object and no longer needed child objects:
 
-    ```sql
+    ```csharp
     update BOOK
     set
         STORE_ID = null

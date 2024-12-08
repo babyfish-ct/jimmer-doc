@@ -107,13 +107,13 @@ Different databases have vastly different SQL support, so Jimmer uses dialect co
 
 -   For other databases, users can extend dialects by themselves. But the database needs to support multi-column `in` expressions, such as
 
-    ```sql
+    ```csharp
     where (a, b) in ((3, 4), (8, 13)) 
     ```
 
     Or
 
-    ```sql
+    ```csharp
     where (a, b) in (select x, y from ...)
     ```
 

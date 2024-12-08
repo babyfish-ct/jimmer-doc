@@ -149,7 +149,7 @@ interface BookRepository : KRepository<Book, Long> {
     
     生成的SQL如下(为了方便阅读，做了格式化)
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
     from BOOK as tb_1_
     ```
@@ -180,7 +180,7 @@ interface BookRepository : KRepository<Book, Long> {
     
     生成的SQL如下(为了方便阅读，做了格式化)
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
     from BOOK as tb_1_
     where lower(tb_1_.NAME) like ? /* %g% */
@@ -214,7 +214,7 @@ interface BookRepository : KRepository<Book, Long> {
     
     生成的SQL如下(为了方便阅读，做了格式化)
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
     from BOOK as tb_1_
     where tb_1_.PRICE >= ? /* 40 */
@@ -248,7 +248,7 @@ interface BookRepository : KRepository<Book, Long> {
     
     生成的SQL如下(为了方便阅读，做了格式化)
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
     from BOOK as tb_1_
     where tb_1_.PRICE <= ? /* 60 */
@@ -285,7 +285,7 @@ interface BookRepository : KRepository<Book, Long> {
     
     生成的SQL如下(为了方便阅读，做了格式化)
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
     from BOOK as tb_1_
     where (
@@ -324,7 +324,7 @@ interface BookRepository : KRepository<Book, Long> {
     
     生成的SQL如下(为了方便阅读，做了格式化)
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
     from BOOK as tb_1_
     where 
@@ -419,7 +419,7 @@ interface BookRepository : KRepository<Book, Long> {
     
     生成的SQL如下(为了方便阅读，做了格式化)
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
     from BOOK as tb_1_
     where tb_1_.NAME like ? /* G% */
@@ -448,7 +448,7 @@ interface BookRepository : KRepository<Book, Long> {
     
     生成的SQL如下(为了方便阅读，做了格式化)
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
     from BOOK as tb_1_ 
     /* highlight-next-line */
@@ -593,7 +593,7 @@ val sort = SortUtils.toSort(
     
     生成的SQL如下(为了方便阅读，做了格式化)
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
     from BOOK as tb_1_
     /* highlight-next-line */ 
@@ -631,7 +631,7 @@ val sort = SortUtils.toSort(
     
     生成的SQL如下(为了方便阅读，做了格式化)
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
     from BOOK as tb_1_ 
     /* highlight-next-line */
@@ -837,7 +837,7 @@ val page = bookRepository
 
 生成的SQL如下(为了方便阅读，做了格式化)
 
-```sql
+```csharp
 /* 第一步：查询分页前记录总行数 */
 select count(tb_1_.ID) from BOOK as tb_1_
 
@@ -1139,7 +1139,7 @@ val page = bookRepository
 
 生成的SQL如下(为了方便阅读，做了格式化)
 
-```sql
+```csharp
 /* 第一步：查询分页前记录总行数 */
 select count(tb_1_.ID) from BOOK as tb_1_
 

@@ -14,7 +14,7 @@ Although Jimmer supports fake foreign keys *(foreign keys in the developer's min
 
 However, you may be handed over a legacy database containing non-normalized database designs, such as:
 
-```sql
+```csharp
 create table book(
     id bigint unsigned not null auto_increment primary key,
     // highlight-next-line 
@@ -41,7 +41,7 @@ To support such non-structural designs, Jimmer provides the `@org.babyfish.jimme
 
 Next, create an SQL function *(MySQL is used as example here)*:
 
-```sql
+```csharp
 create function concatenation_string_contains(
 	self varchar(100),
 	id bigint  

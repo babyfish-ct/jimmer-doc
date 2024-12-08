@@ -95,7 +95,7 @@ import { ViewMore } from '@site/src/components/ViewMore';
 
         这时，❶和❷两处的代码都不会执行，最终生成的SQL不会包含任何join。
 
-        ```sql
+        ```csharp
         select 
             tb_1_.ID, 
             tb_1_.NAME, 
@@ -110,7 +110,7 @@ import { ViewMore } from '@site/src/components/ViewMore';
 
         这时，❶处的连接生效但❷处的代码不会被执行，最终生成的SQL如下。
 
-        ```sql
+        ```csharp
         select 
             tb_1_.ID, 
             tb_1_.NAME, 
@@ -138,7 +138,7 @@ import { ViewMore } from '@site/src/components/ViewMore';
         因此，在最终生成的SQL，不会导致重复的join操作。
         :::
 
-        ```sql
+        ```csharp
         select 
             tb_1_.ID, 
             tb_1_.NAME, 

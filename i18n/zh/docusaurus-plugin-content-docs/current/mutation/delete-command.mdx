@@ -213,7 +213,7 @@ interface Book {
 
 的功能一样，都表示逻辑删除，生成的sql如下
 
-```sql
+```csharp
 update BOOK 
 set DELETED = ? /* true */
 where ID in(?/* 1L*/)
@@ -270,13 +270,13 @@ println(
 最终生成的SQL如下
 
 1. 
-    ```sql
+    ```csharp
     delete from BOOK_AUTHOR_MAPPING 
     where BOOK_ID in(?, ?, ?, ?)
     ```
 
 2. 
-    ```sql
+    ```csharp
     delete from BOOK 
     where ID in(?, ?, ?, ?)
     ```
@@ -352,14 +352,14 @@ println(
 
 1. 如果`Book.store`所对应的外键被[@OnDissociate](../mapping/advanced/on-dissociate)注解配置为`SET_NULL`，则，执行如下SQL
 
-    ```sql
+    ```csharp
     update BOOK set STORE_ID = null where STORE_ID in(?)
     ```
     其中参数为被删除对象的id。这样，这些被抛弃对象的外键就被设置为null了。
 
 2. 否则，则先执行
 
-    ```sql
+    ```csharp
     select ID from BOOK where STORE_ID in(?)
     ```
     其中参数为被删除对象的id。这样，就得到这些被抛弃对象的id了。

@@ -43,7 +43,7 @@ sqlClient
 
 生成的SQL如下
 
-```sql
+```csharp
 insert into 
     BOOK_AUTHOR_MAPPING(
         /* highlight-next-line */
@@ -83,7 +83,7 @@ sqlClient
 
 生成的SQL如下
 
-```sql
+```csharp
 insert into 
     BOOK_AUTHOR_MAPPING(
         /* highlight-next-line */
@@ -188,7 +188,7 @@ sqlClient
 
 这里有3本书，两个作者，共6种组合方式。`saveAll`方法把这6种组合全部插入到中间表中，生成的SQL如下
 
-```sql
+```csharp
 insert into BOOK_AUTHOR_MAPPING(
     BOOK_ID, AUTHOR_ID
 ) values 
@@ -291,7 +291,7 @@ sqlClient
 生成的SQL语句如下
 
 1. 检查哪些待插入数据已经存在数据
-    ```sql
+    ```csharp
     select 
         BOOK_ID, AUTHOR_ID 
     from BOOK_AUTHOR_MAPPING 
@@ -307,7 +307,7 @@ sqlClient
 
     这里，假设判断后真正需要插入的数据还剩两条，生成的SQL为:
 
-    ```sql
+    ```csharp
     insert into BOOK_AUTHOR_MAPPING(
         BOOK_ID, AUTHOR_ID
     ) values 
@@ -344,7 +344,7 @@ sqlClient
 
 生成的SQL如下
 
-```sql
+```csharp
 delete from BOOK_AUTHOR_MAPPING 
 where 
     (BOOK_ID, AUTHOR_ID) in (
@@ -435,7 +435,7 @@ sqlClient
 
 生成的SQL如下
 
-```sql
+```csharp
 delete from BOOK_AUTHOR_MAPPING 
 where 
     (BOOK_ID, AUTHOR_ID) in (

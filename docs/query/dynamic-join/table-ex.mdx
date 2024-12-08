@@ -118,7 +118,7 @@ If we call the entity object corresponding to the first table being queried the 
 
 -   Joining tables via a reference association does not produce duplicate records of the current main object in the SQL query result. For example:
 
-    ```sql
+    ```csharp
     select 
         b.id as root_id,
         b.name as root_name,
@@ -137,7 +137,7 @@ If we call the entity object corresponding to the first table being queried the 
 
 -   Joining tables via a collection association produces duplicate records of the current main object in the SQL query result:
 
-    ```sql
+    ```csharp
     select
         b.id as root_id, 
         b.name as root_name,
@@ -455,7 +455,7 @@ val books = sqlClient
 
 The final generated SQL:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -552,7 +552,7 @@ val books = sqlClient
 
 The final generated SQL:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -631,7 +631,7 @@ val bookIds = sqlClient
 
 The final generated SQL:
 
-```sql 
+```csharp 
 select
     distinct tb_1_.ID
 from BOOK as tb_1_

@@ -458,7 +458,7 @@ Running the save code from before will generate three SQL statements:
 
 3. Check if there are objects that need to be dissociated *(if any exist, throws exception to prevent save command)*
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID
     from BOOK tb_1_
@@ -561,7 +561,7 @@ Running the save code from before will generate three SQL statements:
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     update BOOK
     set STORE_ID = null
     where
@@ -577,7 +577,7 @@ Running the save code from before will generate three SQL statements:
     </TabItem>
     <TabItem value="mysql" label="MySQL">
 
-    ```sql
+    ```csharp
     update BOOK
     set STORE_ID = null
     where
@@ -600,7 +600,7 @@ Running the save code from before will generate three SQL statements:
     </TabItem>
     <TabItem value="postgres" label="Postgres">
 
-    ```sql
+    ```csharp
     update BOOK
     set STORE_ID = null
     where
@@ -695,7 +695,7 @@ Running the save code from before will generate three SQL statements:
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     delete from BOOK
     where
         STORE_ID = ?
@@ -710,7 +710,7 @@ Running the save code from before will generate three SQL statements:
     </TabItem>
     <TabItem value="mysql" label="MySQL">
 
-    ```sql
+    ```csharp
     delete from BOOK
     where
         STORE_ID in (
@@ -732,7 +732,7 @@ Running the save code from before will generate three SQL statements:
     </TabItem>
     <TabItem value="postgres" label="Postgres">
 
-    ```sql
+    ```csharp
     delete from BOOK
     where
         STORE_ID = ?

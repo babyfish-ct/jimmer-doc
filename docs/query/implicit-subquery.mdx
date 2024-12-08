@@ -95,7 +95,7 @@ fun findBooks(authorName: String?): List<BookStore> =
 
 When calling the above method and specifying a non-null parameter, for example `findBooks("alex")`, the generated SQL is:  
 
-```sql  
+```csharp  
 select
     tb_1_.ID,
     tb_1_.CREATED_TIME,  
@@ -207,7 +207,7 @@ The above example uses two implicit subqueries.
 
 However, when we specify both parameters as non-null, for example `findBooks("alex", Gender.MALE)`, there will only be one subquery in the final SQL, as follows:  
 
-```sql  
+```csharp  
 select
     tb_1_.ID, 
     tb_1_.CREATED_TIME,

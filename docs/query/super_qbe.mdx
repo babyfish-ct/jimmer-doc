@@ -259,7 +259,7 @@ Specifications are used as query parameters. To support dynamic queries, all pro
     
     The generated SQL is:
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK tb_1_ 
     where tb_1_.NAME = ?
@@ -299,7 +299,7 @@ Specifications are used as query parameters. To support dynamic queries, all pro
 
     The generated SQL is:
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK tb_1_
     /* highlight-next-line */    
@@ -353,7 +353,7 @@ val books = bookRepository.find(specification)
 
 The generated SQL is:
 
-```sql
+```csharp
 select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
 from BOOK tb_1_
 /* highlight-next-line */  
@@ -391,7 +391,7 @@ Execute the code above again, the following SQL is executed:
 
 -   Databases that do not support `ilike`:
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
     from BOOK tb_1_
     /* highlight-next-line */
@@ -400,7 +400,7 @@ Execute the code above again, the following SQL is executed:
 
 -   Databases that support `ilike`:
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK tb_1_ 
     /* highlight-next-line */  
@@ -558,7 +558,7 @@ val books = bookRepository.find(specification)
 
 The generated SQL is: 
 
-```sql
+```csharp
 select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
 from BOOK tb_1_  
 where
@@ -691,7 +691,7 @@ val books = bookRepository.find(specification)
 
 The generated SQL is:
 
-```sql
+```csharp
 select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
 from BOOK tb_1_ 
 /* highlight-next-line */  
@@ -772,7 +772,7 @@ Here, the DTO property `authorName` maps two properties, `firstName` and `lastNa
 
 Repeating the query in the previous example generates the following SQL:
 
-```sql
+```csharp
 select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID 
 from BOOK tb_1_
 inner join BOOK_STORE tb_2_

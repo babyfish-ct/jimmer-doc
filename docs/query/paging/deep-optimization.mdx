@@ -90,7 +90,7 @@ To simplify discussion, assume using `org.babyfish.jimmer.sql.H2Dialect`. Pagina
 
 -   When offset is less than 1000, e.g. calling `findBooks(10, 90)`, the generated SQL:
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME, 
@@ -103,7 +103,7 @@ To simplify discussion, assume using `org.babyfish.jimmer.sql.H2Dialect`. Pagina
 
 -   When offset is greater than or equal to 1000, e.g. calling `findBooks(10, 1000)`, the generated SQL: 
 
-    ```sql
+    ```csharp
     select
         optimize_.ID,
         optimize_.NAME,

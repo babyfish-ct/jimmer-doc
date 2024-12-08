@@ -117,7 +117,7 @@ interface Book {
 
 -   查询一个对象，通过引用关联进行table join，在SQL查询结果中，当前主对象不会出现重复记录。例如：
 
-    ```sql
+    ```csharp
     select 
         b.id as root_id,
         b.name as root_name,
@@ -136,7 +136,7 @@ interface Book {
 
 -   查询一个对象，通过集合关联进行table join，在SQL查询结果中，当前主对象会出现重复记录：
 
-    ```sql
+    ```csharp
     select 
         b.id as root_id,
         b.name as root_name,
@@ -450,7 +450,7 @@ val books = sqlClient
 
 最终生成的SQL如下
 
-```sql
+```csharp
 select 
     tb_1_.ID, 
     tb_1_.NAME, 
@@ -545,7 +545,7 @@ val books = sqlClient
 
 最终生成的SQL如下
 
-```sql
+```csharp
 select 
     tb_1_.ID, 
     tb_1_.NAME, 
@@ -624,7 +624,7 @@ val bookIds = sqlClient
 
 最终生成的SQL如下
 
-```sql
+```csharp
 select 
     distinct tb_1_.ID 
 from BOOK as tb_1_ 

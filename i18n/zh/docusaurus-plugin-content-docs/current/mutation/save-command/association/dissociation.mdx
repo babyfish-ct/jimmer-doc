@@ -456,7 +456,7 @@ interface Book {
 
 3.  查询是否有需要脱钩的对象 *(如果有，抛出异常组织保持指令)*
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID
     from BOOK tb_1_
@@ -559,7 +559,7 @@ interface Book {
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     update BOOK
     set STORE_ID = null
     where
@@ -575,7 +575,7 @@ interface Book {
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```sql
+    ```csharp
     update BOOK
     set STORE_ID = null
     where
@@ -598,7 +598,7 @@ interface Book {
     </TabItem>
     <TabItem value="posgres" label="Postgres">
 
-    ```sql
+    ```csharp
     update BOOK
     set STORE_ID = null
     where
@@ -694,7 +694,7 @@ interface Book {
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     delete from BOOK
     where
         STORE_ID = ?
@@ -709,7 +709,7 @@ interface Book {
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```sql
+    ```csharp
     delete from BOOK
     where
         STORE_ID in (
@@ -731,7 +731,7 @@ interface Book {
     </TabItem>
     <TabItem value="posgres" label="Postgres">
 
-    ```sql
+    ```csharp
     delete from BOOK
     where
         STORE_ID = ?

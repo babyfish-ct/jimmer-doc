@@ -39,7 +39,7 @@ println("Affected row count: $affectedRowCount")
 </Tabs>
 
 生成的SQL如下：
-```sql
+```csharp
 delete 
 from BOOK as tb_1_ 
 where tb_1_.NAME = ?
@@ -80,7 +80,7 @@ println("Affected row count: $affectedRowCount")
 最终生成了3条SQL:
 
 1. 
-    ```sql
+    ```csharp
     select 
         distinct tb_1_.ID 
     from BOOK as tb_1_ 
@@ -91,12 +91,12 @@ println("Affected row count: $affectedRowCount")
     ```
 
 2. 
-    ```sql
+    ```csharp
     delete from BOOK_AUTHOR_MAPPING 
     where BOOK_ID in(?, ?, ?)
     ```
 3. 
-    ```sql
+    ```csharp
     delete from BOOK 
     where ID in(?, ?, ?)
     ```

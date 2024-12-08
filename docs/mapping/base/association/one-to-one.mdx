@@ -108,7 +108,7 @@ interface Customer {
 
 The foreign key can be real or fake. Fake foreign keys are discussed in subsequent documents. Here we assume the foreign key is real, so the corresponding constraint in the database is:
 
-```sql
+```csharp
 // If foreign key pointing to associated entity is real, create foreign key constraint
 alter table CUSTOMER
     add constraint FK_CUSTOMER__ADDRESS
@@ -213,7 +213,7 @@ interface Customer {
 
 The join table `CUSTOMER_ADDRESS_MAPPING` is defined as follows:
 
-```sql
+```csharp
 create table CUSTOMER_ADDRESS_MAPPING(
     CUSTOMER_ID bigint not null,
     ADDRESS_ID bigint not null

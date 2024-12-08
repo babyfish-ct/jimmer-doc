@@ -62,7 +62,7 @@ fun findBooksByStoreCityName(name: storeCityName?): List<Book> =
 
 关联路径长度不受限制，其中的每个关联属性引用都对应一个SQL表连接操作。
 
-```sql
+```csharp
 from BOOK tb_1_
 // highlight-next-line
 inner join BOOK_STORE tb_2_ // `.store`
@@ -76,7 +76,7 @@ inner join CITY tb_3_ // `.city`
 
 -   `findBooksByStoreCityName(null)`生成的SQL为
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -91,7 +91,7 @@ inner join CITY tb_3_ // `.city`
 
 -   `findBooksByStoreCityName("ChengDu")`生成的SQL为
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,

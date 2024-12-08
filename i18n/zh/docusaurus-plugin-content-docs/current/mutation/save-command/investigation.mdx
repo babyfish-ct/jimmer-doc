@@ -1,0 +1,921 @@
+---
+sidebar_position: 5
+title: 违反约束异常处理
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Precheck from './_precheck.mdx';
+import { ViewMore } from '@site/src/components/ViewMore';
+
+## 基本概念
+
+在日常项目开发中，有一个非常头疼的问题，就是将因违反数据库约束的错误信息翻译为对用户友好的错误信息。
+
+以无法简单地通过输入数据验证为准，数据库存在如下三种约束，一旦被违背难以处理：
+
+-   主键约束
+
+-   唯一约束 *(或唯一索引)*
+
+-   外键约束
+
+为了统一不同的数据库产品，SQL标准规定因违反约束而导致的错误类别码为[23 *(integrity constraint violation)*](https://en.wikipedia.org/wiki/SQLSTATE)，
+所有于此相关的错误state都以`23`开头。
+
+但是，标准的规范化也仅限于此。至于更细节的问题，譬如：
+
+-   被违背的约束是什么
+
+-   如何按照约束名从数据库字典中获取发生错误的表名和列名
+
+-   最重要的问题，究竟是哪条数据的修改行为导致了异常
+
+不同数据库产品行为并不统一，并缺乏清晰的API获取这些信息。
+
+为了给予用户清晰的错误描述，很多业务项目采用一种简单粗暴方法，在执行修改前，<ViewMore buttonText="通过查询预判" size="small"><Precheck/></ViewMore>稍后即将执行的操作是否安全。
+
+然而，这种这种事先预判行为的缺点很多：
+
+-   开发人员需要不厌其烦地编写各种事先预判代码，开发成本居高不下
+
+-   仅适合简单的单条数据DML修改行为，对保存指令这种递归批量保存深层次数据结构的高级行为完全不适合
+
+-   性能低，发生错误是小概率事件，每次都事先预判是一种浪费
+
+因此，Jimmer采用如下策略
+
+-   采用事后调查的方式，先直接修改数据库，如果事后发现数据库报告了约束被违背的错误，再调查错误原因
+
+-   在错误调查过程中，利用查询获取尽可能多的信息，将
+
+    -   导致非法操作的对象在被保存数据结构中的路径
+
+    -   导致错误的实体类型和相关属性名
+
+    -   导致错误的具体对象和相关数据
+    
+    全部报告给用户
+
+-   允许用户自定义异常翻译器，将Jimmer通过调查得到的异常进一步翻译成对最终用户友好的信息
+
+:::info
+调查数据库错误这个行为，既可以因根对象的保存失败而发生，也可以因关联对象的保存失败而发生。Jimmer对二者一视同仁，没有差异。
+
+然而，为了简化文档，本文的例子尽量示范保存相对简单的对象，避免保存过深的数据结构 *(事实上，如果保存深层次的关联对象失败，一样会被调查*)。
+:::
+
+## 检查Id是否冲突
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setId(100L);
+        draft.setName("SQL in Action");
+        draft.setEdition(1);
+        draft.setPrice(new BigDecimal("59.9"));
+        draft.setStoreId(2L);
+    }),
+    Immutables.createBook(draft -> {
+        // highlight-next-line
+        draft.setId(7L); // Exists
+        draft.setName("LINQ in Action");
+        draft.setEdition(3);
+        draft.setPrice(new BigDecimal("49.9"));
+        draft.setStoreId(2L);
+    })
+);
+
+sqlClient.insertEntities(books);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book { 
+        id = 100L
+        name = "SQL in Action"
+        edition = 1
+        price = BigDecimal("59.9")
+        storeId = 2L
+    },
+    Book {
+        // highlight-next-line
+        id = 7L // Exists
+        name = "LINQ in Action"
+        edition = 3
+        price = BigDecimal("49.9")
+        storeId = 2L
+    }
+)
+
+sqlClient.insertEntities(books)
+```
+
+</TabItem>
+</Tabs>
+
+这段代码会生产如下两条SQL
+
+1.  批量插入数据
+
+    ```csharp
+    insert into BOOK(
+        ID, NAME, EDITION, PRICE, STORE_ID
+    ) values(?, ?, ?, ?, ?)
+    /* batch-0: [100, SQL in Action, 1, 59.9, 2] */
+    /* highlight-next-line */
+    /* batch-1: [7, LINQ in Action, 3, 49.9, 2] */
+    ```
+
+    其中，插入第二条数据会导致`id`发生冲突
+
+2.  调查违反约束的原因
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="大部分数据库">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    SQL: select
+        tb_1_.ID
+    from BOOK tb_1_
+    where
+        tb_1_.ID = ? /* 7 */
+    ```
+    
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    SQL: select
+        tb_1_.ID
+    from BOOK tb_1_
+    where
+        tb_1_.ID = any(? /* [100, 7] */)
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    -   对于大部分数据库而言，通过批量SQL抛出的原始JDBC异常信息可以判断是哪条数据违背了约束，所以对出错的那条数据进行调查
+
+    -   对于Postgres而言，通过批量SQL抛出的原始JDBC异常信息无法判断是哪条数据违背了约束，所以对所有数据进行调查
+
+    无论如何，Jimmer都能调查出问题。
+
+最终，Jimmer会根据调查结果抛出异常
+
+```sh
+#highlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$NotUnique: 
+    Save error caused by the path: "<root>": 
+    Cannot save the entity, the value of the id property 
+    "com.yourcompany.yourpoject.model.Book.id" 
+    #highlight-next-line
+    is "7" which already exists
+```
+
+## 检查Key是否冲突
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setId(11L);
+        draft.setName("GraphQL in Action");
+        draft.setEdition(4);
+    }),
+    Immutables.createBook(draft -> {
+        draft.setId(12L); 
+        // highlight-next-line
+        draft.setName("GraphQL in Action"); // `name + edition` exists
+        // highlight-next-line
+        draft.setEdition(1); // `name + edition` exists
+    })
+);
+
+sqlClient.updateEntities(books);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book { 
+        id = 11L
+        name = "GraphQL in Action"
+        edition = 4
+    },
+    Book {
+        id = 12
+        // highlight-next-line
+        name = "GraphQL in Action" // `name + edition` exists
+        // highlight-next-line
+        edition = 1 // `name + edition` exists
+    }
+)
+
+sqlClient.updateEntities(books)
+```
+
+</TabItem>
+</Tabs>
+
+这段代码会生产如下两条SQL
+
+1.  批量更新数据
+
+    ```csharp
+    update BOOK
+    set
+        NAME = ?,
+        EDITION = ?
+    where
+        ID = ?
+    /* batch-0: [GraphQL in Action, 4, 11] */
+    /* highlight-next-line */
+    /* batch-1: [GraphQL in Action, 1, 12] */
+    ```
+
+    其中，修改第二条数据会导致`name`和`edition`的组合发生冲突
+
+2.  调查违反约束的原因
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="大部分数据库">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    select
+        tb_1_.ID
+    from BOOK tb_1_
+    where
+        (tb_1_.NAME, tb_1_.EDITION) = (
+            ? /* GraphQL in Action */, ? /* 4 */
+        )
+    ```
+    
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    SQL: select
+        tb_1_.ID,
+        tb_1_.NAME,
+        tb_1_.EDITION
+    from BOOK tb_1_
+    where
+        (tb_1_.NAME, tb_1_.EDITION) in (
+            (? /* GraphQL in Action */, ? /* 4 */), 
+            (? /* GraphQL in Action */, ? /* 1 */)
+        )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    -   对于大部分数据库而言，通过批量SQL抛出的原始JDBC异常信息可以判断是哪条数据违背了约束，所以对出错的那条数据进行调查
+
+    -   对于Postgres而言，通过批量SQL抛出的原始JDBC异常信息无法判断是哪条数据违背了约束，所以对所有数据进行调查
+
+    无论如何，Jimmer都能调查出问题。
+
+最终，Jimmer会根据调查结果抛出异常
+
+```sh
+#lighlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$NotUnique: 
+    Save error caused by the path: "<root>": 
+    Cannot save the entity, the value of the key properties "[
+        com.yourcompany.yourproject.model.Book.name, 
+        com.yourcompany.yourproject.Book.edition
+    #highlight-start
+    ]" are "Tuple2(
+        _1=GraphQL in Action, 
+        _2=1
+    )" which already exists
+    #highlight-end
+```
+
+:::info
+在[映射篇/进阶映射/Key](../../mapping/advanced/key)一文中，我们介绍了可以实体配置多个唯一约束 *(或唯一索引)* *(事实上，该文档还未修改)*。
+
+如果实体的唯一约束 *(或唯一索引)* 不止一个，Jimmer会逐个调查。
+:::
+
+## 检查关联对象是否存在
+
+在保存指令中，关联被分为[长关联和短关联](./association/classification.mdx)。
+
+-   对于长关联而言，如果关联对象不存在，Jimmer会先自动创建关联对象，故而并不存在关联对象不存在的问题。
+
+-   对于短关联而言，Jimmer假设关联对象一定存在，关联对象不存在会导致问题。
+
+所以，这个问题是短关联特有的。在后续例子中，所有关联对象都是id-only对象。
+
+在[映射篇/基础映射/真假外键](../../mapping/base/foreignkey)中，我们介绍了Jimmer支持真假两种外键。
+只有真外键才会涉及到数据库约束违背问题，所以我们分两种情况讨论。
+
+### 假外键
+
+对于假外键而言，数据库中不存在外键约束，如果指定的关联对象不存在，即，关联id非法，数据库对此毫无意见。
+
+所以，默认情况下，Jimmer不会为假外键判断关联对象是否存在，允许用户保存非法的悬挂值。
+
+虽然这和本文的主题无关，但本文仍给予阐述。用户可以通过配置保存指令让Jimmer事先验证关联对象是否存在。
+
+:::info
+假设`Book.store`是假外键
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+        Immutables.createBook(draft -> {
+            draft.setId(8L);
+            draft.setStoreId(2L);
+        }),
+        Immutables.createBook(draft -> {
+            draft.setId(9L);
+            draft.setStoreId(999L); // Invalid associated id
+        })
+);
+
+sqlClient
+        .saveEntitiesCommand(books)
+        .setMode(SaveMode.UPDATE_ONLY)
+        // highlight-next-line
+        .setAutoIdOnlyTargetChecking(
+                BookProps.STORE
+        )
+        .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        id = 8L
+        storeId = 2L
+    },
+    Book {
+        id = 9L
+        storeId = 999L // Invalid associated id
+    }
+)
+
+sqlClient.updateEntities(books) {
+    // highlight-next-line
+    setAutoIdOnlyTargetChecking(
+        Book::store
+    )
+}
+```
+
+</TabItem>
+</Tabs>
+
+这里，通过`setAutoIdOnlyTargetChecking`方法设置需要事先验证的短关联。
+
+在保存数据之前，Jimmer会通过查询验证关联id是否合法
+
+```csharp
+select
+    tb_1_.ID
+from BOOK_STORE tb_1_
+where
+    /* highlight-next-line */
+    tb_1_.ID = any(? /* [2, 999] */)
+```
+
+最终抛出如下异常
+
+```sh
+#highlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$IllegalTargetId: 
+    Save error caused by the path: "<root>.store": 
+    Cannot save the entity, the associated id of the reference 
+    property "com.yourcompany.yourproject.model.Book.store" is 
+    #highlight-next-line
+    "999" but there is no corresponding associated object in the database
+```
+
+### 真外键
+
+对于真外键而言，数据库中存在外键约束，如果指定的关联对象不存在，即，关联id非法，数据库会报告违背约束异常。
+
+无需用户进行任何设置，如果发生了错误，Jimmer会自动对数据库报告的错误进行分析，找出非法的关联id。
+
+:::info
+假设`Book.store`是真外键
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+        Immutables.createBook(draft -> {
+            draft.setId(8L);
+            draft.setStoreId(2L);
+        }),
+        Immutables.createBook(draft -> {
+            draft.setId(9L);
+            // highlight-next-line
+            draft.setStoreId(999L); // Invalid associated id
+        })
+);
+
+sqlClient.updateEntities(books);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        id = 8L
+        storeId = 2L
+    },
+    Book {
+        id = 9L
+        // highlight-next-line
+        storeId = 999L // Invalid associated id
+    }
+)
+
+sqlClient.updateEntities(books)
+```
+
+</TabItem>
+</Tabs>
+
+这段代码会生产如下两条SQL
+
+1.  批量更新数据
+
+    ```csharp
+    update BOOK
+    set
+        STORE_ID = ?
+    where
+        ID = ?
+    /* batch-0: [2, 8] */
+    /* highlight-next-line */
+    /* batch-1: [999, 9] */
+    ```
+
+    其中，修改第二条数据会导致`STORE_ID`列的外键约束被违背。
+
+2.  调查违反约束的原因
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="大部分数据库">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    SQL: select
+        tb_1_.ID
+    from BOOK_STORE tb_1_
+    where
+        tb_1_.ID = ? /* 999 */
+    ```
+    
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    SQL: select
+        tb_1_.ID
+    from BOOK_STORE tb_1_
+    where
+        tb_1_.ID = any(? /* [2, 999] */)
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    -   对于大部分数据库而言，通过批量SQL抛出的原始JDBC异常信息可以判断是哪条数据违背了约束，所以对出错的那条数据进行调查
+
+    -   对于Postgres而言，通过批量SQL抛出的原始JDBC异常信息无法判断是哪条数据违背了约束，所以对所有数据进行调查
+
+    无论如何，Jimmer都能调查出问题。
+
+最终，Jimmer会根据调查结果抛出异常
+
+```sh
+#highlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$IllegalTargetId: 
+    Save error caused by the path: "<root>.store": 
+    Cannot save the entity, the associated id of the reference 
+    property "com.yourcompany.yourproject.model.Book.store" is 
+    #highlight-next-line
+    "999" but there is no corresponding associated object in the database
+```
+
+:::tip
+可见，虽然真外键的错误自动调查和假外键的手动检查机制完全不同，但二者得到异常信息完全一样。
+:::
+
+## 用户异常翻译器
+
+### 异常翻译接口
+
+如前文所讲，Jimmer调查数据库报告的违反约束的错误，并抛出异常
+
+-   `org.babyfish.jimmer.sql.exception.SaveException.NotUnique`
+
+    违反主键约束、唯一约束或唯一索引
+
+-   `org.babyfish.jimmer.sql.exception.SaveException.IllegalTargetId`
+
+    非法的关联id
+
+这两个异常不但提供详尽的错误信息，还提供丰富的API以获取各种信息。
+
+但是，还远远不够，实际项目中，我们必须为最终用户展示通俗易懂的信息。
+
+诚然，我们可以在每次调用保存指令后捕获异常并处理。然而，Jimmer支持更强大统一异常翻译。
+
+Jimmer提供了异常翻译接口`ExceptionTranslator`，代码如下
+
+```java title="ExceptionTranslator.java"
+package org.babyfish.jimmer.sql.runtime;
+
+public interface ExceptionTranslator<E extends Exception> {
+
+    /**
+     * Translate the exception.
+     *
+     * <p>If the exception is not known how to be translated,
+     * return null or the original argument.</p>
+     */
+    @Nullable
+    Exception translate(@NotNull E exception, @NotNull Args args);
+
+    interface Args {
+        ...略...
+    }
+}
+```
+
+用户可以通过类实现此接口 *(注意，不能用lambda表达式)*，并为接口指定范型号参数，例如
+
+-   翻译`SaveException.NotUnique`异常
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    public class NotUniqueExceptionTranslator
+    extends ExceptionTranslator<
+        // highlight-next-line
+        SaveException.NotUnique
+    > {
+        ...略...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    class NotUniqueExceptionTranslator :
+    ExceptionTranslator<
+        // highlight-next-line
+        SaveException.NotUnique
+    > {
+        ...略...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   翻译`SaveException.IllegalTargetId`异常
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    public class IllegalTargetIdExceptionTranslator
+    extends ExceptionTranslator<
+        // highlight-next-line
+        SaveException.IllegalTargetId
+    > {
+        ...略...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    class IllegalTargetIdExceptionTranslator :
+    ExceptionTranslator<
+        // highlight-next-line
+        SaveException.IllegalTargetId
+    > {
+        ...略...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   甚至可以翻译Jimmer不感兴趣的其他JDBC异常
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    public class SQLExceptionTranslator
+    extends ExceptionTranslator<
+        // highlight-next-line
+        java.sql.SQLException
+    > {
+        ...略...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    class SQLExceptionTranslator :
+    ExceptionTranslator<
+        // highlight-next-line
+        java.sql.SQLException
+    > {
+        ...略...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+### 多种注册方法
+
+只编写一个类实现此接口是没用的，必须创建对象并将之注册到Jimmer方可生效。
+
+Jimmer提供两种注册方法，以上文提及的`NotUniqueExceptionTranslator`为例：
+
+1.  全局注册，又可分为两种
+
+    1.  不使用Jimmer的spring starter
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        JSqlClient sqlClient = JSqlClient
+            .newBuilder()
+            // highlight-next-line
+            .addExceptionTranslator(
+                new NotUniqueExceptionTranslator()
+            )
+            ...省略其他配置...
+            .build();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val sqlClient = sqlClient {
+            // highlight-next-line
+            addExceptionTranslator(
+                NotUniqueExceptionTranslator()
+            )
+            ...省略其他配置...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+    2.  使用Jimmer的spring starter
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        // highlight-next-line
+        @Component
+        public class NotUniqueExceptionTranslator
+        extends ExceptionTranslator<SaveException.NotUnique> {
+            ...略...
+        }
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        // highlight-next-line
+        @Component
+        class NotUniqueExceptionTranslator :
+        ExceptionTranslator<SaveException.NotUnique> {
+            ...略...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+2.  为特定保存指令注册
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    Book book = ...略...;
+
+    sqlClient
+        .saveCommand(book)
+        // highlight-next-line
+        .addExceptionTranslator(
+            new NotUniqueExceptionTranslator()
+        )
+        .execute()
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val book: Book = ...略...
+
+    sqlClient.save(book) {
+        // highlight-next-line
+        addExceptionTranslator(
+            new NotUniqueExceptionTranslator()
+        )
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+### 实现`translate`方法
+
+最后，我们来展示如何实现的`translate`方法
+
+
+-   翻译`SaveException.NotUnique`异常
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    @Component
+    public class NotUniqueExceptionTranslator
+    extends ExceptionTranslator<SaveException.NotUnique> {
+        
+        @Override
+        public @Nullable Exception translate(
+            @NotNull SaveException.NotUnique exception, 
+            @NotNull Args args
+        ) {
+            
+            // highlight-next-line
+            if (exception.isMatched(BookProps.ID)) {
+                return new IllegalArgumentException(
+                        "ID为" +
+                                exception.getValue(BookProps.ID) +
+                                "的书籍已经存在"
+                );
+            }
+            
+            // highlight-next-line
+            if (exception.isMatched(BookProps.NAME, BookProps.EDITION)) {
+                return new IllegalArgumentException(
+                        "名称为" +
+                                exception.getValue(BookProps.NAME) +
+                                "且版本为" +
+                                exception.getValue(BookProps.EDITION) +
+                                "的书籍已经存在"
+                );
+            }
+            
+            //不做处理，也可以写成`return exception`
+            return null;
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    @Component
+    class NotUniqueExceptionTranslator :
+    ExceptionTranslator<SaveException.NotUnique> {
+
+        override fun translate(
+            exception: NotUnique, 
+            args: ExceptionTranslator.Args
+        ): Exception? =
+            when {
+                // highlight-next-line
+                exception.isMatched(Book::id) ->
+                    throw IllegalArgumentException(
+                        "ID为${exception[Book::id]}的书籍已经存在"
+                    )
+                // highlight-next-line
+                exception.isMatched(Book::name, Book::edition) ->
+                    throw IllegalArgumentException(
+                        "名称为${
+                            exception[Book::id]
+                        }且版本为${
+                            exception[Book::edition]
+                        }的书籍已经存在"
+                    )
+                else ->
+                    null //不做处理，也可以写作`exception`
+            }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   翻译`SaveException.IllegalTargetId`异常
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    @Component
+    public class IllegalTargetIdExceptionTranslator
+    extends ExceptionTranslator<SaveException.IllegalTargetId> {
+        
+        @Override
+        public @Nullable Exception translate(
+                @NotNull SaveException.IllegalTargetId exception,
+                @NotNull Args args
+        ) {
+            if (exception.getProp() == BookProps.STORE.unwrap()) {
+                throw new IllegalArgumentException(
+                        "无法为书籍设置非法的关联书店ID: " +
+                                exception.getTargetIds()
+                );
+            }
+
+            // 不做处理，也可写作`return exception`
+            return null;
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    @Component
+    class IllegalTargetIdExceptionTranslator :
+    ExceptionTranslator<SaveException.IllegalTargetId> {
+
+        override fun translate(
+            exception: IllegalTargetId,
+            args: ExceptionTranslator.Args
+        ): Exception? =
+            when {
+                // highlight-next-line
+                exception.prop == BookProps.STORE.unwrap() ->
+                    throw IllegalArgumentException(
+                        "无法为书籍设置非法的关联书店ID: ${
+                            exception.targetIds
+                        }"
+                    )
+                else ->
+                    null //不做处理，也可以写作`exception`
+            }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>

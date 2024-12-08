@@ -149,7 +149,7 @@ It will generate two SQL statements:
 
 -   count-query
 
-    ```sql
+    ```csharp
     select
         count(tb_1_.ID) 
     from BOOK tb_1_
@@ -157,7 +157,7 @@ It will generate two SQL statements:
 
 -   data-query *(assuming the database is H2)*  
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.CREATED_TIME, 
@@ -426,7 +426,7 @@ Different dialects will use different SQL to implement the `limit` query:
 Default behavior includes DefaultDialect, H2Dialect and PostgresDialect.
 :::
 
-```sql
+```csharp
 select
   tb_1_.ID,
   tb_1_.NAME,
@@ -444,7 +444,7 @@ limit ? offset ?
 
 ### MySqlDialect
 
-```sql  
+```csharp  
 select
   tb_1_.ID,
   tb_1_.NAME,
@@ -464,7 +464,7 @@ limit ?, ?
 
 1.  When offset is not 0:
 
-    ```sql
+    ```csharp
     select * from (
       select core__.*, rownum rn__
       from (
@@ -487,7 +487,7 @@ limit ?, ?
     
 2.  When offset is 0:
 
-    ```sql  
+    ```csharp  
     select core__.* from (
       select
         tb_1_.ID,
@@ -655,7 +655,7 @@ It will generate the following 4 SQL statements:
 
 -   count-query
 
-    ```sql
+    ```csharp
     select
         count(tb_1_.ID)
     from BOOK tb_1_ 
@@ -663,7 +663,7 @@ It will generate the following 4 SQL statements:
 
 -   data-query *(assuming the database is H2)*
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.CREATED_TIME,
@@ -681,7 +681,7 @@ It will generate the following 4 SQL statements:
     
 -   Query the many-to-one association `Book.store` for the 5 paged objects
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME
@@ -698,7 +698,7 @@ It will generate the following 4 SQL statements:
     
 -   Query the many-to-many association `Book.authors` for the 5 paged objects
 
-    ```sql
+    ```csharp
     select
         tb_2_.BOOK_ID,
         tb_1_.ID,

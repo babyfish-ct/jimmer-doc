@@ -92,7 +92,7 @@ Unlike JPA/Hibernate, when using composite types in entities, `@Embedded` is not
 
 The table structure corresponding to `Author` is: 
 
-```sql
+```csharp
 create table author(
     id bigint unsigned not null auto_increment primary key,
     /* highlight-next-line */
@@ -239,7 +239,7 @@ create table author(
 
 The table structure corresponding to `Transition` is:
 
-```sql
+```csharp
 create table transition(
     id bigint unsigned not null auto_increment primary key,
     millis int not null,
@@ -334,7 +334,7 @@ interface Book {
 
 Since `Book.id` does not override column names of `UniqueId` type using `@PropOverride`, the column names configured in `UniqueId` are used. The corresponding DDL is:
 
-```sql
+```csharp
 create table book(
     unique_id_day_no int not null,
     unique_id_seq_no int not null,
@@ -403,7 +403,7 @@ When the foreign key consists of multiple columns, multiple `@JoinColumn` annota
 
 If the foreign key is real, the corresponding constraint is:  
 
-```sql
+```csharp
 alter table chapter
     add constraint fk_chapter__book
         foreign key(
@@ -482,7 +482,7 @@ interface Book {
 
 If the foreign key is real, the DDL of the join table is:
 
-```sql
+```csharp
 create table book_author_mapping(
     book_id_day_no int not null,
     book_id_seq_id int not null,

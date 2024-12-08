@@ -70,7 +70,7 @@ sqlClient.update(
 
 生成的SQL如下
 
-```sql
+```csharp
 
 // 判断关对象是否存在
 select
@@ -196,7 +196,7 @@ values
 
         Jimmer会执行如下查询检查所有短关联的id
 
-        ```sql
+        ```csharp
         select
             tb_1_.ID
         from BOOK tb_1_
@@ -255,7 +255,7 @@ values
 
         无论外键真假，Jimmer都会执行如下查询检查短关联的id
 
-        ```sql
+        ```csharp
         select
             tb_1_.ID
         from BOOK_STORE tb_1_

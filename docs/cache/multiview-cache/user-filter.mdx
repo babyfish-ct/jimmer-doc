@@ -744,7 +744,7 @@ Assume the current tenant name is `a`, the execution process is as follows:
 
     First query the aggregate root object by executing the following SQL:
 
-    ```sql
+    ```csharp
     select 
         tb_1_.ID,
         tb_1_.NAME,
@@ -769,7 +769,7 @@ Assume the current tenant name is `a`, the execution process is as follows:
     
     So the following SQL is executed to complete the associated property `BookStore.books`:
 
-    ```sql
+    ```csharp
     SQL: select,
         tb_1_.STORE_ID,
         tb_1_.ID  
@@ -847,7 +847,7 @@ Assume the current tenant name is `a`, the execution process is as follows:
 
     So the following SQL is executed to compute the calculation property:
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         avg(tb_2_.PRICE)
@@ -1230,7 +1230,7 @@ Since `Book-6` belongs to `BookStore-1`, it is foreseeable that the multi-view c
 
 -   If BinLog trigger is enabled, modifying the database in any way can lead to Jimmer's cache consistency involvement. For example, directly executing the following SQL in SQL IDE:
 
-    ```sql
+    ```csharp
     update BOOK
     set TENANT = 'a'
     where ID = 6; 

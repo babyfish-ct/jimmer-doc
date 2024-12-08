@@ -76,7 +76,7 @@ Here, `store()` indicates fetching the associated object. We did not specify any
 
 The generated SQL is:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -157,7 +157,7 @@ Two SQLs are generated:
 
 1.  Query for the `Book` objects themselves
 
-    ```sql
+    ```csharp
     select 
         tb_1_.ID, 
         tb_1_.NAME, 
@@ -169,7 +169,7 @@ Two SQLs are generated:
 
 2.  Based on the `Book.authors` association, query for the `Author` associated objects with only id for all root objects queried in the previous step
 
-    ```sql
+    ```csharp
     select 
         tb_1_.BOOK_ID, /* batch-map key */
         tb_1_.AUTHOR_ID /* batch-map value */
@@ -271,7 +271,7 @@ Two SQLs are generated:
 
 1.  Query for `Book` objects
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -284,7 +284,7 @@ Two SQLs are generated:
 
 2.  Based on the `Book.store` association, query for relatively complete `BookStore` associated objects for all root objects queried in the previous step
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -369,7 +369,7 @@ Two SQLs are generated:
 
 1.  Query for the `Book` objects themselves
 
-    ```sql
+    ```csharp
     select 
         tb_1_.ID, 
         tb_1_.NAME, 
@@ -381,7 +381,7 @@ Two SQLs are generated:
 
 2.  Based on the `Book.authors` association, query for relatively complete `Author` associated objects for all root objects queried in previous step
 
-    ```sql
+    ```csharp
     select
         /* batch-map key */
         tb_2_.BOOK_ID,
@@ -593,7 +593,7 @@ val books = sqlClient
 </Tabs>
 
 The generated SQL is:
-```sql  
+```csharp  
 # 1. Query book table to get all BOOK_ID
 select
     tb_1_.ID,
@@ -646,7 +646,7 @@ The output is:
 ```
 
 In the example above, we see the query:
-```sql
+```csharp
 select
     tb_2_.BOOK_ID,
     tb_1_.ID,
@@ -709,7 +709,7 @@ Here the `batchSize` for `authors` is set to 2. Such a small value would cause p
 This would cause the `in(?, ?, ?, ?)` to be split into two `in(?, ?)`, and the SQL to fetch associated objects would be split into two.
 
 1.  
-```sql
+```csharp
 select
     tb_2_.BOOK_ID,
     tb_1_.ID,
@@ -722,7 +722,7 @@ where tb_2_.BOOK_ID in (?, ?)
 ```
 
 2.
-```sql  
+```csharp  
 select
     tb_2_.BOOK_ID,
     tb_1_.ID,
@@ -847,7 +847,7 @@ val books = sqlClient
 -   For simplicity let's assume `H2Dialect` is used so different databases have the same paging SQL
 
 1.  Query current `Book` objects
-    ```sql   
+    ```csharp   
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -858,7 +858,7 @@ val books = sqlClient
     ```
 
 2.  Paginated query on `authors` collection of the 1st `Book` object 
-    ```sql
+    ```csharp
     select
         tb_1_.AUTHOR_ID,
         tb_3_.FIRST_NAME,
@@ -971,7 +971,7 @@ Three SQLs are generated:
 
 1.  Query the two `Book` objects needed for the tuple
 
-    ```sql
+    ```csharp
     select
 
     /* For tuple._1 */  
@@ -991,7 +991,7 @@ Three SQLs are generated:
     ```
 
 2.  For the `authors` association of the 4 `Book` objects in column 1, use filter
-    ```sql   
+    ```csharp   
     select
 
         tb_1_.BOOK_ID,
@@ -1010,7 +1010,7 @@ Three SQLs are generated:
     ```
 
 3.  For the `authors` association of the 4 `Book` objects in column 2, no filter
-    ```sql
+    ```csharp
     select
 
         tb_1_.BOOK_ID,

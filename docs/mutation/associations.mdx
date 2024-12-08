@@ -44,7 +44,7 @@ sqlClient
 
 The generated SQL is:
 
-```sql
+```csharp
 insert into
     BOOK_AUTHOR_MAPPING(
         /* highlight-next-line */
@@ -85,7 +85,7 @@ Note that compared to the previous example, the parameter order of the `save` me
 
 The generated SQL is:
 
-```sql
+```csharp
 insert into
     BOOK_AUTHOR_MAPPING(
         /* highlight-next-line */
@@ -192,7 +192,7 @@ sqlClient
 
 Here there are 3 books, two authors, and 6 total combination ways. The `saveAll` method inserts all 6 combinations into the association table, generating the following SQL:
 
-```sql  
+```csharp  
 insert into BOOK_AUTHOR_MAPPING(
     BOOK_ID, AUTHOR_ID
 ) values
@@ -299,7 +299,7 @@ The generated SQL statements are:
 
 1.  Check which data to be inserted already exists:
 
-    ```sql
+    ```csharp
     select
         BOOK_ID, AUTHOR_ID
     from BOOK_AUTHOR_MAPPING
@@ -315,7 +315,7 @@ The generated SQL statements are:
 
     Here, assuming it is determined that only two rows of data really need to be inserted, the generated SQL is:
 
-    ```sql 
+    ```csharp 
     insert into BOOK_AUTHOR_MAPPING(
         BOOK_ID, AUTHOR_ID  
     ) values
@@ -357,7 +357,7 @@ sqlClient
 
 The generated SQL is:
 
-```sql
+```csharp
 delete from BOOK_AUTHOR_MAPPING
 where
     (BOOK_ID, AUTHOR_ID) in (
@@ -450,7 +450,7 @@ sqlClient
 
 The generated SQL is:
 
-```sql
+```csharp
 delete from BOOK_AUTHOR_MAPPING  
 where
     (BOOK_ID, AUTHOR_ID) in (

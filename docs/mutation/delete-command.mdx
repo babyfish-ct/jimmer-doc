@@ -214,7 +214,7 @@ Then the following three behaviors:
 
 have the same function, they all represent logical delete, and generate the following sql:
 
-```sql
+```csharp
 update BOOK  
 set DELETED = ? /* true */
 where ID in(?/* 1L*/)
@@ -272,13 +272,13 @@ println(
 The finally generated SQL is: 
 
 1. 
-    ```sql
+    ```csharp
     delete from BOOK_AUTHOR_MAPPING
     where BOOK_ID in(?, ?, ?, ?) 
     ```
 
 2. 
-    ```sql
+    ```csharp
     delete from BOOK
     where ID in(?, ?, ?, ?)
     ```
@@ -354,14 +354,14 @@ Next, Jimmer will refer to the [@OnDissociate](../mapping/advanced/on-dissociate
 ## Dissociation Examples
 1.  If the foreign key corresponding to `Book.store` is configured by the [@OnDissociate](../mapping/advanced/on-dissociate) annotation as `SET_NULL`, the following SQL is executed:
 
-    ```sql
+    ```csharp
     update BOOK set STORE_ID = null where STORE_ID in(?)
     ```
     where the parameter is the id of the deleted object. Thus, the foreign keys of these discarded objects are set to null.
     
 2.  Otherwise, first execute:
 
-    ```sql
+    ```csharp
     select ID from BOOK where STORE_ID in(?) 
     ```
     where the parameter is the id of the deleted object. Thus, the ids of these discarded objects are obtained.

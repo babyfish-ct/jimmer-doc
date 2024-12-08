@@ -1,0 +1,917 @@
+---
+sidebar_position: 5
+title: Constraint Violation Error Handling
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Precheck from './_precheck.mdx';
+import { ViewMore } from '@site/src/components/ViewMore';
+
+## Basic Concepts
+
+In daily project development, there is a very challenging issue: translating database constraint violation errors into user-friendly error messages.
+
+Based on constraints that cannot be simply validated through input validation, databases have three types of constraints that are difficult to handle when violated:
+
+-   Primary key constraints
+-   Unique constraints *(or unique indexes)*
+-   Foreign key constraints
+
+To standardize across different database products, the SQL standard specifies that errors caused by constraint violations have the category code [23 *(integrity constraint violation)*](https://en.wikipedia.org/wiki/SQLSTATE). All related error states begin with `23`.
+
+However, standardization ends there. For more detailed issues, such as:
+
+-   Which constraint was violated
+
+-   How to get the table name and column name from the database dictionary based on the constraint name
+
+-   Most importantly, which data row modification action caused the exception
+
+Different database products behave inconsistently and lack clear APIs to obtain this information.
+
+To provide users with clear error descriptions, many business projects adopt a simple but crude method: <ViewMore buttonText="pre-checking through queries" size="small"><Precheck/></ViewMore> to determine if the upcoming operation is safe before execution.
+
+However, this pre-checking approach has many disadvantages:
+
+-   Developers need to write various pre-checking code repeatedly, leading to high development costs
+
+-   Only suitable for simple single-record DML modifications, completely unsuitable for advanced operations like save commands that recursively save deep data structures in batch
+
+-   Poor performance, as errors are rare events, and pre-checking every time is wasteful
+
+Therefore, Jimmer adopts the following strategy:
+
+-   Uses post-investigation approach, directly modifying the database first, and if constraint violation errors are reported, investigating the cause afterward
+
+-   During error investigation, uses queries to gather as much information as possible, reporting:
+
+    -   The path of the illegal object in the saved data structure
+
+    -   The entity type and related properties that caused the error
+
+    -   The specific object and related data that caused the error
+
+-   Allows users to customize exception translators to further translate Jimmer's investigated exceptions into end-user friendly messages
+
+:::info
+The database error investigation can occur due to either root object save failure or associated object save failure. Jimmer treats both cases equally, without distinction.
+
+However, to simplify the documentation, the examples in this article demonstrate saving relatively simple objects, avoiding deep data structures *(in fact, if saving deep associated objects fails, it will be investigated the same way)*.
+:::
+
+## Checking for Id Conflicts
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setId(100L);
+        draft.setName("SQL in Action");
+        draft.setEdition(1);
+        draft.setPrice(new BigDecimal("59.9"));
+        draft.setStoreId(2L);
+    }),
+    Immutables.createBook(draft -> {
+        // highlight-next-line
+        draft.setId(7L); // Exists
+        draft.setName("LINQ in Action");
+        draft.setEdition(3);
+        draft.setPrice(new BigDecimal("49.9"));
+        draft.setStoreId(2L);
+    })
+);
+
+sqlClient.insertEntities(books);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book { 
+        id = 100L
+        name = "SQL in Action"
+        edition = 1
+        price = BigDecimal("59.9")
+        storeId = 2L
+    },
+    Book {
+        // highlight-next-line
+        id = 7L // Exists
+        name = "LINQ in Action"
+        edition = 3
+        price = BigDecimal("49.9")
+        storeId = 2L
+    }
+)
+
+sqlClient.insertEntities(books)
+```
+
+</TabItem>
+</Tabs>
+
+This code will generate the following two SQL statements:
+
+1.  Batch insert data
+
+    ```csharp
+    insert into BOOK(
+        ID, NAME, EDITION, PRICE, STORE_ID
+    ) values(?, ?, ?, ?, ?)
+    /* batch-0: [100, SQL in Action, 1, 59.9, 2] */
+    /* highlight-next-line */
+    /* batch-1: [7, LINQ in Action, 3, 49.9, 2] */
+    ```
+
+    Here, inserting the second record will cause an `id` conflict
+
+2.  Investigate the cause of the constraint violation
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="Most Databases">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    SQL: select
+        tb_1_.ID
+    from BOOK tb_1_
+    where
+        tb_1_.ID = ? /* 7 */
+    ```
+    
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    SQL: select
+        tb_1_.ID
+    from BOOK tb_1_
+    where
+        tb_1_.ID = any(? /* [100, 7] */)
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    - For most databases, the original JDBC exception information from the batch SQL can determine which record violated the constraint, so only the problematic record is investigated
+    
+    - For Postgres, the original JDBC exception information from the batch SQL cannot determine which record violated the constraint, so all records are investigated
+
+    Either way, Jimmer can investigate and identify the problem.
+
+Finally, Jimmer will throw an exception based on the investigation results:
+
+```sh
+#highlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$NotUnique: 
+    Save error caused by the path: "<root>": 
+    Cannot save the entity, the value of the id property 
+    "com.yourcompany.yourpoject.model.Book.id" 
+    #highlight-next-line
+    is "7" which already exists
+```
+
+## Checking for Key Conflicts
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setId(11L);
+        draft.setName("GraphQL in Action");
+        draft.setEdition(4);
+    }),
+    Immutables.createBook(draft -> {
+        draft.setId(12L); 
+        // highlight-next-line
+        draft.setName("GraphQL in Action"); // `name + edition` exists
+        // highlight-next-line
+        draft.setEdition(1); // `name + edition` exists
+    })
+);
+
+sqlClient.updateEntities(books);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book { 
+        id = 11L
+        name = "GraphQL in Action"
+        edition = 4
+    },
+    Book {
+        id = 12
+        // highlight-next-line
+        name = "GraphQL in Action" // `name + edition` exists
+        // highlight-next-line
+        edition = 1 // `name + edition` exists
+    }
+)
+
+sqlClient.updateEntities(books)
+```
+
+</TabItem>
+</Tabs>
+
+This code will generate the following two SQL statements:
+
+1.  Batch update data
+
+    ```csharp
+    update BOOK
+    set
+        NAME = ?,
+        EDITION = ?
+    where
+        ID = ?
+    /* batch-0: [GraphQL in Action, 4, 11] */
+    /* highlight-next-line */
+    /* batch-1: [GraphQL in Action, 1, 12] */
+    ```
+
+    Here, modifying the second record will cause a conflict with the combination of `name` and `edition`
+
+2.  Investigate the cause of the constraint violation
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="Most Databases">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    select
+        tb_1_.ID
+    from BOOK tb_1_
+    where
+        (tb_1_.NAME, tb_1_.EDITION) = (
+            ? /* GraphQL in Action */, ? /* 4 */
+        )
+    ```
+    
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    SQL: select
+        tb_1_.ID,
+        tb_1_.NAME,
+        tb_1_.EDITION
+    from BOOK tb_1_
+    where
+        (tb_1_.NAME, tb_1_.EDITION) in (
+            (? /* GraphQL in Action */, ? /* 4 */), 
+            (? /* GraphQL in Action */, ? /* 1 */)
+        )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    - For most databases, the original JDBC exception information from the batch SQL can determine which record violated the constraint, so only the problematic record is investigated
+
+    - For Postgres, the original JDBC exception information from the batch SQL cannot determine which record violated the constraint, so all records are investigated
+
+    Either way, Jimmer can investigate and identify the problem.
+
+Finally, Jimmer will throw an exception based on the investigation results:
+
+```sh
+#lighlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$NotUnique: 
+    Save error caused by the path: "<root>": 
+    Cannot save the entity, the value of the key properties "[
+        com.yourcompany.yourproject.model.Book.name, 
+        com.yourcompany.yourproject.Book.edition
+    #highlight-start
+    ]" are "Tuple2(
+        _1=GraphQL in Action, 
+        _2=1
+    )" which already exists
+    #highlight-end
+```
+
+:::info
+In the [Mapping/Advanced Mapping/Key](../../mapping/advanced/key) article, we introduced that entities can be configured with multiple unique constraints *(or unique indexes)* *(in fact, this documentation has not been modified yet)*.
+
+If an entity has more than one unique constraint *(or unique index)*, Jimmer will investigate them one by one.
+:::
+
+I'll translate the document while maintaining the technical terms as requested.
+
+# Checking the Existence of Associated Objects
+
+In save commands, associations are divided into [long associations and short associations](./association/classification.mdx).
+
+- For long associations, if the associated object doesn't exist, Jimmer will automatically create it first, so there is no issue of non-existent associated objects.
+
+- For short associations, Jimmer assumes that the associated object must exist, and problems will arise if the associated object doesn't exist.
+
+Therefore, this issue is specific to short associations. In the following examples, all associated objects are id-only objects.
+
+In [Mapping/Basic Mapping/Real and Fake Foreign Keys](../../mapping/base/foreignkey), we introduced that Jimmer supports both real and fake foreign keys.
+Only real foreign keys involve database constraint violation issues, so we'll discuss them separately.
+
+### Fake Foreign Keys
+
+For fake foreign keys, there are no foreign key constraints in the database. If the specified associated object doesn't exist, meaning the association ID is invalid, the database has no opinion on this.
+
+Therefore, by default, Jimmer doesn't check whether the associated object exists for fake foreign keys, allowing users to save invalid dangling values.
+
+Although this is unrelated to the main topic of this article, we'll still explain it. Users can configure the save command to make Jimmer verify the existence of associated objects beforehand.
+
+:::info
+Assume `Book.store` is a fake foreign key
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+        Immutables.createBook(draft -> {
+            draft.setId(8L);
+            draft.setStoreId(2L);
+        }),
+        Immutables.createBook(draft -> {
+            draft.setId(9L);
+            draft.setStoreId(999L); // Invalid associated id
+        })
+);
+
+sqlClient
+        .saveEntitiesCommand(books)
+        .setMode(SaveMode.UPDATE_ONLY)
+        // highlight-next-line
+        .setAutoIdOnlyTargetChecking(
+                BookProps.STORE
+        )
+        .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        id = 8L
+        storeId = 2L
+    },
+    Book {
+        id = 9L
+        storeId = 999L // Invalid associated id
+    }
+)
+
+sqlClient.updateEntities(books) {
+    // highlight-next-line
+    setAutoIdOnlyTargetChecking(
+        Book::store
+    )
+}
+```
+
+</TabItem>
+</Tabs>
+
+Here, the `setAutoIdOnlyTargetChecking` method is used to set which short associations need to be verified beforehand.
+
+Before saving the data, Jimmer will verify the association IDs through a query
+
+```csharp
+select
+    tb_1_.ID
+from BOOK_STORE tb_1_
+where
+    /* highlight-next-line */
+    tb_1_.ID = any(? /* [2, 999] */)
+```
+
+Finally, it throws the following exception
+
+```sh
+#highlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$IllegalTargetId: 
+    Save error caused by the path: "<root>.store": 
+    Cannot save the entity, the associated id of the reference 
+    property "com.yourcompany.yourproject.model.Book.store" is 
+    #highlight-next-line
+    "999" but there is no corresponding associated object in the database
+```
+
+### Real Foreign Keys
+
+For real foreign keys, there are foreign key constraints in the database. If the specified associated object doesn't exist, meaning the association ID is invalid, the database will report a constraint violation error.
+
+Without any user configuration, if an error occurs, Jimmer will automatically analyze the error reported by the database to identify the invalid association ID.
+
+:::info
+Assume `Book.store` is a real foreign key
+:::
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+        Immutables.createBook(draft -> {
+            draft.setId(8L);
+            draft.setStoreId(2L);
+        }),
+        Immutables.createBook(draft -> {
+            draft.setId(9L);
+            // highlight-next-line
+            draft.setStoreId(999L); // Invalid associated id
+        })
+);
+
+sqlClient.updateEntities(books);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        id = 8L
+        storeId = 2L
+    },
+    Book {
+        id = 9L
+        // highlight-next-line
+        storeId = 999L // Invalid associated id
+    }
+)
+
+sqlClient.updateEntities(books)
+```
+
+</TabItem>
+</Tabs>
+
+This code will generate two SQL statements
+
+1.  Batch update data
+
+    ```csharp
+    update BOOK
+    set
+        STORE_ID = ?
+    where
+        ID = ?
+    /* batch-0: [2, 8] */
+    /* highlight-next-line */
+    /* batch-1: [999, 9] */
+    ```
+
+    Here, modifying the second record will cause a foreign key constraint violation on the `STORE_ID` column.
+
+2.  Investigate the cause of the constraint violation
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="Most Databases">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    SQL: select
+        tb_1_.ID
+    from BOOK_STORE tb_1_
+    where
+        tb_1_.ID = ? /* 999 */
+    ```
+    
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```csharp
+    /* highlight-next-line */
+    Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
+    SQL: select
+        tb_1_.ID
+    from BOOK_STORE tb_1_
+    where
+        tb_1_.ID = any(? /* [2, 999] */)
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    - For most databases, the original JDBC exception information thrown by the batch SQL can determine which record violated the constraint, so only the erroneous record is investigated
+
+    - For Postgres, the original JDBC exception information thrown by the batch SQL cannot determine which record violated the constraint, so all records are investigated
+
+    Either way, Jimmer can investigate the problem.
+
+Finally, Jimmer will throw an exception based on the investigation results
+
+```sh
+#highlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$IllegalTargetId: 
+    Save error caused by the path: "<root>.store": 
+    Cannot save the entity, the associated id of the reference 
+    property "com.yourcompany.yourproject.model.Book.store" is 
+    #highlight-next-line
+    "999" but there is no corresponding associated object in the database
+```
+
+:::tip
+As you can see, although the automatic error investigation mechanism for real foreign keys and the manual checking mechanism for fake foreign keys are completely different, they produce exactly the same exception information.
+:::
+
+## User Exception Translator
+
+### Exception Translation Interface
+
+As mentioned earlier, Jimmer investigates database-reported constraint violations and throws exceptions
+
+-   `org.babyfish.jimmer.sql.exception.SaveException.NotUnique`
+
+    Violation of primary key constraint, unique constraint, or unique index
+
+-   `org.babyfish.jimmer.sql.exception.SaveException.IllegalTargetId`
+
+    Illegal association ID
+
+These two exceptions not only provide detailed error messages but also offer rich APIs to obtain various information.
+
+However, this is far from enough. In real projects, we must display easy-to-understand information for end users.
+
+Indeed, we can catch and handle exceptions after each save command call. However, Jimmer supports more powerful unified exception translation.
+
+Jimmer provides an exception translation interface `ExceptionTranslator`, the code is as follows
+
+```java title="ExceptionTranslator.java"
+package org.babyfish.jimmer.sql.runtime;
+
+public interface ExceptionTranslator<E extends Exception> {
+
+    /**
+     * Translate the exception.
+     *
+     * <p>If the exception is not known how to be translated,
+     * return null or the original argument.</p>
+     */
+    @Nullable
+    Exception translate(@NotNull E exception, @NotNull Args args);
+
+    interface Args {
+        ...omitted...
+    }
+}
+```
+
+Users can implement this interface through classes *(note: lambda expressions cannot be used)* and specify generic type parameter for the interface, for example:
+
+-   Translate `SaveException.NotUnique` exception
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    public class NotUniqueExceptionTranslator
+    extends ExceptionTranslator<
+        // highlight-next-line
+        SaveException.NotUnique
+    > {
+        ...omitted...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    class NotUniqueExceptionTranslator :
+    ExceptionTranslator<
+        // highlight-next-line
+        SaveException.NotUnique
+    > {
+        ...omitted...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   Translate `SaveException.IllegalTargetId` exception
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    public class IllegalTargetIdExceptionTranslator
+    extends ExceptionTranslator<
+        // highlight-next-line
+        SaveException.IllegalTargetId
+    > {
+        ...omitted...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    class IllegalTargetIdExceptionTranslator :
+    ExceptionTranslator<
+        // highlight-next-line
+        SaveException.IllegalTargetId
+    > {
+        ...omitted...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   You can even translate other JDBC exceptions that Jimmer is not interested in
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    public class SQLExceptionTranslator
+    extends ExceptionTranslator<
+        // highlight-next-line
+        java.sql.SQLException
+    > {
+        ...omitted...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    class SQLExceptionTranslator :
+    ExceptionTranslator<
+        // highlight-next-line
+        java.sql.SQLException
+    > {
+        ...omitted...
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+### Multiple Registration Methods
+
+Just writing a class to implement this interface is useless; you must create an object and register it to Jimmer take effect.
+
+Jimmer provides two registration methods, taking the `NotUniqueExceptionTranslator` mentioned above as an example:
+
+1.  Global registration, which can be divided into two types
+
+    1.  Not using Jimmer's spring starter
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        JSqlClient sqlClient = JSqlClient
+            .newBuilder()
+            // highlight-next-line
+            .addExceptionTranslator(
+                new NotUniqueExceptionTranslator()
+            )
+            ...other configurations omitted...
+            .build();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val sqlClient = sqlClient {
+            // highlight-next-line
+            addExceptionTranslator(
+                NotUniqueExceptionTranslator()
+            )
+            ...other configurations omitted...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+    2.  Using Jimmer's spring starter
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        // highlight-next-line
+        @Component
+        public class NotUniqueExceptionTranslator
+        extends ExceptionTranslator<SaveException.NotUnique> {
+            ...omitted...
+        }
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        // highlight-next-line
+        @Component
+        class NotUniqueExceptionTranslator :
+        ExceptionTranslator<SaveException.NotUnique> {
+            ...omitted...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+2.  Register for specific save commands
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    Book book = ...omitted...;
+
+    sqlClient
+        .saveCommand(book)
+        // highlight-next-line
+        .addExceptionTranslator(
+            new NotUniqueExceptionTranslator()
+        )
+        .execute()
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val book: Book = ...omitted...
+
+    sqlClient.save(book) {
+        // highlight-next-line
+        addExceptionTranslator(
+            new NotUniqueExceptionTranslator()
+        )
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+### Implementing the `translate` Method
+
+Finally, let's show how to implement the `translate` method
+
+-   Translate `SaveException.NotUnique` exception
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    @Component
+    public class NotUniqueExceptionTranslator
+    extends ExceptionTranslator<SaveException.NotUnique> {
+        
+        @Override
+        public @Nullable Exception translate(
+            @NotNull SaveException.NotUnique exception, 
+            @NotNull Args args
+        ) {
+            
+            // highlight-next-line
+            if (exception.isMatched(BookProps.ID)) {
+                return new IllegalArgumentException(
+                        "Book with ID " +
+                                exception.getValue(BookProps.ID) +
+                                " already exists"
+                );
+            }
+            
+            // highlight-next-line
+            if (exception.isMatched(BookProps.NAME, BookProps.EDITION)) {
+                return new IllegalArgumentException(
+                        "Book with name " +
+                                exception.getValue(BookProps.NAME) +
+                                " and edition " +
+                                exception.getValue(BookProps.EDITION) +
+                                " already exists"
+                );
+            }
+            
+            //No processing needed, can also be written as `return exception`
+            return null;
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    @Component
+    class NotUniqueExceptionTranslator :
+    ExceptionTranslator<SaveException.NotUnique> {
+
+        override fun translate(
+            exception: NotUnique, 
+            args: ExceptionTranslator.Args
+        ): Exception? =
+            when {
+                // highlight-next-line
+                exception.isMatched(Book::id) ->
+                    throw IllegalArgumentException(
+                        "Book with ID ${exception[Book::id]} already exists"
+                    )
+                // highlight-next-line
+                exception.isMatched(Book::name, Book::edition) ->
+                    throw IllegalArgumentException(
+                        "Book with name ${
+                            exception[Book::id]
+                        } and edition ${
+                            exception[Book::edition]
+                        } already exists"
+                    )
+                else ->
+                    null //No processing needed, can also be written as `exception`
+            }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   Translate `SaveException.IllegalTargetId` exception
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    @Component
+    public class IllegalTargetIdExceptionTranslator
+    extends ExceptionTranslator<SaveException.IllegalTargetId> {
+        
+        @Override
+        public @Nullable Exception translate(
+                @NotNull SaveException.IllegalTargetId exception,
+                @NotNull Args args
+        ) {
+            if (exception.getProp() == BookProps.STORE.unwrap()) {
+                throw new IllegalArgumentException(
+                        "Cannot set invalid associated store ID for book: " +
+                                exception.getTargetIds()
+                );
+            }
+
+            // No processing needed, can also be written as `return exception`
+            return null;
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    @Component
+    class IllegalTargetIdExceptionTranslator :
+    ExceptionTranslator<SaveException.IllegalTargetId> {
+
+        override fun translate(
+            exception: IllegalTargetId,
+            args: ExceptionTranslator.Args
+        ): Exception? =
+            when {
+                // highlight-next-line
+                exception.prop == BookProps.STORE.unwrap() ->
+                    throw IllegalArgumentException(
+                        "Cannot set invalid associated store ID for book: ${
+                            exception.targetIds
+                        }"
+                    )
+                else ->
+                    null //No processing needed, can also be written as `exception`
+            }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>

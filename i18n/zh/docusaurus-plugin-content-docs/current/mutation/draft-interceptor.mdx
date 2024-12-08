@@ -357,7 +357,7 @@ sqlClient.entities.save(book)
 </Tabs>
 
 -   如果上面的保存指令最终导致了insert操作，生成的SQL如下
-    ```sql
+    ```csharp
     insert into BOOK(
         /* highlight-start */
         CREATED_TIME,
@@ -379,7 +379,7 @@ sqlClient.entities.save(book)
     其中，为`CREATED_TIME`、 `MODIFIED_TIME`、`CREATED_BY`和`MODIFIED_BY`赋值的行为由拦截器自动添加
 
 -   如果上面的保存指令最终导致了update操作，生成的SQL如下
-    ```sql
+    ```csharp
     update BOOK set 
         /* highlight-start */
         MODIFIED_TIME = ?,

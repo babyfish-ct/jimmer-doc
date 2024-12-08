@@ -117,7 +117,7 @@ val rowCount = query.fetchUnlimitedCount()
 
 所以，优化规则并不能生效，count-query仍然需要保留`table.store()`，并最终在SQL中生成JOIN子句
 
-```sql
+```csharp
 select 
     count(tb_1_.ID) 
 from BOOK as tb_1_ 
@@ -184,7 +184,7 @@ val rowCount = query.fetchUnlimitedCount()
 </Tabs>
 
 现在，优化可以生效，最终count-query生成SQL如下
-```sql
+```csharp
 select 
     count(tb_1_.ID) 
 from BOOK as tb_1_ 

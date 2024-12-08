@@ -472,7 +472,7 @@ sqlClient.saveEntities(
 
     生成如下SQL
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(?, ?, ?, ?)
@@ -606,7 +606,7 @@ sqlClient.saveEntities(
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     merge into BOOK tb_1_ 
     using(values(?, ?, ?, ?)) tb_2_(
         NAME, EDITION, PRICE, STORE_ID
@@ -631,7 +631,7 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```sql
+    ```csharp
     insert 
     /* highlight-next-line */
     ignore
@@ -649,7 +649,7 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="posgres" label="Postgres">
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(
@@ -773,7 +773,7 @@ sqlClient.saveEntities(
 
     生成如下SQL
 
-    ```sql
+    ```csharp
     update BOOK
     set
         PRICE = ?,
@@ -912,7 +912,7 @@ sqlClient.saveEntities(
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     /* highlight-next-line */
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
@@ -928,7 +928,7 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(
@@ -948,7 +948,7 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="posgres" label="Postgres">
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(
@@ -1114,7 +1114,7 @@ sqlClient.saveEntities(
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     delete from BOOK_AUTHOR_MAPPING
     where
         BOOK_ID = ?
@@ -1127,7 +1127,7 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```sql
+    ```csharp
     delete from BOOK_AUTHOR_MAPPING
     where
         BOOK_ID in (
@@ -1145,7 +1145,7 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="posgres" label="Postgres">
 
-    ```sql
+    ```csharp
     delete from BOOK_AUTHOR_MAPPING
     where
         BOOK_ID = ?
@@ -1183,7 +1183,7 @@ sqlClient.saveEntities(
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```sql
+    ```csharp
     merge into BOOK_AUTHOR_MAPPING tb_1_ 
     using(values(?, ?)) tb_2_(
         BOOK_ID, AUTHOR_ID
@@ -1205,7 +1205,7 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```sql
+    ```csharp
     insert 
     /* highlight-next-line */
     ignore
@@ -1220,7 +1220,7 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="posgres" label="Postgres">
 
-    ```sql
+    ```csharp
     insert 
     into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
     values(?, ?)
@@ -1355,7 +1355,7 @@ sqlClient.saveEntities(
     -   `MANING`的id为`2`
     -   `AMAZON`的id为`100`
 
-    ```sql
+    ```csharp
     delete from BOOK 
     where STORE_ID in (
         ? /* 2 */, ? /* 100 */
@@ -1375,7 +1375,7 @@ sqlClient.saveEntities(
     -   `MANING`的id为`2`
     -   `AMAZON`的id为`100`
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(?, ?, ?, ?)

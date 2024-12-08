@@ -64,7 +64,7 @@ interface TreeNode {
 
 Prepare the database:
 
-```sql
+```csharp
 create table tree_node(
     node_id bigint not null,
     name varchar(20) not null,
@@ -174,7 +174,7 @@ Here, `recursiveChildNodes` in Java code and `childNodes*` in Kotlin code repres
 
 1.  Query root nodes
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID,
         tb_1_.NAME
@@ -185,7 +185,7 @@ Here, `recursiveChildNodes` in Java code and `childNodes*` in Kotlin code repres
 
 2.  Fetch layer 1
 
-    ```sql 
+    ```csharp 
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -197,7 +197,7 @@ Here, `recursiveChildNodes` in Java code and `childNodes*` in Kotlin code repres
 
 3.  Fetch layer 2  
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID, 
         tb_1_.NODE_ID,
@@ -209,7 +209,7 @@ Here, `recursiveChildNodes` in Java code and `childNodes*` in Kotlin code repres
 
 4.  Fetch layer 3
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -221,7 +221,7 @@ Here, `recursiveChildNodes` in Java code and `childNodes*` in Kotlin code repres
 
 5.  Fetch layer 4  
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -233,7 +233,7 @@ Here, `recursiveChildNodes` in Java code and `childNodes*` in Kotlin code repres
 
 6.  Fetch layer 5 *(This step does not query any data and the recursive query downstairs ends)*
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID, 
         tb_1_.NODE_ID,
@@ -432,7 +432,7 @@ val treeNodes = sqlClient
 
 1.  Main query to fetch root nodes (layer 0)
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID, 
         tb_1_.NAME
@@ -443,7 +443,7 @@ val treeNodes = sqlClient
 
 2.  Fetch layer 1  
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID, 
@@ -455,7 +455,7 @@ val treeNodes = sqlClient
 
 3.  Fetch layer 2
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -567,7 +567,7 @@ The above code means all nodes will be recursively fetched except the `Clothing`
 
 1.  Query root objects
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID,
         tb_1_.NAME
@@ -576,7 +576,7 @@ The above code means all nodes will be recursively fetched except the `Clothing`
     ```
 
 2.  Fetch layer 1
-    ```sql  
+    ```csharp  
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -587,7 +587,7 @@ The above code means all nodes will be recursively fetched except the `Clothing`
     ```
 
 3.  Fetch layer 2
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -606,7 +606,7 @@ The above code means all nodes will be recursively fetched except the `Clothing`
 
 4.  Fetch layer 3
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -616,7 +616,7 @@ The above code means all nodes will be recursively fetched except the `Clothing`
     tb_1_.PARENT_ID in (?, ?)
     ``` 
     5. Fetch layer 4
-    ```sql 
+    ```csharp 
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -716,7 +716,7 @@ When executed, the following 6 SQL statements are generated:
 
 1.  Query current node
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID, 
         tb_1_.NAME,
@@ -728,7 +728,7 @@ When executed, the following 6 SQL statements are generated:
 
 2.  Query first layer parent node upstairs  
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID,
         tb_1_.NAME, 
@@ -740,7 +740,7 @@ When executed, the following 6 SQL statements are generated:
 
 3.  Query second layer parent node upstairs *(This step will query the root node and the recursive query upstairs ends)*
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID,
         tb_1_.NAME,
@@ -752,7 +752,7 @@ When executed, the following 6 SQL statements are generated:
 
 4.  Query first layer child nodes downstairs
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID, 
         tb_1_.NAME
@@ -763,7 +763,7 @@ When executed, the following 6 SQL statements are generated:
 
 5.  Query second layer child nodes downstairs
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -777,7 +777,7 @@ When executed, the following 6 SQL statements are generated:
 
 6.  Query third layer child nodes downstairs *(This step does not query any data and the recursive query downstairs ends)*
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,

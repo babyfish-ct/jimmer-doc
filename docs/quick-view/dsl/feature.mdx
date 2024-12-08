@@ -133,7 +133,7 @@ Now let's see the effects:
 
     No where condition will be generated and the SQL is:  
 
-    ```sql
+    ```csharp
     select 
         tb_1_.ID,
         tb_1_.NAME, 
@@ -175,7 +175,7 @@ Now let's see the effects:
 
     All where conditions will be generated and the SQL is:  
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,  
         tb_1_.NAME,
@@ -277,7 +277,7 @@ class BookRepository(
 
 :::tip
 The path `table.store()` in Java code or `table.store` in Kotlin code is called a dynamic table join path, which is represented by the following SQL logic
-```sql
+```csharp
 from BOOK b
     /* highlight-next-line */
     inner join BOOK_STORE s on b.STORE_ID = s.ID
@@ -346,7 +346,7 @@ If a table join is created in the DSL but is not actually used, the table join w
 
 The generated SQL statement is as follows
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -397,7 +397,7 @@ If conflicting table joins of the same association are created multiple times in
 
 The generated SQL is:  
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,  
@@ -622,7 +622,7 @@ val books = bookRepository.findBooks()
 
 The final SQL does not contain any subqueries:  
 
-```sql  
+```csharp  
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -675,7 +675,7 @@ If conflicting implicit subqueries of the same association are created multiple 
 
 The final generated SQL is:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

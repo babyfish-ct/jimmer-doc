@@ -16,7 +16,7 @@ However, there is one scenario that makes the choice of mapping mode very tangle
 
 Let's look at a piece of DDL
 
-```sql
+```csharp
 create table book(
     ...omit...
 )engine=innodb;;
@@ -128,7 +128,7 @@ The corresponding many-to-many association in ORM is as follows:
 
 Let's look at the second scenario, first, look at a piece of DDL
 
-```sql
+```csharp
 create table order_(
     ...omit...
 ) engine=innodb;
@@ -281,7 +281,7 @@ In the previous text, we showed two business scenarios
 
 Next, let's look at scenario 3, first look at the DDL:
 
-```sql
+```csharp
 create table student(
     ...omit...
 )engine=innodb;;

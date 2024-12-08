@@ -21,23 +21,24 @@
     "@easyops-cn/docusaurus-search-local": "^0.33.6",
     "@emotion/react": "^11.9.3",
     "@emotion/styled": "^11.9.3",
-    "@mdx-js/react": "^3.0.1",
+    "@mdx-js/react": "^3.0.0",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.9.1",
+    "babel-plugin-import": "^1.13.8",
     "bizcharts": "^4.1.19",
-    "clsx": "^1.1.1",
+    "clsx": "^2.0.0",
     "docusaurus-init": "^1.14.7",
     "global": "^4.4.0",
-    "prism-react-renderer": "^1.3.1",
+    "prism-react-renderer": "^2.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "use-immer": "^0.9.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^3.6.3",
-    "@tsconfig/docusaurus": "^1.0.5",
-    "babel-plugin-import": "^1.13.8",
-    "typescript": "^4.6.4"
+    "@docusaurus/module-type-aliases": "3.6.3",
+    "@docusaurus/tsconfig": "3.6.3",
+    "@docusaurus/types": "3.6.3",
+    "typescript": "~5.6.2"
   },
   "browserslist": {
     "production": [
@@ -51,5 +52,8 @@
       "last 1 safari version"
     ]
   },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "engines": {
+    "node": ">=18.0"
+  }
 }

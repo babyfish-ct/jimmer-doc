@@ -70,7 +70,7 @@ Jimmer支持[逻辑删除](./logical-deleted)，该功能会导致被数据只�
 
     这时，把`@Key`所对应的列 *(对这个例子而言，就是`name`)* 和逻辑删除标志列 *(对这个例子而言，就是`deletedTime`)* 合并到一起定义唯一性约束即可，例如
 
-    ```sql
+    ```csharp
     alter table BOOK
         add constraint UQ_BOOK
             unique(NAME, DELETED_TIME);
@@ -127,7 +127,7 @@ Jimmer支持[逻辑删除](./logical-deleted)，该功能会导致被数据只�
     不幸的是，并非所有数据库都支持条件索引，不同的数据库下创建条件索引的语法完全不同。这里仅以Postgres为例
     :::
 
-    ```sql
+    ```csharp
     create unique index BOOK_KEY_INDEX 
         on BOOK(NAME)
         // highlight-next-line

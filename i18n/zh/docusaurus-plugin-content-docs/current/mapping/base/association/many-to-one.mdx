@@ -86,7 +86,7 @@ interface Book {
 
 外键可真可假。伪外键在后续文档中讨论，这里假设外键是真实的，则数据库中对应的约束为
 
-```sql
+```csharp
 // 如果指向关联对象的外键是真的，建立外键约束
 alter table BOOK
     add constraint FK_BOOK__BOOK_STORE
@@ -185,7 +185,7 @@ interface Book {
 
 中间表`BOOK_BOOK_STORE_MAPPING`定义如下
 
-```sql
+```csharp
 create table BOOK_BOOK_STORE_MAPPING(
     BOOK_ID bigint not null,
     STORE_ID bigint not null

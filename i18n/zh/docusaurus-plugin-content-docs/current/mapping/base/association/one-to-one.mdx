@@ -108,7 +108,7 @@ interface Customer {
 
 外键可真可假。伪外键在后续文档中讨论，这里假设外键是真实的，则数据库中对应的约束为
 
-```sql
+```csharp
 // 如果指向关联对象的外键是真的，建立外键约束
 alter table CUSTOMER
     add constraint FK_CUSTOMER__ADDRESS
@@ -213,7 +213,7 @@ interface Customer {
 
 中间表`CUSTOMER_ADDRESS_MAPPING`定义如下
 
-```sql
+```csharp
 create table CUSTOMER_ADDRESS_MAPPING(
     CUSTOMER_ID bigint not null,
     ADDRESS_ID bigint not null

@@ -104,7 +104,7 @@ val books = bookRepository.findBooks()
 
 不会生成任何where条件，SQL如下
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -146,7 +146,7 @@ val books = bookRepository.findBooks(
 
 会生成所有where条件，SQL如下
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

@@ -120,7 +120,7 @@ Both subqueries are ineffective, they will both be ignored
 
 The final generated SQL does not contain any subqueries
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -164,7 +164,7 @@ Both subqueries are effective, but they conflict with each other, so they will b
 
 The final generated SQL will have only one subquery, not two
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

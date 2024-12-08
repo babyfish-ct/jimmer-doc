@@ -420,7 +420,7 @@ interface Book {
 
 Although the Key of the `Book` object is `name` and `edition`, because the `deletedMillis` property is the logical deletion flag, the non-primary key `UNIQUE` constraint at the database level should be:  
 
-```sql  
+```csharp  
 alter table BOOK
     add constraint uq_key_BOOK
         unique(NAME, EDITION, DELETED_MILLIS);  

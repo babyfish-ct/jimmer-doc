@@ -121,7 +121,7 @@ INSERT_ONLY works very simply - it inserts unconditionally without any checks.
 
 The generated batch operation SQL is as follows:
 
-```sql
+```csharp
 insert into BOOK(NAME, EDITION, PRICE, STORE_ID) values(?, ?, ?, ?)
 /* batch-0: SQL in Action, 3, 49.9, 2 */
 /* batch-1: [LINQ in Action, 2, 39.9, 2 */
@@ -207,7 +207,7 @@ println("Affected row count: ${result.totalAffectedRowCount}")
 
 Since the object's id property is specified, the object is updated based on its id. The generated batch operation SQL is as follows:
 
-```sql
+```csharp
 update BOOK
 set
     NAME = ?,
@@ -352,7 +352,7 @@ for (item in result.item) {
 
 Since the object's id property is not specified, the object is updated based on its key. The generated batch operation SQL is as follows:
 
-```sql
+```csharp
 update BOOK
 set
     PRICE = ?,
@@ -455,7 +455,7 @@ Jimmer prioritizes using the database's native UPSERT capabilities, so it genera
 <td>H2</td>
 <td>
 
-```sql
+```csharp
 merge into BOOK(
     ID, NAME, EDITION, PRICE, STORE_ID
 ) key(ID) values(
@@ -471,7 +471,7 @@ merge into BOOK(
 <td>MySQL</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(
     ID, NAME, EDITION, PRICE, STORE_ID
 ) values(?, ?, ?, ?, ?)
@@ -490,7 +490,7 @@ on duplicate key update
 <td>Postgres</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(
     ID, NAME, EDITION, PRICE, STORE_ID
 ) values(?, ?, ?, ?, ?)
@@ -602,7 +602,7 @@ However, in this case, it cannot achieve this *(we'll discuss how to solve this 
 In this situation, Jimmer will first execute a query, then based on the query results, determine which data should be INSERTed and which should be UPDATEd. This results in three SQL statements:
 
 1.  Query, with reason provided
-    ```sql
+    ```csharp
     /* highlight-next-line */
     Purpose: COMMAND(KEY_UNIQUE_CONSTRAINT_REQUIRED)
     SQL: select
@@ -627,7 +627,7 @@ In this situation, Jimmer will first execute a query, then based on the query re
 
 2.  INSERT operation for non-existing data
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(
@@ -639,7 +639,7 @@ In this situation, Jimmer will first execute a query, then based on the query re
 
 3.  UPDATE operation for existing data
 
-    ```sql
+    ```csharp
     update BOOK
     set
         PRICE = ?,
@@ -669,7 +669,7 @@ For `KEY_UNIQUE_CONSTRAINT_REQUIRED` specifically, it indicates the need for:
 
 1.  Creating a unique constraint for `Book.name` and `Book.edition` properties:
 
-    ```sql
+    ```csharp
     alter table book
         add constraint uq_book__name_edition
             /* highlight-next-line */
@@ -750,7 +750,7 @@ Once these two improvements are made, when running the previous example again, J
 <td>H2</td>
 <td>
 
-```sql
+```csharp
 merge into BOOK(
     NAME, EDITION, PRICE, STORE_ID
 ) key(
@@ -771,7 +771,7 @@ merge into BOOK(
 <td>MySQL</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(
     NAME, EDITION, PRICE, STORE_ID
 ) values(?, ?, ?, ?)
@@ -793,7 +793,7 @@ on duplicate key update
 <td>Postgres</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(
     NAME, EDITION, PRICE, STORE_ID
 ) values(?, ?, ?, ?, ?)
@@ -833,7 +833,7 @@ If you are using MySQL, there are two points to note:
   Users need to be responsible for their commitment.
 
 - The SQL generated for MySQL includes:
-  ```sql
+  ```csharp
   /* fake update to return all ids */ ID = last_insert_id(ID)
   ```    
   This is a relatively tricky technique. If the data is updated, it returns the existing id of the updated data; otherwise, it returns the id assigned by the database for automatically inserted data.
@@ -930,7 +930,7 @@ Jimmer will prioritize using the database's native capabilities for `INSERT_IF_A
 <td>H2</td>
 <td>
 
-```sql
+```csharp
 merge into BOOK tb_1_ 
 using(values(?, ?, ?, ?, ?)) tb_2_(
     ID, NAME, EDITION, PRICE, STORE_ID
@@ -950,7 +950,7 @@ values
 <td>MySQL</td>
 <td>
 
-```sql
+```csharp
 insert 
 // highlight-next-line
 ignore 
@@ -966,7 +966,7 @@ values(?, ?, ?, ?, ?)
 <td>Postgres</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
 values(?, ?, ?, ?, ?)
 on conflict(ID) 
@@ -1072,7 +1072,7 @@ Jimmer generates different SQL for different databases:
 <td>H2</td>
 <td>
 
-```sql
+```csharp
 merge into BOOK tb_1_ 
 using(values(?, ?, ?, ?, ?)) tb_2_(
     ID, NAME, EDITION, PRICE, STORE_ID
@@ -1098,7 +1098,7 @@ values
 <td>MySQL</td>
 <td>
 
-```sql
+```csharp
 insert 
 // highlight-next-line
 ignore 
@@ -1114,7 +1114,7 @@ values(?, ?, ?, ?, ?)
 <td>Postgres</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
 values(?, ?, ?, ?, ?)
 on conflict(

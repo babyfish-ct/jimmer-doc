@@ -747,7 +747,7 @@ println(stores)
 
     首先查询聚合根对象，执行如下SQL
     
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -770,7 +770,7 @@ println(stores)
     ```
 
     所以，执行如下SQL，完成关联属性`BookStore.books`
-    ```sql
+    ```csharp
     SQL: select,
         tb_1_.STORE_ID,
         tb_1_.ID
@@ -844,7 +844,7 @@ println(stores)
     ```
 
     所以，执行如下SQL，完成计算属性的计算
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         avg(tb_2_.PRICE)
@@ -1223,7 +1223,7 @@ println(stores)
 由于`Book-6`隶属于`BookStore-1`，所以可以预见的是，属性`BookStore.books-1`和`BookStore.avgPrice-1`所对应的多视角缓存必然失效。
 
 -   假如启用了BinLog触发器，用任何手段修改数据库都可以导致Jimmer缓存一致性的介入。比如直接在SQL IDE中执行如下SQL
-    ```sql
+    ```csharp
     update BOOK
     set TENANT = 'a' 
     where ID = 6;

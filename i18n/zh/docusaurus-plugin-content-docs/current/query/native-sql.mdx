@@ -76,7 +76,7 @@ kotlin没有这个问题，其API是统一的
 - `value(Object)`: 植入一个值，和SQL模板中的"%v"匹配。
 
 最终生成的SQL是
-```sql
+```csharp
 select 
     tb_1_.ID, 
     tb_1_.FIRST_NAME, 
@@ -151,7 +151,7 @@ val tuples = sqlClient
 
 生成的SQL如下
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

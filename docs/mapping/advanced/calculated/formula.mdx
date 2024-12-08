@@ -115,7 +115,7 @@ println(author)
 
 The executed SQL is:
 
-```sql 
+```csharp 
 select
     tb_1_.ID,
     /* highlight-start */  
@@ -332,7 +332,7 @@ val books = sqlClient
 
 Execute, generating two SQL statements
 
-1. ```sql
+1. ```csharp
    select
        tb_1_.ID,
        tb_1_.NAME,
@@ -344,7 +344,7 @@ Execute, generating two SQL statements
        tb_1_.EDITION desc
    ```
 
-2. ```sql
+2. ```csharp
    select
        tb_2_.BOOK_ID,
        tb_1_.ID,
@@ -481,7 +481,7 @@ println(author)
 
 The generated SQL is:  
 
-```sql
+```csharp
 select
     tb_1_.ID,
     /* Here, `%alias` in @Formula.sql is replaced with `tb_1_` */ 

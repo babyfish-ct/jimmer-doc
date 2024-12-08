@@ -81,7 +81,7 @@ val books = sqlClient
 
 生成的SQL为
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -143,7 +143,7 @@ val authors = sqlClient
 
 -   查询聚合根
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.FIRST_NAME,
@@ -154,7 +154,7 @@ val authors = sqlClient
 
 -   查询关联对象，应用逻辑删除过滤器
 
-    ```sql
+    ```csharp
     select
         tb_2_.AUTHOR_ID,
         tb_1_.ID,
@@ -212,7 +212,7 @@ val books = sqlClient
 
 这次，生成的SQL不再包含
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -264,7 +264,7 @@ val books = sqlClient
 
 生成的SQL为
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

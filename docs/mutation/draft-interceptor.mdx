@@ -348,7 +348,7 @@ sqlClient.entities.save(book)
 
 -   If the above save command finally results in an insert operation, the generated SQL is:
 
-    ```sql
+    ```csharp
     insert into BOOK(
         /* highlight-start */
         CREATED_TIME,
@@ -371,7 +371,7 @@ sqlClient.entities.save(book)
     
 -   If the above save command finally results in an update operation, the generated SQL is: 
 
-    ```sql
+    ```csharp
     update BOOK set
         /* highlight-start */
         MODIFIED_TIME = ?, 

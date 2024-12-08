@@ -65,7 +65,7 @@ Double price = book.price();
 <tr>
 <td>
 
-```sql
+```csharp
 create table book(
     -- 省略其他
     -- 外键指向book_store表的id字段
@@ -91,7 +91,7 @@ public interface Book{
 <tr>
 <td>
 
-```sql
+```csharp
 create table book_store(
     -- 没有外键指向book表
 )

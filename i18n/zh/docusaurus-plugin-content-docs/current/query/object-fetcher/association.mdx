@@ -75,7 +75,7 @@ val books = sqlClient
 
 生成如下SQL：
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -154,7 +154,7 @@ val books = sqlClient
 生成两条SQL:
 
 1.  查询`Book`对象本身
-    ```sql
+    ```csharp
     select 
         tb_1_.ID, 
         tb_1_.NAME, 
@@ -166,7 +166,7 @@ val books = sqlClient
 
 2.  根据关联`Book.authors`，为上一步查询的所有根对象查询仅包含id的`Author`关联对象
 
-    ```sql
+    ```csharp
     select 
         tb_1_.BOOK_ID, /* batch-map key */
         tb_1_.AUTHOR_ID /* batch-map value */
@@ -268,7 +268,7 @@ val books = sqlClient
 
 1.  查询Book对象
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -281,7 +281,7 @@ val books = sqlClient
 
 2.  根据关联`Book.store`，为上一步查询的所有根对象查询相对完整的`BookStore`关联对象
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -365,7 +365,7 @@ val books = sqlClient
 生成两条SQL:
 
 1.  查询`Book`对象本身
-    ```sql
+    ```csharp
     select 
         tb_1_.ID, 
         tb_1_.NAME, 
@@ -377,7 +377,7 @@ val books = sqlClient
 
 2.  根据关联`Book.authors`，为上一步查询的所有根对象查询相对完整的`Author`关联对象
 
-    ```sql
+    ```csharp
     select
         /* batch-map key */
         tb_2_.BOOK_ID,
@@ -591,7 +591,7 @@ val books = sqlClient
 </Tabs>
 
 生成SQL如下：
-```sql
+```csharp
 # 1.首先查询book表得到所有BOOK_ID
 select
     tb_1_.ID,
@@ -644,7 +644,7 @@ where tb_2_.BOOK_ID in (?, ?, ?, ?)
 ```
 
 上面的例子中，我们看到这样的查询
-```sql
+```csharp
 select
     tb_2_.BOOK_ID,
     tb_1_.ID,
@@ -707,7 +707,7 @@ val books = sqlClient
 这样会导致`in(?, ?, ?, ?)`被切割为两个`in(?, ?)`，抓取关联对象的Sql会比分裂成两条。
 
 1.
-    ```sql
+    ```csharp
     select
         tb_2_.BOOK_ID,
         tb_1_.ID,
@@ -720,7 +720,7 @@ val books = sqlClient
     ```
 
 2.
-    ```sql
+    ```csharp
     select
         tb_2_.BOOK_ID,
         tb_1_.ID,
@@ -846,7 +846,7 @@ val books = sqlClient
 
 1.  查询当前`Book`对象
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -858,7 +858,7 @@ val books = sqlClient
 
 2.  对第1个`Book`对象的`authors`集合进行分页查询
 
-    ```sql
+    ```csharp
     select
         tb_1_.AUTHOR_ID,
         tb_3_.FIRST_NAME,
@@ -971,7 +971,7 @@ val tuples: List<Tuple2<Book, Book>> = sqlClient
 
 1.  查询元组需要的两个`Book`对象
 
-    ```sql
+    ```csharp
     select
 
     /* For tuple._1 */
@@ -992,7 +992,7 @@ val tuples: List<Tuple2<Book, Book>> = sqlClient
 
 2.  为第1列的4个`Book`对象查询`authors`关联属性，使用过滤器
 
-    ```sql
+    ```csharp
     select
 
         tb_1_.BOOK_ID,
@@ -1012,7 +1012,7 @@ val tuples: List<Tuple2<Book, Book>> = sqlClient
 
 3. 为第2列的4个`Book`对象查询`authors`关联属性，不使用过滤器
 
-    ```sql
+    ```csharp
     select
 
         tb_1_.BOOK_ID,

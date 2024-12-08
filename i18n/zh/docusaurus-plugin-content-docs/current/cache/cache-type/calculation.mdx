@@ -194,7 +194,7 @@ println(stores)
 
     首先查询聚合根对象，执行如下SQL
     
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -226,7 +226,7 @@ println(stores)
     ```
 
     所以，执行如下SQL，完成计算属性的计算
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         avg(tb_2_.PRICE)
@@ -487,7 +487,7 @@ override fun getAffectedSourceIds(e: AssociationEvent): Collection<*> {
 现在，让我们来验证修改`Book.store`的效果
 
 -   假如启用了BinLog触发器，用任何手段修改数据库都可以导致Jimmer缓存一致性的介入。比如直接在SQL IDE中执行如下SQL
-    ```sql
+    ```csharp
     update BOOK 
     /* Old value: 1, New value: 2 */
     set STORE_ID = 2 
@@ -640,7 +640,7 @@ override fun getAffectedSourceIds(e: EntityEvent<*>): Collection<*>? {
 现在，让我们来验证修改`Book.price`的效果
 
 -   假如启用了BinLog触发器，用任何手段修改数据库都可以导致Jimmer缓存一致性的介入。比如直接在SQL IDE中执行如下SQL
-    ```sql
+    ```csharp
     update BOOK 
     set PRICE = PRICE + 1 
     where ID = 7;

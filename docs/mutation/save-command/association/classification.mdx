@@ -171,7 +171,7 @@ Assuming the current database is H2, the generated SQL would be:
 
 1.  Save the aggregate root.
 
-    ```sql
+    ```csharp
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) key(
@@ -184,7 +184,7 @@ Assuming the current database is H2, the generated SQL would be:
 
 2.  If there are `Author` objects associated with the current object *(newly inserted data is `Book(100)`)* other than just `Author(4)` and `Author(5)`, break the associations with those other objects.
 
-    ```sql
+    ```csharp
     delete from BOOK_AUTHOR_MAPPING
     where 
         BOOK_ID = ? /* 100 */
@@ -198,7 +198,7 @@ Assuming the current database is H2, the generated SQL would be:
 
 3.  Establish associations between the object *(newly inserted data is `Book(100)`)* and the two objects `Author(4)` and `Author(5)`
 
-    ```sql
+    ```csharp
     merge into BOOK_AUTHOR_MAPPING tb_1_ 
     using(values(?, ?)) tb_2_(
         BOOK_ID, AUTHOR_ID
@@ -479,7 +479,7 @@ This operation generates two SQL statements:
 
 1.  Insert the root object `Order`
 
-    ```sql
+    ```csharp
     insert into order_(
         PROVINCE, CITY, ADDRESS, CUSTOMER_ID
     ) values(?, ?, ?, ?)
@@ -488,7 +488,7 @@ This operation generates two SQL statements:
 
 2.  Insert all child objects `OrderItem`
 
-    ```sql
+    ```csharp
     insert into ORDER_ITEM(
         ORDER_ID, 
         PRODUCT_ID, 
@@ -549,7 +549,7 @@ Taking H2 as an example, it generates two SQL statements:
 
 1.  First save the associated object `BookStore`
 
-    ```sql
+    ```csharp
     merge into BOOK_STORE(
         NAME, WEBSITE
     ) key(NAME) values(?, ?)
@@ -558,7 +558,7 @@ Taking H2 as an example, it generates two SQL statements:
 
 2.  Then save the current object `Book`
 
-    ```sql
+    ```csharp
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) key(
@@ -640,7 +640,7 @@ Taking H2 as an example, it generates three SQL statements:
 
 1.  First save the current object `BookStore`
 
-    ```sql
+    ```csharp
     merge into BOOK_STORE(
         NAME, WEBSITE
     ) key(
@@ -651,7 +651,7 @@ Taking H2 as an example, it generates three SQL statements:
 
 2.  Then save the associated objects `Book`
 
-    ```sql
+    ```csharp
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) key(

@@ -195,7 +195,7 @@ println(stores)
 
     First, query the aggregate root object, executing the following SQL:
     
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -228,7 +228,7 @@ println(stores)
     ```
 
     So the following SQL is executed to compute the calculated property:
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         avg(tb_2_.PRICE) 
@@ -491,7 +491,7 @@ Now let's verify the effect of modifying `Book.store`:
 
 -   If BinLog trigger is enabled, modifying the database by any means can lead to Jimmer's cache consistency intervention. For example, directly execute the following SQL in the SQL IDE:
 
-    ```sql
+    ```csharp
     update BOOK
     /* Old value: 1, New value: 2 */ 
     set STORE_ID = 2
@@ -645,7 +645,7 @@ Now let's verify the effect of modifying `Book.price`:
 
 -   If BinLog trigger is enabled, modifying the database by any means can lead to Jimmer's cache consistency intervention. For example, directly execute the following SQL in the SQL IDE:
 
-  ```sql
+  ```csharp
     update BOOK
     set PRICE = PRICE + 1
     where ID = 7;

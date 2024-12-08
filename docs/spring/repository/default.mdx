@@ -161,7 +161,7 @@ Usage:
     
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_
     order by
@@ -190,7 +190,7 @@ Usage:
     
     The generated SQL is (formatted for readability):
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK as tb_1_
     where
@@ -313,7 +313,7 @@ val books = bookRepository.find(storeName = "M")
 
 The generated SQL is (formatted for readability):
 
-```sql
+```csharp
 select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
 from BOOK as tb_1_
 /* highlight-next-line */ 
@@ -497,7 +497,7 @@ val books = bookRepository.find(authorName = "M")
 
 The generated SQL is (formatted for readability): 
 
-```sql
+```csharp
 select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
 from BOOK as tb_1_
 where
@@ -725,7 +725,7 @@ val books = bookRepository.find(
 
 The generated SQL is (formatted for readability):
 
-```sql
+```csharp
 select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
 from BOOK as tb_1_  
 /* Dynamic sort causes table join */
@@ -1012,7 +1012,7 @@ The returned Page object is:
 
 The generated SQL is (formatted for readability):   
 
-```sql
+```csharp
 /* Step 1: Query total rows before pagination */
 select count(tb_1_.ID) from BOOK as tb_1_  
 
@@ -1385,7 +1385,7 @@ The returned Page object is:
 
 The generated SQL is (formatted for readability):
 
-```sql 
+```csharp 
 /* Step 1: Query total rows before pagination */
 select count(tb_1_.ID) from BOOK as tb_1_
 

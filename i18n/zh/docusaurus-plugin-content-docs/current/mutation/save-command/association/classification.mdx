@@ -171,7 +171,7 @@ val book = Book {
 
 1.  保存聚合根。
 
-    ```sql
+    ```csharp
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) key(
@@ -184,7 +184,7 @@ val book = Book {
 
 2.  如果和当前对象 *(新插入的数据为`Book(100)`)* 关联的`Author`对象不仅仅只有`Author(4)`和`Author(5)`，切断和其他对象啊的关联。
 
-    ```sql
+    ```csharp
     delete from BOOK_AUTHOR_MAPPING
     where 
         BOOK_ID = ? /* 100 */
@@ -198,7 +198,7 @@ val book = Book {
 
 3.  建立对象 *(新插入的数据为`Book(100)`)* 和`Author(4)`和`Author(5)`两个对象之间的关联
 
-    ```sql
+    ```csharp
     merge into BOOK_AUTHOR_MAPPING tb_1_ 
     using(values(?, ?)) tb_2_(
         BOOK_ID, AUTHOR_ID
@@ -474,7 +474,7 @@ sqlClient.insert(order)
 
 1.  插入根对象`Order`
 
-    ```sql
+    ```csharp
     insert into order_(
         PROVINCE, CITY, ADDRESS, CUSTOMER_ID
     ) values(?, ?, ?, ?)
@@ -483,7 +483,7 @@ sqlClient.insert(order)
 
 2.  插入所有子对象`OrderItem`
 
-    ```sql
+    ```csharp
     insert into ORDER_ITEM(
         ORDER_ID, 
         PRODUCT_ID, 
@@ -544,7 +544,7 @@ sqlClient.save(book)
 
 1.  先保存关联对象`BookStore`
 
-    ```sql
+    ```csharp
     merge into BOOK_STORE(
         NAME, WEBSITE
     ) key(NAME) values(?, ?)
@@ -553,7 +553,7 @@ sqlClient.save(book)
 
 2.  后保存当前对象`Book`
 
-    ```sql
+    ```csharp
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) key(
@@ -635,7 +635,7 @@ sqlClient.save(store) {
 
 1.  先保存当前对象`BookStore`
 
-    ```sql
+    ```csharp
     merge into BOOK_STORE(
         NAME, WEBSITE
     ) key(
@@ -646,7 +646,7 @@ sqlClient.save(store) {
 
 2.  后保存关联对象`Book`
 
-    ```sql
+    ```csharp
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) key(

@@ -1,8 +1,7 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -44,11 +43,11 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
+          sidebarPath: './sidebars.js',
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl: ({locale, versionDocsDirPath, docPath}) => {
-            if (locale == 'zh') {
+            if (locale === 'zh') {
               return `https://github.com/babyfish-ct/jimmer-doc/edit/main/i18n/zh/docusaurus-plugin-content-docs/current/${docPath}`
             }
             return `https://github.com/babyfish-ct/jimmer-doc/edit/main/docs/${docPath}`
@@ -63,7 +62,7 @@ const config = {
         //     'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
         // },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: './src/css/custom.css',
         },
       }),
     ],
@@ -79,7 +78,7 @@ const config = {
         sidebarPath: require.resolve('./sidebars-faq.js'),
         showLastUpdateTime: true,
         editUrl: ({locale, versionDocsDirPath, docPath}) => {
-          if (locale == 'zh') {
+          if (locale === 'zh') {
             return `https://github.com/babyfish-ct/jimmer-doc/edit/main/i18n/zh/docusaurus-plugin-content-faq/current/${docPath}`
           }
           return `https://github.com/babyfish-ct/jimmer-doc/edit/main/faq/${docPath}`
@@ -140,9 +139,9 @@ const config = {
       copyright: `Copyright © ${new Date().getFullYear()} jimmer, Inc.`,
     },
     prism: {
-      theme: lightCodeTheme,
-      darkTheme: darkCodeTheme,
-      additionalLanguages: ['java', 'kotlin', 'groovy', 'sql', 'cpp', 'kotlin', 'graphql', 'json', 'csharp'],
+      theme: prismThemes.github,
+      darkTheme: prismThemes.dracula,
+      additionalLanguages: ['java', 'kotlin', 'sql', 'groovy', 'cpp', 'kotlin', 'graphql', 'json', 'csharp']
     },
   })
 };

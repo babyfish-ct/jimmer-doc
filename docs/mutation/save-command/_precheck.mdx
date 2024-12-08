@@ -1,0 +1,57 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+public void addBookStore(String name) {
+
+    BookTable table = BookTable.$;
+    boolean exists = sqlClient.createQuery(table)
+        .where(table.name().eq(name))
+        .exists();
+    if (exists) {
+        throw new IllegalArgumentException(
+            "Cannot create new book store \"
+            name +
+            \" because it already exists"
+        );
+    }
+
+    return sqlClient.insert(
+        Immutables.createBookStore(draft -> {
+            draft.setName(name);
+        })
+    );
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+fun addBookStore(name: String) {
+
+    val exists = sqlCient.createQuery(BookStore::class) {
+        where(table.name eq name)
+        select(table)
+    }.exists()
+    if (exists) {
+        throw IllegalArgumentException(
+            "Cannot create new book store \"
+            name +
+            \" because it already exists"
+        )
+    }
+
+    sqlCient.insert(
+        BookStore {
+            name = name
+        }
+    )
+}
+```
+
+</TabItem>
+</Tabs>

@@ -420,7 +420,7 @@ interface Book {
 
 虽然`Book`对象的Key为`name`和`edition`，但是由于`deletedMillis`属性为逻辑删除标志，所以数据库层面的非主键UNIQUE约束应该为
 
-```sql
+```csharp
 alter table BOOK
     add constraint uq_key_BOOK
         unique(NAME, EDITION, DELETED_MILLIS);

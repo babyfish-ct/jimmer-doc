@@ -63,7 +63,7 @@ interface TreeNode {
 </Tabs>
 
 准备数据库
-```sql
+```csharp
 create table tree_node(
     node_id bigint not null,
     name varchar(20) not null,
@@ -167,7 +167,7 @@ val treeNodes = sqlClient
 
 1.  查询根节点
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID,
         tb_1_.NAME
@@ -178,7 +178,7 @@ val treeNodes = sqlClient
 
 2.  抓取第1层
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -190,7 +190,7 @@ val treeNodes = sqlClient
 
 3.  抓取第2层
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -202,7 +202,7 @@ val treeNodes = sqlClient
 
 4.  抓取第3层
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -214,7 +214,7 @@ val treeNodes = sqlClient
 
 5.  抓取第4层
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -226,7 +226,7 @@ val treeNodes = sqlClient
 
 6.  抓取第5层 *(这个步骤查询不到任何数据，递归结束)*
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -425,7 +425,7 @@ val treeNodes = sqlClient
 
 1.  主查询获取根节点（第0层）
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID,
         tb_1_.NAME
@@ -436,7 +436,7 @@ val treeNodes = sqlClient
 
 2.  抓取第1层
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -448,7 +448,7 @@ val treeNodes = sqlClient
 
 3.  抓取第2层
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -559,7 +559,7 @@ val treeNodes = sqlClient
 
 1.  查询根对象
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID,
         tb_1_.NAME
@@ -569,7 +569,7 @@ val treeNodes = sqlClient
 
 2.  抓取第1层
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -581,7 +581,7 @@ val treeNodes = sqlClient
 
 3. 抓取第2层
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -600,7 +600,7 @@ val treeNodes = sqlClient
 
 4.  抓取第3层
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -610,7 +610,7 @@ val treeNodes = sqlClient
     tb_1_.PARENT_ID in (?, ?)
     ```
     5. 抓取第4层
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -709,7 +709,7 @@ val treeNodes = sqlClient
 
 1.  查询当前节点
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID,
         tb_1_.NAME,
@@ -721,7 +721,7 @@ val treeNodes = sqlClient
 
 2.  向上查询第一层父节点
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID,
         tb_1_.NAME,
@@ -733,7 +733,7 @@ val treeNodes = sqlClient
 
 3.  向上查询第二层父节点 *(这个步骤会查询到根节点，向上递归结束)*
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID,
         tb_1_.NAME,
@@ -745,7 +745,7 @@ val treeNodes = sqlClient
 
 4.  向下查询第一层子节点
 
-    ```sql
+    ```csharp
     select
         tb_1_.NODE_ID,
         tb_1_.NAME
@@ -756,7 +756,7 @@ val treeNodes = sqlClient
 
 5.  向下查询第二层子节点
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,
@@ -770,7 +770,7 @@ val treeNodes = sqlClient
 
 6.  向下查询第三层子节点 *(这个步骤查询不到任何数据，向下递归结束)*
 
-    ```sql
+    ```csharp
     select
         tb_1_.PARENT_ID,
         tb_1_.NODE_ID,

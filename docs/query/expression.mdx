@@ -58,7 +58,7 @@ val tuples = sqlClient
 
 The generated SQL is:
 
-```sql
+```csharp
 select ?, ?, ?, ?, null from BOOK as tb_1_ 
 ```
 
@@ -174,7 +174,7 @@ val constants = sqlClient
 
 The generated SQL is:
 
-```sql 
+```csharp 
 select
     /* highlight-next-line */
     1
@@ -573,7 +573,7 @@ We have clearly discussed the concept of dynamic predicates. To simplify subsequ
     </Tabs>
 
     The generated SQL condition is:
-    ```sql
+    ```csharp
     where tb_1_.NAME like ?
     ```
     The corresponding JDBC parameter is: `%Ab%`
@@ -601,13 +601,13 @@ We have clearly discussed the concept of dynamic predicates. To simplify subsequ
 
     -   If `ilike` is supported by dialect
         
-        ```sql
+        ```csharp
         where tb_1_.NAME ilike ? 
         ```
 
     -   Otherwise
         
-        ```sql
+        ```csharp
         where lower(tb_1_.NAME) like ? 
         ```
     
@@ -770,7 +770,7 @@ where(
 
 The generated SQL condition is: 
 
-```sql
+```csharp
 where tb_1_.NAME in (?, ?)  
 ```
 
@@ -817,7 +817,7 @@ where(
 
 The generated SQL condition is:
 
-```sql 
+```csharp 
 where (tb_1_.NAME, tb_1_.EDITION) in (
     (?, ?), (?, ?), (?, ?), (?, ?) 
 )
@@ -875,7 +875,7 @@ Jimmer provides 3 optimizations for the `in list` expression:
     </Tabs>
 
     The generated SQL condition:
-    ```sql
+    ```csharp
     where
         (tb_1_.NAME, tb_1_.EDITION) =
         (? /* SQL in Action */, ? /* 1 */)
@@ -962,7 +962,7 @@ Jimmer provides 3 optimizations for the `in list` expression:
 
     In this example, the list length is 3, which is not a power of 2. The nearest power of 2 to 3 is 4, so Jimmer will repeat the last item in the list, eventually making the list length 4. The generated SQL condition is as follows:
 
-    ```sql
+    ```csharp
     where (tb_1_.NAME, tb_1_.EDITION) in (
 
         // Original list
@@ -1064,7 +1064,7 @@ Jimmer provides 3 optimizations for the `in list` expression:
 
     The generated SQL condition:
 
-    ```sql
+    ```csharp
     where tb_1_.NAME = any(
         ? /* [SQL in Action, Java in Action] */
     )
@@ -1248,7 +1248,7 @@ where(
 
 The actual generated SQL is:
 
-```sql
+```csharp
 where tb_1_1.PRICE < ?
 ```
 
@@ -1404,7 +1404,7 @@ val tuples = sqlClient
 
 The final generated SQL is:  
 
-```sql
+```csharp
 select
     count(tb_1_.ID),
     count(distinct tb_1_.ID),
@@ -1472,7 +1472,7 @@ The generated SQL is:
 <Tabs groupId="language">
 <TabItem value="java" label="SQL for Java">  
 
-```sql
+```csharp
 select
     /* highlight-next-line */
     coalesce(
@@ -1486,7 +1486,7 @@ from BOOK_STORE as tb_1_
 </TabItem>
 <TabItem value="kotlin" label="SQL for Kotlin">
 
-```sql  
+```csharp  
 select
     /* highlight-next-line */
     coalesce(
@@ -1534,7 +1534,7 @@ var results = sqlClient
 
 The generated SQL is:
 
-```sql
+```csharp
 select
     /* highlight-next-line */
     coalesce(tb_1_.WEBSITE, tb_1_.NAME)
@@ -1592,7 +1592,7 @@ var fullNames = sqlClient
 
 The generated SQL is:
 
-```sql
+```csharp
 select
     /* highlight-next-line */
     concat(
@@ -1652,7 +1652,7 @@ val results = sqlClient
 
 The generated SQL is:
 
-```sql  
+```csharp  
 select
     /* highlight-next-line */
     case tb_1_.NAME
@@ -1714,7 +1714,7 @@ val results = sqlClient
 
 The generated SQL is: 
 
-```sql
+```csharp
 select
     /* highlight-next-line */
     case

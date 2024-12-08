@@ -83,7 +83,7 @@ val books = sqlClient
 
 The generated SQL is:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME, 
@@ -146,7 +146,7 @@ Without caching enabled, this generates two SQLs:
 
 -   Query root entity
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.FIRST_NAME,
@@ -157,7 +157,7 @@ Without caching enabled, this generates two SQLs:
 
 -   Query associated objects, apply logical deletion filter
 
-    ```sql
+    ```csharp
     select
         tb_2_.AUTHOR_ID,
         tb_1_.ID,
@@ -216,7 +216,7 @@ val books = sqlClient
 
 This time, the generated SQL no longer contains:
 
-```sql 
+```csharp 
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -267,7 +267,7 @@ val books = sqlClient
 
 Executing again, the generated SQL is:  
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

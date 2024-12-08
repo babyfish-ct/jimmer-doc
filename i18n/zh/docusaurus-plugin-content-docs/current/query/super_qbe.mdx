@@ -261,7 +261,7 @@ specification用作查询参数，为了支持动态查询，默认情况下，�
     
     生成的SQL如下
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK tb_1_
     ```
@@ -300,7 +300,7 @@ specification用作查询参数，为了支持动态查询，默认情况下，�
 
     生成的SQL如下
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK tb_1_
     /* highlight-next-line */
@@ -354,7 +354,7 @@ val books = bookRepository.find(specification)
 
 生成的SQL如下
 
-```sql
+```csharp
 select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
 from BOOK tb_1_
 /* highlight-next-line */
@@ -392,7 +392,7 @@ specification BookSpecification {
 
 -   不支持`ilike`的数据库
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK tb_1_
     /* highlight-next-line */
@@ -401,7 +401,7 @@ specification BookSpecification {
 
 -   支持`ilike`的数据库
 
-    ```sql
+    ```csharp
     select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
     from BOOK tb_1_
     /* highlight-next-line */
@@ -559,7 +559,7 @@ val books = bookRepository.find(specification)
 
 生成的SQL如下
 
-```sql
+```csharp
 select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
 from BOOK tb_1_
 where
@@ -692,7 +692,7 @@ val books = bookRepository.find(specification)
 
 生成的SQL如下
 
-```sql
+```csharp
 select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
 from BOOK tb_1_
 /* highlight-next-line */
@@ -773,7 +773,7 @@ specification BookSpecification {
 
 重复执行上个例子中的查询，生成的SQL如下
 
-```sql
+```csharp
 select tb_1_.ID, tb_1_.NAME, tb_1_.EDITION, tb_1_.PRICE, tb_1_.STORE_ID
 from BOOK tb_1_
 inner join BOOK_STORE tb_2_

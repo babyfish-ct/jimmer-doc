@@ -167,7 +167,7 @@ Suppose the data corresponding to these keys cannot be found in the cache:
 ```
 
 So the following SQL is executed to load data from the database:
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME, 
@@ -260,7 +260,7 @@ println(books)
 
     First, query the aggregate root object, executing the following SQL:
     
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -299,7 +299,7 @@ println(books)
     ```
 
     Then the following SQL is executed to load data from the database:
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -316,7 +316,7 @@ println(books)
     <ViewMore buttonText="The difference compared to not enabling cache">
 
     In cache mode, the SQL generated here is:
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -368,7 +368,7 @@ println(books)
     **Only in this way can the cached objects have reusable value for any business scenario.**
 
     If cache is not enabled, Jimmer will ensure that the generated SQL queries only the information needed for the current business scenario:
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME
@@ -442,7 +442,7 @@ To use Jimmer's automatic cache invalidation, [triggers](../../mutation/trigger)
 :::
 
 -   If BinLog trigger is enabled, modifying the database by any means can lead to Jimmer's cache consistency intervention. For example, directly execute the following SQL in the SQL IDE:
-    ```sql
+    ```csharp
     update BOOK_STORE
     set WEBSITE = 'https://www.manning.com'
     where ID = 2; 

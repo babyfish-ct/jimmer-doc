@@ -62,7 +62,7 @@ In the above code, `table.store().city()` in Java or `table.store.city` in Kotli
 
 The association path length is unlimited. Each association reference corresponds to a SQL join operation.
 
-```sql
+```csharp
 from BOOK tb_1_
 // highlight-next-line  
 inner join BOOK_STORE tb_2_ // `.store`
@@ -76,7 +76,7 @@ inner join CITY tb_3_ // `.city`
 
 -   For `findBooksByStoreCityName(null)`, the generated SQL is:
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME, 
@@ -91,7 +91,7 @@ inner join CITY tb_3_ // `.city`
 
 -   For `findBooksByStoreCityName("ChengDu")`, the generated SQL is:
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,

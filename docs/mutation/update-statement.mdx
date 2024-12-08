@@ -49,7 +49,7 @@ println("Affected row count: $affectedRowCount")
 
 The finally generated SQL is:
 
-```sql
+```csharp
 update AUTHOR tb_1_  
 set FIRST_NAME = concat(tb_1_.FIRST_NAME, ?)
 where tb_1_.FIRST_NAME = ?
@@ -217,7 +217,7 @@ println("Affected row count: $affectedRowCount")
 
 The finally generated SQL for MySQL is: 
 
-```sql
+```csharp
 update
     AUTHOR tb_1_
     inner join BOOK_AUTHOR_MAPPING as tb_2_
@@ -328,7 +328,7 @@ Unlike MySQL, using JOIN in update statements in Postgres has the following rest
 
 The finally generated SQL for Postgres is:
 
-```sql
+```csharp
 update
     AUTHOR tb_1_
 set

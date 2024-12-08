@@ -167,7 +167,7 @@ Jimmer先从缓存中查找数据，被查找的键为`Book-1`、`Book-2`、`Boo
 ```
 
 所以，执行如下SQL，从数据库加载数据
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -260,7 +260,7 @@ println(books)
 
     首先查询聚合根对象，执行如下SQL
     
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -298,7 +298,7 @@ println(books)
     ```
 
     那么，执行如下SQL，从数据库加载数据
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -315,7 +315,7 @@ println(books)
     <ViewMore buttonText="和不启用缓存相比的差异">
 
     有缓存模式下，这里生成的SQL为
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -367,7 +367,7 @@ println(books)
     **只有这样做，缓存中的对象才可对任何业务场景具有可重用价值。**
 
     如果不启用缓存，Jimmer会保证生成的SQL能查询的信息刚好满足当前业务场景的需要
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME
@@ -441,7 +441,7 @@ println(books)
 :::
 
 -   假如启用了BinLog触发器，用任何手段修改数据库都可以导致Jimmer缓存一致性的介入。比如直接在SQL IDE中执行如下SQL
-    ```sql
+    ```csharp
     update BOOK_STORE 
     set WEBSITE = 'https://www.manning.com' 
     where ID = 2;

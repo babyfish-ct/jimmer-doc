@@ -121,7 +121,7 @@ interface Shop {
 
 这个例子中，`Shop.customers`，`Shop.vipCustomers`和`Shop.ordinaryCustomers`共享一张中间表
 
-```sql
+```csharp
 create table SHOP_CUSTOMER_MAPPING(
     SHOP_ID bigint not null,
     CUSTOMER_ID bigint not null,
@@ -261,7 +261,7 @@ val customers: List<Customer>
 
     最终生成的SQL为
 
-    ```sql
+    ```csharp
     select distinct tb_1_.ID, tb_1_.NAME
     from SHOP tb_1_
     inner join SHOP_CUSTOMER_MAPPING tb_2_ 
@@ -318,7 +318,7 @@ val customers: List<Customer>
 
     最终生成的SQL为
 
-    ```sql
+    ```csharp
     select distinct tb_1_.ID, tb_1_.NAME
     from SHOP tb_1_
     inner join SHOP_CUSTOMER_MAPPING tb_2_ 
@@ -379,7 +379,7 @@ val customers: List<Customer>
 
     最终生成的SQL为
 
-    ```sql
+    ```csharp
     select distinct tb_1_.ID, tb_1_.NAME
     from SHOP tb_1_
     inner join SHOP_CUSTOMER_MAPPING tb_2_ 
@@ -616,7 +616,7 @@ val customers: List<Customer>
 
 因此，我们无法为`SOURCE_ID`添加外键约束。
 
-```sql
+```csharp
 create table SOURCE_TAG_MAPPING(
     SOURCE_ID bigint not null,
     TAG_ID bigint not null,
@@ -784,7 +784,7 @@ interface Book {
 
 ### 条件索引
 
-```sql
+```csharp
 create table BOOK_AUTHOR_MAPPING(
     BOOK_ID bigint not null,
     AUTHOR_ID bigint not null,

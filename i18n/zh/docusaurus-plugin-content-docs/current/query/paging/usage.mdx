@@ -150,7 +150,7 @@ SpringData中`Pageable`的页码从0开始，而非从1开始，所以，这里�
 
 -   count-query
 
-    ```sql
+    ```csharp
     select
         count(tb_1_.ID)
     from BOOK tb_1_
@@ -158,7 +158,7 @@ SpringData中`Pageable`的页码从0开始，而非从1开始，所以，这里�
 
 -   data-query *（假设数据库是H2）*
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.CREATED_TIME,
@@ -425,7 +425,7 @@ val books = query
 默认行为包含含DefaultDialect、H2Dialect和PostgresDialect
 :::
 
-```sql
+```csharp
 select 
     tb_1_.ID, 
     tb_1_.NAME, 
@@ -443,7 +443,7 @@ limit ? offset ?
 
 ### MySqlDialect
 
-```sql
+```csharp
 select 
     tb_1_.ID, 
     tb_1_.NAME, 
@@ -463,7 +463,7 @@ limit ?, ?
 
 1. 当offset不为0时
 
-    ```sql
+    ```csharp
     select * from (
         select core__.*, rownum rn__ 
         from (
@@ -486,7 +486,7 @@ limit ?, ?
 
 2. 当offset为0时
 
-    ```sql
+    ```csharp
     select core__.* from (
         select 
             tb_1_.ID, 
@@ -653,7 +653,7 @@ val page = bookRepository.findBooks(
 
 -   count-query
 
-    ```sql
+    ```csharp
     select
         count(tb_1_.ID)
     from BOOK tb_1_
@@ -661,7 +661,7 @@ val page = bookRepository.findBooks(
 
 -   data-query *（假设数据库是H2）*
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.CREATED_TIME,
@@ -679,7 +679,7 @@ val page = bookRepository.findBooks(
 
 -   为分页后的5个对象查询多对一关联`Book.store`
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME
@@ -695,7 +695,7 @@ val page = bookRepository.findBooks(
 
 -   为分页后的5个对象查询多对多关联`Book.authors`
 
-    ```sql
+    ```csharp
     select
         tb_2_.BOOK_ID,
         tb_1_.ID,

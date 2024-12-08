@@ -117,7 +117,7 @@ INSERT_ONLY的工作方式非常简单，不做任何判断，无条件插入。
 
 生成的批量操作SQL如下
 
-```sql
+```csharp
 insert into BOOK(NAME, EDITION, PRICE, STORE_ID) values(?, ?, ?, ?)
 /* batch-0: SQL in Action, 3, 49.9, 2 */
 /* batch-1: [LINQ in Action, 2, 39.9, 2 */
@@ -451,7 +451,7 @@ Jimmer会优先使用数据库本身的能力进行UPSERT操作，因此，会�
 <td>H2</td>
 <td>
 
-```sql
+```csharp
 merge into BOOK(
     ID, NAME, EDITION, PRICE, STORE_ID
 ) key(ID) values(
@@ -467,7 +467,7 @@ merge into BOOK(
 <td>MySQL</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(
     ID, NAME, EDITION, PRICE, STORE_ID
 ) values(?, ?, ?, ?, ?)
@@ -486,7 +486,7 @@ on duplicate key update
 <td>Postgres</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(
     ID, NAME, EDITION, PRICE, STORE_ID
 ) values(?, ?, ?, ?, ?)
@@ -598,7 +598,7 @@ println(ids)
 这时，Jimmer会先执行查询，然后根据查询结果来决定应该对那些数据进行INSERT，对那些数据生成UPDATE语句。共三条SQL语句
 
 1. 查询，并给出原因
-    ```sql
+    ```csharp
     // highlight-next-line
     Purpose: COMMAND(KEY_UNIQUE_CONSTRAINT_REQUIRED)
     SQL: select
@@ -623,7 +623,7 @@ println(ids)
 
 2.  对不存在的数据进行插入操作
 
-    ```sql
+    ```csharp
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(
@@ -635,7 +635,7 @@ println(ids)
 
 3.  对存在的数据进行更新操作
 
-    ```sql
+    ```csharp
     update BOOK
     set
         PRICE = ?,
@@ -665,7 +665,7 @@ Jimmer为所有的QueryReason提供了详尽的文档注释，详情请参见[Qu
 
 1.  为`Book.name`和`Book.edition`属性建立唯一性约束，即
 
-    ```sql
+    ```csharp
     alter table book
         add constraint uq_book__name_edition
             /* highlight-next-line */
@@ -746,7 +746,7 @@ Jimmer为所有的QueryReason提供了详尽的文档注释，详情请参见[Qu
 <td>H2</td>
 <td>
 
-```sql
+```csharp
 merge into BOOK(
     NAME, EDITION, PRICE, STORE_ID
 ) key(
@@ -767,7 +767,7 @@ merge into BOOK(
 <td>MySQL</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(
     NAME, EDITION, PRICE, STORE_ID
 ) values(?, ?, ?, ?)
@@ -789,7 +789,7 @@ on duplicate key update
 <td>Postgres</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(
     NAME, EDITION, PRICE, STORE_ID
 ) values(?, ?, ?, ?, ?)
@@ -830,7 +830,7 @@ returning ID
     用户需对自己的承诺负责。
 
 -   为MySQL所生成的SQL包含
-    ```sql
+    ```csharp
     /* fake update to return all ids */ ID = last_insert_id(ID)
     ```    
     这是一个相对tricky的技巧。如果数据被更新，返回被更新数据的已有id；否则，返回数据库为自动插入的数据分配的id。
@@ -927,7 +927,7 @@ Jimmer会优先使用数据库本身的能力进行`INSERT_IF_ABSENT`操作，�
 <td>H2</td>
 <td>
 
-```sql
+```csharp
 merge into BOOK tb_1_ 
 using(values(?, ?, ?, ?, ?)) tb_2_(
     ID, NAME, EDITION, PRICE, STORE_ID
@@ -947,7 +947,7 @@ values
 <td>MySQL</td>
 <td>
 
-```sql
+```csharp
 insert 
 // highlight-next-line
 ignore 
@@ -963,7 +963,7 @@ values(?, ?, ?, ?, ?)
 <td>Postgres</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
 values(?, ?, ?, ?, ?)
 on conflict(ID) 
@@ -1069,7 +1069,7 @@ Jimmer会为不同的数据库生成不同的SQL
 <td>H2</td>
 <td>
 
-```sql
+```csharp
 merge into BOOK tb_1_ 
 using(values(?, ?, ?, ?, ?)) tb_2_(
     ID, NAME, EDITION, PRICE, STORE_ID
@@ -1095,7 +1095,7 @@ values
 <td>MySQL</td>
 <td>
 
-```sql
+```csharp
 insert 
 // highlight-next-line
 ignore 
@@ -1111,7 +1111,7 @@ values(?, ?, ?, ?, ?)
 <td>Postgres</td>
 <td>
 
-```sql
+```csharp
 insert into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
 values(?, ?, ?, ?, ?)
 on conflict(

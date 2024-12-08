@@ -336,7 +336,7 @@ println(stores)
 
     首先查询聚合根对象，执行如下SQL
     
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -368,7 +368,7 @@ println(stores)
     ```
 
     所以，执行如下SQL，从数据库加载数据
-    ```sql
+    ```csharp
     select
         tb_1_.STORE_ID,
         tb_1_.ID,
@@ -426,7 +426,7 @@ println(stores)
 
     如果缓存中无相关数据，会导致如下SQL被执行
 
-    ```sql
+    ```csharp
     select
         ...略...
     from BOOK tb_1_
@@ -442,7 +442,7 @@ println(stores)
 3.  根据`Book`类型的对象缓存，把关联对象的id映射为关联对象
 
     如果缓存中无相关数据，会导致如下SQL被执行
-    ```sql
+    ```csharp
     select
         ...略...
     from BOOK tb_1_
@@ -457,7 +457,7 @@ println(stores)
 
 如果未启用缓存，此查询只需要两个步骤，第一个步骤完全相同，第二个步骤执行如下SQL查询
 
-```sql
+```csharp
 select
     ...略...
 from BOOK tb_1_
@@ -607,7 +607,7 @@ println(books)
 
     首先查询聚合根对象，执行如下SQL
     
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.NAME,
@@ -642,7 +642,7 @@ println(books)
     ```
 
     所以，执行如下SQL，从数据库加载数据
-    ```sql
+    ```csharp
     select
         tb_1_.BOOK_ID,
         tb_1_.AUTHOR_ID
@@ -708,7 +708,7 @@ println(books)
 
     如果缓存中无相关数据，会导致如下SQL被执行
 
-    ```sql
+    ```csharp
     select
         tb_1_.BOOK_ID,
         tb_1_.AUTHOR_ID
@@ -727,7 +727,7 @@ println(books)
 3.  根据`Book`类型的对象缓存，把关联对象的id映射为关联对象
 
     如果缓存中无相关数据，会导致如下SQL被执行
-    ```sql
+    ```csharp
     select
         tb_1_.ID,
         tb_1_.FIRST_NAME,
@@ -744,7 +744,7 @@ println(books)
 
 如果未启用缓存，此查询只需要两个步骤，第一个步骤完全相同，第二个步骤执行如下SQL查询
 
-```sql
+```csharp
 select
     tb_2_.BOOK_ID,
     tb_1_.ID,
@@ -835,7 +835,7 @@ order by
 修改BOOK表的外键`STORE_ID`，Jimmer自动删除多对一关联`Book.store`和一对多`BookStore.books`的关联缓存
 
 -   假如启用了BinLog触发器，用任何手段修改数据库都可以导致Jimmer缓存一致性的介入。比如直接在SQL IDE中执行如下SQL
-    ```sql
+    ```csharp
     update BOOK 
     /* Old value: 1, New value: 2 */
     set STORE_ID = 2 
@@ -895,7 +895,7 @@ Delete data from redis: [BookStore.books-2] ❸
 :::
 
 -   假如启用了BinLog触发器，用任何手段修改数据库都可以导致Jimmer缓存一致性的介入。比如直接在SQL IDE中执行如下SQL
-    ```sql
+    ```csharp
     insert into 
     BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID)
     values(10, 3);

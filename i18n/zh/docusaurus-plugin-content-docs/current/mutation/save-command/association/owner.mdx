@@ -215,7 +215,7 @@ sqlClient.save(rootNode) {
 
 1.  按`@Key`查询根对象是否存在
 
-    ```sql
+    ```csharp
     Purpose: COMMAND(NULL_NOT_DISTINCT_REQUIRED)
     select
         tb_1_.NODE_ID,
@@ -243,7 +243,7 @@ sqlClient.save(rootNode) {
 
 2.  假设上述查询判断被保存对象在数据库中不存在，直接插入根对象即可
 
-    ```sql
+    ```csharp
     insert into TREE_NODE(NAME, PARENT_ID) 
     values(?, ?)
     /* batch-0: [Root, DbNull{type=long}] */
@@ -251,7 +251,7 @@ sqlClient.save(rootNode) {
 
 3.  保存子对象 *(假设保存根对象后得知其id为100)*
 
-    ```sql
+    ```csharp
     merge into TREE_NODE(
         NAME, PARENT_ID
     ) key(
@@ -306,7 +306,7 @@ sqlClient.save(store)
 
 1.  保存根对象`BookStore`
 
-    ```sql
+    ```csharp
     merge into BOOK_STORE(
         NAME
     ) key(NAME) values(?)
@@ -315,7 +315,7 @@ sqlClient.save(store)
 
 2.  保存子对`Book`
 
-    ```sql
+    ```csharp
     // highlight-next-line
     Purpose: COMMAND(TARGET_NOT_TRANSFERABLE)
     select
@@ -531,7 +531,7 @@ public interface Book {
 
 1.  保存根对象
 
-    ```sql
+    ```csharp
     merge into BOOK_STORE(
         NAME
     ) key(NAME) values(?)
@@ -540,7 +540,7 @@ public interface Book {
 
 2.  建立根对象和子对象之间的关联
 
-    ```sql
+    ```csharp
     merge into BOOK(
         ID, STORE_ID
     ) key(ID) values(?, ?)
@@ -550,7 +550,7 @@ public interface Book {
 
 3.  断开根对象和不再需要的子对象之间的关联
 
-    ```sql
+    ```csharp
     update BOOK
     set
         STORE_ID = null

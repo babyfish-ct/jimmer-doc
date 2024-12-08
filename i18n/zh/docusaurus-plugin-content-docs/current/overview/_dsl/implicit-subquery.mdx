@@ -119,7 +119,7 @@ val books = bookRepository.findBooks()
 
 最终生成的SQL不包含任何子查询
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -163,7 +163,7 @@ val books = bookRepository.findBooks(
 
 最终生成的SQL只有一个子查询
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

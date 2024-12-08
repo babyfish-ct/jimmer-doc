@@ -47,7 +47,7 @@ val books = sqlClient
 上述代码中, Java的`table.store()`和Kotlin的`table.store`表示通过多对一关联`Book.store`内连接`Book`所定义的表和`BookStore`所定义的表。
 
 即，表示如下SQL逻辑
-```sql
+```csharp
 from BOOK b
 inner join BOOK_STORE s on b.STORE_ID = s.ID
 ```
@@ -65,7 +65,7 @@ inner join BOOK_STORE s on b.STORE_ID = s.ID
 
 这时，生成如下SQL:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -81,7 +81,7 @@ from BOOK tb_1_
 
 这时，生成如下SQL:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,
@@ -103,7 +103,7 @@ where
 Jimmer能自动合并冲突的连接，两个连接会被合并为一个，最终，只有一个SQL连接被渲染
 :::
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.NAME,

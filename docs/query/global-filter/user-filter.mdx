@@ -227,7 +227,7 @@ val books = SqlClient
 
 The generated SQL:
 
-```sql
+```csharp
 select
     tb_1_.ID,
     tb_1_.TENANT,
@@ -326,7 +326,7 @@ This generates two SQL statements:
 
 1.  Query aggregate roots:
 
-    ```sql
+    ```csharp
     select
         tb_1_.ID, tb_1_.FIRST_NAME, tb_1_.LAST_NAME, tb_1_.GENDER
     from AUTHOR as tb_1_
@@ -334,7 +334,7 @@ This generates two SQL statements:
    
 2.  Query associated objects:
 
-    ```sql
+    ```csharp
     select
         tb_2_.AUTHOR_ID,
         tb_1_.ID,

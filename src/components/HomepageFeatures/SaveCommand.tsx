@@ -39,7 +39,7 @@ const ZH: ReactNode =
     <>
         <p>保存指令允许开发人员保存任意形状的数据结构，而非保存简单的对象。</p>
         
-        <p>在默认情况下，即在<i>AssociatedSaveMode</i>为<b>REPLACE</b>情况下，Jimmer会用被保存结构去权量替换数据库中已有的数据结构，如图所示：</p>
+        <p>在默认情况下，即在<i>AssociatedSaveMode</i>为<b>REPLACE</b>情况下，Jimmer会用被保存结构去全量替换数据库中已有的数据结构，如图所示：</p>
 
         <Save/>
 

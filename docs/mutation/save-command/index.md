@@ -38,7 +38,7 @@ Save command require developers to **completely change their thinking pattern**
 
     In the traditional development mode, developers like to do one thing: query an object first, then modify some of its properties, and finally save the modified object.
 
-    Although Jimmer also allows developers to do this, it is recommended to use a more performant approach, please refer to [Incomplete Object](./incomplete).
+    Although Jimmer also allows developers to do this, it is recommended to use a more performant approach, please refer to [Incomplete Object](./usage#12-using-incomplete-objects-to-avoid-query-before-update).
 :::
 
 Calling a save command only takes one line of code, but hides countless details internally that documentation cannot exhaustively enumerate. Therefore, save commands have a dedicated sample project:

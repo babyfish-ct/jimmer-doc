@@ -6,7 +6,7 @@ title: 可见性
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-之前文档已经详细讨论了Jimmer属性的[动态性](./dynamic)和不可变性(./immutable)，这里介绍一个新的特性：可见性。
+之前文档已经详细讨论了Jimmer属性的[动态性](./dynamic)和[不可变性](./immutable)，这里介绍一个新的特性：可见性。
 
 ## 纠缠属性
 
@@ -262,7 +262,7 @@ import TabItem from '@theme/TabItem';
     </TabItem>
     </Tabs>
 
-    对象抓取器中的`authors()`没有任何参数，表示是抓取只有id属性的author对象的集合，结果如下 *(为提高本稳定可读性，人为进行了格式化)*
+    对象抓取器中的`authors()`没有任何参数，表示是抓取只有id属性的author对象的集合，结果如下 *(为提高本文可读性，人为进行了格式化)*
 
     ```json
     {
@@ -313,7 +313,7 @@ import TabItem from '@theme/TabItem';
     </TabItem>
     </Tabs>
 
-    这次结果为 *(为提高本稳定可读性，人为进行了格式化)*
+    这次结果为 *(为提高本文可读性，人为进行了格式化)*
 
     ```json
     {
@@ -328,7 +328,7 @@ import TabItem from '@theme/TabItem';
     }
     ```
 
-虽然两次查询饭回的数据是等价的，但格式完全不同。
+虽然两次查询返回的数据是等价的，但格式完全不同。
 
 前面说过，[对象抓取器](../query/object-fetcher)抓取视图属性，其内部逻辑会将之换转化为对原始属性的抓取。
 

@@ -1,0 +1,588 @@
+---
+sidebar_position: 8
+title: 乐观锁
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 讨论前提
+
+-   一旦实体对象具备乐观锁，Jimmer就会放弃数据库本身的upsert能力，通过select查询判断后续操作应该是`insert`还是`update`,
+    并告诉用户查询原因是`QueryReason.OPTIMISTIC_LOCK`。
+
+    所以，对于本文而言，讨论upsert场景毫无意义，为了简化文档，本文例子一律展示update行为。
+
+-   无论被保存的对象是聚合根还是深层次的关联对象，乐观锁的处理逻辑是完全一样的。
+
+    因此，为了简化文档，本文只讨论保存简单对象，而非复杂的数据结构。
+
+Jimmer的乐观锁分为三种
+
+1.  内置乐观锁
+
+2.  自定义乐观锁
+
+3.  复合乐观锁
+
+    > 即，同时使用内置乐观锁和自定义乐观锁
+
+## 内置乐观锁
+
+### 定义乐观锁属性
+
+内置乐观锁需要先为数据表中添加一个整型字段，然后为实体定义一个被`@org.babyfish.jimmer.sql.Version`注解修饰的属性以映射它，如下：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookStore.java"
+@Entity
+public interface BookStore {
+
+    // highlight-next-line
+    @Version
+    int version();
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookStore.kt"
+@Entity
+interface BookStore {
+
+    // highlight-next-line
+    @Version
+    val version: Int
+
+    ...省略其他属性...
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+对于插入操作而言，当实体对象的版本属性没有被指定是
+
+-   如果同时制定了了`@Default`注解，则默认插入配置的值
+
+-   否则，插入0
+:::
+
+### 忽略乐观锁
+
+如果被保存的实体对象的`version`属性并未被指定，那么内置乐观锁将会被忽略，如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setId(1L);
+        draft.setWebsite("https://www.oreilly.com");
+        // highlight-next-line
+        // 未指定`version`属性
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setId(2L);
+        draft.setWebsite("https://www.manning.com");
+        // highlight-next-line
+        // 未指定`version`属性
+    })
+);
+
+sqlClient.updateEntities(stores);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        id = 1L
+        website = "https://www.oreilly.com"
+        // highlight-next-line
+        // 未指定`version`属性
+    },
+    BookStore {
+        id = 2L
+        website = "https://www.manning.com"
+        // highlight-next-line
+        // 未指定`version`属性
+    }
+)
+
+sqlClient.updateEntities(stores)
+```
+
+</TabItem>
+</Tabs>
+
+生成如下SQL
+
+```sql
+update BOOK_STORE
+set
+    WEBSITE = ?
+    -- highlight-next-line
+    /* 未更新VERSION */
+where
+    ID = ?
+    -- highlight-next-line
+    /* 未检查VERSION */
+/* batch-0: [https://www.oreilly.com, 1] */
+/* batch-1: [https://www.manning.com, 2] */
+```
+
+### 使用乐观锁
+
+如果被保存的实体对象的`version`属性被指定了，那么内置乐观锁将会生效，如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setId(1L);
+        draft.setWebsite("https://www.oreilly.com");
+        // highlight-next-line
+        draft.setVersion(0);
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setId(2L);
+        draft.setWebsite("https://www.manning.com");
+        // highlight-next-line
+        draft.setVersion(0);
+    })
+);
+
+sqlClient.updateEntities(stores);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        id = 1L
+        website = "https://www.oreilly.com"
+        // highlight-next-line
+        version = 0
+    },
+    BookStore {
+        id = 2L
+        website = "https://www.manning.com"
+        // highlight-next-line
+        version = 0
+    }
+)
+
+sqlClient.updateEntities(stores)
+```
+
+</TabItem>
+</Tabs>
+
+生成如下SQL
+
+```sql
+update BOOK_STORE
+set
+    WEBSITE = ?,
+    --highlight-next-line
+    VERSION = VERSION + 1
+where
+    ID = ?
+and
+    --highlight-next-line
+    VERSION = ?
+/* batch-0: [https://www.oreilly.com, 1, 0] */
+/* batch-1: [https://www.manning.com, 2, 0] */
+```
+
+### 乐观锁异常
+
+我们把之前的例子稍微改一下，为其中第二个对象设置错误的version值，如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setId(1L);
+        draft.setWebsite("https://www.oreilly.com");
+        draft.setVersion(0);
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setId(2L);
+        draft.setWebsite("https://www.manning.com");
+        // 提供错误的version
+        // highlight-next-line
+        draft.setVersion(999);
+    })
+);
+
+sqlClient.updateEntities(stores);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        id = 1L
+        website = "https://www.oreilly.com"
+        // highlight-next-line
+        version = 0
+    },
+    BookStore {
+        id = 2L
+        website = "https://www.manning.com"
+        // 提供错误的version
+        // highlight-next-line
+        version = 999
+    }
+)
+
+sqlClient.updateEntities(stores)
+```
+
+</TabItem>
+</Tabs>
+
+再次执行，会得到如下异常
+
+```sh
+#highlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$OptimisticLockError: 
+    Save error caused by the path: "<root>": 
+    Cannot update the entity whose type is 
+    "com.yourcompany.yourproject.model.BookStore" and id is "2" 
+    #highlight-next-line
+    because of optimistic lock error
+```
+
+## 自定义乐观锁
+
+自定义乐观锁无需为实体对象添加任何version属性，通过`setOptimisticLock`方法配置保存指令，如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+        Immutables.createBookStore(draft -> {
+            draft.setId(1L);
+            draft.setWebsite("https://www.oreilly.com");
+        }),
+        Immutables.createBookStore(draft -> {
+            draft.setId(2L);
+            draft.setWebsite("https://www.manning.com");
+        })
+);
+
+sqlClient
+    .saveEntitiesCommand(stores)
+    .setMode(SaveMode.UPDATE_ONLY)
+    // highlight-next-line
+    .setOptimisticLock(
+        BookStoreTable.class,
+        (table, factory) -> {
+            return Predicate.sql(
+                "coalesce(length(%e), 0) <= length(%e)",
+                new Expression<?>[]{
+                    table.website(),
+                    factory.newString(
+                            BookStoreProps.WEBSITE
+                    )
+                }
+            );
+        }
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+        BookStore {
+            id = 1L
+            website = "https://www.oreilly.com"
+        },
+        BookStore {
+            id = 2L
+            website = "https://www.manning.com"
+        }
+    )
+
+    sqlClient.updateEntities(stores) {
+        // highlight-next-line
+        setOptimisticLock(BookStore::class) {
+            sql("coalesce(length(%e), 0) <= length(%e)") {
+                expression(table.website)
+                expression(newNullable(BookStore::website))
+            }
+        }
+    }
+```
+
+</TabItem>
+</Tabs>
+
+这里，自定义乐观锁的条件是：旧的website长度必须小于或等于新的website的长度。
+
+注意，Java和Kotlin代码存在显著的差异：
+
+-   `setOptimisticLock`方法第一个参数
+
+    -   Java: apt编译时生成的表的类型，
+
+    -   Kotlin: 实体类型
+
+-   由于要更新的一批对象而非一个对象，获取用于更新的新值需要调用专用的API
+
+    -   Java: `factory.newString`获取用于更新的字符串类型的表达式
+
+    -   Kotlin: `newNullable`获取用于更新的nullable表达式
+
+生成如下SQL
+
+```sql
+update BOOK_STORE
+set
+    WEBSITE = ?
+where
+    ID = ?
+and 
+    --highlight-start
+    coalesce(length(WEBSITE), 0) <= length(?)
+--highlight-end
+/* batch-0: [https://www.oreilly.com, 1, https://www.oreilly.com] */
+/* batch-1: [https://www.manning.com, 2, https://www.manning.com] */
+```
+
+假设这二条数据违背了自定义乐观锁的条件，得到如下异常
+
+```sh
+#highlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$OptimisticLockError: 
+    Save error caused by the path: "<root>": 
+    Cannot update the entity whose type is 
+    "com.yourcompany.yourproject.model.BookStore" and id is "2" 
+    #highlight-next-line
+    because of optimistic lock error
+```
+
+## 复合乐观锁
+
+所谓复合乐观锁，就是同时使用内置乐观锁和自定义乐观锁。
+
+### 指定version属性
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setId(1L);
+        draft.setWebsite("https://www.oreilly.com");
+        // highlight-next-line
+        draft.setVersion(0);
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setId(2L);
+        draft.setWebsite("https://www.manning.com");
+        // highlight-next-line
+        draft.setVersion(0);
+    })
+);
+
+sqlClient
+    .saveEntitiesCommand(stores)
+    .setMode(SaveMode.UPDATE_ONLY)
+    .setOptimisticLock(
+        BookStoreTable.class,
+        (table, factory) -> {
+            return Predicate.sql(
+                "coalesce(length(%e), 0) <= length(%e)",
+                new Expression<?>[]{
+                        table.website(),
+                        factory.newString(
+                                BookStoreProps.WEBSITE
+                        )
+                }
+            );
+        }
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        id = 1L
+        website = "https://www.oreilly.com"
+        // highlight-next-line
+        version = 0
+    },
+    BookStore {
+        id = 2L
+        website = "https://www.manning.com"
+        // highlight-next-line
+        version = 0
+    }
+)
+
+sqlClient.updateEntities(stores) {
+    setOptimisticLock(BookStore::class) {
+        sql("coalesce(length(%e), 0) <= length(%e)") {
+            expression(table.website)
+            expression(newNullable(BookStore::website))
+        }
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+生成如下SQL
+
+```sql
+update BOOK_STORE
+set
+    WEBSITE = ?,
+    -- highlight-next-line
+    VERSION = VERSION + 1
+where
+    ID = ?
+and
+    -- highlight-next-line
+    VERSION = ?
+and
+    -- highlight-next-line
+    coalesce(length(WEBSITE), 0) <= length(?)
+/* batch-0: [https://www.oreilly.com, 1, 0, https://www.oreilly.com] */
+/* batch-1: [https://www.manning.com, 2, 0, https://www.manning.com] */
+```
+
+可见，自定义乐观锁和内置乐观锁都生效了。
+
+### 不指定version属性
+
+如果用户不为被保存的对象指定version属性，在默认情况下，内置乐观锁将会被忽略。
+这和直接使用[自定义关锁](#自定义乐观锁)没有任何区别，讨论这种场景毫无意义。
+
+但是，我们可以通过`UnloadedVersionBehavior.INCREASE`来改变这个默认行为，如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setId(1L);
+        draft.setWebsite("https://www.oreilly.com");
+        // 没有指定version
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setId(2L);
+        draft.setWebsite("https://www.manning.com");
+        // 没有指定version
+    })
+);
+
+sqlClient
+    .saveEntitiesCommand(stores)
+    .setMode(SaveMode.UPDATE_ONLY)
+    .setOptimisticLock(
+        BookStoreTable.class,
+        // 即便没有为实体指定version属性
+        // 也要完成version的自增操作
+        // highlight-next-line
+        UnloadedVersionBehavior.INCREASE,
+        (table, factory) -> {
+            return Predicate.sql(
+                "coalesce(length(%e), 0) <= length(%e)",
+                new Expression<?>[]{
+                        table.website(),
+                        factory.newString(
+                                BookStoreProps.WEBSITE
+                        )
+                }
+            );
+        }
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        id = 1L
+        website = "https://www.oreilly.com"
+        // 没有指定version
+    },
+    BookStore {
+        id = 2L
+        website = "https://www.manning.com"
+        // 没有指定version
+    }
+)
+
+sqlClient.updateEntities(stores) {
+    setOptimisticLock(
+        BookStore::class,
+        // 即便没有为实体指定version属性
+        // 也要完成version的自增操作
+        // highlight-next-line
+        UnloadedVersionBehavior.INCREASE
+    ) {
+        sql("coalesce(length(%e), 0) <= length(%e)") {
+            expression(table.website)
+            expression(newNullable(BookStore::website))
+        }
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+生成如下SQL
+
+```sql
+update BOOK_STORE
+set
+    WEBSITE = ?,
+    -- highlight-next-line
+    VERSION = VERSION + 1
+where
+    ID = ?
+and
+    coalesce(length(WEBSITE), 0) <= length(?)
+/* batch-0: [https://www.oreilly.com, 1, 0, https://www.oreilly.com] */
+/* batch-1: [https://www.manning.com, 2, 0, https://www.manning.com] */
+```
+
+可见，虽然没有version相关的SQL条件，但是任然完成了version的自增操作。

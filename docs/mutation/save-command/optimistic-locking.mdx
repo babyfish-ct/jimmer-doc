@@ -1,0 +1,586 @@
+---
+sidebar_position: 8
+title: Optimistic Locking
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Discussion Prerequisites
+
+-   Once an entity object has optimistic locking, Jimmer will give up the database's native upsert capability. It will use select queries to determine whether the subsequent operation should be `insert` or `update`, and inform users that the query reason is `QueryReason.OPTIMISTIC_LOCK`.
+
+    Therefore, discussing upsert scenarios is meaningless for this article. To simplify the documentation, all examples in this article will demonstrate update behavior.
+
+-   Whether the saved object is an aggregate root or a deep associated object, the optimistic lock processing logic is exactly the same.
+
+    Therefore, to simplify the documentation, this article only discusses saving simple objects rather than complex data structures.
+
+Jimmer has three types of optimistic locks:
+
+1.  Built-in optimistic lock
+
+2.  Custom optimistic lock
+
+3.  Composite optimistic lock
+
+    > That is, using both built-in and custom optimistic locks simultaneously
+
+## Built-in Optimistic Lock
+
+### Defining the Optimistic Lock Property
+
+Built-in optimistic lock requires first adding an integer field to the data table, then defining a property decorated with `@org.babyfish.jimmer.sql.Version` annotation to map it, as shown below:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookStore.java"
+@Entity
+public interface BookStore {
+
+    // highlight-next-line
+    @Version
+    int version();
+
+    ...other properties omitted...
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookStore.kt"
+@Entity
+interface BookStore {
+
+    // highlight-next-line
+    @Version
+    val version: Int
+
+    ...other properties omitted...
+}
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+For insert operations, when the version property of the entity object is not specified:
+
+-   If the `@Default` annotation is also specified, the configured value will be inserted
+
+-   Otherwise, 0 will be inserted
+:::
+
+### Ignoring Optimistic Lock
+
+If the `version` property of the entity object being saved is not specified, then the built-in optimistic lock will be ignored, as shown below:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setId(1L);
+        draft.setWebsite("https://www.oreilly.com");
+        // highlight-next-line
+        // `version` property not specified
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setId(2L);
+        draft.setWebsite("https://www.manning.com");
+        // highlight-next-line
+        // `version` property not specified
+    })
+);
+
+sqlClient.updateEntities(stores);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        id = 1L
+        website = "https://www.oreilly.com"
+        // highlight-next-line
+        // `version` property not specified
+    },
+    BookStore {
+        id = 2L
+        website = "https://www.manning.com"
+        // highlight-next-line
+        // `version` property not specified
+    }
+)
+
+sqlClient.updateEntities(stores)
+```
+
+</TabItem>
+</Tabs>
+
+This generates the following SQL:
+
+```sql
+update BOOK_STORE
+set
+    WEBSITE = ?
+    -- highlight-next-line
+    /* VERSION not updated */
+where
+    ID = ?
+    -- highlight-next-line
+    /* VERSION not checked */
+/* batch-0: [https://www.oreilly.com, 1] */
+/* batch-1: [https://www.manning.com, 2] */
+```
+
+### Using Optimistic Lock
+
+If the `version` property of the entity object being saved is specified, then the built-in optimistic lock will take effect, as shown below:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setId(1L);
+        draft.setWebsite("https://www.oreilly.com");
+        // highlight-next-line
+        draft.setVersion(0);
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setId(2L);
+        draft.setWebsite("https://www.manning.com");
+        // highlight-next-line
+        draft.setVersion(0);
+    })
+);
+
+sqlClient.updateEntities(stores);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        id = 1L
+        website = "https://www.oreilly.com"
+        // highlight-next-line
+        version = 0
+    },
+    BookStore {
+        id = 2L
+        website = "https://www.manning.com"
+        // highlight-next-line
+        version = 0
+    }
+)
+
+sqlClient.updateEntities(stores)
+```
+
+</TabItem>
+</Tabs>
+
+This generates the following SQL:
+
+```sql
+update BOOK_STORE
+set
+    WEBSITE = ?,
+    --highlight-next-line
+    VERSION = VERSION + 1
+where
+    ID = ?
+and
+    --highlight-next-line
+    VERSION = ?
+/* batch-0: [https://www.oreilly.com, 1, 0] */
+/* batch-1: [https://www.manning.com, 2, 0] */
+```
+
+### Optimistic Lock Exception
+
+Let's slightly modify the previous example by setting an incorrect version value for the second object, as shown below:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setId(1L);
+        draft.setWebsite("https://www.oreilly.com");
+        draft.setVersion(0);
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setId(2L);
+        draft.setWebsite("https://www.manning.com");
+        // Providing incorrect version
+        // highlight-next-line
+        draft.setVersion(999);
+    })
+);
+
+sqlClient.updateEntities(stores);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        id = 1L
+        website = "https://www.oreilly.com"
+        version = 0
+    },
+    BookStore {
+        id = 2L
+        website = "https://www.manning.com"
+        // Providing incorrect version
+        // highlight-next-line
+        version = 999
+    }
+)
+
+sqlClient.updateEntities(stores)
+```
+
+</TabItem>
+</Tabs>
+
+When executed again, you'll get the following exception:
+
+```sh
+#highlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$OptimisticLockError: 
+    Save error caused by the path: "<root>": 
+    Cannot update the entity whose type is 
+    "com.yourcompany.yourproject.model.BookStore" and id is "2" 
+    #highlight-next-line
+    because of optimistic lock error
+```
+
+## Custom Optimistic Lock
+
+Custom optimistic lock doesn't require adding any version property to the entity object. Instead, it configures the save instruction using the `setOptimisticLock` method, as shown below:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+        Immutables.createBookStore(draft -> {
+            draft.setId(1L);
+            draft.setWebsite("https://www.oreilly.com");
+        }),
+        Immutables.createBookStore(draft -> {
+            draft.setId(2L);
+            draft.setWebsite("https://www.manning.com");
+        })
+);
+
+sqlClient
+    .saveEntitiesCommand(stores)
+    .setMode(SaveMode.UPDATE_ONLY)
+    // highlight-next-line
+    .setOptimisticLock(
+        BookStoreTable.class,
+        (table, factory) -> {
+            return Predicate.sql(
+                "coalesce(length(%e), 0) <= length(%e)",
+                new Expression<?>[]{
+                    table.website(),
+                    factory.newString(
+                            BookStoreProps.WEBSITE
+                    )
+                }
+            );
+        }
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+        BookStore {
+            id = 1L
+            website = "https://www.oreilly.com"
+        },
+        BookStore {
+            id = 2L
+            website = "https://www.manning.com"
+        }
+    )
+
+    sqlClient.updateEntities(stores) {
+        // highlight-next-line
+        setOptimisticLock(BookStore::class) {
+            sql("coalesce(length(%e), 0) <= length(%e)") {
+                expression(table.website)
+                expression(newNullable(BookStore::website))
+            }
+        }
+    }
+```
+
+</TabItem>
+</Tabs>
+
+Here, the custom optimistic lock condition is: the length of the old website must be less than or equal to the length of the new website.
+
+Note that there are significant differences between Java and Kotlin code:
+
+-   First parameter of `setOptimisticLock` method
+
+    -   Java: Table type generated during apt compilation
+
+    -   Kotlin: Entity type
+
+-   Since we're updating a batch of objects rather than a single object, getting the new value for update requires using a special API
+
+    -   Java: `factory.newString` gets the string type expression for update
+
+    -   Kotlin: `newNullable` gets the nullable expression for update
+
+This generates the following SQL:
+
+```sql
+update BOOK_STORE
+set
+    WEBSITE = ?
+where
+    ID = ?
+and 
+    --highlight-start
+    coalesce(length(WEBSITE), 0) <= length(?)
+--highlight-end
+/* batch-0: [https://www.oreilly.com, 1, https://www.oreilly.com] */
+/* batch-1: [https://www.manning.com, 2, https://www.manning.com] */
+```
+
+If these two records violate the custom optimistic lock condition, you'll get the following exception:
+
+```sh
+#highlight-next-line
+org.babyfish.jimmer.sql.exception.SaveException$OptimisticLockError: 
+    Save error caused by the path: "<root>": 
+    Cannot update the entity whose type is 
+    "com.yourcompany.yourproject.model.BookStore" and id is "2" 
+    #highlight-next-line
+    because of optimistic lock error
+```
+
+## Composite Optimistic Lock
+
+A composite optimistic lock means using both built-in optimistic lock and custom optimistic lock simultaneously.
+
+### Specifying the Version Property
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setId(1L);
+        draft.setWebsite("https://www.oreilly.com");
+        // highlight-next-line
+        draft.setVersion(0);
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setId(2L);
+        draft.setWebsite("https://www.manning.com");
+        // highlight-next-line
+        draft.setVersion(0);
+    })
+);
+
+sqlClient
+    .saveEntitiesCommand(stores)
+    .setMode(SaveMode.UPDATE_ONLY)
+    .setOptimisticLock(
+        BookStoreTable.class,
+        (table, factory) -> {
+            return Predicate.sql(
+                "coalesce(length(%e), 0) <= length(%e)",
+                new Expression<?>[]{
+                        table.website(),
+                        factory.newString(
+                                BookStoreProps.WEBSITE
+                        )
+                }
+            );
+        }
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        id = 1L
+        website = "https://www.oreilly.com"
+        // highlight-next-line
+        version = 0
+    },
+    BookStore {
+        id = 2L
+        website = "https://www.manning.com"
+        // highlight-next-line
+        version = 0
+    }
+)
+
+sqlClient.updateEntities(stores) {
+    setOptimisticLock(BookStore::class) {
+        sql("coalesce(length(%e), 0) <= length(%e)") {
+            expression(table.website)
+            expression(newNullable(BookStore::website))
+        }
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+This generates the following SQL:
+
+```sql
+update BOOK_STORE
+set
+    WEBSITE = ?,
+    -- highlight-next-line
+    VERSION = VERSION + 1
+where
+    ID = ?
+and
+    -- highlight-next-line
+    VERSION = ?
+and
+    -- highlight-next-line
+    coalesce(length(WEBSITE), 0) <= length(?)
+/* batch-0: [https://www.oreilly.com, 1, 0, https://www.oreilly.com] */
+/* batch-1: [https://www.manning.com, 2, 0, https://www.manning.com] */
+```
+
+As you can see, both custom optimistic lock and built-in optimistic lock are in effect.
+
+### Not Specifying the Version Property
+
+If the user doesn't specify the version property for the object being saved, by default, the built-in optimistic lock will be ignored.
+This is no different from using [custom optimistic lock](#custom-optimistic-lock) directly, so discussing this scenario is meaningless.
+
+However, we can change this default behavior using `UnloadedVersionBehavior.INCREASE`, as shown below:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setId(1L);
+        draft.setWebsite("https://www.oreilly.com");
+        // version not specified
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setId(2L);
+        draft.setWebsite("https://www.manning.com");
+        // version not specified
+    })
+);
+
+sqlClient
+    .saveEntitiesCommand(stores)
+    .setMode(SaveMode.UPDATE_ONLY)
+    .setOptimisticLock(
+        BookStoreTable.class,
+        // Increment version even if the version property
+        // is not specified for the saved entity
+        // highlight-next-line
+        UnloadedVersionBehavior.INCREASE,
+        (table, factory) -> {
+            return Predicate.sql(
+                "coalesce(length(%e), 0) <= length(%e)",
+                new Expression<?>[]{
+                        table.website(),
+                        factory.newString(
+                                BookStoreProps.WEBSITE
+                        )
+                }
+            );
+        }
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        id = 1L
+        website = "https://www.oreilly.com"
+        // version not specified
+    },
+    BookStore {
+        id = 2L
+        website = "https://www.manning.com"
+        // version not specified
+    }
+)
+
+sqlClient.updateEntities(stores) {
+    setOptimisticLock(
+        BookStore::class,
+        // Increment version even if the version property
+        // is not specified for the saved entity
+        // highlight-next-line
+        UnloadedVersionBehavior.INCREASE
+    ) {
+        sql("coalesce(length(%e), 0) <= length(%e)") {
+            expression(table.website)
+            expression(newNullable(BookStore::website))
+        }
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+This generates the following SQL:
+
+```sql
+update BOOK_STORE
+set
+    WEBSITE = ?,
+    -- highlight-next-line
+    VERSION = VERSION + 1
+where
+    ID = ?
+and
+    coalesce(length(WEBSITE), 0) <= length(?)
+/* batch-0: [https://www.oreilly.com, 1, 0, https://www.oreilly.com] */
+/* batch-1: [https://www.manning.com, 2, 0, https://www.manning.com] */
+```
+
+As you can see, although there is no version-related SQL condition, the version increment operation is still performed.

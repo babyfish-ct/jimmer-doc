@@ -1,0 +1,307 @@
+---
+sidebar_position: 9
+title: 悲观锁
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+:::warning
+即将重写
+:::
+
+## 悲观锁
+
+和乐观锁不同，悲观锁生命周期很短，仅在一个jdbc事务内有效。
+
+通常，Jimmer会生成一些查询SQL以辅助保存指令的执行，比如
+
+-   判断`UPSERT`操作最终应该判定为`INSERT`还是`UPDATE`
+
+-   判断哪些关联对象需要被[脱钩](./association/dissociation)
+
+接下来，我们对比不使用悲观锁和使用悲观锁两种情况，来观察这些查询SQL有何不同。
+
+:::info
+在前面的例子中，为了介绍乐观锁，假设`BookStore`和`Book`类型都定义了`version`属性。
+
+后续例子为了介绍悲观锁，不再有此假设。
+:::
+
+### 未启用悲观锁
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+sqlClient.save(
+        Immutables.createBookStore(draft -> {
+            draft.setName("TURING");
+            draft.addIntoBooks(book -> {
+                book.setName("Introduction to Algorithms");
+                book.setEdition(3);
+                book.setPrice(new BigDecimal("44.99"));
+            });
+            draft.addIntoBooks(book -> {
+                book.setName("The Pragmatic Programmer");
+                book.setEdition(2);
+                book.setPrice(new BigDecimal("39.99"));
+            });
+        })
+);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.save(
+    BookStore {
+        name = "TURING"
+        books().addBy {
+            name = "Introduction to Algorithms"
+            edition = 3;
+            price = BigDecimal("44.99")
+        }
+        books().addBy {
+            name = "The Pragmatic Programmer"
+            edition = 2
+            price = BigDecimal("39.99")
+        }
+    }
+)
+```
+
+</TabItem>
+</Tabs>
+
+生成6条SQL，如下
+
+1.  判断书店是否存在
+
+    ```csharp
+    select
+        tb_1_.ID,
+        tb_1_.NAME
+    from BOOK_STORE tb_1_
+    where
+        tb_1_.NAME = ? /* TURING */
+    ```
+
+2.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
+
+    insert或update，略
+
+3.  判断第1本书籍是否存在
+    
+    ```csharp
+    select
+        tb_1_.ID,
+        tb_1_.NAME,
+        tb_1_.EDITION
+    from BOOK tb_1_
+    where
+            tb_1_.NAME = ? /* Introduction to Algorithms */
+        and
+            tb_1_.EDITION = ? /* 3 */
+    ```
+4.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
+
+    insert或update，略
+
+5.  判断第2本书籍是否存在
+
+    ```csharp
+    select
+        tb_1_.ID,
+        tb_1_.NAME,
+        tb_1_.EDITION
+    from BOOK tb_1_
+    where
+            tb_1_.NAME = ? /* The Pragmatic Programmer */
+        and
+            tb_1_.EDITION = ? /* 2 */
+    ```
+
+6.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
+
+    insert或update，略
+
+:::info
+这些查询语句用于进行条件判断，以决定后续SQL该如何生成。
+
+然而，这些查询没有使用悲观锁，经它们判断而成立的条件和假设，有可能被其它并发行为破坏，从而导致后续SQL执行出现异常。
+
+为了避免这种并发问题，可以启用悲观锁。接下来，我们讨论悲观锁如何实现。
+:::
+
+### 启用悲观锁
+
+有两种启用悲观锁的方法
+
+-   全局配置
+
+    有两种方法可以通过全局配置启用悲观锁
+
+    -   Spring Boot Starter的配置
+
+        修改`application.yml` *(或`application.properties`)*
+        
+        ```
+        jimmer:
+            default-lock-mode: PESSIMISTIC
+        ```
+
+    -   底层API的配置
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        JSqlClient sqlClient = JSqlClient
+            .newBuilder()
+            // highlight-next-line
+            .setDefaultLockMode(LockMode.PESSIMISTIC)
+            ...省略其他配置...
+            .build();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val sqlClient = newKSqlClient {
+            // highlight-next-line
+            setDefaultLockMode(LockMode.PESSIMISTIC)
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+    :::warning
+    此举修改了全局设置，原本的默认值`OPTIMISTIC`被破坏。这意味着，除非将某个保存指令设置为乐观锁模式，前文所讲述的乐观锁的功能消失。
+
+    因此，大部分情况下，不推荐全局配置，而更推荐下文即将介绍的指令级配置。
+    :::
+
+-   指令级配置
+
+    和影响所有保存指令的全局配置不同，指令级配置仅仅影响当前保存指令
+
+    :::info
+    如果已经通过全局配置打开了悲观锁控制，就不再需要指令级配置了
+    :::
+
+    调用保存指令的配置方法`setLockMode`，即可启用悲观锁，如下
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    sqlClient
+            .getEntities()
+            .saveCommand(
+                    Immutables.createBookStore(draft -> {
+                        draft.setName("TURING");
+                        draft.addIntoBooks(book -> {
+                            book.setName("Introduction to Algorithms");
+                            book.setEdition(3);
+                            book.setPrice(new BigDecimal("44.99"));
+                        });
+                        draft.addIntoBooks(book -> {
+                            book.setName("The Pragmatic Programmer");
+                            book.setEdition(2);
+                            book.setPrice(new BigDecimal("39.99"));
+                        });
+                    })
+            )
+            // highlight-next-line
+            .setLockMode(LockMode.PESSIMISTIC)
+            .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    sqlClient.save(
+        BookStore {
+            name = "TURING"
+            books().addBy {
+                name = "Introduction to Algorithms"
+                edition = 3;
+                price = BigDecimal("44.99")
+            }
+            books().addBy {
+                name = "The Pragmatic Programmer"
+                edition = 2
+                price = BigDecimal("39.99")
+            }
+        }
+    ) {
+        // highlight-next-line
+        setLockMode(LockMode.PESSIMISTIC)
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+一旦启用了悲观锁，生成的查询语句会有显著变化，如下
+
+1.  判断书店是否存在
+
+    ```csharp
+    select
+        tb_1_.ID,
+        tb_1_.NAME
+    from BOOK_STORE tb_1_
+    where
+        tb_1_.NAME = ? /* TURING */
+    /* highlight-next-line */
+    for update
+    ```
+
+2.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
+
+    insert或update，略
+
+3.  判断第1本书籍是否存在
+    
+    ```csharp
+    select
+        tb_1_.ID,
+        tb_1_.NAME,
+        tb_1_.EDITION
+    from BOOK tb_1_
+    where
+            tb_1_.NAME = ? /* Introduction to Algorithms */
+        and
+            tb_1_.EDITION = ? /* 3 */
+    /* highlight-next-line */
+    for update
+    ```
+4.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
+
+    insert或update，略
+
+5.  判断第2本书籍是否存在
+
+    ```csharp
+    select
+        tb_1_.ID,
+        tb_1_.NAME,
+        tb_1_.EDITION
+    from BOOK tb_1_
+    where
+            tb_1_.NAME = ? /* The Pragmatic Programmer */
+        and
+            tb_1_.EDITION = ? /* 2 */
+    /* highlight-next-line */
+    for update
+    ```
+
+6.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
+
+    insert或update，略

@@ -26,7 +26,10 @@ function HomepageHeader() {
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className="container">
         <h1 className="hero__title">{title}</h1>
-        <p className="hero__subtitle">{tagline}</p>
+        <p>
+          <span className="hero__subtitle">{tagline}</span>
+          {isZh && <span style={{fontStyle: "italic"}}> (也是中国人自己的集成化方案)</span>}
+        </p>
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"

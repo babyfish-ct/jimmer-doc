@@ -191,7 +191,7 @@ Assume the entity package is "com.example.model". **Ignore associated properties
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
 
-    ```java title="Author.java"
+    ```java title="Gender.java"
     package com.example.model;
 
     import org.babyfish.jimmer.sql.EnumItem;
@@ -210,7 +210,7 @@ Assume the entity package is "com.example.model". **Ignore associated properties
     
     <TabItem value="kotlin" label="Kotlin">
 
-    ```kotlin title="Author.kt" 
+    ```kotlin title="Gender.kt" 
     package com.example.model
 
     import org.babyfish.jimmer.sql.EnumItem
@@ -325,8 +325,8 @@ package com.example.model;
 @Entity
 public interface Book {
 
-    ...other properties omitted...  
-
+    ...other properties omitted...
+    
     // highlight-next-line
     @ManyToOne
     @Nullable

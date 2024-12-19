@@ -63,7 +63,7 @@ public interface BookStore {
 interface BookStore {
 
     @Id
-    @@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long
 
     val name: String

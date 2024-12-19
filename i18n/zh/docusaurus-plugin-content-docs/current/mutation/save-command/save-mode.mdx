@@ -115,13 +115,50 @@ println("Allocated ids: $allocatedIds")
 
 INSERT_ONLY的工作方式非常简单，不做任何判断，无条件插入。
 
-生成的批量操作SQL如下
+Jimmer会为不同数据库生成不同的SQL
 
-```csharp
-insert into BOOK(NAME, EDITION, PRICE, STORE_ID) values(?, ?, ?, ?)
+<Tabs groupId="database">
+<TabItem value="h2" label="大部分数据库">
+
+```sql
+insert into BOOK(
+    NAME, EDITION, PRICE, STORE_ID
+) values(?, ?, ?, ?)
 /* batch-0: SQL in Action, 3, 49.9, 2 */
 /* batch-1: [LINQ in Action, 2, 39.9, 2 */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
+
+1.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 3 */, 
+        ? /* 49.9 */, 
+        ? /* 2 */
+    )
+    ```
+
+2.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* LINQ in Action */, 
+        ? /* 2 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    )
+    ```
+
+</TabItem>
+</Tabs>
 
 这个例子中，由于id属性对应的列采用了数据自动编号。因此批量插入完成后，数据库为所有数据分配的id都将被返回，打印结果为
 
@@ -203,7 +240,10 @@ println("Affected row count: ${result.totalAffectedRowCount}")
 
 对象的id属性被指定，因此根据对象的id来更新对象，生成的批量操作SQL如下
 
-```
+<Tabs groupId="database">
+<TabItem value="h2" label="大多数数据库">
+
+```sql
 update BOOK
 set
     NAME = ?,
@@ -215,6 +255,39 @@ where
 /* batch-0: [SQL in Action, 3, 49.9, 2, 3] *
 /* batch-1: [LINQ in Action, 2, 39.9, 2, 100] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
+
+1.  ```sql
+    update BOOK
+    set
+        NAME = ? /* SQL in Action */,
+        EDITION = ? /* 3 */,
+        PRICE = ? /* 49.9 */,
+        STORE_ID = ? /* 2 */
+    where
+        ID = ? /* 3 */
+    /* batch-1: [LINQ in Action, 2, 39.9, 2, 100] */
+    ```
+
+2.  ```sql
+    update BOOK
+    set
+        NAME = ? /* LINQ in Action */,
+        EDITION = ? /* 2 */,
+        PRICE = ? /* 39.9 */,
+        STORE_ID = ? /* 2 */
+    where
+        ID = ? /* 100 */
+    ```
+
+</TabItem>
+</Tabs>
 
 该批量操作修改企图两条数据，假设数据库只有一条匹配数据，打印结果为`1`。
 
@@ -348,7 +421,10 @@ for (item in result.item) {
 
 对象的id属性没有指定，因此根据对象的key来更新对象，生成的批量操作SQL如下
 
-```
+<Tabs groupId="database">
+<TabItem value="h2" label="大多数数据库">
+
+```sql
 update BOOK
 set
     PRICE = ?,
@@ -360,6 +436,39 @@ where
 /* batch-0: [49.9, 2, Learning GraphQL, 3] */
 /* batch-1: [39.9, 2, LINQ in Action, 2] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
+
+1.  ```sql
+    update BOOK
+    set
+        PRICE = ? /* 49.9 */,
+        STORE_ID = ? /* 2 */
+    where
+        NAME = ? /* Learning GraphQL */
+        and
+        EDITION = ? /* 3 */
+    /* batch-1: [39.9, 2, LINQ in Action, 2] */
+    ```
+
+2.  ```sql
+    update BOOK
+    set
+        PRICE = ? /* 39.9 */,
+        STORE_ID = ? /* 2 */
+    where
+        NAME = ? /* LINQ in Action */
+        and
+        EDITION = ? /* 2 */
+    ```
+
+</TabItem>
+</Tabs>
 
 打印结果为
 
@@ -439,19 +548,10 @@ sqlClient.save(
 
 Jimmer会优先使用数据库本身的能力进行UPSERT操作，因此，会为不同的数据库生成不同的SQL
 
-<table>
-<thead>
-<tr>
-<th>数据库</th>
-<th>生成的SQL</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>H2</td>
-<td>
+<Tabs groupId="database">
+<TabItem value="h2" label="H2">
 
-```csharp
+```sql
 merge into BOOK(
     ID, NAME, EDITION, PRICE, STORE_ID
 ) key(ID) values(
@@ -461,32 +561,51 @@ merge into BOOK(
 /* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
 ```
 
-</td>
-</tr>
-<tr>
-<td>MySQL</td>
-<td>
+</TabItem>
+<TabItem value="mysql" label="Mysql">
 
-```csharp
-insert into BOOK(
-    ID, NAME, EDITION, PRICE, STORE_ID
-) values(?, ?, ?, ?, ?)
-on duplicate key update 
-    NAME = values(NAME), 
-    EDITION = values(EDITION), 
-    PRICE = values(PRICE), 
-    STORE_ID = values(STORE_ID)
-/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
-/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
-```
+:::caution
+默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
 
-</td>
-</tr>
-<tr>
-<td>Postgres</td>
-<td>
+1.  ```sql
+    insert into BOOK(
+        ID, NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* 3 */, 
+        ? /* Learning GraphQL */, 
+        ? /* 3 */, 
+        ? /* 49.9 */, 
+        ? /* 2 */
+    )
+    on duplicate key update 
+        NAME = values(NAME), 
+        EDITION = values(EDITION), 
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    ```
 
-```csharp
+2.  ```sql
+    insert into BOOK(
+        ID, NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* 100 */, 
+        ? /* LINQ in Action */, 
+        ? /* 2 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    )
+    on duplicate key update 
+        NAME = values(NAME), 
+        EDITION = values(EDITION), 
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    ```
+
+</TabItem>
+<TabItem value="posgres" label="Postgres">
+
+```sql
 insert into BOOK(
     ID, NAME, EDITION, PRICE, STORE_ID
 ) values(?, ?, ?, ?, ?)
@@ -499,10 +618,8 @@ on conflict(ID) do update set
 /* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
 ```
 
-</td>
-</tr>
-</tbody>
-</table>
+</TabItem>
+</Tabs>
 
 ### 按照Key判断数据是否存在
 
@@ -597,9 +714,10 @@ println(ids)
 
 这时，Jimmer会先执行查询，然后根据查询结果来决定应该对那些数据进行INSERT，对那些数据生成UPDATE语句。共三条SQL语句
 
-1. 查询，并给出原因
-    ```csharp
-    // highlight-next-line
+1.  查询，并给出原因
+
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(KEY_UNIQUE_CONSTRAINT_REQUIRED)
     SQL: select
         tb_1_.ID,
@@ -623,7 +741,10 @@ println(ids)
 
 2.  对不存在的数据进行插入操作
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="大部分数据库">
+
+    ```sql
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(
@@ -633,9 +754,44 @@ println(ids)
     /* batch-1: [Kotlin in Action, 2, 39.9, 2] */
     ```
 
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+    :::
+
+    1.  ```sql
+        insert into BOOK(
+            NAME , EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* LINQ in Action */, 
+            ? /* 2 */, 
+            ? /* 39.9 */, 
+            ? /* 2 */
+        )
+        ```
+
+    2.  ```sql
+        insert into BOOK(
+            NAME , EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* Kotlin in Action */, 
+            ? /* 2 */, 
+            ? /* 39.9 */, 
+            ? /* 2 */
+        )
+        ```
+
+    </TabItem>
+    </Tabs>
+
 3.  对存在的数据进行更新操作
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     update BOOK
     set
         PRICE = ?,
@@ -645,6 +801,38 @@ println(ids)
     /* batch-0: [49.9, 2, 3] */
     /* batch-1: [49.9, 2, 12] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+    :::
+
+    1.  ```sql
+        update BOOK
+        set
+            PRICE = ? /* 49.9 */,
+            STORE_ID = ? /* 2 */
+        where
+            ID = ? /* 3 */
+        ```
+
+    2.  ```sql
+        update BOOK
+        set
+            PRICE = ? /* 49.9 */,
+            STORE_ID = ? /* 2 */
+        where
+            ID = ? /* 12 */
+        ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+
+    </TabItem>
+    </Tabs>
 
 打印结果如下
 
@@ -665,10 +853,10 @@ Jimmer为所有的QueryReason提供了详尽的文档注释，详情请参见[Qu
 
 1.  为`Book.name`和`Book.edition`属性建立唯一性约束，即
 
-    ```csharp
+    ```sql
     alter table book
         add constraint uq_book__name_edition
-            /* highlight-next-line */
+            -- highlight-next-line
             unique(name, edition);
     ```
 
@@ -734,23 +922,14 @@ Jimmer为所有的QueryReason提供了详尽的文档注释，详情请参见[Qu
 
 一旦完成这两点改进，再次执行上一个例子。Jimmer不在执行select语句，而是直接利用数据库本身的UPSERT能力
 
-<table>
-<thead>
-<tr>
-<th>数据库</th>
-<th>生成的SQL</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>H2</td>
-<td>
+<Tabs groupId="database">
+<TabItem value="h2" label="H2">
 
-```csharp
+```sql
 merge into BOOK(
     NAME, EDITION, PRICE, STORE_ID
 ) key(
-    /* highlight-next-line */
+    -- highlight-next-line
     NAME, EDITION
 ) values(
     ?, ?, ?, ?
@@ -761,40 +940,90 @@ merge into BOOK(
 /* batch-3: [Kotlin in Action, 2, 39.9, 2] */
 ```
 
-</td>
-</tr>
-<tr>
-<td>MySQL</td>
-<td>
+</TabItem>
+<TabItem value="mysql" label="Mysql">
 
-```csharp
-insert into BOOK(
-    NAME, EDITION, PRICE, STORE_ID
-) values(?, ?, ?, ?)
-on duplicate key update 
-    /* fake update to return all ids */ ID = last_insert_id(ID), 
-    NAME = values(NAME), 
-    EDITION = values(EDITION), 
-    PRICE = values(PRICE), 
-    STORE_ID = values(STORE_ID)
-/* batch-0: [Learning GraphQL, 3, 49.9, 2] */
-/* batch-1: [GraphQL in Action, 3, 49.9, 2] */
-/* batch-2: [LINQ in Action, 2, 39.9, 2] */
-/* batch-3: [Kotlin in Action, 2, 39.9, 2] */
-```
+:::caution
+默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
 
-</td>
-</tr>
-<tr>
-<td>Postgres</td>
-<td>
+1.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* Learning GraphQL */, 
+        ? /* 3 */, 
+        ? /* 49.9 */, 
+        ? /* 2 */
+    )
+    on duplicate key update 
+        /* fake update to return all ids */ ID = last_insert_id(ID), 
+        NAME = values(NAME), 
+        EDITION = values(EDITION), 
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    ```
 
-```csharp
+2.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* GraphQL in Action */, 
+        ? /* 3 */, 
+        ? /* 49.9 */, 
+        ? /* 2 */
+    )
+    on duplicate key update 
+        /* fake update to return all ids */ ID = last_insert_id(ID), 
+        NAME = values(NAME), 
+        EDITION = values(EDITION), 
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    ```
+
+3.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* LINQ in Action */, 
+        ? /* 2 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    )
+    on duplicate key update 
+        /* fake update to return all ids */ ID = last_insert_id(ID), 
+        NAME = values(NAME), 
+        EDITION = values(EDITION), 
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    ```
+
+4.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* Kotlin in Action */, 
+        ? /* 2 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    )
+    on duplicate key update 
+        /* fake update to return all ids */ ID = last_insert_id(ID), 
+        NAME = values(NAME), 
+        EDITION = values(EDITION), 
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    ```
+
+</TabItem>
+<TabItem value="posgres" label="Postgres">
+
+```sql
 insert into BOOK(
     NAME, EDITION, PRICE, STORE_ID
 ) values(?, ?, ?, ?, ?)
 on conflict(
-    /* highlight-next-line */
+    -- highlight-next-line
     NAME, EDITION
 ) do update set
     NAME = excluded.NAME, 
@@ -808,10 +1037,8 @@ returning ID
 /* batch-3: [Kotlin in Action, 2, 39.9, 2] */
 ```
 
-</td>
-</tr>
-</tbody>
-</table>
+</TabItem>
+</Tabs>
 
 :::info
 如果你在使用MySQL，以下两点需要注意
@@ -830,7 +1057,7 @@ returning ID
     用户需对自己的承诺负责。
 
 -   为MySQL所生成的SQL包含
-    ```csharp
+    ```sql
     /* fake update to return all ids */ ID = last_insert_id(ID)
     ```    
     这是一个相对tricky的技巧。如果数据被更新，返回被更新数据的已有id；否则，返回数据库为自动插入的数据分配的id。
@@ -915,24 +1142,15 @@ println("Affected row count: ${result.totalAffectedRowCount}")
 
 Jimmer会优先使用数据库本身的能力进行`INSERT_IF_ABSENT`操作，因此，会为不同的数据库生成不同的SQL
 
-<table>
-<thead>
-<tr>
-<th>数据库</th>
-<th>生成的SQL</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>H2</td>
-<td>
+<Tabs groupId="database">
+<TabItem value="h2" label="H2">
 
-```csharp
+```sql
 merge into BOOK tb_1_ 
 using(values(?, ?, ?, ?, ?)) tb_2_(
     ID, NAME, EDITION, PRICE, STORE_ID
 ) on tb_1_.ID = tb_2_.ID 
-// highlight-next-line
+-- highlight-next-line
 when not matched then 
     insert(ID, NAME, EDITION, PRICE, STORE_ID)
 values
@@ -941,42 +1159,56 @@ values
 /* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
 ```
 
-</td>
-</tr>
-<tr>
-<td>MySQL</td>
-<td>
+</TabItem>
+<TabItem value="mysql" label="Mysql">
 
-```csharp
-insert 
-// highlight-next-line
-ignore 
-into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
-values(?, ?, ?, ?, ?)
-/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
-/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
-```
+:::caution
+默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
 
-</td>
-</tr>
-<tr>
-<td>Postgres</td>
-<td>
+1.  ```sql
+    insert 
+    -- highlight-next-line
+    ignore 
+    into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
+    values(
+        ? /* 3 */, 
+        ? /* Learning GraphQL */, 
+        ? /* 3 */, 
+        ? /* 49.9 */, 
+        ? /* 2 */
+    )
+    ```
 
-```csharp
+2.  ```sql
+    insert 
+    -- highlight-next-line
+    ignore 
+    into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
+    values(
+        ? /* 100 */, 
+        ? /* LINQ in Action */, 
+        ? /* 2 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    )
+    ```
+
+</TabItem>
+<TabItem value="posgres" label="Postgres">
+
+```sql
 insert into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
 values(?, ?, ?, ?, ?)
 on conflict(ID) 
-// highlight-next-line
+-- highlight-next-line
 do nothing
 /* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
 /* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
 ```
 
-</td>
-</tr>
-</tbody>
-</table>
+</TabItem>
+</Tabs>
 
 假设插入一条数据忽略一条数据，打印结果为
 ```
@@ -1010,7 +1242,11 @@ List<Long> ids = sqlClient
     )
     .getItems()
     .stream()
-    .map(it -> it.getModifiedEntity().id())
+    .map(it -> 
+        ImmutableObjects.isLoaded(it, BookProps.ID) ?
+            it.getModifiedEntity().id() :
+            null
+    )
     .collect(Collectors.toList());
 System.out.println(ids);
 ```
@@ -1040,7 +1276,13 @@ val ids = sqlClient
         SaveMode.INSERT_IF_ABSENT
     )
     .items
-    .map { it.originalEntity.id }
+    .map { 
+        if (isLoaded(it, Book::id)) {
+            it.originalEntity.id
+        } else {
+            null
+        }
+     }
 println(ids)
 ```
 
@@ -1057,87 +1299,90 @@ println(ids)
 
 Jimmer会为不同的数据库生成不同的SQL
 
-<table>
-<thead>
-<tr>
-<th>数据库</th>
-<th>生成的SQL</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>H2</td>
-<td>
+<Tabs groupId="database">
+<TabItem value="h2" label="H2">
 
-```csharp
+```sql
 merge into BOOK tb_1_ 
-using(values(?, ?, ?, ?, ?)) tb_2_(
-    ID, NAME, EDITION, PRICE, STORE_ID
+using(values(?, ?, ?, ?)) tb_2_(
+    NAME, EDITION, PRICE, STORE_ID
 ) on 
-    // highlight-next-line
+    -- highlight-next-line
     tb_1_.NAME = tb_2_.NAME 
-and 
-    // highlight-next-line
+and
+    -- highlight-next-line
     tb_1_.EDITION = tb_2_.EDITION 
-when
-    // highlight-next-line
-    not matched then 
+
+-- highlight-next-line
+when not matched then 
     insert(ID, NAME, EDITION, PRICE, STORE_ID)
 values
     (tb_2_.ID, tb_2_.NAME, tb_2_.EDITION, tb_2_.PRICE, tb_2_.STORE_ID)
-/* batch-0: [3, SQL in Action, 3, 49.9, 2] */
-/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+/* batch-0: [SQL in Action, 3, 49.9, 2] */
+/* batch-1: [LINQ in Action, 2, 39.9, 2] */
 ```
 
-</td>
-</tr>
-<tr>
-<td>MySQL</td>
-<td>
+</TabItem>
+<TabItem value="mysql" label="Mysql">
 
-```csharp
-insert 
-// highlight-next-line
-ignore 
-into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
-values(?, ?, ?, ?, ?)
-/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
-/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
-```
+:::caution
+默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
 
-</td>
-</tr>
-<tr>
-<td>Postgres</td>
-<td>
+1.  ```sql
+    insert 
+    -- highlight-next-line
+    ignore 
+    into BOOK(NAME, EDITION, PRICE, STORE_ID)
+    values(
+        ? /* Learning GraphQL */, 
+        ? /* 3 */, 
+        ? /* 49.9 */, 
+        ? /* 2 */
+    )
+    ```
 
-```csharp
-insert into BOOK(ID, NAME, EDITION, PRICE, STORE_ID)
+2.  ```sql
+    insert 
+    -- highlight-next-line
+    ignore 
+    into BOOK(NAME, EDITION, PRICE, STORE_ID)
+    values(
+        ? /* LINQ in Action */, 
+        ? /* 2 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    )
+    ```
+
+</TabItem>
+<TabItem value="posgres" label="Postgres">
+
+```sql
+insert into BOOK(NAME, EDITION, PRICE, STORE_ID)
 values(?, ?, ?, ?, ?)
 on conflict(
-    // highlight-next-line
+    -- highlight-next-line
     NAME, EDITION
-)
-// highlight-next-line
+) 
+-- highlight-next-line
 do nothing
 returning ID
-/* batch-0: [3, Learning GraphQL, 3, 49.9, 2] */
-/* batch-1: [100, LINQ in Action, 2, 39.9, 2] */
+/* batch-0: [Learning GraphQL, 3, 49.9, 2] */
+/* batch-1: [LINQ in Action, 2, 39.9, 2] */
 ```
 
-</td>
-</tr>
-</tbody>
-</table>
+</TabItem>
+</Tabs>
 
 打印结果为
 
 ```
-[3, 100]
+[null, 100]
 ```
 
 其中
--   第一条数据已经存在，插入操作被忽略，已有数据id为3
+-   第一条数据已经存在，插入操作被忽略，操作被忽略，无法返回id
 -   第二条数据不经存在，执行插入操作，新分配的自动编号为100
 
 ## 5. NON_IDEMPOTENT_UPSERT
@@ -1206,7 +1451,7 @@ println(ids)
 Save error caused by the path: "<root>": 
     Cannot save illegal entity object whose type is 
     "com.yourproject.model.Book", entity with 
-    // highlight-next-line
+    # highlight-next-line
     neither id nor key 
     cannot be accepted. 
     There are 3 ways to fix this problem: 
@@ -1220,7 +1465,7 @@ Save error caused by the path: "<root>":
         "INSERT_ONLY(function changed)", 
         "INSERT_IF_ABSTENT(function changed)", 
         or 
-        // highlight-next-line
+        # highlight-next-line
         "NON_IDEMPOTENT_UPSERT"
 ```
 

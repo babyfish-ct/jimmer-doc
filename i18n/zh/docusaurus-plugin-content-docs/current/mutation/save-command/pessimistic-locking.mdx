@@ -5,303 +5,182 @@ title: 悲观锁
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import { ViewMore } from '@site/src/components/ViewMore';
 
-:::warning
-即将重写
+## 准备工作
+
+本文所讨论的悲观锁，并非普通查询的悲观锁，而是保存指令内部的悲观锁。
+
+面对一个保存操作，在不同的情况下，保存指令会采取两种截然不同的行为:
+
+1.  直接利用数据库本身的能力进行upsert操作
+
+2.  先通过select操作检查被保存的数据是否存在，再根据查询结果决定后续操作应该是insert还是update
+
+Jimmer会尽可能执行`1`，如果无法做到，则执行`2`并向用户报告`QueryReason`。
+
+当Jimmer不得不执行`2`时，存在一个问题：先执行的select操作和后执行insert或update操作之间存在一个时间窗口，其他事务可能挤进这个时间窗口对相同的数据进行修改。
+
+为了解决这个问题，保存指令允许用户启用悲观锁，在执行select操作时加上`for update`选项，直到事务提交为止。
+
+在展示悲观锁之前，我们有必要让保存指令执行上面的`2`，而非`1`。一个有效的办法是启用事务内触发器:
+
+事务内触发器是Jimmer所支持的[触发器](../trigger)的一种，Jimmer总是通过select查询修改前的旧数据，并以此模拟出触发器的效果。
+
+:::note
+事务内触发器是当前尚未介绍的功能，读者不用太在意它，这里，我们只是用它来确保Jimmer会采用先查再改的策略而已。
 :::
 
-## 悲观锁
+采用以下任何一种方法开启事务内触发器
 
-和乐观锁不同，悲观锁生命周期很短，仅在一个jdbc事务内有效。
+-   利用Jimmer的Spring Boot Starter
 
-通常，Jimmer会生成一些查询SQL以辅助保存指令的执行，比如
+    修改`application.yml`或`application.properties`文件，完成配置
 
--   判断`UPSERT`操作最终应该判定为`INSERT`还是`UPDATE`
-
--   判断哪些关联对象需要被[脱钩](./association/dissociation)
-
-接下来，我们对比不使用悲观锁和使用悲观锁两种情况，来观察这些查询SQL有何不同。
-
-:::info
-在前面的例子中，为了介绍乐观锁，假设`BookStore`和`Book`类型都定义了`version`属性。
-
-后续例子为了介绍悲观锁，不再有此假设。
-:::
-
-### 未启用悲观锁
-
-<Tabs groupId="language">
-<TabItem value="java" label="Java">
-
-```java
-sqlClient.save(
-        Immutables.createBookStore(draft -> {
-            draft.setName("TURING");
-            draft.addIntoBooks(book -> {
-                book.setName("Introduction to Algorithms");
-                book.setEdition(3);
-                book.setPrice(new BigDecimal("44.99"));
-            });
-            draft.addIntoBooks(book -> {
-                book.setName("The Pragmatic Programmer");
-                book.setEdition(2);
-                book.setPrice(new BigDecimal("39.99"));
-            });
-        })
-);
-```
-
-</TabItem>
-<TabItem value="kotlin" label="Kotlin">
-
-```kotlin
-sqlClient.save(
-    BookStore {
-        name = "TURING"
-        books().addBy {
-            name = "Introduction to Algorithms"
-            edition = 3;
-            price = BigDecimal("44.99")
-        }
-        books().addBy {
-            name = "The Pragmatic Programmer"
-            edition = 2
-            price = BigDecimal("39.99")
-        }
-    }
-)
-```
-
-</TabItem>
-</Tabs>
-
-生成6条SQL，如下
-
-1.  判断书店是否存在
-
-    ```csharp
-    select
-        tb_1_.ID,
-        tb_1_.NAME
-    from BOOK_STORE tb_1_
-    where
-        tb_1_.NAME = ? /* TURING */
+    ```sh title="application.yml"
+    jimmer:
+        # highlight-next-line
+        trigger-type: TRANSACTION_ONLY
     ```
 
-2.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
-
-    insert或update，略
-
-3.  判断第1本书籍是否存在
-    
-    ```csharp
-    select
-        tb_1_.ID,
-        tb_1_.NAME,
-        tb_1_.EDITION
-    from BOOK tb_1_
-    where
-            tb_1_.NAME = ? /* Introduction to Algorithms */
-        and
-            tb_1_.EDITION = ? /* 3 */
-    ```
-4.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
-
-    insert或update，略
-
-5.  判断第2本书籍是否存在
-
-    ```csharp
-    select
-        tb_1_.ID,
-        tb_1_.NAME,
-        tb_1_.EDITION
-    from BOOK tb_1_
-    where
-            tb_1_.NAME = ? /* The Pragmatic Programmer */
-        and
-            tb_1_.EDITION = ? /* 2 */
-    ```
-
-6.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
-
-    insert或update，略
-
-:::info
-这些查询语句用于进行条件判断，以决定后续SQL该如何生成。
-
-然而，这些查询没有使用悲观锁，经它们判断而成立的条件和假设，有可能被其它并发行为破坏，从而导致后续SQL执行出现异常。
-
-为了避免这种并发问题，可以启用悲观锁。接下来，我们讨论悲观锁如何实现。
-:::
-
-### 启用悲观锁
-
-有两种启用悲观锁的方法
-
--   全局配置
-
-    有两种方法可以通过全局配置启用悲观锁
-
-    -   Spring Boot Starter的配置
-
-        修改`application.yml` *(或`application.properties`)*
-        
-        ```
-        jimmer:
-            default-lock-mode: PESSIMISTIC
-        ```
-
-    -   底层API的配置
-
-        <Tabs groupId="language">
-        <TabItem value="java" label="Java">
-
-        ```java
-        JSqlClient sqlClient = JSqlClient
-            .newBuilder()
-            // highlight-next-line
-            .setDefaultLockMode(LockMode.PESSIMISTIC)
-            ...省略其他配置...
-            .build();
-        ```
-
-        </TabItem>
-        <TabItem value="kotlin" label="Kotlin">
-
-        ```kotlin
-        val sqlClient = newKSqlClient {
-            // highlight-next-line
-            setDefaultLockMode(LockMode.PESSIMISTIC)
-        }
-        ```
-
-        </TabItem>
-        </Tabs>
-
-    :::warning
-    此举修改了全局设置，原本的默认值`OPTIMISTIC`被破坏。这意味着，除非将某个保存指令设置为乐观锁模式，前文所讲述的乐观锁的功能消失。
-
-    因此，大部分情况下，不推荐全局配置，而更推荐下文即将介绍的指令级配置。
-    :::
-
--   指令级配置
-
-    和影响所有保存指令的全局配置不同，指令级配置仅仅影响当前保存指令
-
-    :::info
-    如果已经通过全局配置打开了悲观锁控制，就不再需要指令级配置了
-    :::
-
-    调用保存指令的配置方法`setLockMode`，即可启用悲观锁，如下
+-   使用Jimmer的核心API
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
 
     ```java
-    sqlClient
-            .getEntities()
-            .saveCommand(
-                    Immutables.createBookStore(draft -> {
-                        draft.setName("TURING");
-                        draft.addIntoBooks(book -> {
-                            book.setName("Introduction to Algorithms");
-                            book.setEdition(3);
-                            book.setPrice(new BigDecimal("44.99"));
-                        });
-                        draft.addIntoBooks(book -> {
-                            book.setName("The Pragmatic Programmer");
-                            book.setEdition(2);
-                            book.setPrice(new BigDecimal("39.99"));
-                        });
-                    })
-            )
-            // highlight-next-line
-            .setLockMode(LockMode.PESSIMISTIC)
-            .execute();
+    JSqlClient sqlClient = JSqlClient
+        .newBuilder()
+        // highlight-next-line
+        .setTriggerType(TriggerType.TRANSACTION_ONLY)
+        ...省略其他配置...
+        .build();
     ```
 
     </TabItem>
     <TabItem value="kotlin" label="Kotlin">
 
     ```kotlin
-    sqlClient.save(
-        BookStore {
-            name = "TURING"
-            books().addBy {
-                name = "Introduction to Algorithms"
-                edition = 3;
-                price = BigDecimal("44.99")
-            }
-            books().addBy {
-                name = "The Pragmatic Programmer"
-                edition = 2
-                price = BigDecimal("39.99")
-            }
-        }
-    ) {
+    val sqlClient = sqlClient {
         // highlight-next-line
-        setLockMode(LockMode.PESSIMISTIC)
+        setTriggerType(TriggerType.TRANSACTION_ONLY)
+        ...省略其他配置...
     }
     ```
 
     </TabItem>
     </Tabs>
 
-一旦启用了悲观锁，生成的查询语句会有显著变化，如下
+通过这样的配置，强迫Jimmer总是先查询再修改，以便于演示悲观锁。
 
-1.  判断书店是否存在
+## 悲观锁展示
 
-    ```csharp
-    select
+我们可以通过`setPessimisticLock`方法为保存指令开启悲观锁
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setName("GraphQL in Action");
+        draft.setEdition(3);
+        draft.setPrice(new BigDecimal("59.9"));
+    }),
+    Immutables.createBook(draft -> {
+        draft.setName("GraphQL in Action");
+        draft.setEdition(4);
+        draft.setPrice(new BigDecimal("59.9"));
+    })
+);
+sqlClient
+        .saveEntitiesCommand(books)
+        // highlight-next-line
+        .setPessimisticLock(Book.class)
+        .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book { 
+        name = "SQL in Action"
+        edition = 3
+        price = BigDecimal("59.9")
+    },
+    Book {
+        name = "SQL in Action"
+        edition = 4
+        price = BigDecimal("59.9")
+    }
+)
+
+sqlClient.saveEntities(books) {
+    // highlight-next-line
+    setPessimisticLock(Book::class)
+}
+```
+
+</TabItem>
+</Tabs>
+
+这里，`setPessimisticLock`为`Book`实体开启了悲观锁，如果保存指令需要查询`Book`类型的对象，相关select语句会启用`for update`选项。
+
+:::info
+事实上，你也可以调用`setPessimisticLockAll`方法盲目地为所有实体类型开启悲观锁
+:::
+
+最终生成如下三条SQL
+
+1.  查询被保存的对象是否存在，带上`for update`选项
+
+    ```sql
+    Purpose: COMMAND(TRIGGER)
+    SQL: select
         tb_1_.ID,
-        tb_1_.NAME
-    from BOOK_STORE tb_1_
+        tb_1_.NAME,
+        tb_1_.EDITION,
+        tb_1_.PRICE,
+        tb_1_.STORE_ID
+    from BOOK tb_1_
     where
-        tb_1_.NAME = ? /* TURING */
-    /* highlight-next-line */
-    for update
+        (tb_1_.NAME, tb_1_.EDITION) in (
+            (? /* GraphQL in Action */, ? /* 3 */), 
+            (? /* GraphQL in Action */, ? /* 4 */)
+            -- highlight-next-line
+        ) for update
     ```
 
-2.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
-
-    insert或update，略
-
-3.  判断第1本书籍是否存在
+    :::info
+    这里，查询语句带有`for update`选项，悲观锁已经生效。
+    :::
     
-    ```csharp
-    select
-        tb_1_.ID,
-        tb_1_.NAME,
-        tb_1_.EDITION
-    from BOOK tb_1_
-    where
-            tb_1_.NAME = ? /* Introduction to Algorithms */
-        and
-            tb_1_.EDITION = ? /* 3 */
-    /* highlight-next-line */
-    for update
-    ```
-4.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
-
-    insert或update，略
-
-5.  判断第2本书籍是否存在
-
-    ```csharp
-    select
-        tb_1_.ID,
-        tb_1_.NAME,
-        tb_1_.EDITION
-    from BOOK tb_1_
-    where
-            tb_1_.NAME = ? /* The Pragmatic Programmer */
-        and
-            tb_1_.EDITION = ? /* 2 */
-    /* highlight-next-line */
-    for update
+2.  <details>
+    <summary>插入不存在的数据 *(非本文重点，默认折叠)* </summary>
+    
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE
+    ) values(
+        ? /* GraphQL in Action */, 
+        ? /* 4 */, 
+        ? /* 59.9 */
+    )
     ```
 
-6.  根据前一条查询的结果，决定`INSERT`还是`UPDATE`
+    </details>
 
-    insert或update，略
+3.  <details>
+    <summary>更新已经存在的数据 *(非本文重点，默认折叠)* </summary>
+    
+    ```sql
+    update BOOK
+    set
+        PRICE = ? /* 59.9 */
+    where
+        ID = ? /* 12 */
+    ```
+
+    </details>

@@ -65,7 +65,7 @@ import com.example.model.Book
 import org.babyfish.jimmer.spring.repository.KRepository
 import org.babyfish.jimmer.sql.kt.ast.expression.*
 
-interface BookRepository : KRepository<BookStore, Long> {
+interface BookRepository : KRepository<Book, Long> {
 
     fun find(name: String? = null): List<Book> =
         sql ❷
@@ -258,7 +258,7 @@ import com.example.model.Book
 import org.babyfish.jimmer.spring.repository.KRepository
 import org.babyfish.jimmer.sql.kt.ast.expression.*
 
-interface BookRepository : KRepository<BookStore, Long> {
+interface BookRepository : KRepository<Book, Long> {
 
     fun find(
         name: String? = null,
@@ -416,7 +416,7 @@ import com.example.model.Book
 import org.babyfish.jimmer.spring.repository.KRepository
 import org.babyfish.jimmer.sql.kt.ast.expression.*
 
-interface BookRepository : KRepository<BookStore, Long> {
+interface BookRepository : KRepository<Book, Long> {
 
     fun find(
         name: String? = null,
@@ -600,7 +600,7 @@ import org.babyfish.jimmer.spring.repository.orderBy
 import org.babyfish.jimmer.sql.kt.ast.expression.*
 import org.springframework.data.domain.Sort
 
-interface BookRepository : KRepository<BookStore, Long> {
+interface BookRepository : KRepository<Book, Long> {
 
     fun find(
         name: String? = null,
@@ -829,7 +829,7 @@ import org.babyfish.jimmer.sql.kt.ast.expression.*
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 
-interface BookRepository : KRepository<BookStore, Long> {
+interface BookRepository : KRepository<Book, Long> {
 
     fun find(
         name: String? = null,
@@ -1121,7 +1121,7 @@ import org.babyfish.jimmer.sql.kt.ast.expression.*
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 
-interface BookRepository : KRepository<BookStore, Long> {
+interface BookRepository : KRepository<Book, Long> {
 
     fun find(
         name: String? = null,

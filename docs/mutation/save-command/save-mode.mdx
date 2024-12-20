@@ -973,8 +973,6 @@ For specific details, please refer to [MySQL Issues](./mysql)
     )
     on duplicate key update 
         /* fake update to return all ids */ ID = last_insert_id(ID), 
-        NAME = values(NAME), 
-        EDITION = values(EDITION), 
         PRICE = values(PRICE), 
         STORE_ID = values(STORE_ID)
     ```
@@ -990,8 +988,6 @@ For specific details, please refer to [MySQL Issues](./mysql)
     )
     on duplicate key update 
         /* fake update to return all ids */ ID = last_insert_id(ID), 
-        NAME = values(NAME), 
-        EDITION = values(EDITION), 
         PRICE = values(PRICE), 
         STORE_ID = values(STORE_ID)
     ```
@@ -1007,8 +1003,6 @@ For specific details, please refer to [MySQL Issues](./mysql)
     )
     on duplicate key update 
         /* fake update to return all ids */ ID = last_insert_id(ID), 
-        NAME = values(NAME), 
-        EDITION = values(EDITION), 
         PRICE = values(PRICE), 
         STORE_ID = values(STORE_ID)
     ```
@@ -1024,8 +1018,6 @@ For specific details, please refer to [MySQL Issues](./mysql)
     )
     on duplicate key update 
         /* fake update to return all ids */ ID = last_insert_id(ID), 
-        NAME = values(NAME), 
-        EDITION = values(EDITION), 
         PRICE = values(PRICE), 
         STORE_ID = values(STORE_ID)
     ```
@@ -1041,8 +1033,6 @@ on conflict(
     /* highlight-next-line */
     NAME, EDITION
 ) do update set
-    NAME = excluded.NAME, 
-    EDITION = excluded.EDITION, 
     PRICE = excluded.PRICE, 
     STORE_ID = excluded.STORE_ID
 returning ID

@@ -167,24 +167,76 @@ val book = Book {
 但这并不是必须的，为了让例子更具普适性，这里并不假设用户为实体类型定义了[IdView](../../../mapping/advanced/view/id-view)属性。后续所有文档都如此，不再提醒。
 :::
 
-假设当前数据库为H2，生成的SQL
+生成如下SQL
 
 1.  保存聚合根。
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
+    -- highlight-next-line
     ) key(
         NAME, EDITION
-    ) values(?, ?, ?, ?)
-    /* batch-0: [SQL in Action, 1, 39.9, 2] */
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    )
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    -- highlight-next-line
+    ) on duplicate key update
+        /* fake update to return all ids */ ID = last_insert_id(ID), 
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    into into into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    -- highlight-next-line
+    ) on conflict(
+        NAME, EDITION
+    ) do update set
+        PRICE = excluded.PRICE, 
+        STORE_ID = excluded.STORE_ID
+    returning ID
+    ```
+
+    </TabItem>
+    </Tabs>
 
     由于`Book.store`是直接基于外键 *(STORE_ID)* 的多对一关系，当前对象和`BookStore(2)`对象的关联将会因这条SQL的执行而被自动创建。
 
 2.  如果和当前对象 *(新插入的数据为`Book(100)`)* 关联的`Author`对象不仅仅只有`Author(4)`和`Author(5)`，切断和其他对象啊的关联。
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     delete from BOOK_AUTHOR_MAPPING
     where 
         BOOK_ID = ? /* 100 */
@@ -194,11 +246,46 @@ val book = Book {
         )
     ```
 
-    > 这个步骤叫做脱勾，后续文档会给予介绍，这里请读者先行忽略
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    delete from BOOK_AUTHOR_MAPPING
+    where 
+        BOOK_ID = ? /* 100 */
+    and
+        AUTHOR_ID not in(
+            ? /* 4 */, 
+            ? /* 5 */
+        )
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    delete from BOOK_AUTHOR_MAPPING
+    where 
+        BOOK_ID = ? /* 100 */
+    and
+        not (
+            AUTHOR_ID = any(? /* [4, 5] */)
+        )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    :::info
+    这个步骤叫做[脱勾操作](./dissociation)，后续文档会给予介绍，这里请读者先行忽略
+    :::
 
 3.  建立对象 *(新插入的数据为`Book(100)`)* 和`Author(4)`和`Author(5)`两个对象之间的关联
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK_AUTHOR_MAPPING tb_1_ 
     using(values(?, ?)) tb_2_(
         BOOK_ID, AUTHOR_ID
@@ -207,11 +294,62 @@ val book = Book {
         tb_1_.BOOK_ID = tb_2_.BOOK_ID
     and
         tb_1_.AUTHOR_ID = tb_2_.AUTHOR_ID 
-    when not matched then insert(BOOK_ID, AUTHOR_ID)
-    values(tb_2_.BOOK_ID, tb_2_.AUTHOR_ID)
+    -- highlight-next-line
+    when not matched 
+        then insert(BOOK_ID, AUTHOR_ID)
+        values(tb_2_.BOOK_ID, tb_2_.AUTHOR_ID)
     /* batch-0: [100, 4] */
     /* batch-1: [100, 5] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+    :::
+
+    1.  ```sql
+        insert 
+        -- highlight-next-line
+        ignore
+        into BOOK_AUTHOR_MAPPING(
+            BOOK_ID, AUTHOR_ID
+        ) values(
+            ? /* 100 */, ? /* 4 */
+        )
+        ```
+
+    2.  ```sql
+        insert 
+        -- highlight-next-line
+        ignore
+        into BOOK_AUTHOR_MAPPING(
+            BOOK_ID, AUTHOR_ID
+        ) values(
+            ? /* 100 */, ? /* 5 */
+        )
+        ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK_AUTHOR_MAPPING(
+        BOOK_ID, AUTHOR_ID
+    ) values(
+        ?, ?
+    -- highlight-next-line  
+    ) on conflict(
+        BOOK_ID, AUTHOR_ID
+    )
+    do nothing
+    /* batch-0: [100, 4] */
+    /* batch-1: [100, 5] */
+    ```
+
+    </TabItem>
+    </Tabs>
 
 :::info
 通过此例，不难发现，短关联只会创建或销毁当前对象和其他对象之间的关联关系，不会进一步保存关联对象。
@@ -474,16 +612,23 @@ sqlClient.insert(order)
 
 1.  插入根对象`Order`
 
-    ```csharp
+    ```sql
     insert into order_(
         PROVINCE, CITY, ADDRESS, CUSTOMER_ID
-    ) values(?, ?, ?, ?)
-    /*batch-0: [四川, 成都, 龙泉驿区洪玉路与十洪路交叉口, 1] */
+    ) values(
+        ? /* 四川 */, 
+        ? /* 成都 */, 
+        ? /* 龙泉驿区洪玉路与十洪路交叉口 */, 
+        ? /* 1 */
+    )
     ```
 
 2.  插入所有子对象`OrderItem`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="绝大部分数据库">
+
+    ```sql
     insert into ORDER_ITEM(
         ORDER_ID, 
         PRODUCT_ID, 
@@ -492,6 +637,40 @@ sqlClient.insert(order)
     /* batch-0: [100, 8, 2] */
     /* batch-1: [100, 9, 1] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+    :::
+
+    1.  ```sql
+        insert into ORDER_ITEM(
+            ORDER_ID, 
+            PRODUCT_ID, 
+            QUANTITY
+        ) values(
+            ? /* 100 */, 
+            ? /* 8 */, 
+            ? /* 2 */
+        )
+        ```
+
+    2.  ```sql
+        insert into ORDER_ITEM(
+            ORDER_ID, 
+            PRODUCT_ID, 
+            QUANTITY
+        ) values(
+            ? /* 100 */, 
+            ? /* 9 */, 
+            ? /* 1 */
+        )
+        ```
+
+    </TabItem>
+    </Tabs>
 
 :::info
 由此可见，长关联不仅能修改当前对象和其他对象的关联关系，还是会导致关联对象被保存。
@@ -544,23 +723,115 @@ sqlClient.save(book)
 
 1.  先保存关联对象`BookStore`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK_STORE(
         NAME, WEBSITE
-    ) key(NAME) values(?, ?)
-    /* batch-0: [TURING, https://www.turing.com] */
+    -- highlight-next-line
+    ) key(
+        NAME
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    )
     ```
 
-2.  后保存当前对象`Book`
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
 
-    ```csharp
+    ```sql
+    insert into BOOK_STORE(
+        NAME, WEBSITE
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    -- highlight-next-line
+    ) on duplcate update
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        WEBSITE = VALUES(WEBSITE)
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME, WEBSITE
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    -- highlight-next-line
+    ) on conflict(
+        NAME, WEBSITE
+    ) do update set
+        WEBSITE = excluded.WEBSITE,
+    return ID
+    ```
+
+    </TabItem>
+    </Tabs>
+
+2.  后保存当前对象`Book` *(假设上个操作返回的id为`100`)*
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
+    --highlight-next-line
     ) key(
         NAME, EDITION
-    ) values(?, ?, ?, ?)
-    /* batch-0: [SQL in Action, 1, 49.9, 100] */
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 49.9 */, 
+        ? /* 100 */
+    )
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 49.9 */, 
+        ? /* 100 */
+    -- highlight-next-line
+    ) on duplcate key update
+        /* fake update to return all ids */ ID = last_insert_id(ID), 
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 49.9 */, 
+        ? /* 100 */
+    -- highlight-next-line
+    ) on conflict(
+        NAME, EDITION
+    ) do update set
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    returning ID
+    ```
+
+    </TabItem>
+    </Tabs>
 
 :::caution
 在工作交流中，面对前置关联时，建议用"当前对象/关联对象"这样的方式来表达，而不是"父对象/子对象"这种表达方式。
@@ -635,26 +906,128 @@ sqlClient.save(store) {
 
 1.  先保存当前对象`BookStore`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK_STORE(
         NAME, WEBSITE
+    -- highlight-next-line
     ) key(
         NAME
-    ) values(?, ?)
-    /* batch-0: [TURING, https://www.turing.com] */
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    )
     ```
 
-2.  后保存关联对象`Book`
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
 
-    ```csharp
+    ```sql
+    insert into BOOK_STORE(
+        NAME, WEBSITE
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    -- highlight-next-line
+    ) on duplcate update
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        WEBSITE = VALUES(WEBSITE)
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME, WEBSITE
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    -- highlight-next-line
+    ) on conflict(
+        NAME, WEBSITE
+    ) do update set
+        WEBSITE = excluded.WEBSITE,
+    return ID
+    ```
+
+    </TabItem>
+    </Tabs>
+
+2.  后保存关联对象`Book` *(假设上个操作返回的id为`100`)*
+
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
+    -- highlight-next-line
     ) key(
         NAME, EDITION
     ) values(?, ?, ?, ?)
     /* batch-0: [SQL in Action, 1, 49.9, 100] */
     /* batch-1: [RUST programming, 2, 39.9, 100] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+    :::
+
+    1.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* SQL in Action */, 
+            ? /* 1 */, 
+            ? /* 49.9 */, 
+            ? /* 100 */
+        -- highlight-next-line
+        ) on duplcate update 
+            /* fake update to return all ids */ ID = last_insert_id(ID), 
+            PRICE = VALUES(PRICE),
+            STORE_ID = VALUES(STORE_ID)
+
+    2.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* RUST programming */, 
+            ? /* 2 */, 
+            ? /* 39.9 */, 
+            ? /* 100 */
+        -- highlight-next-line
+        ) on duplcate update 
+            /* fake update to return all ids */ ID = last_insert_id(ID), 
+            PRICE = VALUES(PRICE),
+            STORE_ID = VALUES(STORE_ID)
+        ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ?, ?, ?, ?
+    -- highlight-next-line
+    ) on conflict(
+        NAME, EDITION
+    ) do update set
+        PRICE = excluded.PRICE,
+        STORE_ID = excluded.STORE_ID
+    /* batch-0: [SQL in Action, 1, 49.9, 100] */
+    /* batch-1: [RUST programming, 2, 39.9, 100] */
+    ```
+
+    </TabItem>
+    </Tabs>
 
 3.  第三条SQL和这里讨论的话题无关，省略
 

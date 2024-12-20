@@ -167,24 +167,76 @@ val book = Book {
 However, this is not mandatory. To make the example more universal, we don't assume that users have defined [IdView](../../../mapping/advanced/view/id-view) properties for entity types. All subsequent documentation will follow this approach without further reminders.
 :::
 
-Assuming the current database is H2, the generated SQL would be:
+The generated SQL statements would be:
 
 1.  Save the aggregate root.
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
+    -- highlight-next-line
     ) key(
         NAME, EDITION
-    ) values(?, ?, ?, ?)
-    /* batch-0: [SQL in Action, 1, 39.9, 2] */
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    )
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    -- highlight-next-line
+    ) on duplicate key update
+        /* fake update to return all ids */ ID = last_insert_id(ID), 
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    into into into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 39.9 */, 
+        ? /* 2 */
+    -- highlight-next-line
+    ) on conflict(
+        NAME, EDITION
+    ) do update set
+        PRICE = excluded.PRICE, 
+        STORE_ID = excluded.STORE_ID
+    returning ID
+    ```
+
+    </TabItem>
+    </Tabs>
 
     Since `Book.store` is a many-to-one relationship directly based on foreign key *(STORE_ID)*, the association between the current object and `BookStore(2)` object will be automatically created by the execution of this SQL.
 
 2.  If there are `Author` objects associated with the current object *(newly inserted data is `Book(100)`)* other than just `Author(4)` and `Author(5)`, break the associations with those other objects.
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     delete from BOOK_AUTHOR_MAPPING
     where 
         BOOK_ID = ? /* 100 */
@@ -194,11 +246,46 @@ Assuming the current database is H2, the generated SQL would be:
         )
     ```
 
-    > This step is called unhooking, which will be introduced in subsequent documentation. Readers can ignore this for now.
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    delete from BOOK_AUTHOR_MAPPING
+    where 
+        BOOK_ID = ? /* 100 */
+    and
+        AUTHOR_ID not in(
+            ? /* 4 */, 
+            ? /* 5 */
+        )
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    delete from BOOK_AUTHOR_MAPPING
+    where 
+        BOOK_ID = ? /* 100 */
+    and
+        not (
+            AUTHOR_ID = any(? /* [4, 5] */)
+        )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    :::info
+    This step is called [Dissociation Operation](./dissociation), which will be introduced in subsequent documentation. Readers can ignore this for now.
+    :::
 
 3.  Establish associations between the object *(newly inserted data is `Book(100)`)* and the two objects `Author(4)` and `Author(5)`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK_AUTHOR_MAPPING tb_1_ 
     using(values(?, ?)) tb_2_(
         BOOK_ID, AUTHOR_ID
@@ -207,11 +294,63 @@ Assuming the current database is H2, the generated SQL would be:
         tb_1_.BOOK_ID = tb_2_.BOOK_ID
     and
         tb_1_.AUTHOR_ID = tb_2_.AUTHOR_ID 
-    when not matched then insert(BOOK_ID, AUTHOR_ID)
-    values(tb_2_.BOOK_ID, tb_2_.AUTHOR_ID)
+    -- highlight-next-line
+    when not matched 
+        then insert(BOOK_ID, AUTHOR_ID)
+        values(tb_2_.BOOK_ID, tb_2_.AUTHOR_ID)
     /* batch-0: [100, 4] */
     /* batch-1: [100, 5] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    By default, MySQL does not enable batch operations and uses multiple SQL statements instead. 
+    For specific details, please refer to [MySQL Issues](../mysql)
+    :::
+
+    1.  ```sql
+        insert 
+        -- highlight-next-line
+        ignore
+        into BOOK_AUTHOR_MAPPING(
+            BOOK_ID, AUTHOR_ID
+        ) values(
+            ? /* 100 */, ? /* 4 */
+        )
+        ```
+
+    2.  ```sql
+        insert 
+        -- highlight-next-line
+        ignore
+        into BOOK_AUTHOR_MAPPING(
+            BOOK_ID, AUTHOR_ID
+        ) values(
+            ? /* 100 */, ? /* 5 */
+        )
+        ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK_AUTHOR_MAPPING(
+        BOOK_ID, AUTHOR_ID
+    ) values(
+        ?, ?
+    -- highlight-next-line  
+    ) on conflict(
+        BOOK_ID, AUTHOR_ID
+    )
+    do nothing
+    /* batch-0: [100, 4] */
+    /* batch-1: [100, 5] */
+    ```
+
+    </TabItem>
+    </Tabs>
 
 :::info
 Through this example, it's not hard to see that short associations only create or destroy the association relationships between the current object and other objects, without further saving the associated objects.
@@ -482,13 +621,20 @@ This operation generates two SQL statements:
     ```csharp
     insert into order_(
         PROVINCE, CITY, ADDRESS, CUSTOMER_ID
-    ) values(?, ?, ?, ?)
-    /*batch-0: [Prenzlauer Berg, Berlin, Brandenburgische Straße 9, Prenzlauer Berg, Berlin, Germany, 1] */
+    ) values(
+        ? /* Prenzlauer Berg */, 
+        ? /* Berlin */, 
+        ? /* Brandenburgische Strae 9, Prenzlauer Berg, Berlin, Germany */, 
+        ? /* 1 */
+    )
     ```
 
 2.  Insert all child objects `OrderItem`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="Most Databases">
+
+    ```sql
     insert into ORDER_ITEM(
         ORDER_ID, 
         PRODUCT_ID, 
@@ -497,6 +643,41 @@ This operation generates two SQL statements:
     /* batch-0: [100, 8, 2] */
     /* batch-1: [100, 9, 1] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    By default, MySQL does not enable batch operations and uses multiple SQL statements instead. 
+    For specific details, please refer to [MySQL Issues](../mysql)
+    :::
+
+    1.  ```sql
+        insert into ORDER_ITEM(
+            ORDER_ID, 
+            PRODUCT_ID, 
+            QUANTITY
+        ) values(
+            ? /* 100 */, 
+            ? /* 8 */, 
+            ? /* 2 */
+        )
+        ```
+
+    2.  ```sql
+        insert into ORDER_ITEM(
+            ORDER_ID, 
+            PRODUCT_ID, 
+            QUANTITY
+        ) values(
+            ? /* 100 */, 
+            ? /* 9 */, 
+            ? /* 1 */
+        )
+        ```
+
+    </TabItem>
+    </Tabs>
 
 :::info
 As we can see, long associations not only modify the association relationship between the current object and other objects but also cause the associated objects to be saved.
@@ -549,23 +730,115 @@ Taking H2 as an example, it generates two SQL statements:
 
 1.  First save the associated object `BookStore`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK_STORE(
         NAME, WEBSITE
-    ) key(NAME) values(?, ?)
-    /* batch-0: [TURING, https://www.turing.com] */
+    -- highlight-next-line
+    ) key(
+        NAME
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    )
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME, WEBSITE
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    -- highlight-next-line
+    ) on duplcate update
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        WEBSITE = VALUES(WEBSITE)
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME, WEBSITE
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    -- highlight-next-line
+    ) on conflict(
+        NAME, WEBSITE
+    ) do update set
+        WEBSITE = excluded.WEBSITE,
+    return ID
+    ```
+
+    </TabItem>
+    </Tabs>
 
 2.  Then save the current object `Book`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
+    --highlight-next-line
     ) key(
         NAME, EDITION
-    ) values(?, ?, ?, ?)
-    /* batch-0: [SQL in Action, 1, 49.9, 100] */
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 49.9 */, 
+        ? /* 100 */
+    )
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 49.9 */, 
+        ? /* 100 */
+    -- highlight-next-line
+    ) on duplcate key update
+        /* fake update to return all ids */ ID = last_insert_id(ID), 
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* SQL in Action */, 
+        ? /* 1 */, 
+        ? /* 49.9 */, 
+        ? /* 100 */
+    -- highlight-next-line
+    ) on conflict(
+        NAME, EDITION
+    ) do update set
+        PRICE = values(PRICE), 
+        STORE_ID = values(STORE_ID)
+    returning ID
+    ```
+
+    </TabItem>
+    </Tabs>
 
 :::caution
 When discussing forward associations in work communication, it's recommended to use expressions like "current object/associated object" rather than "parent object/child object".
@@ -640,26 +913,129 @@ Taking H2 as an example, it generates three SQL statements:
 
 1.  First save the current object `BookStore`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK_STORE(
         NAME, WEBSITE
+    -- highlight-next-line
     ) key(
         NAME
-    ) values(?, ?)
-    /* batch-0: [TURING, https://www.turing.com] */
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    )
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME, WEBSITE
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    -- highlight-next-line
+    ) on duplcate update
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        WEBSITE = VALUES(WEBSITE)
+    ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME, WEBSITE
+    ) values(
+        ? /* TURING */, 
+        ? /* https://www.turing.com */
+    -- highlight-next-line
+    ) on conflict(
+        NAME, WEBSITE
+    ) do update set
+        WEBSITE = excluded.WEBSITE,
+    return ID
+    ```
+
+    </TabItem>
+    </Tabs>
 
 2.  Then save the associated objects `Book`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
+    -- highlight-next-line
     ) key(
         NAME, EDITION
     ) values(?, ?, ?, ?)
     /* batch-0: [SQL in Action, 1, 49.9, 100] */
     /* batch-1: [RUST programming, 2, 39.9, 100] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    By default, MySQL does not enable batch operations and uses multiple SQL statements instead. 
+    For specific details, please refer to [MySQL Issues](../mysql)
+    :::
+
+    1.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* SQL in Action */, 
+            ? /* 1 */, 
+            ? /* 49.9 */, 
+            ? /* 100 */
+        -- highlight-next-line
+        ) on duplcate update 
+            /* fake update to return all ids */ ID = last_insert_id(ID), 
+            PRICE = VALUES(PRICE),
+            STORE_ID = VALUES(STORE_ID)
+
+    2.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* RUST programming */, 
+            ? /* 2 */, 
+            ? /* 39.9 */, 
+            ? /* 100 */
+        -- highlight-next-line
+        ) on duplcate update 
+            /* fake update to return all ids */ ID = last_insert_id(ID), 
+            PRICE = VALUES(PRICE),
+            STORE_ID = VALUES(STORE_ID)
+        ```
+
+    </TabItem>
+    <TabItem value="posgres" label="Postgres">
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ?, ?, ?, ?
+    -- highlight-next-line
+    ) on conflict(
+        NAME, EDITION
+    ) do update set
+        PRICE = excluded.PRICE,
+        STORE_ID = excluded.STORE_ID
+    /* batch-0: [SQL in Action, 1, 49.9, 100] */
+    /* batch-1: [RUST programming, 2, 39.9, 100] */
+    ```
+
+    </TabItem>
+    </Tabs>
 
 3.  The third SQL statement is not relevant to the topic being discussed here, so it's omitted
 

@@ -306,12 +306,48 @@ sqlClient.save(store)
 
 1.  保存根对象`BookStore`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK_STORE(
         NAME
-    ) key(NAME) values(?)
-    /* batch-0: [MANNING] */
+    ) key(
+        NAME
+    ) values(
+        ? /* MANNING */
+    )
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME
+    ) values(
+        ? /* MANNING */
+    ) on duplicate key update
+        /* fake update to return all ids */ ID = last_insert_id(ID)
+    ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME
+    ) values(
+        ? /* MANNING */
+    ) on conflict(
+        NAME
+    ) do update set
+        /* fake update to return all ids */ NAME = execluded.NAME
+    returning ID
+    ```
+
+    </TabItem>
+    </Tabs>
 
 2.  保存子对`Book`
 
@@ -531,16 +567,55 @@ public interface Book {
 
 1.  保存根对象
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK_STORE(
         NAME
-    ) key(NAME) values(?)
-    /* batch-0: [MANNING] */
+    ) key(
+        NAME
+    ) values(
+        ? /* MANNING */
+    )
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME
+    ) values(
+        ? /* MANNING */
+    ) on duplicate key update
+        /* fake update to return all ids */ ID = last_insert_id(ID)
+    ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME
+    ) values(
+        ? /* MANNING */
+    ) on conflict(
+        NAME
+    ) do update set
+        /* fake update to return all ids */ NAME = execluded.NAME
+    returning ID
+    ```
+
+    </TabItem>
+    </Tabs>
 
 2.  建立根对象和子对象之间的关联
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK(
         ID, STORE_ID
     ) key(ID) values(?, ?)
@@ -548,20 +623,102 @@ public interface Book {
     /* batch-1: [1, 2] */
     ```
 
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+    :::
+
+    1.  ```sql
+        insert into BOOK(
+            ID, STORE_ID
+        ) values(
+            ? /* 12 */, ? /* 2 */
+        ) on duplicate key update
+            STORE_ID = VALUES(STORE_ID)
+
+    2.  ```sql
+        insert into BOOK(
+            ID, STORE_ID
+        ) values(
+            ? /* 1 */, ? /* 2 */
+        ) on duplicate key update
+            STORE_ID = VALUES(STORE_ID)
+        ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    insert into BOOK(
+        ID, STORE_ID
+    ) values(
+        ?, ?
+    ) on conflict(
+        ID
+    ) do update set
+        STORE_ID = execluded.STORE_ID
+    returning ID
+    /* batch-0: [12, 2] */
+    /* batch-1: [1, 2] */
+    ```
+
+    </TabItem>
+    </Tabs>
+
 3.  断开根对象和不再需要的子对象之间的关联
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     update BOOK
     set
         STORE_ID = null
     where
         STORE_ID = ?
-        and
+    and
         not (
             ID = any(?)
         )
     /* batch-0: [2, [12, 1]] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    update BOOK
+    set
+        STORE_ID = null
+    where
+        STORE_ID = ? /* 2 */
+    and
+        ID not in(
+            ? /* 12 */,
+            ? /* 1 */
+        )
+    ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    update BOOK
+    set
+        STORE_ID = null
+    where
+        STORE_ID = ?
+    and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [2, [12, 1]] */
+    ```
+
+    </TabItem>
+    </Tabs>
 
 :::info
 为了向用户展示性能优先的场景，附带例子

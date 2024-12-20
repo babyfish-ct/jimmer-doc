@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 <Tabs groupId="database">
 <TabItem value="h2" label="H2">
 
-```csharp
+```sql
 merge into BOOK_STORE(
     NAME
 ) key(NAME) values(
@@ -19,21 +19,39 @@ merge into BOOK_STORE(
 </TabItem>
 <TabItem value="mysql" label="Mysql">
 
-```
-TBD
-```
+:::caution
+默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+:::
+
+1.  ```sql
+    insert into BOOK_STORE(
+        NAME
+    ) values(
+        ? /* MANNING */
+    ) on duplicate key update
+        /* fake update to return all ids */ ID = last_insert_id(ID)
+
+2.  ```sql
+    insert into BOOK_STORE(
+        NAME
+    ) values(
+        ? /* AMAZON */
+    ) on duplicate key update
+        /* fake update to return all ids */ ID = last_insert_id(ID)
+    ```
 
 </TabItem>
-<TabItem value="posgres" label="Postgres">
+<TabItem value="postgres" label="Postgres">
 
-```csharp
+```sql
 insert into BOOK_STORE(
     NAME
 ) values(
     ?
 ) on conflict(
     NAME
-) do nothing
+) do update set
+    /* fake update to return all ids */ NAME = execluded.NAME
 returning ID
 /* batch-0: [MANNING] */
 /* batch-1: [AMAZON] */

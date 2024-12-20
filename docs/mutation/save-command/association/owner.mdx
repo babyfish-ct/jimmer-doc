@@ -308,27 +308,106 @@ Executing this code will generate the following SQL and result in an exception:
 
 1.  Saving the root object `BookStore`:
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK_STORE(
         NAME
-    ) key(NAME) values(?)
-    /* batch-0: [MANNING] */
+    ) key(
+        NAME
+    ) values(
+        ? /* MANNING */
+    )
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME
+    ) values(
+        ? /* MANNING */
+    ) on duplicate key update
+        /* fake update to return all ids */ ID = last_insert_id(ID)
+    ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME
+    ) values(
+        ? /* MANNING */
+    ) on conflict(
+        NAME
+    ) do update set
+        /* fake update to return all ids */ NAME = execluded.NAME
+    returning ID
+    ```
+
+    </TabItem>
+    </Tabs>
 
 2.  Saving the child objects `Book`:
 
-    ```csharp
-    // highlight-next-line
-    Purpose: COMMAND(TARGET_NOT_TRANSFERABLE)
-    select
-        tb_1_.ID,
-        tb_1_.NAME,
-        tb_1_.EDITION,
-        tb_1_.STORE_ID
-    from BOOK tb_1_
-    where
-        tb_1_.ID = any(? /* [12, 1] */)
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    merge into BOOK(
+        ID, STORE_ID
+    ) key(ID) values(?, ?)
+    /* batch-0: [12, 2] */
+    /* batch-1: [1, 2] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    By default, MySQL does not enable batch operations and uses multiple SQL statements instead. 
+    For specific details, please refer to [MySQL Issues](../mysql)
+    :::
+
+    1.  ```sql
+        insert into BOOK(
+            ID, STORE_ID
+        ) values(
+            ? /* 12 */, ? /* 2 */
+        ) on duplicate key update
+            STORE_ID = VALUES(STORE_ID)
+
+    2.  ```sql
+        insert into BOOK(
+            ID, STORE_ID
+        ) values(
+            ? /* 1 */, ? /* 2 */
+        ) on duplicate key update
+            STORE_ID = VALUES(STORE_ID)
+        ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    insert into BOOK(
+        ID, STORE_ID
+    ) values(
+        ?, ?
+    ) on conflict(
+        ID
+    ) do update set
+        STORE_ID = execluded.STORE_ID
+    returning ID
+    /* batch-0: [12, 2] */
+    /* batch-1: [1, 2] */
+    ```
+
+    </TabItem>
+    </Tabs>
 
     Strangely, even though the id property of child objects is specified *(which usually means Jimmer will utilize the database's own `UPSERT` capability)*,
     Jimmer still tries to determine whether the subsequent operation should be `INSERT` or `UPDATE` through a query, rather than using the database's own `UPSERT` capability.
@@ -336,14 +415,56 @@ Executing this code will generate the following SQL and result in an exception:
 
 3.  Finally, the above code will result in the following exception:
 
-    ```sh
-    Save error caused by the path: "<root>.books": 
-    Can the move the child object whose type is "org.doc.j.model.Book" 
-    and id is "1" to another parent object because the property 
-    "org.doc.j.model.BookStore.books" 
-    // highlight-next-line
-    does not support target transfer
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    update BOOK
+    set
+        STORE_ID = null
+    where
+        STORE_ID = ?
+    and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [2, [12, 1]] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    update BOOK
+    set
+        STORE_ID = null
+    where
+        STORE_ID = ? /* 2 */
+    and
+        ID not in(
+            ? /* 12 */,
+            ? /* 1 */
+        )
+    ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    update BOOK
+    set
+        STORE_ID = null
+    where
+        STORE_ID = ?
+    and
+        not (
+            ID = any(?)
+        )
+    /* batch-0: [2, [12, 1]] */
+    ```
+
+    </TabItem>
+    </Tabs>
 
 `Book.store` is a many-to-one association, a `Book` object can only belong to one `BookStore` object and cannot belong to multiple `BookStore` objects simultaneously.
 
@@ -535,12 +656,48 @@ Re-executing the code will generate the following SQL:
 
 1.  Saving the root object:
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
     merge into BOOK_STORE(
         NAME
-    ) key(NAME) values(?)
-    /* batch-0: [MANNING] */
+    ) key(
+        NAME
+    ) values(
+        ? /* MANNING */
+    )
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME
+    ) values(
+        ? /* MANNING */
+    ) on duplicate key update
+        /* fake update to return all ids */ ID = last_insert_id(ID)
+    ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    insert into BOOK_STORE(
+        NAME
+    ) values(
+        ? /* MANNING */
+    ) on conflict(
+        NAME
+    ) do update set
+        /* fake update to return all ids */ NAME = execluded.NAME
+    returning ID
+    ```
+
+    </TabItem>
+    </Tabs>
 
 2.  Establishing associations between root object and child objects:
 

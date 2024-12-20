@@ -472,7 +472,10 @@ sqlClient.saveEntities(
 
     生成如下SQL
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="绝大部分数据库">
+
+    ```sql
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(?, ?, ?, ?)
@@ -481,6 +484,57 @@ sqlClient.saveEntities(
     /* batch-2: [C++ Primer, 5, 44.02, 100] */
     /* batch-3: [Programming RUST, 1, 71.99, 100] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+    :::
+
+    1.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* SQL in Action */, 
+            ? /* 1 */, 
+            ? /* 49.9 */, 
+            ? /* 2 */
+        )
+
+    2.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* LINQ in Action */, 
+            ? /* 1 */, 
+            ? /* 39.9 */, 
+            ? /* 2 */
+        )
+
+    3.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* C++ Primer */, 
+            ? /* 5 */, 
+            ? /* 44.02 */, 
+            ? /* 100 */
+        )
+
+    4.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* Programming RUST */, 
+            ? /* 1 */, 
+            ? /* 71.99 */, 
+            ? /* 100 */
+        )
+        ```
+
+    </TabItem>
+    </Tabs>
 
 ## 2. APPEND_IF_ABSENT
 
@@ -606,7 +660,7 @@ sqlClient.saveEntities(
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```csharp
+    ```sql
     merge into BOOK tb_1_ 
     using(values(?, ?, ?, ?)) tb_2_(
         NAME, EDITION, PRICE, STORE_ID
@@ -615,7 +669,7 @@ sqlClient.saveEntities(
         tb_1_.NAME = tb_2_.NAME
     and
         tb_1_.EDITION = tb_2_.EDITION 
-    /* highlight-next-line */
+    -- highlight-next-line
     when not matched then 
         insert(
             NAME, EDITION, PRICE, STORE_ID
@@ -631,9 +685,9 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```csharp
+    ```sql
     insert 
-    /* highlight-next-line */
+    -- highlight-next-line
     ignore
     into BOOK(
         NAME, EDITION, PRICE, STORE_ID
@@ -647,16 +701,16 @@ sqlClient.saveEntities(
     ```
 
     </TabItem>
-    <TabItem value="posgres" label="Postgres">
+    <TabItem value="postgres" label="Postgres">
 
-    ```csharp
+    ```sql
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(
         ?, ?, ?, ?
     ) on conflict(
         NAME, EDITION
-        /* highlight-next-line */
+        -- highlight-next-line
     ) do nothing
     returning ID
     /* batch-0: [SQL in Action, 1, 49.9, 2] */
@@ -773,7 +827,10 @@ sqlClient.saveEntities(
 
     生成如下SQL
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="绝大部分数据库">
+
+    ```sql
     update BOOK
     set
         PRICE = ?,
@@ -787,6 +844,60 @@ sqlClient.saveEntities(
     /* batch-2: [44.02, 100, C++ Primer, 5] */
     /* batch-3: [71.99, 100, Programming RUST, 1] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+    :::
+
+    1.  ```sql
+        update BOOK
+        set
+            PRICE = ? /* 49.9 */,
+            STORE_ID = ? /* 2 */
+        where
+            NAME = ? /* SQL in Action */
+        and
+            EDITION = ? /* 1 */
+        ```
+
+    2.  ```sql
+        update BOOK
+        set
+            PRICE = ? /* 39.9 */,
+            STORE_ID = ? /* 2 */
+        where
+            NAME = ? /* LINQ in Action */
+        and
+            EDITION = ? /* 1 */
+        ```
+
+    3.  ```sql
+        update BOOK
+        set
+            PRICE = ? /* 44.02 */,
+            STORE_ID = ? /* 100 */
+        where
+            NAME = ? /* C++ Primer */
+        and
+            EDITION = ? /* 5 */
+        ```
+
+    4.  ```sql
+        update BOOK
+        set
+            PRICE = ? /* 71.99 */,
+            STORE_ID = ? /* 100 */
+        where
+            NAME = ? /* Programming RUST */
+        and
+            EDITION = ? /* 1 */
+        ```
+
+    </TabItem>
+    </Tabs>
 
 ## 4. MERGE
 
@@ -912,8 +1023,8 @@ sqlClient.saveEntities(
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     merge into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) key(NAME, EDITION) values(
@@ -928,34 +1039,85 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```csharp
-    insert into BOOK(
-        NAME, EDITION, PRICE, STORE_ID
-    ) values(
-        ?, ?, ?, ?
-    ) on duplicate key 
-    /* highlight-next-line */
-    update
-        /* fake update to return all ids */ ID = last_insert_id(ID),
-        PRICE = values(PRICE),
-        STORE_ID = values(STORE_ID)
-    /* batch-0: [SQL in Action, 1, 49.9, 2] */
-    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
-    /* batch-2: [C++ Primer, 5, 44.02, 100] */
-    /* batch-3: [Programming RUST, 1, 71.99, 100] */
-    ```
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+    :::
+
+    1.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* SQL in Action */, 
+            ? /* 1 */, 
+            ? /* 49.9 */, 
+            ? /* 2 */
+        ) on duplicate key 
+        -- highlight-next-line
+        update
+            /* fake update to return all ids */ ID = last_insert_id(ID),
+            PRICE = values(PRICE),
+            STORE_ID = values(STORE_ID)
+        ```
+
+    2.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* LINQ in Action */, 
+            ? /* 1 */, 
+            ? /* 39.9 */, 
+            ? /* 2 */
+        ) on duplicate key 
+        -- highlight-next-line
+        update
+            /* fake update to return all ids */ ID = last_insert_id(ID),
+            PRICE = values(PRICE),
+            STORE_ID = values(STORE_ID)
+        ```
+
+    3.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* C++ Primer */, 
+            ? /* 5 */, 
+            ? /* 44.02 */, 
+            ? /* 100 */
+        ) on duplicate key 
+        -- highlight-next-line
+        update
+            /* fake update to return all ids */ ID = last_insert_id(ID),
+            PRICE = values(PRICE),
+            STORE_ID = values(STORE_ID)
+        ```
+
+    4.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* Programming RUST */, 
+            ? /* 1 */, 
+            ? /* 71.99 */, 
+            ? /* 100 */
+        ) on duplicate key 
+        -- highlight-next-line
+        update
+            /* fake update to return all ids */ ID = last_insert_id(ID),
+            PRICE = values(PRICE),
+            STORE_ID = values(STORE_ID)
+        ```
 
     </TabItem>
-    <TabItem value="posgres" label="Postgres">
+    <TabItem value="postgres" label="Postgres">
 
-    ```csharp
+    ```sql
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(
         ?, ?, ?, ?
     ) on conflict(
         NAME, EDITION
-        /* highlight-next-line */
+        -- highlight-next-line
     ) do update set
         PRICE = excluded.PRICE, 
         STORE_ID = excluded.STORE_ID
@@ -1114,7 +1276,7 @@ sqlClient.saveEntities(
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```csharp
+    ```sql
     delete from BOOK_AUTHOR_MAPPING
     where
         BOOK_ID = ?
@@ -1127,7 +1289,7 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```csharp
+    ```sql
     delete from BOOK_AUTHOR_MAPPING
     where
         BOOK_ID in (
@@ -1143,9 +1305,9 @@ sqlClient.saveEntities(
     ```
     
     </TabItem>
-    <TabItem value="posgres" label="Postgres">
+    <TabItem value="postgres" label="Postgres">
 
-    ```csharp
+    ```sql
     delete from BOOK_AUTHOR_MAPPING
     where
         BOOK_ID = ?
@@ -1183,7 +1345,7 @@ sqlClient.saveEntities(
     <Tabs groupId="database">
     <TabItem value="h2" label="H2">
 
-    ```csharp
+    ```sql
     merge into BOOK_AUTHOR_MAPPING tb_1_ 
     using(values(?, ?)) tb_2_(
         BOOK_ID, AUTHOR_ID
@@ -1192,7 +1354,7 @@ sqlClient.saveEntities(
         tb_1_.BOOK_ID = tb_2_.BOOK_ID
     and
         tb_1_.AUTHOR_ID = tb_2_.AUTHOR_ID 
-    /* highlight-next-line */
+    -- highlight-next-line
     when not matched then 
         insert(BOOK_ID, AUTHOR_ID)
         values(tb_2_.BOOK_ID, tb_2_.AUTHOR_ID)
@@ -1205,27 +1367,51 @@ sqlClient.saveEntities(
     </TabItem>
     <TabItem value="mysql" label="Mysql">
 
-    ```csharp
-    insert 
-    /* highlight-next-line */
-    ignore
-    into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
-    values(?, ?)
-    /* batch-0: [1, 2] */
-    /* batch-1: [1, 3] */
-    /* batch-2: [2, 2] */
-    /* batch-3: [2, 3] */
-    ```
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+    :::
+
+    1.  ```sql
+        insert 
+        -- highlight-next-line
+        ignore
+        into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
+        values(? /* 1 */, ? /* 2 */)
+        ```
+    
+    2.  ```sql
+        insert 
+        -- highlight-next-line
+        ignore
+        into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
+        values(? /* 1 */, ? /* 3 */)
+        ```
+
+    3.  ```sql
+        insert 
+        -- highlight-next-line
+        ignore
+        into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
+        values(? /* 2 */, ? /* 2 */)
+        ```
+
+    4.  ```sql
+        insert 
+        -- highlight-next-line
+        ignore
+        into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
+        values(? /* 2 */, ? /* 3 */)
+        ```
 
     </TabItem>
-    <TabItem value="posgres" label="Postgres">
+    <TabItem value="postgres" label="Postgres">
 
-    ```csharp
+    ```sql
     insert 
     into BOOK_AUTHOR_MAPPING(BOOK_ID, AUTHOR_ID) 
     values(?, ?)
     on conflict(BOOK_ID, AUTHOR_ID)
-    /* highlight-next-line */
+    -- highlight-next-line
     do nothing
     /* batch-0: [1, 2] */
     /* batch-1: [1, 3] */
@@ -1355,12 +1541,38 @@ sqlClient.saveEntities(
     -   `MANING`的id为`2`
     -   `AMAZON`的id为`100`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="H2">
+
+    ```sql
+    delete from BOOK 
+    where STORE_ID = any(
+        ? /* [2, 100] */
+    )
+    ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    ```sql
     delete from BOOK 
     where STORE_ID in (
         ? /* 2 */, ? /* 100 */
     )
     ```
+
+    </TabItem>
+    <TabItem value="postgres" label="Postgres">
+
+    ```sql
+    delete from BOOK 
+    where STORE_ID = any(
+        ? /* [2, 100] */
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
 
     :::info
     如果数据库有其他表通过外键引用`BOOK`表，简单的的`DELETE`语句并不能删除所有关联对象。
@@ -1375,7 +1587,10 @@ sqlClient.saveEntities(
     -   `MANING`的id为`2`
     -   `AMAZON`的id为`100`
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="绝大部分数据库">
+
+    ```sql
     insert into BOOK(
         NAME, EDITION, PRICE, STORE_ID
     ) values(?, ?, ?, ?)
@@ -1384,6 +1599,57 @@ sqlClient.saveEntities(
     /* batch-2: [C++ Primer, 5, 44.02, 100] */
     /* batch-3: [Programming RUST, 1, 71.99, 100] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+    :::
+
+    1.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* SQL in Action */, 
+            ? /* 1 */, 
+            ? /* 49.9 */, 
+            ? /* 2 */
+        )
+
+    2.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* LINQ in Action */, 
+            ? /* 1 */, 
+            ? /* 39.9 */, 
+            ? /* 2 */
+        )
+
+    3.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* C++ Primer */, 
+            ? /* 5 */, 
+            ? /* 44.02 */, 
+            ? /* 100 */
+        )
+
+    4.  ```sql
+        insert into BOOK(
+            NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* Programming RUST */, 
+            ? /* 1 */, 
+            ? /* 71.99 */, 
+            ? /* 100 */
+        )
+        ```
+
+    </TabItem>
+    </Tabs>
 
 不对新旧数据进行细致的比较，只是简单地先删除关联对象再重建，这是一个非常暴力的模式，存在如下缺点
 

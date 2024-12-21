@@ -124,24 +124,62 @@ sqlClient.insertEntities(books)
 
 1.  批量插入数据
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="绝大部分数据库">
+
+    ```sql
     insert into BOOK(
         ID, NAME, EDITION, PRICE, STORE_ID
     ) values(?, ?, ?, ?, ?)
     /* batch-0: [100, SQL in Action, 1, 59.9, 2] */
-    /* highlight-next-line */
+    -- highlight-next-line
     /* batch-1: [7, LINQ in Action, 3, 49.9, 2] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+    :::
+
+    1.  ```sql
+        insert into BOOK(
+            ID, NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* 100 */, 
+            ? /* SQL in Action */, 
+            ? /* 1 */, 
+            ? /* 59.9 */, 
+            ? /* 2  */
+        )
+        ```
+
+    2.  ```sql
+        insert into BOOK(
+            ID, NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            -- highlight-next-line
+            ? /* 7 */, 
+            ? /* LINQ in Action */, 
+            ? /* 3 */, 
+            ? /* 49.9 */, 
+            ? /* 2  */
+        )
+        ```
+
+    </TabItem>
+    </Tabs>
 
     其中，插入第二条数据会导致`id`发生冲突
 
 2.  调查违反约束的原因
 
     <Tabs groupId="database">
-    <TabItem value="h2" label="大部分数据库">
+    <TabItem value="scenario-1" label="场景1">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     SQL: select
         tb_1_.ID
@@ -151,10 +189,10 @@ sqlClient.insertEntities(books)
     ```
     
     </TabItem>
-    <TabItem value="postgres" label="Postgres">
+    <TabItem value="scenario-2" label="场景2">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     SQL: select
         tb_1_.ID
@@ -166,9 +204,15 @@ sqlClient.insertEntities(books)
     </TabItem>
     </Tabs>
 
-    -   对于大部分数据库而言，通过批量SQL抛出的原始JDBC异常信息可以判断是哪条数据违背了约束，所以对出错的那条数据进行调查
+    -   场景1
+    
+        理想情况下，可以根据批量操作导致的`java.sql.BatchUpdateException`判断是哪条数据违背了约束，只需对出错的那条数据进行调查
 
-    -   对于Postgres而言，通过批量SQL抛出的原始JDBC异常信息无法判断是哪条数据违背了约束，所以对所有数据进行调查
+    -   场景2
+    
+        不理想的情况下，无法根据批量操作导致的`java.sql.BatchUpdateException`判断是哪条数据违背了约束，不得不对所有数据进行调查
+
+        > Postgres以及启用了批量化能力的MySQL(参见[MySQL的问题](./mysql))，都属于这种场景
 
     无论如何，Jimmer都能调查出问题。
 
@@ -237,7 +281,10 @@ sqlClient.updateEntities(books)
 
 1.  批量更新数据
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="绝大部分数据库">
+
+    ```sql
     update BOOK
     set
         NAME = ?,
@@ -245,19 +292,49 @@ sqlClient.updateEntities(books)
     where
         ID = ?
     /* batch-0: [GraphQL in Action, 4, 11] */
-    /* highlight-next-line */
+    -- highlight-next-line
     /* batch-1: [GraphQL in Action, 1, 12] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+    :::
+
+    1.  ```sql
+        update BOOK
+        set
+            NAME = ? /* GraphQL in Action */,
+            EDITION = ? /* 4 */
+        where
+            ID = ? /* 11 */
+        ```
+
+    2.  ```sql
+        update BOOK
+        set
+            -- highlight-start
+            NAME = ? /* GraphQL in Action */,
+            EDITION = ? /* 1 */
+            -- highlight-end
+        where
+            ID = ? /* 12 */
+        ```
+
+    </TabItem>
+    </Tabs>
 
     其中，修改第二条数据会导致`name`和`edition`的组合发生冲突
 
 2.  调查违反约束的原因
 
     <Tabs groupId="database">
-    <TabItem value="h2" label="大部分数据库">
+    <TabItem value="scenario-1" label="场景1">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     select
         tb_1_.ID
@@ -269,10 +346,10 @@ sqlClient.updateEntities(books)
     ```
     
     </TabItem>
-    <TabItem value="postgres" label="Postgres">
+    <TabItem value="scenario-2" label="场景2">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     SQL: select
         tb_1_.ID,
@@ -289,9 +366,15 @@ sqlClient.updateEntities(books)
     </TabItem>
     </Tabs>
 
-    -   对于大部分数据库而言，通过批量SQL抛出的原始JDBC异常信息可以判断是哪条数据违背了约束，所以对出错的那条数据进行调查
+    -   场景1
+    
+        理想情况下，可以根据批量操作导致的`java.sql.BatchUpdateException`判断是哪条数据违背了约束，只需对出错的那条数据进行调查
 
-    -   对于Postgres而言，通过批量SQL抛出的原始JDBC异常信息无法判断是哪条数据违背了约束，所以对所有数据进行调查
+    -   场景2
+    
+        不理想的情况下，无法根据批量操作导致的`java.sql.BatchUpdateException`判断是哪条数据违背了约束，不得不对所有数据进行调查
+
+        > Postgres以及启用了批量化能力的MySQL(参见[MySQL的问题](./mysql))，都属于这种场景
 
     无论如何，Jimmer都能调查出问题。
 
@@ -398,12 +481,12 @@ sqlClient.updateEntities(books) {
 
 在保存数据之前，Jimmer会通过查询验证关联id是否合法
 
-```csharp
+```sql
 select
     tb_1_.ID
 from BOOK_STORE tb_1_
 where
-    /* highlight-next-line */
+    -- highlight-next-line
     tb_1_.ID = any(? /* [2, 999] */)
 ```
 
@@ -474,26 +557,56 @@ sqlClient.updateEntities(books)
 
 1.  批量更新数据
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="绝大部分数据库">
+
+    ```sql
     update BOOK
     set
-        STORE_ID = ?
+        STORE_ID = ? /*  */
     where
-        ID = ?
+        ID = ? /*  */
     /* batch-0: [2, 8] */
-    /* highlight-next-line */
+    -- highlight-next-line
     /* batch-1: [999, 9] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+    :::
+
+    1.  ```sql
+        update BOOK
+        set
+            STORE_ID = ? /* 2 */
+        where
+            ID = ? /* 8 */
+        ```
+
+    1.  ```sql
+        update BOOK
+        set
+            -- highlight-next-line
+            STORE_ID = ? /* 999 */
+        where
+            ID = ? /* 9 */
+        ```
+
+    </TabItem>
+    </Tabs>
 
     其中，修改第二条数据会导致`STORE_ID`列的外键约束被违背。
 
 2.  调查违反约束的原因
 
     <Tabs groupId="database">
-    <TabItem value="h2" label="大部分数据库">
+    <TabItem value="scenario-1" label="场景1">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     SQL: select
         tb_1_.ID
@@ -503,10 +616,10 @@ sqlClient.updateEntities(books)
     ```
     
     </TabItem>
-    <TabItem value="postgres" label="Postgres">
+    <TabItem value="scenario-2" label="场景2">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     SQL: select
         tb_1_.ID
@@ -518,9 +631,15 @@ sqlClient.updateEntities(books)
     </TabItem>
     </Tabs>
 
-    -   对于大部分数据库而言，通过批量SQL抛出的原始JDBC异常信息可以判断是哪条数据违背了约束，所以对出错的那条数据进行调查
+    -   场景1
+    
+        理想情况下，可以根据批量操作导致的`java.sql.BatchUpdateException`判断是哪条数据违背了约束，只需对出错的那条数据进行调查
 
-    -   对于Postgres而言，通过批量SQL抛出的原始JDBC异常信息无法判断是哪条数据违背了约束，所以对所有数据进行调查
+    -   场景2
+    
+        不理想的情况下，无法根据批量操作导致的`java.sql.BatchUpdateException`判断是哪条数据违背了约束，不得不对所有数据进行调查
+
+        > Postgres以及启用了批量化能力的MySQL(参见[MySQL的问题](./mysql))，都属于这种场景
 
     无论如何，Jimmer都能调查出问题。
 

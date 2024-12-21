@@ -119,24 +119,63 @@ This code will generate the following two SQL statements:
 
 1.  Batch insert data
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="Most Databases">
+
+    ```sql
     insert into BOOK(
         ID, NAME, EDITION, PRICE, STORE_ID
     ) values(?, ?, ?, ?, ?)
     /* batch-0: [100, SQL in Action, 1, 59.9, 2] */
-    /* highlight-next-line */
+    -- highlight-next-line
     /* batch-1: [7, LINQ in Action, 3, 49.9, 2] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    By default, MySQL does not enable batch operations and uses multiple SQL statements instead. 
+    For specific details, please refer to [MySQL Issues](../mysql)
+    :::
+
+    1.  ```sql
+        insert into BOOK(
+            ID, NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            ? /* 100 */, 
+            ? /* SQL in Action */, 
+            ? /* 1 */, 
+            ? /* 59.9 */, 
+            ? /* 2  */
+        )
+        ```
+
+    2.  ```sql
+        insert into BOOK(
+            ID, NAME, EDITION, PRICE, STORE_ID
+        ) values(
+            -- highlight-next-line
+            ? /* 7 */, 
+            ? /* LINQ in Action */, 
+            ? /* 3 */, 
+            ? /* 49.9 */, 
+            ? /* 2  */
+        )
+        ```
+
+    </TabItem>
+    </Tabs>
 
     Here, inserting the second record will cause an `id` conflict
 
 2.  Investigate the cause of the constraint violation
 
     <Tabs groupId="database">
-    <TabItem value="h2" label="Most Databases">
+    <TabItem value="scenario-1" label="Scenario 1">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     SQL: select
         tb_1_.ID
@@ -146,10 +185,10 @@ This code will generate the following two SQL statements:
     ```
     
     </TabItem>
-    <TabItem value="postgres" label="Postgres">
+    <TabItem value="scenario-2" label="Scenario 2">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     SQL: select
         tb_1_.ID
@@ -161,9 +200,17 @@ This code will generate the following two SQL statements:
     </TabItem>
     </Tabs>
 
-    - For most databases, the original JDBC exception information from the batch SQL can determine which record violated the constraint, so only the problematic record is investigated
-    
-    - For Postgres, the original JDBC exception information from the batch SQL cannot determine which record violated the constraint, so all records are investigated
+    -   Scenario 1
+        
+        The row violated the constraint can be located by the `java.sql.BatchUpdateException` thrown by batch operation, 
+        so only the error row needs to be investigatd
+
+    -   Scenario 2
+        
+        The row violated the constraint can not be located by the `java.sql.BatchUpdateException` thrown by batch operation, 
+        so all rows need to be investigatd
+
+        > Postgres and MySQL with batch capabilities enabled (see [MySQL Issues](./mysql)) both fall into this scenario
 
     Either way, Jimmer can investigate and identify the problem.
 
@@ -232,7 +279,10 @@ This code will generate the following two SQL statements:
 
 1.  Batch update data
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="Most Databases">
+
+    ```sql
     update BOOK
     set
         NAME = ?,
@@ -240,19 +290,50 @@ This code will generate the following two SQL statements:
     where
         ID = ?
     /* batch-0: [GraphQL in Action, 4, 11] */
-    /* highlight-next-line */
+    -- highlight-next-line
     /* batch-1: [GraphQL in Action, 1, 12] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    By default, MySQL does not enable batch operations and uses multiple SQL statements instead. 
+    For specific details, please refer to [MySQL Issues](./mysql)
+    :::
+
+    1.  ```sql
+        update BOOK
+        set
+            NAME = ? /* GraphQL in Action */,
+            EDITION = ? /* 4 */
+        where
+            ID = ? /* 11 */
+        ```
+
+    2.  ```sql
+        update BOOK
+        set
+            -- highlight-start
+            NAME = ? /* GraphQL in Action */,
+            EDITION = ? /* 1 */
+            -- highlight-end
+        where
+            ID = ? /* 12 */
+        ```
+
+    </TabItem>
+    </Tabs>
 
     Here, modifying the second record will cause a conflict with the combination of `name` and `edition`
 
 2.  Investigate the cause of the constraint violation
 
     <Tabs groupId="database">
-    <TabItem value="h2" label="Most Databases">
+    <TabItem value="scenario-1" label="Scenario 1">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     select
         tb_1_.ID
@@ -264,10 +345,10 @@ This code will generate the following two SQL statements:
     ```
     
     </TabItem>
-    <TabItem value="postgres" label="Postgres">
+    <TabItem value="scenario-2" label="Scenario 2">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     SQL: select
         tb_1_.ID,
@@ -284,9 +365,17 @@ This code will generate the following two SQL statements:
     </TabItem>
     </Tabs>
 
-    - For most databases, the original JDBC exception information from the batch SQL can determine which record violated the constraint, so only the problematic record is investigated
+    -   Scenario 1
+        
+        The row violated the constraint can be located by the `java.sql.BatchUpdateException` thrown by batch operation, 
+        so only the error row needs to be investigatd
 
-    - For Postgres, the original JDBC exception information from the batch SQL cannot determine which record violated the constraint, so all records are investigated
+    -   Scenario 2
+        
+        The row violated the constraint can not be located by the `java.sql.BatchUpdateException` thrown by batch operation, 
+        so all rows need to be investigatd
+
+        > Postgres and MySQL with batch capabilities enabled (see [MySQL Issues](./mysql)) both fall into this scenario
 
     Either way, Jimmer can investigate and identify the problem.
 
@@ -395,12 +484,12 @@ Here, the `setAutoIdOnlyTargetChecking` method is used to set which short associ
 
 Before saving the data, Jimmer will verify the association IDs through a query
 
-```csharp
+```sql
 select
     tb_1_.ID
 from BOOK_STORE tb_1_
 where
-    /* highlight-next-line */
+    -- highlight-next-line
     tb_1_.ID = any(? /* [2, 999] */)
 ```
 
@@ -471,26 +560,57 @@ This code will generate two SQL statements
 
 1.  Batch update data
 
-    ```csharp
+    <Tabs groupId="database">
+    <TabItem value="h2" label="Most Databases">
+
+    ```sql
     update BOOK
     set
-        STORE_ID = ?
+        STORE_ID = ? /*  */
     where
-        ID = ?
+        ID = ? /*  */
     /* batch-0: [2, 8] */
-    /* highlight-next-line */
+    -- highlight-next-line
     /* batch-1: [999, 9] */
     ```
+
+    </TabItem>
+    <TabItem value="mysql" label="Mysql">
+
+    :::caution
+    By default, MySQL does not enable batch operations and uses multiple SQL statements instead. 
+    For specific details, please refer to [MySQL Issues](./mysql)
+    :::
+
+    1.  ```sql
+        update BOOK
+        set
+            STORE_ID = ? /* 2 */
+        where
+            ID = ? /* 8 */
+        ```
+
+    1.  ```sql
+        update BOOK
+        set
+            -- highlight-next-line
+            STORE_ID = ? /* 999 */
+        where
+            ID = ? /* 9 */
+        ```
+
+    </TabItem>
+    </Tabs>
 
     Here, modifying the second record will cause a foreign key constraint violation on the `STORE_ID` column.
 
 2.  Investigate the cause of the constraint violation
 
     <Tabs groupId="database">
-    <TabItem value="h2" label="Most Databases">
+    <TabItem value="scenario-1" label="Scenario 1">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     SQL: select
         tb_1_.ID
@@ -500,10 +620,10 @@ This code will generate two SQL statements
     ```
     
     </TabItem>
-    <TabItem value="postgres" label="Postgres">
+    <TabItem value="scenario-2" label="Scenario 2">
 
-    ```csharp
-    /* highlight-next-line */
+    ```sql
+    -- highlight-next-line
     Purpose: COMMAND(INVESTIGATE_CONSTRAINT_VIOLATION_ERROR)
     SQL: select
         tb_1_.ID
@@ -515,9 +635,17 @@ This code will generate two SQL statements
     </TabItem>
     </Tabs>
 
-    - For most databases, the original JDBC exception information thrown by the batch SQL can determine which record violated the constraint, so only the erroneous record is investigated
+    -   Scenario 1
+        
+        The row violated the constraint can be located by the `java.sql.BatchUpdateException` thrown by batch operation, 
+        so only the error row needs to be investigatd
 
-    - For Postgres, the original JDBC exception information thrown by the batch SQL cannot determine which record violated the constraint, so all records are investigated
+    -   Scenario 2
+        
+        The row violated the constraint can not be located by the `java.sql.BatchUpdateException` thrown by batch operation, 
+        so all rows need to be investigatd
+
+        > Postgres and MySQL with batch capabilities enabled (see [MySQL Issues](./mysql)) both fall into this scenario
 
     Either way, Jimmer can investigate the problem.
 

@@ -6,7 +6,7 @@ import TabItem from '@theme/TabItem';
 <Tabs groupId="database">
 <TabItem value="h2" label="H2">
 
-```csharp
+```sql
 merge into BOOK(
     NAME, EDITION, PRICE, STORE_ID
 ) key(
@@ -27,29 +27,126 @@ merge into BOOK(
 </TabItem>
 <TabItem value="mysql" label="Mysql">
 
-```
-insert into BOOK(
-    NAME, EDITION, PRICE, STORE_ID
-) values(
-    ?, ?, ?, ?
-) on duplicate key udpate
-    /* fake update to return all ids */ ID = last_insert_id(ID),
-    PRICE = values(PRICE),
-    STORE_ID = values(STORE_ID)
-/* batch-0: [Learning GraphQL, 3, 51.9, 1] */
-/* batch-1: [Learning GraphQL, 4, 43.9, 1] */
-/* batch-2: [Effective TypeScript, 3, 88.9, 1] */
-/* batch-3: [Effective TypeScript, 4, 85.9, 1] */
-/* batch-4: [Programming TypeScript, 3, 48.9, 1] */
-/* batch-5: [Programming TypeScript, 4, 47.9, 1] */
-/* batch-6: [GraphQL in Action, 3, 80.9, 2] */
-/* batch-7: [GraphQL in Action, 4, 81.9, 2] */
-```
+:::caution
+默认情况下，MySQL不会启用批量操作，而采用多条SQL。具体细节请参考[MySQL的问题](../mysql)
+:::
+
+1.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* Learning GraphQL */, 
+        ? /* 3 */, 
+        ? /* 51.9 */, 
+        ? /* 1 */
+    ) on duplicate key udpate
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        PRICE = values(PRICE),
+        STORE_ID = values(STORE_ID)
+    ```
+
+2.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* Learning GraphQL */, 
+        ? /* 4 */, 
+        ? /* 43.9 */, 
+        ? /* 1 */
+    ) on duplicate key udpate
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        PRICE = values(PRICE),
+        STORE_ID = values(STORE_ID)
+    ```
+
+3.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* Effective TypeScript */, 
+        ? /* 3 */, 
+        ? /* 88.9 */, 
+        ? /* 1 */
+    ) on duplicate key udpate
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        PRICE = values(PRICE),
+        STORE_ID = values(STORE_ID)
+    ```
+
+4.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* Effective TypeScript */, 
+        ? /* 4 */, 
+        ? /* 85.9 */, 
+        ? /* 1 */
+    ) on duplicate key udpate
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        PRICE = values(PRICE),
+        STORE_ID = values(STORE_ID)
+    ```
+
+5.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* Programming TypeScript */, 
+        ? /* 3 */, 
+        ? /* 48.9 */, 
+        ? /* 1 */
+    ) on duplicate key udpate
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        PRICE = values(PRICE),
+        STORE_ID = values(STORE_ID)
+    ```
+
+6.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* Programming TypeScript */, 
+        ? /* 4 */, 
+        ? /* 47.9 */, 
+        ? /* 1 */
+    ) on duplicate key udpate
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        PRICE = values(PRICE),
+        STORE_ID = values(STORE_ID)
+    ```
+
+7.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* GraphQL in Action */, 
+        ? /* 3 */, 
+        ? /* 80.9 */, 
+        ? /* 2 */
+    ) on duplicate key udpate
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        PRICE = values(PRICE),
+        STORE_ID = values(STORE_ID)
+    ```
+
+8.  ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(
+        ? /* GraphQL in Action */, 
+        ? /* 4 */, 
+        ? /* 81.9 */, 
+        ? /* 2 */
+    ) on duplicate key udpate
+        /* fake update to return all ids */ ID = last_insert_id(ID),
+        PRICE = values(PRICE),
+        STORE_ID = values(STORE_ID)
+    ```
 
 </TabItem>
 <TabItem value="postgres" label="Postgres">
 
-```csharp
+```sql
 insert into BOOK(
     NAME, EDITION, PRICE, STORE_ID
 ) values(

@@ -127,6 +127,9 @@ sqlClient.updateEntities(stores)
 
 生成如下SQL
 
+<Tabs groupId="database">
+<TabItem value="h2" label="绝大部分数据库">
+
 ```sql
 update BOOK_STORE
 set
@@ -140,6 +143,40 @@ where
 /* batch-0: [https://www.oreilly.com, 1] */
 /* batch-1: [https://www.manning.com, 2] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+默认情况下，MySQL的批量操作不会被采用，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
+
+1.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.oreilly.com */
+        -- highlight-next-line
+        /* 未更新VERSION */
+    where
+        ID = ? /* 1 */
+        -- highlight-next-line
+        /* 未检查VERSION */
+    ```
+
+2.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.manning.com */
+        -- highlight-next-line
+        /* 未更新VERSION */
+    where
+        ID = ? /* 2 */
+        -- highlight-next-line
+        /* 未检查VERSION */
+    ```
+
+</TabItem>
+</Tabs>
 
 ### 使用乐观锁
 
@@ -194,6 +231,9 @@ sqlClient.updateEntities(stores)
 
 生成如下SQL
 
+<Tabs groupId="database">
+<TabItem value="h2" label="绝大部分数据库">
+
 ```sql
 update BOOK_STORE
 set
@@ -208,6 +248,42 @@ and
 /* batch-0: [https://www.oreilly.com, 1, 0] */
 /* batch-1: [https://www.manning.com, 2, 0] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+默认情况下，MySQL的批量操作不会被采用，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
+
+1.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ?, /* https://www.oreilly.com */
+        --highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 1 */
+    and
+        --highlight-next-line
+        VERSION = ? /* 0 */
+    ```
+
+2.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ?, /* https://www.manning.com */
+        --highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 2 */
+    and
+        --highlight-next-line
+        VERSION = ? /* 0 */
+    ```
+
+</TabItem>
+</Tabs>
 
 ### 乐观锁异常
 
@@ -360,6 +436,9 @@ val stores = listOf(
 
 生成如下SQL
 
+<Tabs groupId="database">
+<TabItem value="h2" label="绝大部分数据库">
+
 ```sql
 update BOOK_STORE
 set
@@ -367,12 +446,47 @@ set
 where
     ID = ?
 and 
-    --highlight-start
+    --highlight-next-line
     coalesce(length(WEBSITE), 0) <= length(?)
---highlight-end
 /* batch-0: [https://www.oreilly.com, 1, https://www.oreilly.com] */
 /* batch-1: [https://www.manning.com, 2, https://www.manning.com] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+默认情况下，MySQL的批量操作不会被采用，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
+
+1.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.oreilly.com */
+    where
+        ID = ? /* 1 */
+    and 
+        --highlight-next-line
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.oreilly.com */
+        )
+    ```
+
+2.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.manning.com */
+    where
+        ID = ? /* 2 */
+    and 
+        --highlight-next-line
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.manning.com */
+        )
+    ```
+
+</TabItem>
+</Tabs>
 
 假设这二条数据违背了自定义乐观锁的条件，得到如下异常
 
@@ -465,6 +579,9 @@ sqlClient.updateEntities(stores) {
 
 生成如下SQL
 
+<Tabs groupId="database">
+<TabItem value="h2" label="绝大部分数据库">
+
 ```sql
 update BOOK_STORE
 set
@@ -482,6 +599,52 @@ and
 /* batch-0: [https://www.oreilly.com, 1, 0, https://www.oreilly.com] */
 /* batch-1: [https://www.manning.com, 2, 0, https://www.manning.com] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+默认情况下，MySQL的批量操作不会被采用，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
+
+1.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.oreilly.com */,
+        -- highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 1 */
+    and
+        -- highlight-next-line
+        VERSION = ? /* 0 */
+    and
+        -- highlight-next-line
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.oreilly.com */
+        )
+    ```
+
+2.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.manning.com */,
+        -- highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 2 */
+    and
+        -- highlight-next-line
+        VERSION = ? /* 0 */
+    and
+        -- highlight-next-line
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.manning.com */
+        )
+    ```
+
+</TabItem>
+</Tabs>
 
 可见，自定义乐观锁和内置乐观锁都生效了。
 
@@ -571,6 +734,9 @@ sqlClient.updateEntities(stores) {
 
 生成如下SQL
 
+<Tabs groupId="database">
+<TabItem value="h2" label="绝大部分数据库">
+
 ```sql
 update BOOK_STORE
 set
@@ -584,5 +750,43 @@ and
 /* batch-0: [https://www.oreilly.com, 1, 0, https://www.oreilly.com] */
 /* batch-1: [https://www.manning.com, 2, 0, https://www.manning.com] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+默认情况下，MySQL的批量操作不会被采用，而采用多条SQL。具体细节请参考[MySQL的问题](./mysql)
+:::
+
+1.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.oreilly.com */,
+        -- highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 1 */
+    and
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.oreilly.com */
+        )
+    ```
+
+2.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.manning.com */,
+        -- highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 2 */
+    and
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.manning.com */
+        )
+    ```
+
+</TabItem>
+</Tabs>
 
 可见，虽然没有version相关的SQL条件，但是任然完成了version的自增操作。

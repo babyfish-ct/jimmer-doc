@@ -21,7 +21,7 @@ As emphasized in previous articles, Jimmer does not enable batch queries for MyS
     It provides no performance benefits and is essentially no different from using multiple individual SQL statements.
     :::
 
-2.  Once MySQL's batch operations are actually enabled, necessary return information is lost, such as:
+2.  Once MySQL's batch operations are really enabled, necessary return information is lost, such as:
 
     -   Cannot return JDBC's `generatedKeys`, which means the id of entities without an id property cannot be automatically filled. 
         This is a very important and common requirement for id allocation strategies based on SQL identity.

@@ -126,12 +126,15 @@ sqlClient.updateEntities(stores)
 
 This generates the following SQL:
 
+<Tabs groupId="database">
+<TabItem value="h2" label="Most Databases">
+
 ```sql
 update BOOK_STORE
 set
     WEBSITE = ?
     -- highlight-next-line
-    /* VERSION not updated */
+    /* VERSION not update */
 where
     ID = ?
     -- highlight-next-line
@@ -139,6 +142,41 @@ where
 /* batch-0: [https://www.oreilly.com, 1] */
 /* batch-1: [https://www.manning.com, 2] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+By default, MySQL batch operations are not used. 
+For specific details, please refer to [MySQL Issues](./mysql)
+:::
+
+1.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.oreilly.com */
+        -- highlight-next-line
+        /* VERSION not update */
+    where
+        ID = ? /* 1 */
+        -- highlight-next-line
+        /* VERSION not checked */
+    ```
+
+2.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.manning.com */
+        -- highlight-next-line
+        /* VERSION not update */
+    where
+        ID = ? /* 2 */
+        -- highlight-next-line
+        /* VERSION not checked */
+    ```
+
+</TabItem>
+</Tabs>
 
 ### Using Optimistic Lock
 
@@ -193,6 +231,9 @@ sqlClient.updateEntities(stores)
 
 This generates the following SQL:
 
+<Tabs groupId="database">
+<TabItem value="h2" label="Most Databases">
+
 ```sql
 update BOOK_STORE
 set
@@ -207,6 +248,43 @@ and
 /* batch-0: [https://www.oreilly.com, 1, 0] */
 /* batch-1: [https://www.manning.com, 2, 0] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+By default, MySQL batch operations are not used. 
+For specific details, please refer to [MySQL Issues](./mysql)
+:::
+
+1.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ?, /* https://www.oreilly.com */
+        --highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 1 */
+    and
+        --highlight-next-line
+        VERSION = ? /* 0 */
+    ```
+
+2.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ?, /* https://www.manning.com */
+        --highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 2 */
+    and
+        --highlight-next-line
+        VERSION = ? /* 0 */
+    ```
+
+</TabItem>
+</Tabs>
 
 ### Optimistic Lock Exception
 
@@ -358,6 +436,9 @@ Note that there are significant differences between Java and Kotlin code:
 
 This generates the following SQL:
 
+<Tabs groupId="database">
+<TabItem value="h2" label="Most Databases">
+
 ```sql
 update BOOK_STORE
 set
@@ -365,12 +446,48 @@ set
 where
     ID = ?
 and 
-    --highlight-start
+    --highlight-next-line
     coalesce(length(WEBSITE), 0) <= length(?)
---highlight-end
 /* batch-0: [https://www.oreilly.com, 1, https://www.oreilly.com] */
 /* batch-1: [https://www.manning.com, 2, https://www.manning.com] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+By default, MySQL batch operations are not used. 
+For specific details, please refer to [MySQL Issues](./mysql)
+:::
+
+1.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.oreilly.com */
+    where
+        ID = ? /* 1 */
+    and 
+        --highlight-next-line
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.oreilly.com */
+        )
+    ```
+
+2.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.manning.com */
+    where
+        ID = ? /* 2 */
+    and 
+        --highlight-next-line
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.manning.com */
+        )
+    ```
+
+</TabItem>
+</Tabs>
 
 If these two records violate the custom optimistic lock condition, you'll get the following exception:
 
@@ -463,6 +580,9 @@ sqlClient.updateEntities(stores) {
 
 This generates the following SQL:
 
+<Tabs groupId="database">
+<TabItem value="h2" label="Most Database">
+
 ```sql
 update BOOK_STORE
 set
@@ -480,6 +600,53 @@ and
 /* batch-0: [https://www.oreilly.com, 1, 0, https://www.oreilly.com] */
 /* batch-1: [https://www.manning.com, 2, 0, https://www.manning.com] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+By default, MySQL batch operations are not used. 
+For specific details, please refer to [MySQL Issues](./mysql)
+:::
+
+1.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.oreilly.com */,
+        -- highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 1 */
+    and
+        -- highlight-next-line
+        VERSION = ? /* 0 */
+    and
+        -- highlight-next-line
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.oreilly.com */
+        )
+    ```
+
+2.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.manning.com */,
+        -- highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 2 */
+    and
+        -- highlight-next-line
+        VERSION = ? /* 0 */
+    and
+        -- highlight-next-line
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.manning.com */
+        )
+    ```
+
+</TabItem>
+</Tabs>
 
 As you can see, both custom optimistic lock and built-in optimistic lock are in effect.
 
@@ -569,6 +736,9 @@ sqlClient.updateEntities(stores) {
 
 This generates the following SQL:
 
+<Tabs groupId="database">
+<TabItem value="h2" label="Most Database">
+
 ```sql
 update BOOK_STORE
 set
@@ -582,5 +752,44 @@ and
 /* batch-0: [https://www.oreilly.com, 1, 0, https://www.oreilly.com] */
 /* batch-1: [https://www.manning.com, 2, 0, https://www.manning.com] */
 ```
+
+</TabItem>
+<TabItem value="mysql" label="Mysql">
+
+:::caution
+By default, MySQL batch operations are not used. 
+For specific details, please refer to [MySQL Issues](./mysql)
+:::
+
+1.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.oreilly.com */,
+        -- highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 1 */
+    and
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.oreilly.com */
+        )
+    ```
+
+2.  ```sql
+    update BOOK_STORE
+    set
+        WEBSITE = ? /* https://www.manning.com */,
+        -- highlight-next-line
+        VERSION = VERSION + 1
+    where
+        ID = ? /* 2 */
+    and
+        coalesce(length(WEBSITE), 0) <= length(
+            ? /* https://www.manning.com */
+        )
+    ```
+
+</TabItem>
+</Tabs>
 
 As you can see, although there is no version-related SQL condition, the version increment operation is still performed.

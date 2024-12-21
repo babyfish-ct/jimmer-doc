@@ -6,6 +6,523 @@ title: MySQL的问题
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-:::warning
-即将重写
+
+## 1. 基本概念
+
+在之前的文章中，我们反复强调，默认情况下，Jimmer不会为MySQL启用批量查询。这是因为MySQL对批量查询的支持存在两个缺陷：
+
+1.  必须在JDBC连接字符串中显式指定`rewriteBatchedStatements`才能开启MySQL的批量操作能力，例如
+
+    ```
+    jdbc:mysql://localhost:3306/mydb?rewriteBatchedStatements=true
+    ```
+
+    :::caution
+    如果不指定`rewriteBatchedStatements`，虽然JDBC的Batch操作仍然可以执行，但实际被调用的是虚假实现。
+    对性能没有任何帮助，本质上和使用多条SQL没有任何区别。
+    :::
+
+2.  一旦真正启用了MySQL的批量操作，会丢失必要的返回信息，例如
+
+    -   无法返回JDBC的`generatedKeys`，这会导致无id属性的实体对象的id无法被自动填充，而这对基于自动编号的id分配策略而言是非常重要且常见的诉求
+
+    -   无法返回任何操作的影响行数
+
+    :::info
+    Jimmer称MySQL的这种批量操作为**哑批操作**。由于该操作会导致实质性的功能缺失
+
+    -   除非用户明确表示自己可以接受**哑批操作**，Jimmer不会采用MySQL的批量操作
+
+    -   即使用户明确表示自己可以接受**哑批操作**，Jimmer也只是尽量采用MySQL的批量操作，但不保证一定会。这也是本文要讨论的重点之一
+    :::
+
+## 2. 准备工作
+
+### 2.1. 启用MySQL的批量操作
+
+-   修改数据库连接字符串
+
+    为连接字符串指定`rewriteBatchedStatements`，例如
+
+    ```sql
+    jdbc:mysql://localhost:3306/mydb?rewriteBatchedStatements=true
+    ```
+
+-   为sqlClient开启明确的批量操作支持，存在如下两种等价的方法，任选其一
+
+    -   采用Jimmer的Spring Boot Starter
+
+        编辑`application.yml`或`application.properties`，如下
+
+        ```sh title="application.yml"
+        jimmer:
+            # highlight-next-line
+            explicit-batch-enabled: true
+            ...省略其他配置...
+        ```
+
+    -   采用Jimmer的核心API
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        JSqlClient sqlCient = JSqlClient
+            .newBuilder()
+            // highlight-next-line
+            .setExplicitBatchEnabled(true)
+            ...省略其他配置...
+            .build();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val sqlClient = sqlCient {
+            // highlight-next-line
+            setExplicitBatchEnabled(true)
+            ...省略其他配置...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+### 2.2. 明确表示哑批操作可以接受
+
+有两种方法可用于明确地向Jimmer表示哑批操作是可以接受的
+
+-   全局配置 *(不推荐)*
+
+    全局配置又可分为两种
+
+    -   采用Jimmer的Spring Boot Starter
+
+        编辑`application.yml`或`application.properties`，如下
+
+        ```sh title="application.yml"
+        jimmer:
+            # highlight-next-line
+            dumb-batch-acceptable: true
+            ...省略其他配置...
+        ```
+
+    -   采用Jimmer的核心API
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        JSqlClient sqlCient = JSqlClient
+            .newBuilder()
+            // highlight-next-line
+            .setDumbBatchAcceptable(true)
+            ...省略其他配置...
+            .build();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val sqlClient = sqlCient {
+            // highlight-next-line
+            setDumbBatchAcceptable(true)
+            ...省略其他配置...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+        
+-   保存指令级配置 *(推荐)*
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = ...略...;
+
+    sqlClient
+        .saveEntitiesCommand(books)
+        // highlight-next-line
+        .setDumbBatchAcceptable(true)
+        .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = ...略...;
+
+    sqlClient.saveEntities(books) {
+        // highlight-next-line
+        setDumbBatchAcceptable(true)
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    :::info
+    也可以使用更简单的无参调用`setDumbBatchAcceptable()`
+    :::
+
+:::info
+明确表示哑批操作可接受会带来实质性的功能缺失，更推荐在保存指令级别启用
 :::
+
+## 3. 简单案例
+
+### 3.1 指定对象id
+
+假设`jimmer.explicit-batch-enabled`已经被指定，执行如下代码
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setId(11L);
+        draft.setPrice(new BigDecimal("59.99"));
+    }),
+    Immutables.createBook(draft -> {
+        draft.setId(12L);
+        draft.setPrice(new BigDecimal("68.99"));
+    })
+);
+
+sqlClient
+    .saveEntitiesCommand(books)
+    .setMode(SaveMode.UPDATE_ONLY)
+    // highlight-next-line
+    .setDumbBatchAcceptable()
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        id = 11L
+        price = BigDecimal("59.99")
+    },
+    Book {
+        id = 12L
+        price = BigDecimal("68.99")
+    }
+)
+
+sqlClient.updateEntities(books) {
+    // highlight-next-line
+    setDumbBatchAcceptable()
+}
+```
+
+</TabItem>
+</Tabs>
+
+此时，Jimmer会为MySQL生成批量操作SQL
+
+```sql
+update BOOK
+set PRICE = ?
+where ID = ?
+-- highlight-next-line
+/* batch-0: [59.99, 11] */
+-- highlight-next-line
+/* batch-0: [57.99, 12] */
+```
+
+### 3.2 不指定对象id
+
+假设`jimmer.explicit-batch-enabled`已经被指定，执行如下代码
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        // highlight-next-line
+        // 无id
+        draft.setName("SQL in Action");
+        draft.setEdition(4);
+        draft.setPrice(new BigDecimal("59.99"));
+        draft.setStoreId(2L);
+    }),
+    Immutables.createBook(draft -> {
+        // highlight-next-line
+        // 无id
+        draft.setName("LINQ in Action");
+        draft.setEdition(5);
+        draft.setPrice(new BigDecimal("68.99"));
+        draft.setStoreId(2L);
+    })
+);
+
+List<Book> insertedBooks = sqlClient
+    .saveEntitiesCommand(books)
+    .setMode(SaveMode.INSERT_ONLY)
+    .setDumbBatchAcceptable()
+    .execute()
+    .getItems()
+    .stream()
+    .map(BatchSaveResult.Item::getModifiedEntity)
+    .collect(Collectors.toList());
+for (Book insertedBook : insertedBooks) {
+    System.out.println(insertedBook);
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        // highlight-next-line
+        // 无id
+        name = "SQL in Action"
+        edtion = 4
+        price = BigDecimal("59.99")
+        storeId = 2L
+    },
+    Book {
+        // highlight-next-line
+        // 无id
+        name = "LINQ in Action"
+        edtion = 5
+        price = BigDecimal("68.99")
+        storeId = 2L
+    }
+)
+
+val insertedBooks = 
+    sqlClient.insertEntities(books) {
+        setDumbBatchAcceptable()
+    }.items.map { 
+        it.modifiedEntity 
+    }
+for (insertedBook in insertedBooks) {
+    println(insertedBook);
+}
+```
+
+</TabItem>
+</Tabs>
+
+此时，Jimmer会为MySQL生成批量操作SQL
+
+```sql
+insert into BOOK(
+    NAME, EDITION, PRICE, STORE_ID
+) values(
+    ?, ?, ?, ?
+)
+-- highlight-next-line
+/* batch-0: [SQL in Action, 4, 59.99, 2] */
+-- highlight-next-line
+/* batch-0: [LINQ in Action, 5, 57.99, 2] */
+```
+
+打印结果如下 *(为了便于阅读，这里人为进行了格式化)*
+
+```json
+{
+    // highlight-next-line
+    // 无id
+    "name":"SQL in Action",
+    "edition":4,
+    "price":59.99,
+    "store":{"id":2}
+}
+{
+    // highlight-next-line
+    // 无id
+    "name":"LINQ in Action",
+    "edition":5,
+    "price":68.99,
+    "store":{"id":2}
+}
+```
+
+:::info
+我们第一次看到了功能丢失，保存后对象仍然没有id，我们无法得知数据库为新插入的数据分配的id。
+
+这是实质性的功能缺失，所以，Jimmer要求开发人员明确配置哑批操作是可以接受的，并推荐采用指令级的配置。
+:::
+
+## 4. 复杂案例
+
+即使用户完成了所有为MySQL启用批量操作的配置，Jimmer也只是尽量使用批量操作，但不保证一定使用。
+
+这是因为哑批操作不会为缺少id属性的对象自动填充id，如果该对象具备其他关联对象，那么id的缺失将导致无法管理关联关系。
+
+因此，Jimmer规定了启用MySQL批量查询的条件
+
+<table>
+<tr>
+<td rowSpan={4}>
+OR
+</td>
+<td colSpan={2}>
+当前对象具备id
+</td>
+</tr>
+<tr>
+<td rowSpan={3}>
+AND
+</td>
+<td>
+当前对象并非其他对象的前置关联对象
+</td>
+</tr>
+<tr>
+<td>
+当前对象没有更深的后置关联
+</td>
+</tr>
+<tr>
+<td>
+如果当前对象是其他对象的后置关联，关联保存模式并非`REPLACE`
+> 即，无[脱钩行为](./association/dissociation)
+</td>
+</tr>
+</table>
+
+假设`jimmer.explicit-batch-enabled`已经被指定，插入深度为2的数据结构，代码如下
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient
+    .saveEntitiesCommand(stores)
+    .setMode(SaveMode.INSERT_ONLY)
+    .setAssociatedModeAll(AssociatedSaveMode.APPEND)
+    // highlight-next-line
+    .setDumbBatchAcceptable()
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.insertEntities(stores) {
+    // highlight-next-line
+    setDumbBatchAcceptable()
+}
+```
+
+</TabItem>
+</Tabs>
+
+显然
+
+-   对于第一级的`BookStore`对象而言，必须获取插入完成后的对象id才能和第二级对象建立关关系。所以放弃使用MySQL的批量操作
+
+-   对于第二级的`Book`对象而言，它们已经是最深的关联对象了，无需得到插入插入完成后的对象id。所以可以使用MySQL的批量操作
+
+
+将会生成两条SQL
+
+1.  对两个根对象进行INSERT操作 *(不得不放弃批量操作)*
+
+    1.  ```sql
+        insert into BOOK_STORE(
+            NAME
+        ) values(
+            ? /* MANNING */
+        )
+
+    2.  ```sql
+        insert into BOOK_STORE(
+            NAME
+        ) values(
+            ? /* AMAZON */
+        )
+        ```
+
+2.  对4个关联对象进行INSERT操作 *(采用批量操作)*
+
+    假设上个SQL保存根对象后
+    
+    -   `MANING`的id为`2`
+    -   `AMAZON`的id为`100`
+
+    生成如下SQL
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(?, ?, ?, ?)
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```

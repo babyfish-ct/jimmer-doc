@@ -1,11 +1,528 @@
 ---
 sidebar_position: 10
-title: MySQL issues
+title: MySQL Issues
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-:::warning
-Will come soon
+## 1. Basic Concepts
+
+As emphasized in previous articles, Jimmer does not enable batch queries for MySQL by default. This is because MySQL has two deficiencies in its support for batch queries:
+
+1.  The `rewriteBatchedStatements` parameter must be explicitly specified in the JDBC connection string to enable MySQL's batch operation capability, for example:
+
+    ```
+    jdbc:mysql://localhost:3306/mydb?rewriteBatchedStatements=true
+    ```
+
+    :::caution
+    If `rewriteBatchedStatements` is not specified, although JDBC Batch operations can still be executed, it's actually using a fake implementation.
+    It provides no performance benefits and is essentially no different from using multiple individual SQL statements.
+    :::
+
+2.  Once MySQL's batch operations are actually enabled, necessary return information is lost, such as:
+
+    -   Cannot return JDBC's `generatedKeys`, which means the id of entities without an id property cannot be automatically filled. 
+        This is a very important and common requirement for id allocation strategies based on SQL identity.
+
+    -   Cannot return the number of affected rows for any operation
+
+    :::info
+    Jimmer refers to this type of MySQL batch operation as a **dumb batch operation**. Due to the substantial loss of functionality:
+
+    -   Unless users explicitly indicate that they can accept **dumb batch operations**, Jimmer will not use MySQL batch operations
+
+    -   Even if users explicitly indicate that they can accept **dumb batch operations**, Jimmer will only try to use MySQL batch operations when possible, but does not guarantee it will always do so. This is one of the key points we'll discuss in this article.
+    :::
+
+## 2. Preparation
+
+### 2.1. Enabling MySQL Batch Operations
+
+- Modify the database connection string
+
+    Specify `rewriteBatchedStatements` in the connection string, for example:
+
+    ```sql
+    jdbc:mysql://localhost:3306/mydb?rewriteBatchedStatements=true
+    ```
+
+- Enable explicit batch operation support for sqlClient, there are two equivalent methods, choose either:
+
+    - Using Jimmer's Spring Boot Starter
+
+        Edit `application.yml` or `application.properties` as follows:
+
+        ```sh title="application.yml"
+        jimmer:
+            # highlight-next-line
+            explicit-batch-enabled: true
+            ...other configurations omitted...
+        ```
+
+    - Using Jimmer's Core API
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        JSqlClient sqlCient = JSqlClient
+            .newBuilder()
+            // highlight-next-line
+            .setExplicitBatchEnabled(true)
+            ...other configurations omitted...
+            .build();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val sqlClient = sqlCient {
+            // highlight-next-line
+            setExplicitBatchEnabled(true)
+            ...other configurations omitted...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+### 2.2. Explicitly Indicating Acceptance of Dumb Batch Operations
+
+There are two methods to explicitly indicate to Jimmer that dumb batch operations are acceptable:
+
+- Global Configuration *(not recommended)*
+
+    Global configuration can be done in two ways:
+
+    - Using Jimmer's Spring Boot Starter
+
+        Edit `application.yml` or `application.properties` as follows:
+
+        ```sh title="application.yml"
+        jimmer:
+            # highlight-next-line
+            dumb-batch-acceptable: true
+            ...other configurations omitted...
+        ```
+
+    - Using Jimmer's Core API
+
+        <Tabs groupId="language">
+        <TabItem value="java" label="Java">
+
+        ```java
+        JSqlClient sqlCient = JSqlClient
+            .newBuilder()
+            # highlight-next-line
+            .setDumbBatchAcceptable(true)
+            ...other configurations omitted...
+            .build();
+        ```
+
+        </TabItem>
+        <TabItem value="kotlin" label="Kotlin">
+
+        ```kotlin
+        val sqlClient = sqlCient {
+            # highlight-next-line
+            setDumbBatchAcceptable(true)
+            ...other configurations omitted...
+        }
+        ```
+
+        </TabItem>
+        </Tabs>
+
+- Save Command Level Configuration *(recommended)*
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = ...omitted...;
+
+    sqlClient
+        .saveEntitiesCommand(books)
+        // highlight-next-line
+        .setDumbBatchAcceptable(true)
+        .execute();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = ...omitted...;
+
+    sqlClient.saveEntities(books) {
+        // highlight-next-line
+        setDumbBatchAcceptable(true)
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    :::info
+    You can also use the simpler parameterless call `setDumbBatchAcceptable()`
+    :::
+
+:::info
+Explicitly indicating acceptance of dumb batch operations will result in substantial loss of functionality, so it's more recommended to enable it at the save command level
 :::
+
+## 3. Simple Examples
+
+### 3.1 Specifying Object IDs
+
+Assuming `jimmer.explicit-batch-enabled` has been specified, execute the following code:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        draft.setId(11L);
+        draft.setPrice(new BigDecimal("59.99"));
+    }),
+    Immutables.createBook(draft -> {
+        draft.setId(12L);
+        draft.setPrice(new BigDecimal("68.99"));
+    })
+);
+
+sqlClient
+    .saveEntitiesCommand(books)
+    .setMode(SaveMode.UPDATE_ONLY)
+    // highlight-next-line
+    .setDumbBatchAcceptable()
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        id = 11L
+        price = BigDecimal("59.99")
+    },
+    Book {
+        id = 12L
+        price = BigDecimal("68.99")
+    }
+)
+
+sqlClient.updateEntities(books) {
+    // highlight-next-line
+    setDumbBatchAcceptable()
+}
+```
+
+</TabItem>
+</Tabs>
+
+In this case, Jimmer will generate batch operation SQL for MySQL:
+
+```sql
+update BOOK
+set PRICE = ?
+where ID = ?
+-- highlight-next-line
+/* batch-0: [59.99, 11] */
+-- highlight-next-line
+/* batch-0: [57.99, 12] */
+```
+
+### 3.2 Not Specifying Object IDs
+
+Assuming `jimmer.explicit-batch-enabled` has been specified, execute the following code:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<Book> books = Arrays.asList(
+    Immutables.createBook(draft -> {
+        // highlight-next-line
+        // No id
+        draft.setName("SQL in Action");
+        draft.setEdition(4);
+        draft.setPrice(new BigDecimal("59.99"));
+        draft.setStoreId(2L);
+    }),
+    Immutables.createBook(draft -> {
+        // highlight-next-line
+        // No id
+        draft.setName("LINQ in Action");
+        draft.setEdition(5);
+        draft.setPrice(new BigDecimal("68.99"));
+        draft.setStoreId(2L);
+    })
+);
+
+List<Book> insertedBooks = sqlClient
+    .saveEntitiesCommand(books)
+    .setMode(SaveMode.INSERT_ONLY)
+    .setDumbBatchAcceptable()
+    .execute()
+    .getItems()
+    .stream()
+    .map(BatchSaveResult.Item::getModifiedEntity)
+    .collect(Collectors.toList());
+for (Book insertedBook : insertedBooks) {
+    System.out.println(insertedBook);
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = listOf(
+    Book {
+        // highlight-next-line
+        // No id
+        name = "SQL in Action"
+        edtion = 4
+        price = BigDecimal("59.99")
+        storeId = 2L
+    },
+    Book {
+        // highlight-next-line
+        // No id
+        name = "LINQ in Action"
+        edtion = 5
+        price = BigDecimal("68.99")
+        storeId = 2L
+    }
+)
+
+val insertedBooks = 
+    sqlClient.insertEntities(books) {
+        setDumbBatchAcceptable()
+    }.items.map { 
+        it.modifiedEntity 
+    }
+for (insertedBook in insertedBooks) {
+    println(insertedBook);
+}
+```
+
+</TabItem>
+</Tabs>
+
+In this case, Jimmer will generate batch operation SQL for MySQL:
+
+```sql
+insert into BOOK(
+    NAME, EDITION, PRICE, STORE_ID
+) values(
+    ?, ?, ?, ?
+)
+-- highlight-next-line
+/* batch-0: [SQL in Action, 4, 59.99, 2] */
+-- highlight-next-line
+/* batch-0: [LINQ in Action, 5, 57.99, 2] */
+```
+
+The output is as follows *(formatted for readability)*:
+
+```json
+{
+    // highlight-next-line
+    // No id
+    "name":"SQL in Action",
+    "edition":4,
+    "price":59.99,
+    "store":{"id":2}
+}
+{
+    // highlight-next-line
+    // No id
+    "name":"LINQ in Action",
+    "edition":5,
+    "price":68.99,
+    "store":{"id":2}
+}
+```
+
+:::info
+Here we see the first instance of lost functionality - after saving, the objects still have no ids, and we cannot know what ids the database assigned to the newly inserted data.
+
+This is a substantial loss of functionality, which is why Jimmer requires developers to explicitly configure that dumb batch operations are acceptable, and recommends doing so at the command level.
+:::
+
+## 4. Complex Cases
+
+Even when users have completed all the configurations to enable batch operations for MySQL, Jimmer only tries to use batch operations when possible but does not guarantee their use.
+
+This is because dumb batch operations don't automatically populate ids for objects lacking id property. If such an object has other associated objects, the missing id will make it impossible to manage these associations.
+
+Therefore, Jimmer specifies conditions for enabling MySQL batch queries:
+
+<table>
+<tr>
+<td rowSpan={4}>
+OR
+</td>
+<td colSpan={2}>
+Current object has an id
+</td>
+</tr>
+<tr>
+<td rowSpan={3}>
+AND
+</td>
+<td>
+Current object is not a pre-associated object of other objects
+</td>
+</tr>
+<tr>
+<td>
+Current object has no deeper post-associations
+</td>
+</tr>
+<tr>
+<td>
+If the current object is a post-associated object of others, the association save mode is not `REPLACE`
+> That mens no [dissociation operations](./association/dissociation)
+</td>
+</tr>
+</table>
+
+Assuming `jimmer.explicit-batch-enabled` has been specified, here's the code to insert a data structure with depth 2:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+List<BookStore> stores = Arrays.asList(
+    Immutables.createBookStore(draft -> {
+        draft.setName("MANNING");
+        draft.addIntoBooks(book -> {
+            book.setName("SQL in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("49.9"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("LINQ in Action");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("39.9"));
+        });
+    }),
+    Immutables.createBookStore(draft -> {
+        draft.setName("AMAZON");
+        draft.addIntoBooks(book -> {
+            book.setName("C++ Primer");
+            book.setEdition(5);
+            book.setPrice(new BigDecimal("44.02"));
+        });
+        draft.addIntoBooks(book -> {
+            book.setName("Programming RUST");
+            book.setEdition(1);
+            book.setPrice(new BigDecimal("71.99"));
+        });
+    })
+);
+
+sqlClient
+    .saveEntitiesCommand(stores)
+    .setMode(SaveMode.INSERT_ONLY)
+    .setAssociatedModeAll(AssociatedSaveMode.APPEND)
+    // highlight-next-line
+    .setDumbBatchAcceptable()
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val stores = listOf(
+    BookStore {
+        name = "MANNING"
+        books().addBy {
+            name = "SQL in Action"
+            edition = 1
+            price = BigDecimal("49.9")
+        }
+        books().addBy {
+            name = "LINQ in Action"
+            edition = 1
+            price = BigDecimal("39.9")
+        }
+    },
+    BookStore {
+        name = "AMAZON"
+        books().addBy {
+            name = "C++ Primer"
+            edition = 5
+            price = BigDecimal("44.02")
+        }
+        books().addBy {
+            name = "Programming RUST"
+            edition = 1
+            price = BigDecimal("71.99")
+        }
+    }
+)
+
+sqlClient.insertEntities(stores) {
+    // highlight-next-line
+    setDumbBatchAcceptable()
+}
+```
+
+</TabItem>
+</Tabs>
+
+Obviously:
+
+- For first-level `BookStore` objects, we must get their ids after insertion to establish associations with second-level objects. Therefore, MySQL batch operations cannot be used.
+
+- For second-level `Book` objects, since they are the deepest associated objects, we don't need their ids after insertion. Therefore, MySQL batch operations can be used.
+
+Two SQL statements will be generated:
+
+1. INSERT operation for two root objects *(batch operation must be abandoned)*
+
+    1.  ```sql
+        insert into BOOK_STORE(
+            NAME
+        ) values(
+            ? /* MANNING */
+        )
+        ```
+
+    2.  ```sql
+        insert into BOOK_STORE(
+            NAME
+        ) values(
+            ? /* AMAZON */
+        )
+        ```
+
+2. INSERT operation for 4 associated objects *(using batch operation)*
+
+    Assuming after saving the root objects in the previous SQL:
+    
+    - `MANNING`'s id is `2`
+    - `AMAZON`'s id is `100`
+
+    The following SQL is generated:
+
+    ```sql
+    insert into BOOK(
+        NAME, EDITION, PRICE, STORE_ID
+    ) values(?, ?, ?, ?)
+    /* batch-0: [SQL in Action, 1, 49.9, 2] */
+    /* batch-1: [LINQ in Action, 1, 39.9, 2] */
+    /* batch-2: [C++ Primer, 5, 44.02, 100] */
+    /* batch-3: [Programming RUST, 1, 71.99, 100] */
+    ```

@@ -71,242 +71,182 @@ For converting static POJOs to Jimmer dynamic objects, MapStruct does not know h
     -   For Java, `jimmer-mapstruct-apt` is included in `jimmer-apt`
 
     -   For Kotlin, `jimmer-ksp` and `jimmer-mapstruct-apt` must be used together in the maven or gradle configuration file. 
-    
-        If you use [Gradle plugin Jimmer](https://github.com/ArgonarioD/gradle-plugin-jimmer), the plugin will automatically configure it for you when you have the MapStruct kapt dependency.
 
-<Tabs groupId="buildTool">
-<TabItem value="java_maven" label="Java(Maven)">
+You can use either Jimmer's standard build method, or use plugins provided by the community.
 
-```xml title="pom.xml"
-...omit other code...
+-   Method 1: Use Jimmer's standard build method
 
-<build>
-    <dependencies>
-        <dependency> ➀
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-        </dependency>
-        <dependency> ➊
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <version>${mapstruct.version}</version>
-        </dependency>
+    <Tabs groupId="buildTool">
+    <TabItem value="java_maven" label="Java(Maven)">
+
+    ```xml title="pom.xml"
+    ...omit other code...
+
+    <build>
+        <dependencies>
+            <dependency> ➀
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+            <dependency> ➊
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            ...omit other dependencies...
+        </dependencies>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path> ➁
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path> ➋
+                            <groupId>org.babyfish.jimmer</groupId>
+                            <artifactId>jimmer-apt</artifactId>
+                            <version>${jimmer.version}</version>
+                        </path>
+                        <path> ➌
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    ...omit other code...
+    ```
+
+    </TabItem>
+    <TabItem value="java_gradle" label="Java(Gradle)">
+
+    ```groovy title="build.gradle"
+    dependencies {
+        
+        implementation "org.projectlombok:lombok:${lombok.version}" ➀
+        implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
+
+        annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
+        annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}" ➋
+        annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➌
+
         ...omit other dependencies...
-    </dependencies>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.10.1</version>
-            <configuration>
-                <annotationProcessorPaths>
-                    <path> ➁
-                        <groupId>org.projectlombok</groupId>
-                        <artifactId>lombok</artifactId>
-                        <version>${lombok.version}</version>
-                    </path>
-                    <path> ➋
-                        <groupId>org.babyfish.jimmer</groupId>
-                        <artifactId>jimmer-apt</artifactId>
-                        <version>${jimmer.version}</version>
-                    </path>
-                    <path> ➌
-                        <groupId>org.mapstruct</groupId>
-                        <artifactId>mapstruct-processor</artifactId>
-                        <version>${mapstruct.version}</version>
-                    </path>
-                </annotationProcessorPaths>
-            </configuration>
-        </plugin>
-    </plugins>
-</build>
-
-...omit other code...
-```
-
-</TabItem>
-<TabItem value="java_gradle" label="Java(Gradle)">
-
-```groovy title="build.gradle"
-dependencies {
-    
-    implementation "org.projectlombok:lombok:${lombok.version}" ➀
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
-
-    annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
-    annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}" ➋
-    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➌
-
-    ...omit other dependencies...
-}
-```
-
-</TabItem>
-<TabItem value="kotlin_maven" label="Kotlin(Maven)">
-
-```xml title="pom.xml" 
-...omit other code...
-
-<build>
-    <sourceDirectory>src/main/kotlin</sourceDirectory>
-    <testSourceDirectory>src/test/kotlin</testSourceDirectory>
-
-    <dependencies>
-        <dependency> ➊
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <version>${mapstruct.version}</version>
-        </dependency>
-        ...omit other dependencies...
-    </dependencies>
-
-    <plugins>
-        <plugin>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-maven-plugin</artifactId>
-            <version>${kotlin.version}</version>
-            <executions>
-                <execution>
-                    <id>compile</id>
-                    <phase>compile</phase>
-                    <goals>
-                        <goal>compile</goal>
-                    </goals>
-                </execution>
-                <execution>
-                    <id>test-compile</id>
-                    <phase>test-compile</phase>
-                    <goals>
-                        <goal>test-compile</goal>
-                    </goals>
-                </execution>
-            </executions>
-            <configuration>
-                <compilerPlugins>
-                    <compilerPlugin>ksp</compilerPlugin>
-                </compilerPlugins>
-                <annotationProcessorPaths>
-                    <path>
-                        <groupId>org.mapstruct</groupId> ➌
-                        <artifactId>mapstruct-processor</artifactId>
-                        <version>${mapstruct.version}</version>
-                    </path>
-                    <path>
-                        <groupId>org.babyfish.jimmer</groupId> ⓐ
-                        <artifactId>jimmer-mapstruct-apt</artifactId>
-                        <version>${jimmer.version}</version>
-                    </path>
-                </annotationProcessorPaths>
-            </configuration>
-            <dependencies>
-                <dependency>
-                    <groupId>com.dyescape</groupId>
-                    <artifactId>kotlin-maven-symbol-processing</artifactId>
-                    <version>1.3</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.babyfish.jimmer</groupId> ➋
-                    <artifactId>jimmer-ksp</artifactId>
-                    <version>${jimmer.version}</version>
-                </dependency>
-            </dependencies>
-        </plugin>
-    </plugins>
-</build>
-
-...omit other code...
-```
-
-</TabItem>
-<TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
-
-```kotlin title="build.gradle.kts"
-plugins {
-    id("com.google.devtools.ksp") version "1.7.10-1.0.6"
-    kotlin("kapt") version "1.7.10"
-
-    ...omit other plugins...
-}
-
-dependencies {
-    
-    implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
-
-    ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}") ➋
-    kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
-	kapt("org.babyfish.jimmer:jimmer-mapstruct-apt:${jimmerVersion}") ⓐ
-
-    ...omit other dependencies...
-}
-
-kotlin {
-    sourceSets.main {
-        kotlin.srcDir("build/generated/ksp/main/kotlin")
     }
-}
-```
+    ```
 
-</TabItem>
-<TabItem value="java_gradle_plugin" label="Java(Gradle Plugin)">
+    </TabItem>
+    <TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
 
-```groovy title="build.gradle"
-plugins {
-    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
+    ```kotlin title="build.gradle.kts"
+    plugins {
+        id("com.google.devtools.ksp") version "1.7.10-1.0.6"
+        kotlin("kapt") version "1.7.10"
 
-    ...omit other plugins...
-}
+        ...omit other plugins...
+    }
 
-jimmer {
-    version = "${jimmerVersion}"
+    dependencies {
+        
+        implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
 
-    ...omit other configurations...
-}
+        ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}") ➋
+        kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
+        kapt("org.babyfish.jimmer:jimmer-mapstruct-apt:${jimmerVersion}") ⓐ
 
-dependencies {
+        ...omit other dependencies...
+    }
 
-    implementation "org.projectlombok:lombok:${lombok.version}" ➀
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
+    kotlin {
+        sourceSets.main {
+            kotlin.srcDir("build/generated/ksp/main/kotlin")
+        }
+    }
+    ```
 
-    annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
-    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➍
-    
-    // there's no need to add org.babyfish.jimmer:jimmer-apt to dependencies manually
-    // when mapstruct-processor dependency is detected，the gradle plugin will add jimmer-apt to dependencies automatically
+    </TabItem>
+    </Tabs>
 
-    ...omit other dependencies...
-}
-```
+-   Method 2: Use plugins provided by the community
 
-</TabItem>
-<TabItem value="kotlin_gradle_plugin" label="Kotlin(Gradle Plugin)">
+    <details>
+    <summary>https://github.com/ArgonarioD/gradle-plugin-jimmer</summary>
+    <Tabs>
+    <TabItem value="java_gradle" label="Java(Gradle Plugin)">
 
-```kotlin title="build.gradle.kts"
-plugins {
-    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
-    id("com.google.devtools.ksp") version "1.7.10+"
-    kotlin("kapt") version "1.7.10"
+    ```groovy title="build.gradle"
+    plugins {
+        id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
 
-    ...omit other plugins...
-}
+        ...omit other plugins...
+    }
 
-jimmer {
-    version = "${jimmerVersion}"
+    jimmer {
+        version = "${jimmerVersion}"
 
-    ...omit other configurations...
-}
+        ...omit other configurations...
+    }
 
-dependencies {
-    
-    implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
-    kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
+    dependencies {
 
-    ...omit other dependencies...
-}
-```
+        implementation "org.projectlombok:lombok:${lombok.version}" ➀
+        implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
 
-</TabItem>
-</Tabs>
+        annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
+        annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➍
+        
+        // there's no need to add org.babyfish.jimmer:jimmer-apt to dependencies manually
+        // when mapstruct-processor dependency is detected，the gradle plugin will add jimmer-apt to dependencies automatically
+
+        ...omit other dependencies...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin_gradle" label="Kotlin(Gradle Plugin)">
+
+    ```kotlin title="build.gradle.kts"
+    plugins {
+        id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
+        id("com.google.devtools.ksp") version "1.7.10+"
+        kotlin("kapt") version "1.7.10"
+
+        ...omit other plugins...
+    }
+
+    jimmer {
+        version = "${jimmerVersion}"
+
+        ...omit other configurations...
+    }
+
+    dependencies {
+        
+        implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
+        kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
+
+        ...omit other dependencies...
+    }
+    ```
+
+    :::info
+    The plugin will automatically configure it for you when you have the MapStruct kapt dependency.
+    :::
+
+    </TabItem>
+    </Tabs>
+    </details>
+
+    {/* TODO: Insert gradle plugin before this line */}
 
 In this example, we assume static POJOs are written in Java using [lombok](https://projectlombok.org/).
 

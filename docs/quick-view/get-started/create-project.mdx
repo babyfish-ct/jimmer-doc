@@ -57,7 +57,7 @@ Modify build.gradle or pom.xml to add dependencies:
 
 ```xml title="pom.xml"
 <properties>
-  <jimmer.version>0.9.34</jimmer.version>
+  <jimmer.version>0.9.37</jimmer.version>
 </properties>
 
 <dependencies>
@@ -75,7 +75,7 @@ Modify build.gradle or pom.xml to add dependencies:
 
 ```groovy
 ext {
-  jimmerVersion = '0.9.34' 
+  jimmerVersion = '0.9.37' 
 }
 
 dependencies {
@@ -90,7 +90,7 @@ dependencies {
 <TabItem value="gradlekts" label="Gradle (Kts)">
 
 ```kotlin
-val jimmerVersion = "0.9.34"
+val jimmerVersion = "0.9.37"
 
 dependencies {
 
@@ -101,50 +101,12 @@ dependencies {
 ```
 
 </TabItem>
-<TabItem value="gradle_plugin" label="Gradle Plugin">
-
-```groovy title="build.gradle"
-plugins {
-    // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
-    // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
-    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
-
-    ... other plugins omitted ...
-}
-
-jimmer {
-    // Set the Jimmer dependency version, where you can also use version range expressions such as "latest.release" or "0.+"
-    version = "0.9.34"
-}
-```
-
-</TabItem>
-<TabItem value="gradle_plugin_kts" label="Gradle Plugin (kts)">
-
-```kotlin title="build.gradle.kts"
-plugins {
-    // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
-    // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
-    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
-
-    ... other plugins omitted ...
-}
-
-jimmer {
-    // Set the Jimmer dependency version, where you can also use version range expressions such as "latest.release" or "0.+"
-    version = "0.9.34"
-}
-```
-
-</TabItem>
 </Tabs>
 
 :::info
-If you are using Gradle as your build tool, you can also use third-party Gradle plugin `tech.argonariod.gradle-plugin-jimmer` provided by the community to automatically identify the project type and add dependencies automatically.
+As a step-by-step example, we only demonstrate Jimmer's standard build method here.
 
-The `tech.argonariod.gradle-plugin-jimmer` gradle plugin is community-provided and maintained to simplify Jimmer project configuration, and it is not officially maintained by Jimmer.
-
-Repository URL: https://github.com/ArgonarioD/gradle-plugin-jimmer
+The community also provides gradle plugins, please refer to [APT/KSP](../../overview/apt-ksp)
 :::
 
 ## Additional Configuration Needed for Kotlin

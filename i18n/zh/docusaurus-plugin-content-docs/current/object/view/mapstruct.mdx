@@ -71,242 +71,182 @@ Jimmer的实体对象是动态的 *(和Hibernate3引入的标量属性惰性化�
     -   对于Java而言，`jimmer-mapstruct-apt`被`jimmer-apt`所包含
 
     -   对于Kotlin而言，需同时在maven或gradle配置文件中使用`jimmer-ksp`和`jimmer-mapstruct-apt`。
-    
-        如果使用[Gradle插件](https://github.com/ArgonarioD/gradle-plugin-jimmer)，当你引入了MapStruct的kapt依赖时，插件会自动引入`jimmer-mapstruct-apt`的依赖。
 
-<Tabs groupId="buildTool">
-<TabItem value="java_maven" label="Java(Maven)">
+你既可以使用Jimmer标准的构建方式，也可以采用社区提供的插件
 
-```xml title="pom.xml"
-...省略其他代码...
+-   用法一：使用Jimmer标准的构建方式
 
-<build>
-    <dependencies>
-        <dependency> ➀
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-        </dependency>
-        <dependency> ➊
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <version>${mapstruct.version}</version>
-        </dependency>
+    <Tabs groupId="buildTool">
+    <TabItem value="java_maven" label="Java(Maven)">
+
+    ```xml title="pom.xml"
+    ...省略其他代码...
+
+    <build>
+        <dependencies>
+            <dependency> ➀
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+            <dependency> ➊
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            ...省略其他依赖...
+        </dependencies>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path> ➁
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path> ➋
+                            <groupId>org.babyfish.jimmer</groupId>
+                            <artifactId>jimmer-apt</artifactId>
+                            <version>${jimmer.version}</version>
+                        </path>
+                        <path> ➌
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    ...省略其他代码...
+    ```
+
+    </TabItem>
+    <TabItem value="java_gradle" label="Java(Gradle)">
+
+    ```groovy title="build.gradle"
+    dependencies {
+        
+        implementation "org.projectlombok:lombok:${lombok.version}" ➀
+        implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
+
+        annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
+        annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}" ➋
+        annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➌
+
         ...省略其他依赖...
-    </dependencies>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.10.1</version>
-            <configuration>
-                <annotationProcessorPaths>
-                    <path> ➁
-                        <groupId>org.projectlombok</groupId>
-                        <artifactId>lombok</artifactId>
-                        <version>${lombok.version}</version>
-                    </path>
-                    <path> ➋
-                        <groupId>org.babyfish.jimmer</groupId>
-                        <artifactId>jimmer-apt</artifactId>
-                        <version>${jimmer.version}</version>
-                    </path>
-                    <path> ➌
-                        <groupId>org.mapstruct</groupId>
-                        <artifactId>mapstruct-processor</artifactId>
-                        <version>${mapstruct.version}</version>
-                    </path>
-                </annotationProcessorPaths>
-            </configuration>
-        </plugin>
-    </plugins>
-</build>
-
-...省略其他代码...
-```
-
-</TabItem>
-<TabItem value="kotlin_maven" label="Kotlin(Maven)">
-
-```xml title="pom.xml"
-...省略其他代码...
-
-<build>
-    <sourceDirectory>src/main/kotlin</sourceDirectory>
-    <testSourceDirectory>src/test/kotlin</testSourceDirectory>
-
-    <dependencies>
-        <dependency> ➊
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <version>${mapstruct.version}</version>
-        </dependency>
-        ...省略其他依赖...
-    </dependencies>
-
-    <plugins>
-        <plugin>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-maven-plugin</artifactId>
-            <version>${kotlin.version}</version>
-            <executions>
-                <execution>
-                    <id>compile</id>
-                    <phase>compile</phase>
-                    <goals>
-                        <goal>compile</goal>
-                    </goals>
-                </execution>
-                <execution>
-                    <id>test-compile</id>
-                    <phase>test-compile</phase>
-                    <goals>
-                        <goal>test-compile</goal>
-                    </goals>
-                </execution>
-            </executions>
-            <configuration>
-                <compilerPlugins>
-                    <compilerPlugin>ksp</compilerPlugin>
-                </compilerPlugins>
-                <annotationProcessorPaths>
-                    <path>
-                        <groupId>org.mapstruct</groupId> ➌
-                        <artifactId>mapstruct-processor</artifactId>
-                        <version>${mapstruct.version}</version>
-                    </path>
-                    <path>
-                        <groupId>org.babyfish.jimmer</groupId> ⓐ
-                        <artifactId>jimmer-mapstruct-apt</artifactId>
-                        <version>${jimmer.version}</version>
-                    </path>
-                </annotationProcessorPaths>
-            </configuration>
-            <dependencies>
-                <dependency>
-                    <groupId>com.dyescape</groupId>
-                    <artifactId>kotlin-maven-symbol-processing</artifactId>
-                    <version>1.3</version>
-                </dependency>
-                <dependency>
-                    <groupId>org.babyfish.jimmer</groupId> ➋
-                    <artifactId>jimmer-ksp</artifactId>
-                    <version>${jimmer.version}</version>
-                </dependency>
-            </dependencies>
-        </plugin>
-    </plugins>
-</build>
-
-...省略其他代码...
-```
-
-</TabItem>
-<TabItem value="java_gradle" label="Java(Gradle)">
-
-```groovy title="build.gradle"
-dependencies {
-    
-    implementation "org.projectlombok:lombok:${lombok.version}" ➀
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
-
-    annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
-    annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}" ➋
-    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➌
-
-    ...省略其他依赖...
-}
-```
-
-</TabItem>
-<TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
-
-```kotlin title="build.gradle.kts"
-plugins {
-    id("com.google.devtools.ksp") version "1.7.10-1.0.6"
-    kotlin("kapt") version "1.7.10"
-
-    ...省略其他插件...
-}
-
-dependencies {
-    
-    implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
-
-    ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}") ➋
-    kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
-	kapt("org.babyfish.jimmer:jimmer-mapstruct-apt:${jimmerVersion}") ⓐ
-
-    ...省略其他依赖...
-}
-
-kotlin {
-    sourceSets.main {
-        kotlin.srcDir("build/generated/ksp/main/kotlin")
     }
-}
-```
+    ```
 
-</TabItem>
-<TabItem value="java_gradle_plugin" label="Java(Gradle插件)">
+    </TabItem>
+    <TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
 
-```groovy title="build.gradle"
-plugins {
-    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
+    ```kotlin title="build.gradle.kts"
+    plugins {
+        id("com.google.devtools.ksp") version "1.7.10-1.0.6"
+        kotlin("kapt") version "1.7.10"
 
-    ...省略其他插件...
-}
+        ...省略其他插件...
+    }
 
-jimmer {
-    version = "${jimmerVersion}"
+    dependencies {
+        
+        implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
 
-    ...省略其他配置...
-}
+        ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}") ➋
+        kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
+        kapt("org.babyfish.jimmer:jimmer-mapstruct-apt:${jimmerVersion}") ⓐ
 
-dependencies {
+        ...省略其他依赖...
+    }
 
-    implementation "org.projectlombok:lombok:${lombok.version}" ➀
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
+    kotlin {
+        sourceSets.main {
+            kotlin.srcDir("build/generated/ksp/main/kotlin")
+        }
+    }
+    ```
 
-    annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
-    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➍
-    
-    // 不需要手动添加 org.babyfish.jimmer:jimmer-apt 的依赖
-    // 检测到 mapstruct-processor 时，插件会自动添加该依赖
+    </TabItem>
+    </Tabs>
 
-    ...省略其他依赖...
-}
-```
+-   用法二：使用社区提供的插件
 
-</TabItem>
-<TabItem value="kotlin_gradle_plugin" label="Kotlin(Gradle插件)">
+    <details>
+    <summary>https://github.com/ArgonarioD/gradle-plugin-jimmer</summary>
+    <Tabs>
+    <TabItem value="java_gradle_plugin" label="Java(Gradle插件)">
 
-```kotlin title="build.gradle.kts"
-plugins {
-    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
-    id("com.google.devtools.ksp") version "1.7.10+"
-    kotlin("kapt") version "1.7.10"
+    ```groovy title="build.gradle"
+    plugins {
+        id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
 
-    ...省略其他插件...
-}
+        ...省略其他插件...
+    }
 
-jimmer {
-    version = "${jimmerVersion}"
+    jimmer {
+        version = "${jimmerVersion}"
 
-    ...省略其他配置...
-}
+        ...省略其他配置...
+    }
 
-dependencies {
-    
-    implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
-    kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
+    dependencies {
 
-    ...省略其他依赖...
-}
-```
+        implementation "org.projectlombok:lombok:${lombok.version}" ➀
+        implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
 
-</TabItem>
-</Tabs>
+        annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
+        annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➍
+        
+        // 不需要手动添加 org.babyfish.jimmer:jimmer-apt 的依赖
+        // 检测到 mapstruct-processor 时，插件会自动添加该依赖
+
+        ...省略其他依赖...
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin_gradle_plugin" label="Kotlin(Gradle插件)">
+
+    ```kotlin title="build.gradle.kts"
+    plugins {
+        id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
+        id("com.google.devtools.ksp") version "1.7.10+"
+        kotlin("kapt") version "1.7.10"
+
+        ...省略其他插件...
+    }
+
+    jimmer {
+        version = "${jimmerVersion}"
+
+        ...省略其他配置...
+    }
+
+    dependencies {
+        
+        implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
+        kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
+
+        ...省略其他依赖...
+    }
+    ```
+
+    :::info
+    当你引入了MapStruct的kapt依赖时，插件会自动引入`jimmer-mapstruct-apt`的依赖。
+    :::
+
+    </TabItem>
+    </Tabs>
+    </details>
+
+    {/* TODO: Insert gradle plugin before this line */}
 
 这个例子中，我们假设Java中基于[lombok](https://projectlombok.org/)编写静态POJO。
 

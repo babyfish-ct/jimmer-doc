@@ -310,27 +310,4 @@ dependencies {
 ```
 
 </TabItem>
-<TabItem value="java_gradle_plugin" label="Java(Gradle Plugin)">
-
-```groovy title="build.gradle"
-plugins {
-    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
-
-    ...省略其它插件...
-}
-
-jimmer {
-    version = ...
-}
-
-dependencies {
-        
-    ...omitted other dependencies...
-
-    // highlight-next-line
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-}
-```
-
-</TabItem>
 </Tabs>

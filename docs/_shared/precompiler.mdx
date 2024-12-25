@@ -1,122 +1,131 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-<Tabs groupId="buildTool">
-<TabItem value="java_maven" label="Java (Maven)">
+You can use either Jimmer's standard build method, or use plugins provided by the community.
 
-```xml title="pom.xml"
-...other code omitted... 
+-   Method 1: Use Jimmer's standard build method
 
-<build>
-  <plugins>
-    <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-compiler-plugin</artifactId>
-      <version>3.10.1</version>
-      <configuration>
-        <!-- highlight-next-line -->
-        <annotationProcessorPaths>
-          <path>
-            <groupId>org.babyfish.jimmer</groupId>
-            <!-- highlight-next-line -->
-            <artifactId>jimmer-apt</artifactId>
-            <version>${jimmer.version}</version>
-          </path>
-        </annotationProcessorPaths>
-      </configuration>
-    </plugin>
-  </plugins>
-</build>
+    <Tabs groupId="buildTool">
+    <TabItem value="java_maven" label="Java (Maven)">
 
-...other code omitted...
-```
+    ```xml title="pom.xml"
+    ...other code omitted... 
 
-</TabItem>
-<TabItem value="java_gradle" label="Java (Gradle)">
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <!-- highlight-next-line -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.babyfish.jimmer</groupId>
+                            <!-- highlight-next-line -->
+                            <artifactId>jimmer-apt</artifactId>
+                            <version>${jimmer.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-```groovy
-dependencies {
+    ...other code omitted...
+    ```
 
-  ...other dependencies omitted...
+    </TabItem>
+    <TabItem value="java_gradle" label="Java (Gradle)">
 
-  annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}" 
-}
-```
+    ```groovy
+    dependencies {
 
-</TabItem>
-<TabItem value="kotlin_gradle" label="Kotlin (Gradle.kts)">
+        ...other dependencies omitted...
 
-```kotlin
-plugins {
-  // Add KSP plugin  
-  id("com.google.devtools.ksp") version "1.7.10-1.0.6"
+        annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}" 
+    }
+    ```
 
-  ...other plugins omitted...
-}
+    </TabItem>
+    <TabItem value="kotlin_gradle" label="Kotlin (Gradle.kts)">
 
-dependencies {
+    ```kotlin
+    plugins {
+        // Add KSP plugin  
+        id("com.google.devtools.ksp") version "1.7.10-1.0.6"
 
-  // Apply Jimmer's KSP code generator 
-  // highlight-next-line
-  ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
+        ...other plugins omitted...
+    }
 
-  ...other dependencies omitted...
-}
+    dependencies {
 
-// Add generated code to compile path.
-// Gradle build works without this, but IntelliJ won't find generated code. 
-kotlin {
-  sourceSets.main {
-    kotlin.srcDir("build/generated/ksp/main/kotlin") 
-  }
-}
-```
+        // Apply Jimmer's KSP code generator 
+        // highlight-next-line
+        ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
 
-</TabItem>
-<TabItem value="java_gradle_plugin" label="Java (Gradle Plugin)">
+        ...other dependencies omitted...
+    }
 
-```groovy title="build.gradle"
-plugins {
-    // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
-    // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
-    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
+    // Add generated code to compile path.
+    // Gradle build works without this, but IntelliJ won't find generated code. 
+    kotlin {
+        sourceSets.main {
+          kotlin.srcDir("build/generated/ksp/main/kotlin") 
+        }
+    }
+    ```
 
-    ...other plugins omitted...
-}
+    </TabItem>
+    </Tabs>
 
-jimmer {
-    // Set the Jimmer dependency version, where you can also use version range expressions such as "latest.release" or "0.+"
-    version = "${jimmerVersion}"
-}
-```
+-   Method 2: Use plugins provided by the community
 
-</TabItem>
-<TabItem value="kotlin_gradle_plugin" label="Kotlin (Gradle Plugin)">
+    <details>
+    <summary>https://github.com/ArgonarioD/gradle-plugin-jimmer</summary>
+    <Tabs>
+    <TabItem value="java_gradle" label="Java (Gradle Plugin)">
 
-```kotlin title="build.gradle.kts"
-plugins {
-    // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
-    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
-    // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
-    // Add KSP plugin
-    id("com.google.devtools.ksp") version "1.7.10+"
+    ```groovy title="build.gradle"
+    plugins {
+        // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
+        // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
+        id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
 
-    ...other plugins omitted...
-}
+        ...other plugins omitted...
+    }
 
-jimmer {
-    // Set the Jimmer dependency version, where you can also use version range expressions such as "latest.release" or "0.+"
-    version = "${jimmerVersion}"
-}
-```
+    jimmer {
+        // Set the Jimmer dependency version, where you can also use version range expressions such as "latest.release" or "0.+"
+        version = "${jimmerVersion}"
+    }
+    ```
 
-</TabItem>
-</Tabs>
+    </TabItem>
+    <TabItem value="kotlin_gradle" label="Kotlin (Gradle Plugin)">
 
-:::info
--   The first three: Standard configurations
--   The last two: Community-provided [Gradle plugin](https://github.com/ArgonarioD/gradle-plugin-jimmer) for further simplifying configurations
-:::
+    ```kotlin title="build.gradle.kts"
+    plugins {
+        // Starting from Gradle 7.0, you can use "latest.release" instead of a specific version number to represent the use of the latest version.
+        id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
+        // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
+        // Add KSP plugin
+        id("com.google.devtools.ksp") version "1.7.10+"
+
+        ...other plugins omitted...
+    }
+
+    jimmer {
+        // Set the Jimmer dependency version, where you can also use version range expressions such as "latest.release" or "0.+"
+        version = "${jimmerVersion}"
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+    </details>
+
+    {/* TODO: Insert gradle plugin before this line */}
 
 :::note
 [KSP](https://kotlinlang.org/docs/ksp-overview.html) only supports gradle,

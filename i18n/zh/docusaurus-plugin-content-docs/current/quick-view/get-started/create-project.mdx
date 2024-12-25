@@ -57,7 +57,7 @@ Jimmer本身是高度中立的，可以脱离spring-boot使用；但同时也提
 
 ```xml title="pom.xml"
 <properties>
-    <jimmer.version>0.9.34</jimmer.version>
+    <jimmer.version>0.9.37</jimmer.version>
 </properties>
 
 <dependencies>
@@ -75,7 +75,7 @@ Jimmer本身是高度中立的，可以脱离spring-boot使用；但同时也提
 
 ```groovy title="build.gradle"
 ext {
-    jimmerVersion = "0.9.34"
+    jimmerVersion = "0.9.37"
 }
 
 dependencies {
@@ -90,7 +90,7 @@ dependencies {
 <TabItem value="gradlekts" label="Gradle(kts)">
 
 ```kotlin title="build.gradle.kts"
-val jimmerVersion = "0.9.34"
+val jimmerVersion = "0.9.37"
 
 dependencies {
     
@@ -101,50 +101,12 @@ dependencies {
 ```
 
 </TabItem>
-<TabItem value="gradle_plugin" label="Gradle插件">
-
-```groovy title="build.gradle"
-plugins {
-    // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
-    // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
-    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
-
-    ... 省略其它插件 ...
-}
-
-jimmer {
-    // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
-    version = "0.9.34"
-}
-```
-
-</TabItem>
-<TabItem value="gradle_plugin_kts" label="Gradle插件(kts)">
-
-```kotlin title="build.gradle.kts"
-plugins {
-    // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
-    // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
-    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
-
-    ... 省略其它插件 ...
-}
-
-jimmer {
-    // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
-    version = "0.9.34"
-}
-```
-
-</TabItem>
 </Tabs>
 
 :::info
-如果你使用的构建工具是Gradle，也可以使用社区提供的第三方Gradle插件 `tech.argonariod.gradle-plugin-jimmer`，自动识别项目类型，自动添加依赖。
+作为手把手的例子，这里仅展示Jimmer标准的构建方式。
 
-`tech.argonariod.gradle-plugin-jimmer` 插件由社区提供和维护用以简化 Jimmer 项目配置，非 Jimmer 官方维护。
-
-仓库地址：https://github.com/ArgonarioD/gradle-plugin-jimmer
+社区也提供了gradle插件，请参考[APT/KSP](../../overview/apt-ksp)
 :::
 
 ## kotlin需要的额外配置

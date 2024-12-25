@@ -1,123 +1,131 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-<Tabs groupId="buildTool">
-<TabItem value="java_maven" label="Java(Maven)">
+你既可以使用Jimmer标准的构建方式，也可以采用社区提供的插件
 
-```xml title="pom.xml"
-...省略其他代码...
+-   用法一：使用Jimmer标准的构建方式
 
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.10.1</version>
-            <configuration>
-                <!-- highlight-next-line -->
-                <annotationProcessorPaths>
-                    <path>
-                        <groupId>org.babyfish.jimmer</groupId>
-                        <!-- highlight-next-line -->
-                        <artifactId>jimmer-apt</artifactId>
-                        <version>${jimmer.version}</version>
-                    </path>
-                </annotationProcessorPaths>
-            </configuration>
-        </plugin>
-    </plugins>
-</build>
+    <Tabs groupId="buildTool">
+    <TabItem value="java_maven" label="Java(Maven)">
 
-...省略其他代码...
-```
+    ```xml title="pom.xml"
+    ...省略其他代码...
 
-</TabItem>
-<TabItem value="java_gradle" label="Java(Gradle)">
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <!-- highlight-next-line -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.babyfish.jimmer</groupId>
+                            <!-- highlight-next-line -->
+                            <artifactId>jimmer-apt</artifactId>
+                            <version>${jimmer.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-```groovy title="build.gradle"
-dependencies {
-    
-    ...省略其他依赖...
+    ...省略其他代码...
+    ```
 
-    annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}"
-}
-```
+    </TabItem>
+    <TabItem value="java_gradle" label="Java(Gradle)">
 
-</TabItem>
-<TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
+    ```groovy title="build.gradle"
+    dependencies {
+        
+        ...省略其他依赖...
 
-```kotlin title="build.gradle.kts"
-plugins {
-    // 添加ksp插件
-    id("com.google.devtools.ksp") version "1.7.10-1.0.6"
-
-    ...省略其他插件...
-}
-dependencies {
-    
-    // 应用jimmer的ksp代码生成器
-    // highlight-next-line
-    ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
-
-    ...省略其他依赖...
-}
-
-// 将生成的代码添加到编译路径中。
-// 没有这个配置，gradle命令仍然可以正常执行，
-// 但是, Intellij无法找到生成的源码。
-kotlin {
-    sourceSets.main {
-        kotlin.srcDir("build/generated/ksp/main/kotlin")
+        annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}"
     }
-}
-```
+    ```
 
-</TabItem>
-<TabItem value="java_gradle_plugin" label="Java(Gradle插件)">
+    </TabItem>
+    <TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
 
-```groovy title="build.gradle"
-plugins {
-    // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
-    // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
-    id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
+    ```kotlin title="build.gradle.kts"
+    plugins {
+        // 添加ksp插件
+        id("com.google.devtools.ksp") version "1.7.10-1.0.6"
 
-    ... 省略其它插件 ...
-}
+        ...省略其他插件...
+    }
+    dependencies {
+        
+        // 应用jimmer的ksp代码生成器
+        // highlight-next-line
+        ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
 
-jimmer {
-    // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
-    version = "${jimmerVersion}"
-}
-```
+        ...省略其他依赖...
+    }
 
-</TabItem>
-<TabItem value="kotlin_gradle_plugin" label="Kotlin(Gradle插件)">
+    // 将生成的代码添加到编译路径中。
+    // 没有这个配置，gradle命令仍然可以正常执行，
+    // 但是, Intellij无法找到生成的源码。
+    kotlin {
+        sourceSets.main {
+            kotlin.srcDir("build/generated/ksp/main/kotlin")
+        }
+    }
+    ```
 
-```kotlin title="build.gradle.kts"
-plugins {
-    // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
-    id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
-    // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
-    // 添加ksp插件
-    id("com.google.devtools.ksp") version "1.7.10+"
+    </TabItem>
+    </Tabs>
 
-    ... 省略其它插件 ...
-}
+-   用法二：使用社区提供的出插件
 
-jimmer {
-    // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
-    version = "${jimmerVersion}"
-}
-```
+    <details>
+    <summary>https://github.com/ArgonarioD/gradle-plugin-jimmer</summary>
+    <Tabs>
+    <TabItem value="java_gradle" label="Java(Gradle插件)">
 
-</TabItem>
-</Tabs>
+    ```groovy title="build.gradle"
+    plugins {
+        // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
+        // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
+        id "tech.argonariod.gradle-plugin-jimmer" version "latest.release"
 
-:::info
--   前三种：标准配置
+        ... 省略其它插件 ...
+    }
 
--   后两种：社区提供的[Gradle插件](https://github.com/ArgonarioD/gradle-plugin-jimmer)，进一步简化配置
-:::
+    jimmer {
+        // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
+        version = "${jimmerVersion}"
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin_gradle" label="Kotlin(插件)">
+
+    ```kotlin title="build.gradle.kts"
+    plugins {
+        // 从 Gradle 7.0 开始，可以使用 "latest.release" 代替具体的版本号，代表使用最新版本
+        id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
+        // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
+        // 添加ksp插件
+        id("com.google.devtools.ksp") version "1.7.10+"
+
+        ... 省略其它插件 ...
+    }
+
+    jimmer {
+        // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
+        version = "${jimmerVersion}"
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+    </details>
+
+    {/* TODO: Insert gradle plugin before this line */}
 
 :::note
 [KSP](https://kotlinlang.org/docs/ksp-overview.html)官方只支持gradle，

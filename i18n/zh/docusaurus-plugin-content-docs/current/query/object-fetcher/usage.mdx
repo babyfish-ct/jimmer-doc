@@ -58,8 +58,8 @@ val tuples = sqlClient
         where(table.edition.eq(3))
         // highlight-next-line
         select(
-            table.id
-            table.name
+            table.id,
+            table.name,
             table.edition
         )
     }
@@ -166,8 +166,8 @@ val bookDTOs = sqlClient
     .createQuery(Book::class) {
         where(table.edition.eq(3))
         select(
-            table.id
-            table.name
+            table.id,
+            table.name,
             table.edition
         )
     }

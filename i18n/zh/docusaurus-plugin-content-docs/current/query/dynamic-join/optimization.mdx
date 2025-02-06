@@ -49,7 +49,7 @@ val books = sqlClient
 </TabItem>
 </Tabs>
 
-虽然通过`table.store`创建了一个JOIN对象，但是，该对象并没有被当前查询的SQL DSL使用，这种情绪下，该JOIN对象会被忽略。
+虽然通过`table.store`创建了一个JOIN对象，但是，该对象并没有被当前查询的SQL DSL使用，这种情况下，该JOIN对象会被忽略。
 
 因此，最终生成的SQL不会包含任何JOIN操作
 

@@ -10,3 +10,7 @@ In this series of articles, we will introduce:
 - The examples that come with the project
 - How to create a Jimmer project from scratch
 - Jimmer's performance advantages
+
+import DocCardList from '@theme/DocCardList';
+
+<DocCardList />

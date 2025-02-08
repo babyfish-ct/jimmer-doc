@@ -10,3 +10,7 @@ title: 初识Jimmer ★
 -   项目附带的例子
 -   如何从头创建Jimmer项目
 -   Jimmer的性能优势
+
+import DocCardList from '@theme/DocCardList';
+
+<DocCardList />

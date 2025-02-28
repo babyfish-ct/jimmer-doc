@@ -1008,12 +1008,11 @@ FlatTreeNodeView {
             #allScalars(TreeNode)
         }
         # highlight-next-line
-        flat(grandParent) {
-            as(^ -> parent) {
+        flat(parent) {
+            as(^ -> grandParent) {
                 #allScalars(TreeNode)
             }
-            
-        }   
+        }
     }
 }
 ```

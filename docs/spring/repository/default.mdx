@@ -118,7 +118,7 @@ interface BookRepository : KRepository<Book, Long> {
     This represents a query that is created but not yet executed. It needs to call `execute` to actually execute it to get the final result `List<Book>`.
     
     :::note
-    The query is not executed immediately after creation, `execute` must be called to execute it. This is not a design flaw, but an important capability that the [pagination query](#pagination-queries) section will illustrate.
+    The query is not executed immediately after creation, `execute` must be called to execute it. This is not a design flaw, but an important capability that the [pagination query](#pagination) section will illustrate.
     :::
 
     `execute` is not the only execution method, in addition to `execute`, there are other execution methods:

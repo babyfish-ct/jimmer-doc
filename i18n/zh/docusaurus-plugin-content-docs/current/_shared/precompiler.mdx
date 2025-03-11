@@ -1,88 +1,197 @@
-import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Tabs from '@theme/Tabs';
 
-你既可以使用Jimmer标准的构建方式，也可以采用社区提供的插件
+Jimmer 本身是技术中立的，即你可以和任何其它框架集成，此外，提供了 Jimmer Spring boot starter 快速配置。
 
--   用法一：使用Jimmer标准的构建方式
+在本文中，你将学会单独使用 Jimmer，或者采取 Jimmer starter，还可以采用社区提供的插件。
 
-    <Tabs groupId="buildTool">
-    <TabItem value="java_maven" label="Java(Maven)">
+### 单独使用
 
-    ```xml title="pom.xml"
-    ...省略其他代码...
+<Tabs groupId="buildTool">
+<TabItem value="java_maven" label="Java(Maven)">
+```xml title="pom.xml"
+<dependencies>
+    <!-- highlight-start -->
+    <dependency>
+        <groupId>org.babyfish.jimmer</groupId>
+        <artifactId>jimmer-sql</artifactId>
+        <version>${jimmer.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.babyfish.jimmer</groupId>
+        <artifactId>jimmer-apt</artifactId>
+        <version>${jimmer.version}</version>
+    </dependency>
+    <!-- highlight-end -->
+</dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.10.1</version>
-                <configuration>
-                    <!-- highlight-next-line -->
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.babyfish.jimmer</groupId>
-                            <!-- highlight-next-line -->
-                            <artifactId>jimmer-apt</artifactId>
-                            <version>${jimmer.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.10.1</version>
+            <configuration>
+                <annotationProcessorPaths>
+                    <!-- 如果使用了 lombok，需要确保在 jimmer apt 之前添加该内容 -->
+                    <!-- <path>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                        <version>${lombok.version}</version>
+                    </path> -->
 
-    ...省略其他代码...
+                    <!-- highlight-start -->
+                    <path>
+                        <groupId>org.babyfish.jimmer</groupId>
+                        <artifactId>jimmer-apt</artifactId>
+                        <version>${jimmer.version}</version>
+                    </path>
+                    <!-- highlight-end -->
+                </annotationProcessorPaths>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+</TabItem>
+
+<TabItem value="java_gradle" label="Java(Gradle)">
+```kts title="build.gradle.kts"
+dependencies {
+    // 与 lombok 协同
+    // annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
+    <!-- highlight-start -->
+    implementation("org.babyfish.jimmer:jimmer-sql:${jimmerVersion}")
+    annotationProcessor("org.babyfish.jimmer:jimmer-apt:${jimmerVersion}")
+    <!-- highlight-end -->
+}
+```
+</TabItem>
+
+<TabItem value="kotlin_gradle" label="Kotlin(Gradle)">
+```kotlin title="build.gradle.kts"
+plugins {
+    kotlin("jvm") version "2.1.0"
+    // ksp
+    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
+}
+
+val jimmerVersion = "0.9.45"
+
+dependencies {
+    // ksp
+    ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
+    // Jimmer sql for kotlin
+    implementation("org.babyfish.jimmer:jimmer-sql-kotlin:${jimmerVersion}")
+}
+
+// 将生成的代码添加到编译路径中。
+// 没有这个配置，gradle命令仍然可以正常执行，
+// 但是, Intellij无法找到生成的源码。
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
+    }
+}
+```
+</TabItem>
+</Tabs>
+
+### 使用 spring boot starter
+
+<Tabs groupId="buildTool">
+<TabItem value="java_maven" label="Java(Maven)">
+
+```xml title="pom.xml"
+<dependencies>
+    <dependency>
+        <groupId>org.babyfish.jimmer</groupId>
+        <artifactId>jimmer-spring-boot-starter</artifactId>
+        <version>${jimmer.version}</version>
+    </dependency>
+</dependencies>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+                <annotationProcessorPaths>
+                    <!-- 如果使用了 lombok，需要确保在 jimmer apt 之前添加该内容 -->
+                    <!-- <path>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                        <version>${lombok.version}</version>
+                    </path> -->
+
+                    <path>
+                        <groupId>org.babyfish.jimmer</groupId>
+                        <artifactId>jimmer-apt</artifactId>
+                        <version>${jimmer.version}</version>
+                    </path>
+                </annotationProcessorPaths>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
     ```
 
-    </TabItem>
-    <TabItem value="java_gradle" label="Java(Gradle)">
+</TabItem>
+<TabItem value="java_gradle" label="Java(Gradle)">
 
-    ```groovy title="build.gradle"
-    dependencies {
-        
-        ...省略其他依赖...
+```groovy title="build.gradle"
+dependencies {
+    ...省略其他依赖...
+    annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}"
+    implementation "org.babyfish.jimmer:jimmer-spring-boot-starter:${jimmerVersion}"
+}
+```
 
-        annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}"
+</TabItem>
+<TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
+
+```kotlin title="build.gradle.kts"
+plugins {
+    // 添加ksp插件
+    id("com.google.devtools.ksp") version "1.7.10-1.0.6"
+
+    ...省略其他插件...
+}
+dependencies {
+    implementation("org.babyfish.jimmer:jimmer-spring-boot-starter:${jimmerVersion}")
+    // 应用jimmer的ksp代码生成器
+    // highlight-next-line
+    ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
+
+    ...省略其他依赖...
+}
+
+// 将生成的代码添加到编译路径中。
+// 没有这个配置，gradle命令仍然可以正常执行，
+// 但是, Intellij无法找到生成的源码。
+kotlin {
+    sourceSets.main {
+        kotlin.srcDir("build/generated/ksp/main/kotlin")
     }
-    ```
+}
+```
 
-    </TabItem>
-    <TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
+</TabItem>
+</Tabs>
 
-    ```kotlin title="build.gradle.kts"
-    plugins {
-        // 添加ksp插件
-        id("com.google.devtools.ksp") version "1.7.10-1.0.6"
+:::important
+Java项目常常和Lombok配合使用使用。默认情况下，如果项目除了lombok外没有其他APT，只需导入lombok的依赖即可。然而，一旦引入了其他APT配置 *(不一定是Jimmer的APT，可以任何其他APT)*，**则必须明确配置 lombok 的APT，且在 Maven 中 lombok 的 APT 必须在 Jimmer 之前。**
 
-        ...省略其他插件...
-    }
-    dependencies {
-        
-        // 应用jimmer的ksp代码生成器
-        // highlight-next-line
-        ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
+**Gradle 下更加推荐使用 kts（doc pr 贡献者推荐）**，如果使用了社区提供的 Gradle 插件，则无需声明 Jimmer 的 APT(见下文)。
+:::
 
-        ...省略其他依赖...
-    }
+### 使用社区提供的插件
 
-    // 将生成的代码添加到编译路径中。
-    // 没有这个配置，gradle命令仍然可以正常执行，
-    // 但是, Intellij无法找到生成的源码。
-    kotlin {
-        sourceSets.main {
-            kotlin.srcDir("build/generated/ksp/main/kotlin")
-        }
-    }
-    ```
-
-    </TabItem>
-    </Tabs>
-
--   用法二：使用社区提供的出插件
 
     <details>
     <summary>https://github.com/ArgonarioD/gradle-plugin-jimmer</summary>
+
     <Tabs>
     <TabItem value="java_gradle" label="Java(Gradle插件)">
 
@@ -98,6 +207,13 @@ import TabItem from '@theme/TabItem';
     jimmer {
         // 设定 jimmer 依赖版本，此处也可以使用 "latest.release" 或 "0.+" 等版本范围表达式
         version = "${jimmerVersion}"
+    }
+
+    dependencies {
+        
+        ...省略其他依赖...
+
+        annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     }
     ```
 
@@ -127,7 +243,7 @@ import TabItem from '@theme/TabItem';
 
     {/* TODO: Insert gradle plugin before this line */}
 
-:::note
+:::warning
 [KSP](https://kotlinlang.org/docs/ksp-overview.html)官方只支持gradle，
 经过实践验证，KSP的第三方Maven插件支持跟不上`kotlin/KSP`本身的版本迭代，往往在升级过程中遇到很多问题。
 

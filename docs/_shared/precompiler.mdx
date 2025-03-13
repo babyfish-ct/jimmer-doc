@@ -1,190 +1,85 @@
-import TabItem from '@theme/TabItem';
 import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-Jimmer itself is technology-neutral, i.e. you can integrate it with any other framework, in addition to providing a quick configuration of the Jimmer Spring boot starter.
+You can use either Jimmer's standard build method, or use plugins provided by the community.
 
-In this article, you will learn to use Jimmer alone, or take Jimmer starter, you can also adopt the community provided plug-ins.
+-   Method 1: Use Jimmer's standard build method
 
-### To be used on its own
+    <Tabs groupId="buildTool">
+    <TabItem value="java_maven" label="Java (Maven)">
 
-<Tabs groupId="buildTool">
-<TabItem value="java_maven" label="Java(Maven)">
-```xml title="pom.xml"
-<dependencies>
-    <!-- highlight-start -->
-    <dependency>
-        <groupId>org.babyfish.jimmer</groupId>
-        <artifactId>jimmer-sql</artifactId>
-        <version>${jimmer.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>org.babyfish.jimmer</groupId>
-        <artifactId>jimmer-apt</artifactId>
-        <version>${jimmer.version}</version>
-    </dependency>
-    <!-- highlight-end -->
-</dependencies>
+    ```xml title="pom.xml"
+    ...other code omitted... 
 
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.10.1</version>
-            <configuration>
-                <annotationProcessorPaths>
-                    <!-- If you are using lombok, you need to make sure you add this before the jimmer apt -->
-                    <!-- <path>
-                        <groupId>org.projectlombok</groupId>
-                        <artifactId>lombok</artifactId>
-                        <version>${lombok.version}</version>
-                    </path> -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <!-- highlight-next-line -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.babyfish.jimmer</groupId>
+                            <!-- highlight-next-line -->
+                            <artifactId>jimmer-apt</artifactId>
+                            <version>${jimmer.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-                    <!-- highlight-start -->
-                    <path>
-                        <groupId>org.babyfish.jimmer</groupId>
-                        <artifactId>jimmer-apt</artifactId>
-                        <version>${jimmer.version}</version>
-                    </path>
-                    <!-- highlight-end -->
-                </annotationProcessorPaths>
-            </configuration>
-        </plugin>
-    </plugins>
-</build>
-```
-</TabItem>
-
-<TabItem value="java_gradle" label="Java(Gradle)">
-```kts title="build.gradle.kts"
-dependencies {
-    // if use lombok
-    // annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
-    <!-- highlight-start -->
-    implementation("org.babyfish.jimmer:jimmer-sql:${jimmerVersion}")
-    annotationProcessor("org.babyfish.jimmer:jimmer-apt:${jimmerVersion}")
-    <!-- highlight-end -->
-}
-```
-</TabItem>
-
-<TabItem value="kotlin_gradle" label="Kotlin(Gradle)">
-```kotlin title="build.gradle.kts"
-plugins {
-    kotlin("jvm") version "2.1.0"
-    // ksp
-    id("com.google.devtools.ksp") version "2.1.0-1.0.29"
-}
-
-val jimmerVersion = "0.9.45"
-
-dependencies {
-    // ksp
-    ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
-    // Jimmer sql for kotlin
-    implementation("org.babyfish.jimmer:jimmer-sql-kotlin:${jimmerVersion}")
-}
-
-// Add generated code to compile path.
-// Gradle build works without this, but IntelliJ won't find generated code. 
-kotlin {
-    sourceSets.main {
-        kotlin.srcDir("build/generated/ksp/main/kotlin")
-    }
-}
-```
-</TabItem>
-</Tabs>
-
-### with spring-boot-starter
-
-<Tabs groupId="buildTool">
-<TabItem value="java_maven" label="Java(Maven)">
-
-```xml title="pom.xml"
-<dependencies>
-    <dependency>
-        <groupId>org.babyfish.jimmer</groupId>
-        <artifactId>jimmer-spring-boot-starter</artifactId>
-        <version>${jimmer.version}</version>
-    </dependency>
-</dependencies>
-
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-                <annotationProcessorPaths>
-                    <!-- If you are using lombok, you need to make sure you add this before the jimmer apt -->
-                    <!-- <path>
-                        <groupId>org.projectlombok</groupId>
-                        <artifactId>lombok</artifactId>
-                        <version>${lombok.version}</version>
-                    </path> -->
-
-                    <path>
-                        <groupId>org.babyfish.jimmer</groupId>
-                        <artifactId>jimmer-apt</artifactId>
-                        <version>${jimmer.version}</version>
-                    </path>
-                </annotationProcessorPaths>
-            </configuration>
-        </plugin>
-    </plugins>
-</build>
+    ...other code omitted...
     ```
 
-</TabItem>
-<TabItem value="java_gradle" label="Java(Gradle)">
+    </TabItem>
+    <TabItem value="java_gradle" label="Java (Gradle)">
 
-```groovy title="build.gradle"
-dependencies {
-    ...omitted other dependencies...
-    annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}"
-    implementation "org.babyfish.jimmer:jimmer-spring-boot-starter:${jimmerVersion}"
-}
-```
+    ```groovy
+    dependencies {
 
-</TabItem>
-<TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
+        ...other dependencies omitted...
 
-```kotlin title="build.gradle.kts"
-plugins {
-    // use ksp plugin
-    id("com.google.devtools.ksp") version "1.7.10-1.0.6"
-
-    ...omitted other dependencies...
-}
-dependencies {
-    implementation("org.babyfish.jimmer:jimmer-spring-boot-starter:${jimmerVersion}")
-    // use jimmer ksp
-    // highlight-next-line
-    ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
-
-    ...omitted other dependencies...
-}
-
-// Add generated code to compile path.
-// Gradle build works without this, but IntelliJ won't find generated code. 
-kotlin {
-    sourceSets.main {
-        kotlin.srcDir("build/generated/ksp/main/kotlin")
+        annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}" 
     }
-}
-```
+    ```
 
-</TabItem>
-</Tabs>
+    </TabItem>
+    <TabItem value="kotlin_gradle" label="Kotlin (Gradle.kts)">
 
-:::important
-Java projects are often used in conjunction with Lombok. By default, if the project has no other APTs besides lombok, it is sufficient to import the lombok dependencies. However, once other APT configurations are introduced *(not necessarily Jimmer's APT, it can be any other APT)*, **then lombok's APT must be explicitly configured, and lombok's APT must come before Jimmer's in Maven.**
+    ```kotlin
+    plugins {
+        // Add KSP plugin  
+        id("com.google.devtools.ksp") version "1.7.10-1.0.6"
 
-There is no need to declare Jimmer's APT if the community-provided Gradle plugin is used (see below).
-:::
+        ...other plugins omitted...
+    }
 
-### Use plugins provided by the community
+    dependencies {
+
+        // Apply Jimmer's KSP code generator 
+        // highlight-next-line
+        ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}")
+
+        ...other dependencies omitted...
+    }
+
+    // Add generated code to compile path.
+    // Gradle build works without this, but IntelliJ won't find generated code. 
+    kotlin {
+        sourceSets.main {
+          kotlin.srcDir("build/generated/ksp/main/kotlin") 
+        }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   Method 2: Use plugins provided by the community
 
     <details>
     <summary>https://github.com/ArgonarioD/gradle-plugin-jimmer</summary>

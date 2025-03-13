@@ -3,8 +3,9 @@ sidebar_position: 4
 title: APT/KSP
 ---
 
-import TabItem from '@theme/TabItem';
 import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Precompiler from '../_shared/precompiler.mdx';
 
 ## 基本概念
 
@@ -24,7 +25,37 @@ Jimmer高度依赖于JVM生态的预编译技术：
 -   直接用Intellij打开项目，暂时无视IDE的错误，依赖下载完毕后，直接运行项目的main方法或单元测试 *(save-command/save-command-kt以单元测试演示功能)*，所有IDE错误将会自动消失，应用也会被正确启动。
 :::
 
+## 如何使用
+
+<Precompiler/>
+
+对于[官方例子](https://github.com/babyfish-ct/jimmer-examples)中的所有项目而言
+
+-   所有Java例子都具备`pom.xml`和`build.gradle`，即，maven/gradle双支持。
+
+    首次打开这种项目时，Intellij会询问以何种方式打开，做出选择即可。
+
+    如果要切换打开方式，退出Intellij，删除项目下的隐藏目录`.idea`，再用Intellij打开，重新选择即可。
+
+-   所有的Kotlin例子，只具备`build.gradle.kts`文件，即，只支持gradle。前面已经解释原因。
+
+Intellij对通过maven引入的annotation processor的整合存在一些轻率的过度优化措施，导致gradle和IDE配合的开发体验优于maven。
+
+## 在哪使用
+
+业务项目很少是一个单项目，更多时候是借助于Maven和Gradle这类构建工具分割成多个子项目。
+
+那么？我们应在哪些子项目中使用前面讲过的配置呢？
+
+|子项目类型|使用目的|注意事项|
+|--------|-------|-----------------|
+|定义实体的项目|根据实体定义生成必要的代码，例如Draft，SQL DSL, Fetcher||
+|在`src/main/dto`目录下定义DTO文件的项目|根据DTO语言的代码生成DTO类型|对于Java而言，除非当前子项目有实体定义，否则需要随便找个类用`@EnableDtoGeneration`修饰|
+|使用Spring Web注解的项目|自动生成Openapi文档和TypeScript代码，将Web Api的Java/Kotlin文档注释写入文档和客户端代码中；支持远程异常||
+
 ## 注意事项
+
+注意事项
 
 由于Jimmer是一个编译时框架，考虑到并非所有用户都熟悉Apt和Ksp，有必要提及一个重要细节。
 
@@ -223,3 +254,76 @@ implements Fetchers {
             };
 }
 ```
+
+## 和Lombok配合
+
+Java项目常常和Lombok配合使用使用。
+
+默认情况下，如果项目除了lombok外没有其他APT，只需导入lombok的依赖即可。
+
+然而，一旦引入了其他APT配置*(不一定是Jimmer的APT，任何其他APT)*，则必须明确配置lombok的APT。
+
+<Tabs groupId="buildTool">
+<TabItem value="java_maven" label="Java(Maven)">
+
+```xml title="pom.xml"
+...省略其他代码...
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.10.1</version>
+            <configuration>
+                <annotationProcessorPaths>
+                    <!--highlight-start-->
+                    <path>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                        <version>${lombok.version}</version>
+                    </path>
+                    <!--highlight-end-->
+                    <path>
+                        <groupId>org.babyfish.jimmer</groupId>
+                        <artifactId>jimmer-apt</artifactId>
+                        <version>${jimmer.version}</version>
+                    </path>
+                </annotationProcessorPaths>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+
+...省略其他代码...
+```
+
+</TabItem>
+<TabItem value="java_gradle" label="Java(Gradle)">
+
+```groovy title="build.gradle"
+dependencies {
+    
+    ...省略其他依赖...
+
+    // highlight-next-line
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.babyfish.jimmer:jimmer-apt:${jimmerVersion}"
+}
+```
+
+</TabItem>
+<TabItem value="java_gradle_plugin" label="Java(Gradle插件)">
+
+```groovy title="build.gradle"
+dependencies {
+        
+    ...省略其他依赖...
+
+    // highlight-next-line
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+}
+```
+
+</TabItem>
+</Tabs>

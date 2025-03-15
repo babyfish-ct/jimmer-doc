@@ -5,6 +5,7 @@ title: Create a Project
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Version from '../../_shared/version.md';
 
 ## Create a Spring Boot Project
 
@@ -52,12 +53,14 @@ Compared to standalone usage, integrating with Spring Boot is simpler. So this t
 
 Modify build.gradle or pom.xml to add dependencies:
 
+<Version/>
+
 <Tabs groupId="buildTool">
 <TabItem value="maven" label="Maven">
 
 ```xml title="pom.xml"
 <properties>
-  <jimmer.version>0.9.37</jimmer.version>
+  <jimmer.version>TODO: latest.version</jimmer.version>
 </properties>
 
 <dependencies>
@@ -75,7 +78,7 @@ Modify build.gradle or pom.xml to add dependencies:
 
 ```groovy
 ext {
-  jimmerVersion = '0.9.37' 
+  jimmerVersion = 'TODO: latest.version' 
 }
 
 dependencies {
@@ -90,7 +93,7 @@ dependencies {
 <TabItem value="gradlekts" label="Gradle (Kts)">
 
 ```kotlin
-val jimmerVersion = "0.9.37"
+val jimmerVersion = "TODO: latest.version"
 
 dependencies {
 

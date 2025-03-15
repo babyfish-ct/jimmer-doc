@@ -5,6 +5,7 @@ title: 创建项目
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Version from '../../_shared/version.md';
 
 ## 创建SpringBoot项目
 
@@ -52,12 +53,14 @@ Jimmer本身是高度中立的，可以脱离spring-boot使用；但同时也提
 
 修改gradle或maven文件，加入依赖
 
+<Version/>
+
 <Tabs groupId="buildTool">
 <TabItem value="maven" label="Maven">
 
 ```xml title="pom.xml"
 <properties>
-    <jimmer.version>0.9.37</jimmer.version>
+    <jimmer.version>TODO: latest.version</jimmer.version>
 </properties>
 
 <dependencies>
@@ -75,7 +78,7 @@ Jimmer本身是高度中立的，可以脱离spring-boot使用；但同时也提
 
 ```groovy title="build.gradle"
 ext {
-    jimmerVersion = "0.9.37"
+    jimmerVersion = "TODO: latest.version"
 }
 
 dependencies {
@@ -90,7 +93,7 @@ dependencies {
 <TabItem value="gradlekts" label="Gradle(kts)">
 
 ```kotlin title="build.gradle.kts"
-val jimmerVersion = "0.9.37"
+val jimmerVersion = "TODO: latest.version"
 
 dependencies {
     

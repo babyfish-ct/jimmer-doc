@@ -1,26 +1,37 @@
 ---
 sidebar_position: 1
-title: 开始之前
+title: 欢迎 ✦
 ---
+
+## 入门注意
+
+Jimmer是采用预编译技术的ORM框架，绝大部分魔法都来自编译时，而非运行时。因此，需要预编行为：
+
+-   对于Java而言，就是APT，即[Annotation Processor Tool](https://www.jetbrains.com/help/idea/annotation-processors-support.html)
+
+-   Kotlin而言，就是KSP，即[Kotlin Symbol Processing](https://kotlinlang.org/docs/ksp-overview.html)
+
+对于没有任何JVM预编译类型框架经验的读者而言，项目的构建方式是陌生的。不建议这类读者直接上手写代码，更建议先运行最简单的官方例子
+
+-   Java: [jimmer-examples/java/jimmer-simple](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-simple)
+
+-   Kotin: [jimmer-examples/kotlin/jimmer-simpl-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-simple-kt)
+
+把这个最简例子成功运行起来，这类读者将会快速熟悉这类项目的构建过程
+
+-   无需安装任何环境，该项目可以直接运行。因为项目采用H2内存数据库并会在启动时自动创建数据
+
+-   如果直接用IDE打开未经首次编译的项目，会发现一些类型并未定义，这是因为这些类型在经过预编译后才会被自动生成。请无视相关错误，直接点击IDE的Run按钮，错误会自动消失
+
+-   使用社区贡献的[Jimmer-Buddy](https://github.com/Enaium/JimmerBuddy)插件，可以提高预编译过程的开发体验
 
 ## 例子和快速上手在哪？
 
 面对一个新的框架，开发人员的第一反应是例子和快速上手在什么地方？
 
--   附带例子：[快速预览/标准例子](../quick-view/standard-demo)
+-   附带例子：[官方例子](https://github.com/babyfish-ct/jimmer-examples)
 
--   快速上手：[快速预览/快速上手](../quick-view/get-started/)
-
-然而，如果你仔细观察文档目录结构，你会发现它们在目录结构中的位置并不是特别靠前，为什么呢？
-
-因为Jimmer是革命性的技术，在开发人员都认为JVM生态访问RMDBS的技术体系早已彻底固化而不可能发生巨变的时候，给出了一套全新的技术方案。
-所以，有必要先对这些变革进行论述，清晰地阐述这些变化会在实际项目中带来哪些不可思议的好处。
-
-这个领域已经存在大量的选择*(可以用过度服务来形容)*，假如新的技术方案的思路和方法论和以前的作品相似，
-并不能让实际项目的开发发生翻天覆地的变化并带来断崖式的效率提升，只是为本已众多选择再添加一个可选项。
-那么，就真的没有必要开发全新的项目，因为那只是给行业添加混乱而已。
-
-总之，建议在了解Jimmer的变革以及这些变革会带来何种巨大好处后再看标准例子和快速上手；第一时间以以前的成功路径和心理预期去看可能适得其反。
+-   快速上手：[快速上手](../quick-view/get-started/)
 
 ## 关于本文档
 

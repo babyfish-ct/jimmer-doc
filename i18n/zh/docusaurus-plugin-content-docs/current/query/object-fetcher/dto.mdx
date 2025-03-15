@@ -466,7 +466,8 @@ Jimmer DTO分为三种
 
 在[对象抓取器/递归查询](./recursive)中，我们介绍了
 
-1. 控制每个节点是否递归
+1. 限制递归深度
+2. 控制每个节点是否递归
 
 同理，作为类型抓取器更加类型化的体现，Output DTO也同样具备这些配置
 
@@ -535,7 +536,7 @@ BookDetailView {
     #allScalars
 
     // highlight-start
-    !where(firstName '%a%' or lastName ilike '%a%')
+    !where(firstName ilike '%a%' or lastName ilike '%a%')
     !orderBy(firstName asc, lastName asc)
     // highlight-end
     authors {
@@ -656,6 +657,22 @@ BookDetailView {
 :::note
 注意：和对象抓取器一样，只能为引用关联 *(非集合关联，`@ManyToOne`或`@OneToOne`)* 属性指定抓取方式
 :::
+
+### 限制递归深度
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !depth(2)
+    childNodes*
+}
+```
 
 ### 控制每个节点是否递归
 

@@ -467,7 +467,8 @@ In [Object Fetcher/Association Properties](./association), we introduced some sp
 
 In [Object Fetcher/Recursive Queries](./recursive), we introduced:
 
-1. Controlling whether each node is recursive
+1. Limit recursion depth
+2. Controlling whether each node is recursive
 
 Similarly, as a more type-oriented representation of type fetchers, Output DTOs also have these configurations.
 
@@ -536,7 +537,7 @@ BookDetailView {
     #allScalars
 
     // highlight-start
-    !where(firstName '%a%' or lastName ilike '%a%')
+    !where(firstName ilike '%a%' or lastName ilike '%a%')
     !orderBy(firstName asc, lastName asc)
     // highlight-end
     authors {
@@ -657,6 +658,22 @@ BookDetailView {
 :::note
 Note: Just like object fetchers, fetch methods can only be specified for reference associations *(non-collection associations, `@ManyToOne` or `@OneToOne`)* properties
 :::
+
+### Limit recursion depth
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !depth(2)
+    childNodes*
+}
+```
 
 ### Controlling Whether Each Node is Recursive
 

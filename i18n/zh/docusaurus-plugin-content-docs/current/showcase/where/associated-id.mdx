@@ -46,10 +46,10 @@ val rootNodes = sqlClient
 
 ## 任意值的判断
 
-事实上，`eq`支持null参数，当`eq`的参数为null是，就渲染`is null`
+事实上，`eq`支持null参数，当`eq`的参数为null时，则渲染`is null`
 
 :::caution
-注意：Java的`eqIf`和Kotlin的`eq?`则不同，null被认为是动态查询，不会渲染任何SQL条件。
+注意：Java的`eqIf`和Kotlin的`eq?`不同，null被认为是动态查询，不会渲染任何SQL条件。
 :::
 
 <Tabs groupId="language">

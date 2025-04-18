@@ -266,7 +266,7 @@ Book newBook = Immutables.createBook(book, draft -> {
 
 ```kotlin
 val newBook = Book(book) {
-    set(draft, Book::authorIds, listOf(1L, 3L))
+    set(draft, BookDraft::authorIds, listOf(1L, 3L))
 }
 ```
 
@@ -291,7 +291,7 @@ Book newBook = Immutables.createBook(book, draft -> {
 
 ```kotlin
 val newBook = Book(book) {
-    unload(draft, Book::authorIds)
+    unload(draft, BookDraft::authorIds)
 }
 ```
 
@@ -316,7 +316,7 @@ Book newBook = Immutables.createBook(book, draft -> {
 
 ```kotlin
 val newBook = Book(book) {
-    show(draft, Book::authorIds) 
+    show(draft, BookDraft::authorIds) 
 }
 ```
 
@@ -341,7 +341,7 @@ Book newBook = Immutables.createBook(book, draft -> {
 
 ```kotlin 
 val newBook = Book(book) {
-    hide(draft, Book::authorIds)
+    hide(draft, BookDraft::authorIds)
 }
 ```
 

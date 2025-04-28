@@ -261,6 +261,17 @@ class BookStoreAvgPriceResolver(
     然而，当聚合函数`avg`和分组集合使用时，聚合函数不可能返回null，所以调用`asNonNull`得到非null的表达式。
     :::
 
+    :::caution
+    为保证系统架构的清晰性与查询性能，当前在 Resolver 中禁止直接使用对象抓取器（Fetcher）进行查询操作。
+
+    主要原因如下：
+
+        ❶ 上下文依赖问题：Fetcher 在处理计算属性时依赖 Resolver，如果 Resolver 反过来使用 Fetcher，容易导致复杂的上下文循环依赖，增加维护成本与出错风险。
+
+        ❷ 性能风险：在 Resolver 中通过 Fetcher 进行对象抓取，容易引发低效的查询模式，严重影响整体性能。
+
+    基于以上考量，暂不计划在短期内支持在 Resolver 中使用 Fetcher。
+
 ### 定义`avgPrice`
 
 现在，`BookStoreAvgPriceResolver`类已经完善，我们可以为`BookStore`实体添加计算属性`avgPrice`了。
@@ -708,6 +719,18 @@ class BookStoreNewestBooksResolver(
 -   ❹ 按照书籍名称分组，同名书籍必然属于同一组。
 
 -   ❺ 对每一组内部的同名书籍，查找`edition`的最大值。
+
+    :::caution
+    为保证系统架构的清晰性与查询性能，当前在 Resolver 中禁止直接使用对象抓取器（Fetcher）进行查询操作。
+
+    主要原因如下：
+
+        ❶ 上下文依赖问题：Fetcher 在处理计算属性时依赖 Resolver，如果 Resolver 反过来使用 Fetcher，容易导致复杂的上下文循环依赖，增加维护成本与出错风险。
+
+        ❷ 性能风险：在 Resolver 中通过 Fetcher 进行对象抓取，容易引发低效的查询模式，严重影响整体性能。
+
+    基于以上考量，暂不计划在短期内支持在 Resolver 中使用 Fetcher。
+
 
 ### 定义`newestBooks`
 

@@ -261,7 +261,19 @@ class BookStoreAvgPriceResolver(
     
     However, when the aggregate function `avg` is used with group, it cannot return null. So `asNonNull()` is called to get a non-null expression.
     :::
-        
+
+    :::caution
+    To ensure architectural clarity and maintain optimal query performance, the use of Object Fetcher inside Resolver is currently not supported.
+
+    The rationale for this decision includes:
+
+    ❶ Context Dependency Complexity: Fetcher depend on Resolver to retrieve computed properties. Allowing Resolver to depend on Fetcher in return would create complex cyclic dependencies, significantly increasing maintenance difficulty and the risk of errors.
+
+    ❷ Performance Considerations: Query data via Fetcher inside Resolver can easily lead to inefficient query patterns, resulting in severe performance degradation.
+
+    Considering the complexity of resolving these issues and the potential risks involved, there are no plans to support the use of Fetcher inside Resolver in the near term.
+    :::
+
 ### Define `avgPrice`
 
 Now that the `BookStoreAvgPriceResolver` class is complete, we can add the calculation property `avgPrice` to the `BookStore` entity:
@@ -707,6 +719,17 @@ class BookStoreNewestBooksResolver(
 -   ❹ Group by book name, so books of the same name must belong to the same group.  
 
 -   ❺ For each group of books with the same name, find the maximum `edition`.
+    :::caution
+    To ensure architectural clarity and maintain optimal query performance, the use of Object Fetcher inside Resolver is currently not supported.
+
+    The rationale for this decision includes:
+
+    ❶ Context Dependency Complexity: Fetcher depend on Resolver to retrieve computed properties. Allowing Resolver to depend on Fetcher in return would create complex cyclic dependencies, significantly increasing maintenance difficulty and the risk of errors.
+
+    ❷ Performance Considerations: Query data via Fetcher inside Resolver can easily lead to inefficient query patterns, resulting in severe performance degradation.
+
+    Considering the complexity of resolving these issues and the potential risks involved, there are no plans to support the use of Fetcher inside Resolver in the near term.
+    :::
 
 ### Define `newestBooks`
 

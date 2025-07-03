@@ -283,7 +283,7 @@ Nullable LocalDateTime
 ```java
 @Nullable
 @LogicalDeleted("now")
-UUID deletedTime();
+LocalDateTime deletedTime();
 ```
 
 </TabItem>
@@ -309,7 +309,7 @@ val deletedTime: LocalDateTime?
 ```java
 @Nullable
 @LogicalDeleted("null")
-UUID createdTime();
+LocalDateTime createdTime();
 ```
 
 </TabItem>

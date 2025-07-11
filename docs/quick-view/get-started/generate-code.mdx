@@ -7,6 +7,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import {GeneratedJava, GeneratedKt, Generated} from '@site/src/components/Image';
 import Precompiler from '../../_shared/precompiler.mdx';
+import { VersionBadgeAdmonition } from '@site/src/components/VersionBadgeAdmonition';
 
 ## Code Generation
 
@@ -36,6 +37,8 @@ Jimmer data types require one of:
 The first is ORM-agnostic, the others are ORM-related.
 
 If entities use the ORM annotations *(eg: @Entity)*, the generated code requires `jimmer-sql` while entity code itself only needs `jimmer-core`:
+
+<VersionBadgeAdmonition />
 
 <Tabs groupId="buildTool">
 

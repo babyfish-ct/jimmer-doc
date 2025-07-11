@@ -7,6 +7,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import { ShortAssociation } from '@site/src/components/ShortAssociation';
 import { ViewMore } from '@site/src/components/ViewMore';
+import { VersionBadgeAdmonition } from '@site/src/components/VersionBadgeAdmonition';
 
 ## Introduction
 
@@ -76,6 +77,8 @@ You can use either Jimmer's standard build method, or use plugins provided by th
 
 -   Method 1: Use Jimmer's standard build method
 
+    <VersionBadgeAdmonition />
+
     <Tabs groupId="buildTool">
     <TabItem value="java_maven" label="Java(Maven)">
 
@@ -132,7 +135,7 @@ You can use either Jimmer's standard build method, or use plugins provided by th
 
     ```groovy title="build.gradle"
     dependencies {
-        
+
         implementation "org.projectlombok:lombok:${lombok.version}" ➀
         implementation "org.mapstruct:mapstruct:${mapstructVersion}" ➊
 
@@ -156,7 +159,7 @@ You can use either Jimmer's standard build method, or use plugins provided by th
     }
 
     dependencies {
-        
+
         implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
 
         ksp("org.babyfish.jimmer:jimmer-ksp:${jimmerVersion}") ➋
@@ -203,7 +206,7 @@ You can use either Jimmer's standard build method, or use plugins provided by th
 
         annotationProcessor "org.projectlombok:lombok:${lombok.version}" ➁
         annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}" ➍
-        
+
         // there's no need to add org.babyfish.jimmer:jimmer-apt to dependencies manually
         // when mapstruct-processor dependency is detected，the gradle plugin will add jimmer-apt to dependencies automatically
 
@@ -230,7 +233,7 @@ You can use either Jimmer's standard build method, or use plugins provided by th
     }
 
     dependencies {
-        
+
         implementation("org.mapstruct:mapstruct:${mapstructVersion}") ➊
         kapt("org.mapstruct:mapstruct-processor:${mapstructVersion}") ➌
 
@@ -352,14 +355,14 @@ Three properties of this POJO need to be explained:
 -   `BookInput.storeId` 
 
     This is obviously an associated id for the dynamic entity object property `Book.store`. 
-    
+
     This kind of dynamic object property is defined as an associated object, but in the POJO it is defined as an associated id, 
     called a <ViewMore buttonText="short association"><ShortAssociation/></ViewMore>.
 
 -   `BookInput.authorIds` 
-    
+
     This is obviously a collection of associated ids, for the dynamic entity object property `Book.authors`. 
-    
+
     This kind of dynamic object property is defined as an associated objects, but in the POJO it is defined as an associated ids, 
     called a <ViewMore buttonText="short association"><ShortAssociation/></ViewMore>.
 

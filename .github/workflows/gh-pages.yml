@@ -20,8 +20,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm install -g yarn
-      - run: yarn install
+          cache: 'yarn'
+
+      - run: yarn install --frozen-lockfile
       - run: yarn build
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4

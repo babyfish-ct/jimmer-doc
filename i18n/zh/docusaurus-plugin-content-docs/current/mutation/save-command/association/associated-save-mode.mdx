@@ -149,7 +149,7 @@ Jimmer的API设计让用户只能选者其中一种方法，不会导致导致�
 
     ```kotlin
     val book = Book { ...略... }
-    sqlCient.save(book, AssociatedSaveMode.MERGE);
+    sqlClient.save(book, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -170,7 +170,7 @@ Jimmer的API设计让用户只能选者其中一种方法，不会导致导致�
 
     ```kotlin
     val books = listOf<Book>(...略...)
-    sqlCient.saveEntities(books, AssociatedSaveMode.MERGE);
+    sqlClient.saveEntities(books, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -191,7 +191,7 @@ Jimmer的API设计让用户只能选者其中一种方法，不会导致导致�
 
     ```kotlin
     val inputs = listOf<BookInput>(...略...)
-    sqlCient.saveInputs(inputs, AssociatedSaveMode.MERGE);
+    sqlClient.saveInputs(inputs, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -226,7 +226,7 @@ Jimmer的API设计让用户只能选者其中一种方法，不会导致导致�
 
     ```kotlin
     val book = Book { ...略... }
-    sqlCient.insert(book, AssociatedSaveMode.MERGE);
+    sqlClient.insert(book, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -247,7 +247,7 @@ Jimmer的API设计让用户只能选者其中一种方法，不会导致导致�
 
     ```kotlin
     val books = listOf<Book>(...略...)
-    sqlCient.insertEntities(books, AssociatedSaveMode.MERGE);
+    sqlClient.insertEntities(books, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -268,7 +268,7 @@ Jimmer的API设计让用户只能选者其中一种方法，不会导致导致�
 
     ```kotlin
     val inputs = listOf<BookInput>(...略...)
-    sqlCient.insertInputs(inputs, AssociatedSaveMode.MERGE);
+    sqlClient.insertInputs(inputs, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -300,7 +300,7 @@ Jimmer的API设计让用户只能选者其中一种方法，不会导致导致�
 
     ```kotlin
     val book = Book { ...略... }
-    sqlCient.save(book) {
+    sqlClient.save(book) {
         // highlight-next-line
         setAssociatedMode(
             Book::authors,
@@ -343,7 +343,7 @@ Jimmer的API设计让用户只能选者其中一种方法，不会导致导致�
 
     ```kotlin
     val book = Book { ...略... }
-    sqlCient.save(book) {
+    sqlClient.save(book) {
         // highlight-next-line
         setAssociatedModeAll(
             AssociatedSaveMode.MERGE

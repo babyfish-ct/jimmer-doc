@@ -220,7 +220,7 @@ Jimmer doesn't have similar configurations. The specific behavior depends on the
         name = "AMAZON"
         website = "https://www.amazon.com"
     }
-    sqlCient.save(store)
+    sqlClient.save(store)
     ```
 
     </TabItem>
@@ -273,7 +273,7 @@ Jimmer doesn't have similar configurations. The specific behavior depends on the
         }
     }
 
-    sqlCient.save(store)
+    sqlClient.save(store)
     ```
 
     </TabItem>
@@ -316,7 +316,7 @@ In Jimmer, you can freely manipulate bidirectional associations according to you
         draft.addIntoAuthors(author -> author.setId(12L));
     })
 
-    sqlCient.save(book);
+    sqlClient.save(book);
     ```
 
     </TabItem>
@@ -332,7 +332,7 @@ In Jimmer, you can freely manipulate bidirectional associations according to you
         authors().addBy { id = 12L }
     }
 
-    sqlCient.save(book);
+    sqlClient.save(book);
     ```
 
     </TabItem>
@@ -375,7 +375,7 @@ In Jimmer, you can freely manipulate bidirectional associations according to you
         books().addBy { id = 45L }
     }
     
-    sqlCient.save(author)
+    sqlClient.save(author)
     ```
 
     </TabItem>
@@ -430,7 +430,7 @@ At the same time, this class can automatically transform into `BookStore` entity
 public void saveBookStore(
     @RequestBody BookStoreInput input
 ) {
-    sqlCient.save(input);
+    sqlClient.save(input);
 }
 ```
 
@@ -442,7 +442,7 @@ public void saveBookStore(
 fun saveBookStore(
     @RequestBody input: BookStoreInput
 ) {
-    sqlCient.save(input);
+    sqlClient.save(input);
 }
 ```
 

@@ -348,26 +348,30 @@ BaseQuery投影查询的的API却不允许这样查询。
 
 ```sql
 select 
+    --highlight-start
     c1, 
     c2,
     c3,
     ...,
-    cN
+    cM
+    --highlight-end
 from (
     select 
+        --highlight-start
         c1,
         c2,
         c3,
         ...,
-        cN,
+        cM,
         ...,
-        CM
+        CN
+        --highlight-end
     from real_table
 ) derived_table
 ```
 > 其中，N &lt;= M
 
-我们先决定内部base query的返回列集合 `(c1, c2, ..., CM)`，然后在选择其中的一个子集合 `(c1, c2, ..., CN)` *(N &lt;= M)*，让外部真实查询返回。
+我们先决定内部base query的返回列集合 `(c1, c2, ..., cN)`，然后在选择其中的一个子集合 `(c1, c2, ..., cM)` *(M &lt;= N)*，让外部真实查询返回。
 
 很明显，这是一个自内向外的投影传播过程，内部查询的投影和外部查询的投影包含大量的重复列，这是一件非常繁琐且容易出错的事。
 在列的数量较多的时候，这对开发、重构和维护极为不利。不幸的是，实际项目几乎总是如此。

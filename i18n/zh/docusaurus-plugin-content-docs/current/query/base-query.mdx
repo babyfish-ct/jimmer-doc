@@ -271,7 +271,7 @@ where
 
 而如下方式是不被允许的
 
--   使用[对象抓取器](./object-fetcher/)的对象查询
+-   <span style={{textDecoration:"line-through"}}>禁止使用[对象抓取器](./object-fetcher/)的对象查询</span>
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -313,7 +313,7 @@ where
     </TabItem>
     </Tabs>
 
--   返回[Output DTO](./object-fetcher/dto)
+-   <span style={{textDecoration:"line-through"}}>禁止返回[Output DTO](./object-fetcher/dto)</span>
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -1678,7 +1678,7 @@ where
     tb_1_.c6 = ? /* 1 */
 ```
 
-## Recusive-CTE
+## Recursive-CTE
 
 SQL的CTE有一个非常重要的功能，就是在利用union all操作构建base-query时
 
@@ -1775,7 +1775,7 @@ val tuples = sqlClient.createQuery(baseTable) {
 生成如下SQL
 
 ```sql
-with tb_1_(c1, c2, c3) as (
+with recursive tb_1_(c1, c2, c3) as (
         select
             tb_2_.ID,
             tb_2_.NAME,
@@ -1788,7 +1788,7 @@ with tb_1_(c1, c2, c3) as (
         select
             tb_4_.ID,
             tb_4_.NAME,
-            tb_1_.c3 + ? /* 1 */
+            tb_1_.c3 + 1
         from TREE_NODE tb_4_
         -- highlight-next-line
         inner join tb_1_

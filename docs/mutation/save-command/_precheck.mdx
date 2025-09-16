@@ -33,7 +33,7 @@ public void addBookStore(String name) {
 ```kotlin
 fun addBookStore(name: String) {
 
-    val exists = sqlCient.createQuery(BookStore::class) {
+    val exists = sqlClient.createQuery(BookStore::class) {
         where(table.name eq name)
         select(table)
     }.exists()
@@ -45,7 +45,7 @@ fun addBookStore(name: String) {
         )
     }
 
-    sqlCient.insert(
+    sqlClient.insert(
         BookStore {
             name = name
         }

@@ -916,8 +916,7 @@ Finally, let's show how to implement the `translate` method
 
     ```java
     @Component
-    public class NotUniqueExceptionTranslator
-    extends ExceptionTranslator<SaveException.NotUnique> {
+    public class NotUniqueExceptionTranslator implements ExceptionTranslator<SaveException.NotUnique> {
         
         @Override
         public @Nullable Exception translate(
@@ -994,8 +993,7 @@ Finally, let's show how to implement the `translate` method
 
     ```java
     @Component
-    public class IllegalTargetIdExceptionTranslator
-    extends ExceptionTranslator<SaveException.IllegalTargetId> {
+    public class IllegalTargetIdExceptionTranslator implements ExceptionTranslator<SaveException.IllegalTargetId> {
         
         @Override
         public @Nullable Exception translate(

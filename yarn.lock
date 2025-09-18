@@ -2184,11 +2184,7 @@
 
 "@easyops-cn/docusaurus-search-local@^0.46.1":
   version "0.46.1"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/@easyops-cn/docusaurus-search-local/-/docusaurus-search-local-0.46.1.tgz#7fac1a14417de680b5af7088814192a153d7334d"
-=======
   resolved "https://registry.npmmirror.com/@easyops-cn/docusaurus-search-local/-/docusaurus-search-local-0.46.1.tgz#7fac1a14417de680b5af7088814192a153d7334d"
->>>>>>> 80e7f8002ed39a2695b6cd492e48a984a2715ef9
   integrity sha512-kgenn5+pctVlJg8s1FOAm9KuZLRZvkBTMMGJvTTcvNTmnFIHVVYzYfA2Eg+yVefzsC8/cSZGKKJ0kLf8I+mQyw==
   dependencies:
     "@docusaurus/plugin-content-docs" "^2 || ^3"
@@ -4146,11 +4142,7 @@ combine-promises@^1.1.0:
 
 comlink@^4.4.2:
   version "4.4.2"
-<<<<<<< HEAD
-  resolved "https://registry.yarnpkg.com/comlink/-/comlink-4.4.2.tgz#cbbcd82742fbebc06489c28a183eedc5c60a2bca"
-=======
   resolved "https://registry.npmmirror.com/comlink/-/comlink-4.4.2.tgz#cbbcd82742fbebc06489c28a183eedc5c60a2bca"
->>>>>>> 80e7f8002ed39a2695b6cd492e48a984a2715ef9
   integrity sha512-OxGdvBmJuNKSCMO4NTl1L47VRp6xn2wG4F/2hYzB6tiCb709otOxtEYCSvK80PtjODfXXZu8ds+Nw5kVCjqd2g==
 
 comma-separated-tokens@^2.0.0:

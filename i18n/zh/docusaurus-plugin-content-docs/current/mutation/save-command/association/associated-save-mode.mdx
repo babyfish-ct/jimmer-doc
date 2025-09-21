@@ -1135,7 +1135,7 @@ sqlClient.saveEntities(
 
 `MERGE`模式对关联对象`INSERT`或`UPDATE`操作，所以，保存执行后，关联对象的数量要么不变，要么变多，但不可能变少。
 
-`REPLACE`模式不再有次特性，因为`REPLACE`在`MERGE`的基础上，对不再需要的关联对象进行脱钩操作。
+`REPLACE`模式不再有此特性，因为`REPLACE`在`MERGE`的基础上，对不再需要的关联对象进行脱钩操作。
 
 脱钩操作会去除当前对象不再需要的关联，例如
 

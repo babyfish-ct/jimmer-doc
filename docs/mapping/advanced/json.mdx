@@ -155,7 +155,7 @@ JSqlClient sqlClient = JSqlClient
     .newBuilder()
     .setDefaultSerializedTypeObjectMapper(mapper1) ❶
     .setSerializedTypeObjectMapper(MetaConfig.class, mapper2) ❷
-    .setSerializedTypePropMapper(TopicProps.TAGS, mapper3) ❸
+    .setSerializedPropObjectMapper(TopicProps.TAGS, mapper3) ❸
     ...Omit other configurations...
     .build();
 ```
@@ -170,7 +170,7 @@ val mapper3: ObjectMapper = ...omitted...
 val sqlClient = newKSqlClient {
     setDefaultSerializedTypeObjectMapper(mapper1) ❶
     setSerializedTypeObjectMapper(MetaConfig::class, mapper2) ❷
-    setSerializedTypePropMapper(Topic::tags, mapper3) ❸
+    setSerializedPropObjectMapper(Topic::tags, mapper3) ❸
     ...Omit other configurations...
 }
 ```
@@ -207,7 +207,7 @@ public class SerializationCustomizer implements Customizer {
         builder
             .setDefaultSerializedTypeObjectMapper(...omitted...)
             .setSerializedTypeObjectMapper(MetaConfig.class, ...omitted...)
-            .setSerializedTypePropMapper(TopicProps.TAGS, ...omitted...); 
+            .setSerializedPropObjectMapper(TopicProps.TAGS, ...omitted...); 
     }
 }
 ```
@@ -224,7 +224,7 @@ class SerializationCustomizer : KCustomizer {
         dsl
             .setDefaultSerializedTypeObjectMapper(...omitted...)
             .setSerializedTypeObjectMapper(MetaConfig::class, ...omitted...)
-            .setSerializedTypePropMapper(Topic::tags, ...omitted...);
+            .setSerializedPropObjectMapper(Topic::tags, ...omitted...);
     }
 }
 ```

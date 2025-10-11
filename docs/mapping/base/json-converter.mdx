@@ -29,7 +29,7 @@ Snowflake IDs lead to very large int64 values that unfortunately cannot be repre
 
 ```java 
 @Entity
-@public interface Book {
+public interface Book {
 
     @Id 
     @GeneratedValue(generatorType = SnowflakeIdGenerator.class)
@@ -48,15 +48,15 @@ Snowflake IDs lead to very large int64 values that unfortunately cannot be repre
 
 ```kotlin
 @Entity 
-@public interface Book {
+interface Book {
 
     @Id
-    @GeneratedValue(generatorType = SnowflakeIdGenerator.class) 
+    @GeneratedValue(generatorType = SnowflakeIdGenerator::class) 
     // highlight-next-line
-    @JsonConverter(LongToStringConverter.class)
-    long id();
+    @JsonConverter(LongToStringConverter::class)
+    val id: Long
 
-    String name();
+    val name: String
 
     ...Omit other properties... 
 }

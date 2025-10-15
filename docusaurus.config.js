@@ -8,7 +8,6 @@ const config = {
   title: 'Jimmer, the most advanced ORM of JVM',
   tagline: 'Supports both java & kotlin',
   url: 'https://github.com',
-  baseUrl: '/jimmer-doc/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
   onBrokenAnchors: 'throw',

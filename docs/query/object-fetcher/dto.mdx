@@ -32,14 +32,15 @@ Assuming the fully qualified name of the `Book` class is `com.yourcompany.yourpr
 
 1.  **In the project where the entity is defined**, create the directory `src/main/dto`
 
-2.  Under `src/main/dto`, create subdirectories following the package path of the entity type `com/yourcompany/yourproject/model` 
+2.  Under `src/main/dto`, create a file `Book.dto`.
 
-3.  In the directory created in the previous step, create a file `Book.dto`. The file name must match the entity class name, and the extension must be `dto`
+3.  Edit this file, use the DTO language to define various DTO shapes for the Book entity
 
-4.  Edit this file, use the DTO language to define various DTO shapes for the Book entity
+    ```js title="Book.dto" 
+    export com.yourcompany.yourproject.model.Book 
+        -> package com.yourcompany.yourproject.model.dto
 
-    ```sh title="Book.dto" 
-    # highlight-next-line
+    // highlight-next-line
     BookDetailView {
         
         #allScalars
@@ -216,14 +217,14 @@ println(view)
 
 The printed result is as follows *(formatted manually for readability)*:
 
-```sh
-# highlight-next-line  
+```js
+// highlight-next-line  
 BookDetailView(
     id=1,
     name=Learning GraphQL,
     edition=1,
     price=50.00,
-    # highlight-next-line
+    // highlight-next-line
     store=BookDetailView.TargetOf_store(
         id=1,
         name=O'REILLY,
@@ -231,14 +232,14 @@ BookDetailView(
         version=0
     ),
     authors=[
-        # highlight-next-line
+        // highlight-next-line
         BookDetailView.TargetOf_authors(
             id=2,
             firstName=Alex,
             lastName=Banks,
             gender=MALE  
         ),
-        # highlight-next-line 
+        // highlight-next-line 
         BookDetailView.TargetOf_authors(
             id=1,
             firstName=Eve,
@@ -442,3 +443,292 @@ Here we see that `table.fetch(fetcher)` in previous code is replaced with `table
 :::tip
 All low-level query APIs can replace `fetcher` with `viewType`, again proving that the DTO language is essentially another way to express object fetchers, as stated at the beginning.
 :::
+
+## Association Property Specific Configurations
+
+:::note
+Jimmer DTOs are divided into three types:
+
+1.  Output DTO
+2.  Input DTO
+3.  Specification DTO
+
+The DTOs discussed in this article are used to define object fetchers and map their query results to static objects, which belong to the Output DTO category.
+
+Therefore, the configurations introduced in this section are specific to Output DTOs.
+:::
+
+In [Object Fetcher/Association Properties](./association), we introduced some specific configurations for association properties:
+
+1. BatchSize
+2. Association-level pagination
+3. Property filters
+4. Reference fetching methods
+
+In [Object Fetcher/Recursive Queries](./recursive), we introduced:
+
+1. Limit recursion depth
+2. Controlling whether each node is recursive
+
+Similarly, as a more type-oriented representation of type fetchers, Output DTOs also have these configurations.
+
+### BatchSize
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !batch(2)
+    authors {
+        #allScalars
+    }
+}
+```
+
+### Association-level Pagination
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !limit(10, 90) // limit: 10, offset: 90
+    authors {
+        #allScalars
+    }
+}
+```
+
+Or
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !limit(10) // limit: 10, offset: 0
+    authors {
+        #allScalars
+    }
+}
+```
+
+### Property Filters
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-start
+    !where(firstName ilike '%a%' or lastName ilike '%a%')
+    !orderBy(firstName asc, lastName asc)
+    // highlight-end
+    authors {
+        #allScalars
+    }
+}
+```
+
+To limit the complexity of the DTO language, `!where` and `!orderBy` intentionally restrict the syntax complexity. Taking the conditional expressions in `!where` as an example:
+
+1.  Supports `and` and `or`, as well as changing operator precedence through `()`.
+2.  Variables must be properties in the associated entity *(in this example, `Author`)* that can be mapped to database columns, i.e., scalar properties and association IDs.
+    > If the property is a [composite field](../../mapping/advanced/embedded), you can use the `.` chain to reference internal properties, such as `fullName.firstName`.
+3.  Supports binary operators `=`, `<>`, `!=`, `<`, `<=`, `>`, `>=`, `like`, and `ilike`, where `<>` and `!=` are equivalent.
+4.  Supports unary operators `is null` and `is not null`.
+
+Obviously, the design purpose is to control the complexity of the DTO language. If you need to write arbitrarily complex filtering and sorting, please use `!filter` as follows:
+
+1.  First, create a new class.
+
+    -   For Java, implement the `org.babyfish.jimmer.sql.fetcher.FieldFilter<T>` interface
+    -   For Kotlin, implement the `org.babyfish.jimmer.sql.kt.fetcher.KFieldFilter<E>` interface
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java title="AuthorFilter.java"
+    package com.yourcompany.yourpackage.strategy;
+
+    ...omitted import statements...
+
+    public class AuthorsPropFilter implements FieldFilter<AuthorTable> {
+
+        @Override
+        public void apply(FieldFilterArgs<AuthorTable> args) {
+            AuthorTable table = args.getTable();
+            args
+                .where(
+                        Predicate.or(
+                                table.firstName().ilike("a"),
+                                table.lastName().ilke("b")
+                        )
+                )
+                .orderBy(
+                        table.firstName(),
+                        table.lastName()
+                );
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin title="AuthorFilter"
+    package com.yourcompany.yourpackage.strategy
+
+    ...omitted import statements...
+
+    class AuthorsPropFilter : KFieldFilter<Author> {
+
+        override fun KFieldFilterDsl<Author>.applyTo() {
+            where(
+                or(
+                    table.firstName ilike "a",
+                    table.lastName ilike "a",
+                )
+            )
+            orderBy(
+                table.firstName,
+                table.lastName
+            )
+        }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    As you can see, this type allows us to use the full capability of the [Jimmer DSL](../expression) to implement arbitrarily complex filtering and sorting logic.
+
+2.  Use the above Java/Kotlin class in the DTO declaration
+
+    ```js title="Book.dto"
+    export com.yourcompany.yourproject.model.Book 
+        -> package com.yourcompany.yourproject.model.dto
+
+    // highlight-next-line
+    import com.yourcompany.yourpackage.strategy.AuthorsPropFilter
+
+    BookDetailView {
+
+        #allScalars
+
+        // highlight-next-line
+        !filter(AuthorsPropFilter)
+        authors {
+            #allScalars
+        }
+    }
+    ```
+
+### Reference Fetching Methods
+
+```js title="Book.dto"
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !fetchType(JOIN_ALWASY)
+    store {
+        #allScalars
+    }
+}
+```
+
+:::note
+Note: Just like object fetchers, fetch methods can only be specified for reference associations *(non-collection associations, `@ManyToOne` or `@OneToOne`)* properties
+:::
+
+### Limit recursion depth
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !depth(2)
+    childNodes*
+}
+```
+
+### Controlling Whether Each Node is Recursive
+
+1.  First, create a new class implementing the `org.babyfish.jimmer.sql.fetcher.RecursionStrategy<E>` interface
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java title="ChildNodesRecursionStrategy.java"
+    package com.yourcompany.yourpackage.strategy;
+
+    ...omitted import statements...
+
+    public class ChildNodesRecursionStrategy implements RecursionStrategy<TreeNode> {
+
+        @Override
+        public boolean isRecursive(Args<TreeNode> args) {
+            return !args.getEntity().name().equals("Clothing");
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin title="ChildNodesRecursionStrategy.kt"
+    package com.yourcompany.yourpackage.strategy
+
+    ...omitted import statements...
+    
+    class ChildNodesRecursionStrategy : RecursionStrategy<TreeNode> {
+        override fun isRecursive(args: RecursionStrategy.Args<TreeNode>): Boolean {
+            return args.entity.name != "Clothing"
+        }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+2.  Use the above Java/Kotlin class in the DTO declaration
+
+    ```js title="Book.dto"
+    export com.yourcompany.yourproject.model.Book 
+        -> package com.yourcompany.yourproject.model.dto
+
+    // highlight-next-line
+    import com.yourcompany.yourpackage.strategy.ChildNodesRecursionStrategy
+
+    BookDetailView {
+
+        #allScalars
+
+        // highlight-next-line
+        !recursion(ChildNodesRecursionStrategy)
+        childNodes*
+    }
+    ```

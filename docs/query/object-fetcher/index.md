@@ -30,15 +30,15 @@ Although the code to return entire objects in queries is simple, the default obj
 
     Object properties that we don't need are queried, causing waste, especially when there are many object fields.
 
-    Take JPA as an example. The returned object by default is a complete object that contains non-associative properties that are not needed. This is a big problem for traditional ORMs *(JPA's `@Basic(fetch = FetchType.LAZY)` is designed for LOB column, it cannot be used by any column)*.
+    Take JPA as an example. The returned object by default is a complete object that contains non-associative properties that may not all be needed. This is a big problem for traditional ORMs *(Althoug, in JPA `@Basic(fetch = FetchType.LAZY)` can be used to mitigate the issue)*.
 
 -   Under fetching problem
 
-    The object properties we need have not been fetched and are in an unavailable unloaded state, causing the program to fail to run correctly.
+    The object properties we need have not been fetched and are in an unavailable unloaded state, causing bugs.
 
 The object fetcher solves this problem very well by allowing users to specify properties to fetch, and then utilizing the characteristics of dynamic objects to make the returned objects from the query neither over fetched nor under fetched.
 
-By using the object fetcher, it is easy to specify the return format of queries, because dynamic objects can describe data structures of any shape. You can decide whether a certain business perspective needs to query some entities, associations, or even every properties.
+By using the object fetcher, it is easy to specify the return format of queries, because dynamic objects can describe data structures of any shape. You can decide whether a certain business perspective needs to query some entities, associations, or even every property.
 
 ## Examples 
 

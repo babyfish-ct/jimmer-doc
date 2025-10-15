@@ -1,0 +1,1841 @@
+---
+sidebar_position: 11
+title: Base-Query
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+Base-Query refers to the unified term for `Derived Table`, `CTE`, and `Recursive CTE` in SQL.
+
+Jimmer provides unified support for `Derived Table`, `CTE`, and `Recursive CTE` using strongly typed DSL.
+
+:::tip
+Unlike these concepts in SQL, Jimmer additionally provides a completely new and revolutionary feature: **Reverse Projection Propagation**.
+
+This is a completely new design philosophy and is the focus of this article.
+:::
+
+## Introduction to Derived Table
+
+A Derived Table uses a query as the base table for the `from` or `join` clause of other queries. For example:
+
+```sql
+select a, b, c 
+--highlight-start
+from (
+    select a, b, c, d from t where ....
+) derived_table
+--highlight-end
+where d between 1 and 10
+```
+
+Jimmer implements derived tables as follows:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable book = BookTable.$;
+AuthorTableEx author = AuthorTableEx.$;
+BaseTable2<BookTable, NumericExpression<Integer>> baseTable =
+    sqlClient
+        // highlight-next-line
+        .createBaseQuery(book)
+        .addSelect(book)
+        .addSelect(
+            Expression.numeric().sql(
+                Integer.class,
+                "dense_rank() over(" +
+                    "order by %e desc" +
+                    ")",
+                sqlClient.createSubQuery(author)
+                    .where(author.books().id().eq(book.id()))
+                    .selectCount()
+            )
+        )
+        // highlight-next-line
+        .asBaseTable();
+List<Book> books =
+    sqlClient
+        // highlight-next-line
+        .createQuery(baseTable)
+        .where(baseTable.get_2().eq(1))
+        .select(baseTable.get_1())
+        .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val baseTable = 
+    // highlight-next-line
+    baseTableSymbol {
+        // highlight-next-line
+        sqlClient.createBaseQuery(Book::class) {
+            selections
+                .add(table)
+                .add(
+                    sql(Int::class, "dense_rank() over(order by %e desc)") {
+                        expression(
+                            subQuery(Author::class) {
+                                where(table.books.id eq parentTable.id)
+                                select(rowCount())
+                            }
+                        )
+                    }
+                )
+        }
+    }
+val books = 
+    // highlight-next-line
+    sqlClient.createQuery(baseTable) {
+        where(table._2 eq 1)
+        select(table._1)
+    }.execute()
+```
+
+</TabItem>
+</Tabs>
+
+For this example:
+
+-   Unlike queries created by `createQuery`, base queries created by `createBaseQuery` are not executed directly. Their purpose is only to build derived tables for subsequent use by real queries created with `createQuery` *(as base tables for `from` or `join`)*.
+
+-   The internal base-query returns two columns *(the first column is a table object, the second column is a simple expression)*. The external query uses `get_1()`/`_1` and `get_2()`/`_2` to use them.
+
+    > Base-queries support returning 1-9 columns
+
+-   Unlike `createQuery` and `createSubQuery` *(which haven't been introduced yet but will appear in later chapters)*, `createBaseQuery` does not use the `select(selection1, selection2, ..., selectionN)` method to specify projections, but instead:
+
+    -   Java uses `.addSelect(...).addSelect(...)...addSelect(...)` style code to specify projections
+
+    -   Kotlin uses `selections.add(...).add(...)...add(...)` style code to specify projections
+
+    :::info
+    -   Chain programming style must be adopted, and syntax cannot be interrupted at the language level to ensure successful compilation
+    -   Base-query uses special projection specification methods to implement the important feature that will be introduced later: **Reverse Projection Propagation**. Please ignore the intention of this design for now.
+    :::
+
+This query generates the following SQL:
+
+```sql
+select
+    tb_1_.c1,
+    tb_1_.c2,
+    tb_1_.c3,
+    tb_1_.c4,
+    tb_1_.c5 
+--highlight-next-line
+from (
+    select
+        tb_2_.ID c1,
+        tb_2_.NAME c2,
+        tb_2_.EDITION c3,
+        tb_2_.PRICE c4,
+        tb_2_.STORE_ID c5,
+        dense_rank() over(order by (
+            select
+                count(1)
+            from AUTHOR tb_3_
+            inner join BOOK_AUTHOR_MAPPING tb_4_
+                on tb_3_.ID = tb_4_.AUTHOR_ID
+            where
+                tb_4_.BOOK_ID = tb_2_.ID
+        ) desc) c6
+    from BOOK tb_2_
+) tb_1_
+where
+    tb_1_.c6 = ? /* 1 */
+```
+
+The result is:
+
+```json
+[
+    {
+        "id": 1,
+        "name": "Learning GraphQL",
+        "edition": 1,
+        "price": 50,
+        "store": {
+            "id": 1
+        }
+    },
+    {
+        "id": 2,
+        "name": "Learning GraphQL",
+        "edition": 2,
+        "price": 55,
+        "store": {
+            "id": 1
+        }
+    },
+    {
+        "id": 3,
+        "name": "Learning GraphQL",
+        "edition": 3,
+        "price": 51,
+        "store": {
+            "id": 1
+        }
+    }
+]
+```
+
+## Reverse Projection Propagation
+
+### Unique Projection Column Settings for BaseQuery
+
+As mentioned above:
+
+>   Unlike `createQuery` and `createSubQuery` *(which haven't been introduced yet but will appear in later chapters)*, `createBaseQuery` does not use the `select(selection1, selection2, ..., selectionN)` method to specify projections, but instead:
+>
+>   -   Java uses `.addSelect(...).addSelect(...)...addSelect(...)` style code to specify projections
+>
+>   -   Kotlin uses `selections.add(...).add(...)...add(...)` style code to specify projections
+
+:::caution
+Chain programming style must be adopted, and syntax cannot be interrupted at the language level to ensure successful compilation.
+:::
+
+`createBaseQuery` is designed this way to allow only the following two operations:
+
+1.  Query simple expressions
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    .addSelect(
+        Expression.concat(
+            table.firstName(), 
+            Expression.constant(" "), 
+            table.lastName()
+        )
+    )
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    selections.add(
+        concat(
+            table.firstName,
+            constant(" "),
+            table.lastName
+        )
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   Query table objects
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    .addSelect(table)
+    .addSelect(table.store())
+    .addSelect(table.asTableEx().authors())
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    selections
+        .add(table)
+        .add(table.store)
+        .add(table.asTableEx().authors)
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    :::info
+    That is:
+    1.  Either return simple expressions
+    2.  Or return objects *(unkown shape)*
+    
+    Among these, returning table objects with unknown shapes *(2)* is what reverse projection propagation is concerned with and is the focus of this chapter.
+
+    > Note: You cannot apply [Object Fetchers](./object-fetcher/) to returned table objects, or return [Output DTOs](./object-fetcher/dto).
+    :::
+
+The following approaches are not allowed:
+
+-   <span style={{textDecoration:"line-through"}}>Object queries using [Object Fetchers](./object-fetcher/) is prohibited</span>
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    // Note: This shows illegal code
+    .addSelect(
+        table.fetch(
+            BookFetcher.$
+                .allScalarFields()
+                .store(
+                    BookStoreFetcher.$.name()
+                )
+                .authors(
+                    AuthorFetcher.$.name()
+                )
+        )
+    )
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    // Note: This shows illegal code
+    selections.add(
+        table.fetchBy {
+            allScalarFields()
+            store {
+                name()
+            }
+            authors {
+                authors()
+            }
+        }
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+-   <span style={{textDecoration:"line-through"}}>Returning [Output DTOs](./object-fetcher/dto) is prohibited</span>
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    // Note: This shows illegal code
+    .addSelect(table.fetch(BookView.class))
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    // Note: This shows illegal code
+    selections.add(table.fetch(BookView::class))
+    ```
+
+    </TabItem>
+    </Tabs>
+
+:::info
+Object queries based on [Object Fetchers](./object-fetcher/)/[Output DTOs](./object-fetcher/dto) are one of Jimmer's core features, but BaseQuery projection query APIs do not allow such queries.
+
+This is not to prohibit using this capability; **quite the opposite**, this is to provide better abstraction and better use of [Object Fetchers](./object-fetcher/) and [Output DTOs](./object-fetcher/dto).
+:::
+
+### Introduction to Reverse Projection Propagation Mechanism
+
+In native SQL, queries based on derived tables are often like this:
+
+```sql
+select 
+    --highlight-start
+    c1, 
+    c2,
+    c3,
+    ...,
+    cM
+    --highlight-end
+from (
+    select 
+        --highlight-start
+        c1,
+        c2,
+        c3,
+        ...,
+        cM,
+        ...,
+        CN
+        --highlight-end
+    from real_table
+) derived_table
+```
+> Where M &lt;= N
+
+We first decide the return column set `(c1, c2, ..., cN)` for the internal base query, then select a subset `(c1, c2, ..., cM)` *(M &lt;= N)* for the external real query to return.
+
+Obviously, this is an inside-out projection propagation process. The projections of inner and outer queries contain many duplicate columns, which is very tedious and error-prone. When there are many columns, this is extremely unfavorable for development, refactoring, and maintenance. Unfortunately, real projects are almost always like this.
+
+:::tip
+Therefore, Jimmer adopts an **outside-in** reverse projection propagation mechanism:
+
+-   If the internal base-query returns objects, it must return original table objects and cannot use [Object Fetchers](./object-fetcher/) or [Output DTOs](./object-fetcher/dto), indicating that the shape of the returned objects is unknown.
+
+-   Finally, which specific columns the internal base-query should return is automatically determined based on the needs of the external query, without the need to explicitly specify them in the internal base-query.
+
+    Methods for external queries to control which specific columns the internal base-query should return include:
+    
+    -   [Object Fetchers](./object-fetcher/)
+    -   [Output DTO](./object-fetcher/dto) types
+    -   Column properties used in DSL
+    
+    Reverse projection propagation not only greatly simplifies complexity but also brings intelligent and practical features that native SQL does not have.
+:::
+
+Now, using [Object Fetchers](./object-fetcher/) as an example, let's write a function:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+private List<Book> findBooks(
+    // highlight-next-line
+    Fetcher<Book> fetcher
+) {
+    BookTable table = BookTable.$;
+    AuthorTableEx author = AuthorTableEx.$;
+    BaseTable2<BookTable, NumericExpression<Integer>> baseTable =
+        sqlClient
+            .createBaseQuery(table)
+            .addSelect(table)
+            .addSelect(
+                Expression.numeric().sql(
+                    Integer.class,
+                    "dense_rank() over(" +
+                        "order by %e desc" +
+                        ")",
+                    sqlClient.createSubQuery(author)
+                        .where(author.books().id().eq(table.id()))
+                        .selectCount()
+                )
+            )
+            .asBaseTable();
+    return sqlClient
+        .createQuery(baseTable)
+        .where(baseTable.get_2().eq(1))
+        .select(
+            baseTable.get_1().fetch(
+                // highlight-next-line
+                fetcher
+            )
+        )
+        .execute();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+private fun findBooks(
+    // highlight-next-line
+    fetcher: Fetcher<Book>
+): List<Book> {
+    val baseTable = baseTableSymbol {
+        sqlClient.createBaseQuery(Book::class) {
+            selections
+                .add(table)
+                .add(
+                    sql(Int::class, "dense_rank() over(order by %e desc)") {
+                        expression(
+                            subQuery(Author::class) {
+                                where(table.books.id eq parentTable.id)
+                                select(rowCount())
+                            }
+                        )
+                    }
+                )
+        }
+    }
+    return sqlClient.createQuery(baseTable) {
+        where(table._2 eq 1)
+        select(
+            table._1.fetch(
+                // highlight-next-line
+                fetcher
+            )
+        )
+    }.execute()
+}
+```
+
+</TabItem>
+</Tabs>
+
+Now let's look at 3 cases:
+
+-   Simple [Object Fetcher](./object-fetcher/)
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = findBooks(
+        BookFetcher.$
+            // highlight-next-line
+            .name()
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = findBooks(
+        newFetcher(Book::class).by {
+            // highlight-next-line
+            name()
+        }
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    Since the [Object Fetcher](./object-fetcher/) is simple, both inner and outer queries return fewer columns, generating the following SQL:
+
+    ```sql
+    select
+        tb_1_.c1,
+        --highlight-next-line
+        tb_1_.c2 
+    from (
+        select
+            tb_2_.ID c1,
+            --highlight-next-line
+            tb_2_.NAME c2,
+            dense_rank() over(order by (
+                select
+                    count(1)
+                from AUTHOR tb_3_
+                inner join BOOK_AUTHOR_MAPPING tb_4_
+                    on tb_3_.ID = tb_4_.AUTHOR_ID
+                where
+                    tb_4_.BOOK_ID = tb_2_.ID
+            ) desc) c3
+        from BOOK tb_2_
+    ) tb_1_
+    where
+        tb_1_.c3 = ? /* 1 */
+    ```
+
+    The query returns the following data:
+
+    ```json
+    [
+        {
+            "id": 1,
+            // highlight-next-line
+            "name": "Learning GraphQL"
+        },
+        {
+            "id": 2,
+            // highlight-next-line
+            "name": "Learning GraphQL"
+        },
+        {
+            "id": 3,
+            // highlight-next-line
+            "name": "Learning GraphQL"
+        }
+    ]
+    ```
+
+-   Moderately complex [Object Fetcher](./object-fetcher/)
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = findBooks(
+        BookFetcher.$
+            // highlight-next-line
+            .allScalarFields()
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = findBooks(
+        newFetcher(Book::class).by {
+            // highlight-next-line
+            allScalarFields()
+        }
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    Since the [Object Fetcher](./object-fetcher/) is relatively complex, both inner and outer queries return more columns, generating the following SQL:
+
+    ```sql
+    select
+        tb_1_.c1,
+        --highlight-start
+        tb_1_.c2,
+        tb_1_.c3,
+        tb_1_.c4 
+        --highlight-end
+    from (
+        select
+            tb_2_.ID c1,
+            --highlight-start
+            tb_2_.NAME c2,
+            tb_2_.EDITION c3,
+            tb_2_.PRICE c4,
+            --highlight-end
+            dense_rank() over(order by (
+                select
+                    count(1)
+                from AUTHOR tb_3_
+                inner join BOOK_AUTHOR_MAPPING tb_4_
+                    on tb_3_.ID = tb_4_.AUTHOR_ID
+                where
+                    tb_4_.BOOK_ID = tb_2_.ID
+            ) desc) c5
+        from BOOK tb_2_
+    ) tb_1_
+    where
+        tb_1_.c5 = ? /* 1 */
+    ```
+
+    The query returns the following data:
+
+    ```json
+    [
+        {
+            "id": 1,
+            // highlight-start
+            "name": "Learning GraphQL",
+            "edition": 1,
+            "price": 50
+            // highlight-end
+        },
+        {
+            "id": 2,
+            // highlight-start
+            "name": "Learning GraphQL",
+            "edition": 2,
+            "price": 55
+            // highlight-end
+        },
+        {
+            "id": 3,
+            // highlight-start
+            "name": "Learning GraphQL",
+            "edition": 3,
+            "price": 51
+            // highlight-end
+        }
+    ]
+    ```
+
+-   Complex [Object Fetcher](./object-fetcher/)
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = findBooks(
+        BookFetcher.$
+            .name()
+            // highlight-next-line
+            .store(
+                ReferenceFetchType.JOIN_ALWAYS,
+                BookStoreFetcher.$.name()
+            )
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = findBooks(
+        newFetcher(Book::class).by {
+            name()
+            // highlight-next-line
+            store(ReferenceFetchType.JOIN_ALWAYS) {
+                name()
+            }
+        }
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    Since the [Object Fetcher](./object-fetcher/) includes join fetch operations, the query naturally also fetches associated objects through joins, generating the following SQL:
+
+    ```sql
+    select
+        tb_1_.c1,
+        tb_1_.c2,
+        -- highlight-start
+        tb_6_.ID,
+        tb_6_.NAME 
+        -- highlight-end
+    from (
+        select
+            tb_2_.ID c1,
+            tb_2_.NAME c2,
+            tb_2_.STORE_ID c3,
+            dense_rank() over(order by (
+                select
+                    count(1)
+                from AUTHOR tb_3_
+                inner join BOOK_AUTHOR_MAPPING tb_4_
+                    on tb_3_.ID = tb_4_.AUTHOR_ID
+                where
+                    tb_4_.BOOK_ID = tb_2_.ID
+            ) desc) c4
+        from BOOK tb_2_
+    ) tb_1_
+    -- highlight-start
+    left join BOOK_STORE tb_6_
+        on tb_1_.c3 = tb_6_.ID
+    -- highlight-end
+    where
+        tb_1_.c4 >= ? /* 1 */
+    ```
+
+    The query returns the following data:
+
+    ```json
+    [
+        {
+            "id": 1,
+            "name": "Learning GraphQL",
+            // highlight-start
+            "store": {
+                "id": 1,
+                "name": "O'REILLY"
+            }
+            // highlight-end
+        },
+        {
+            "id": 2,
+            "name": "Learning GraphQL",
+            // highlight-start
+            "store": {
+                "id": 1,
+                "name": "O'REILLY"
+            }
+            // highlight-end
+        },
+        {
+            "id": 3,
+            "name": "Learning GraphQL",
+            // highlight-start
+            "store": {
+                "id": 1,
+                "name": "O'REILLY"
+            }
+            // highlight-end
+        }
+    ]
+    ```
+
+:::tip
+As you can see, reverse projection propagation means that the internal base-query does not directly control the format of returned table objects *(returning original table objects and treating them as having unknown shapes)*. The format of returned objects is uniformly controlled by external queries, and the internal base-query automatically determines which columns to return based on the needs of external queries.
+:::
+
+### Projection Propagation for Set Operations
+
+SQL supports set operations like `UNION`, `UNION ALL`, `INTERSECT`, and `MINUS`. Base-queries work the same way. Let's modify `findBooks` as follows:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+private List<Book> findBooks(
+    Fetcher<Book> fetcher
+) {
+    BookTable table = BookTable.$;
+    AuthorTableEx author = AuthorTableEx.$;
+    BaseTable2<BookTable, NumericExpression<Integer>> baseTable =
+        // highlight-next-line
+        TypedBaseQuery.unionAll(
+            sqlClient
+                .createBaseQuery(table)
+                // highlight-next-line
+                .where(table.edition().eq(2))
+                .addSelect(table)
+                .addSelect(
+                    Expression.numeric().sql(
+                        Integer.class,
+                        "dense_rank() over(" +
+                            "order by %e desc" +
+                            ")",
+                        sqlClient.createSubQuery(author)
+                            .where(author.books().id().eq(table.id()))
+                            .selectCount()
+                    )
+                ),
+            sqlClient
+                .createBaseQuery(table)
+                // highlight-next-line
+                .where(table.edition().eq(3))
+                .addSelect(table)
+                .addSelect(
+                    Expression.numeric().sql(
+                        Integer.class,
+                        "dense_rank() over(" +
+                            "order by %e desc" +
+                            ")",
+                        sqlClient.createSubQuery(author)
+                            .where(author.books().id().eq(table.id()))
+                            .selectCount()
+                    )
+                )
+        ).asBaseTable();
+    return sqlClient
+        .createQuery(baseTable)
+        .where(baseTable.get_2().eq(1))
+        .select(baseTable.get_1().fetch(fetcher))
+        .execute();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+private fun findBooks(
+    fetcher: Fetcher<Book>
+): List<Book> {
+    val baseTable = baseTableSymbol {
+        sqlClient.createBaseQuery(Book::class) {
+            // highlight-next-line
+            where(table.edition eq 2)
+            selections
+                .add(table)
+                .add(
+                    sql(Int::class, "dense_rank() over(order by %e desc)") {
+                        expression(
+                            subQuery(Author::class) {
+                                where(table.books.id eq parentTable.id)
+                                select(rowCount())
+                            }
+                        )
+                    }
+                )
+            // highlight-next-line
+        } unionAll
+        sqlClient.createBaseQuery(Book::class) {
+            // highlight-next-line
+            where(table.edition eq 3)
+            selections
+                .add(table)
+                .add(
+                    sql(Int::class, "dense_rank() over(order by %e desc)") {
+                        expression(
+                            subQuery(Author::class) {
+                                where(table.books.id eq parentTable.id)
+                                select(rowCount())
+                            }
+                        )
+                    }
+                )
+        }
+    }
+    return sqlClient.createQuery(baseTable) {
+        where(table._2 eq 1)
+        select(
+            table._1.fetch(fetcher)
+        )
+    }.execute()
+}
+```
+
+</TabItem>
+</Tabs>
+
+Now let's look at two cases:
+
+-   Simple [Object Fetcher](./object-fetcher/)
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = findBooks(
+        BookFetcher.$
+            // highlight-next-line
+            .name()
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = findBooks(
+        newFetcher(Book::class).by {
+            // highlight-next-line
+            name()
+        }
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    Since the [Object Fetcher](./object-fetcher/) is simple, both inner and outer queries return fewer columns, generating the following SQL:
+
+    ```sql
+    select
+        tb_1_.c1,
+        --highlight-next-line
+        tb_1_.c2 
+    from (
+            select
+                tb_2_.ID c1,
+                --highlight-next-line
+                tb_2_.NAME c2,
+                dense_rank() over(order by (
+                    select
+                        count(1)
+                    from AUTHOR tb_3_
+                    inner join BOOK_AUTHOR_MAPPING tb_4_
+                        on tb_3_.ID = tb_4_.AUTHOR_ID
+                    where
+                        tb_4_.BOOK_ID = tb_2_.ID
+                ) desc) c3
+            from BOOK tb_2_
+            where
+                tb_2_.EDITION = ? /* 2 */
+            union all
+            select
+                tb_6_.ID c1,
+                --highlight-next-line
+                tb_6_.NAME c2,
+                dense_rank() over(order by (
+                    select
+                        count(1)
+                    from AUTHOR tb_7_
+                    inner join BOOK_AUTHOR_MAPPING tb_8_
+                        on tb_7_.ID = tb_8_.AUTHOR_ID
+                    where
+                        tb_8_.BOOK_ID = tb_6_.ID
+                ) desc) c3
+            from BOOK tb_6_
+            where
+                tb_6_.EDITION = ? /* 3 */
+    ) tb_1_
+    where
+        tb_1_.c3 = ? /* 1 */
+    ```
+
+    The query returns the following data:
+
+    ```json
+    [
+        {
+            "id": 2,
+            // highlight-next-line
+            "name": "Learning GraphQL"
+        },
+        {
+            "id": 3,
+            // highlight-next-line
+            "name": "Learning GraphQL"
+        }
+    ]
+    ```
+
+-   Relatively complex [Object Fetcher](./object-fetcher/)
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = findBooks(
+        BookFetcher.$
+            // highlight-next-line
+            .allScalarFields()
+    );
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = findBooks(
+        newFetcher(Book::class).by {
+            // highlight-next-line
+            allScalarFields()
+        }
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    Since the [Object Fetcher](./object-fetcher/) is relatively complex, both inner and outer queries return more columns, generating the following SQL:
+
+    ```sql
+    select
+        tb_1_.c1,
+        --highlight-start
+        tb_1_.c2,
+        tb_1_.c3,
+        tb_1_.c4 
+        --highlight-end
+    from (
+            select
+                tb_2_.ID c1,
+                --highlight-start
+                tb_2_.NAME c2,
+                tb_2_.EDITION c3,
+                tb_2_.PRICE c4,
+                --highlight-end
+                dense_rank() over(order by (
+                    select
+                        count(1)
+                    from AUTHOR tb_3_
+                    inner join BOOK_AUTHOR_MAPPING tb_4_
+                        on tb_3_.ID = tb_4_.AUTHOR_ID
+                    where
+                        tb_4_.BOOK_ID = tb_2_.ID
+                ) desc) c5
+            from BOOK tb_2_
+            where
+                tb_2_.EDITION = ? /* 2 */
+            union all
+            select
+                tb_6_.ID c1,
+                --highlight-start
+                tb_6_.NAME c2,
+                tb_6_.EDITION c3,
+                tb_6_.PRICE c4,
+                --highlight-end
+                dense_rank() over(order by (
+                    select
+                        count(1)
+                    from AUTHOR tb_7_
+                    inner join BOOK_AUTHOR_MAPPING tb_8_
+                        on tb_7_.ID = tb_8_.AUTHOR_ID
+                    where
+                        tb_8_.BOOK_ID = tb_6_.ID
+                ) desc) c5
+            from BOOK tb_6_
+            where
+                tb_6_.EDITION = ? /* 3 */
+    ) tb_1_
+    where
+        tb_1_.c5 = ? /* 1 */
+    ```
+
+    The query returns the following data:
+
+    ```json
+    [
+        {
+            "id": 2,
+            // highlight-start
+            "name": "Learning GraphQL",
+            "edition": 2,
+            "price": 55
+            // highlight-end
+        },
+        {
+            "id": 3,
+            // highlight-start
+            "name": "Learning GraphQL",
+            "edition": 3,
+            "price": 51
+            // highlight-end
+        }
+    ]
+    ```
+
+:::tip
+In the reverse projection propagation process from outside to inside, if the base-query itself uses set operations *(`UNION`, `UNION ALL`, `INTERSECT`, or `MINUS`)*, this propagation process will split and affect each smaller base-query participating in the set operation.
+:::
+
+### Projection Column Merging
+
+In fact, [Object Fetcher](./object-fetcher/) and [Output DTO](./object-fetcher/dto) are not the only reasons causing projection reverse propagation.
+
+If a base-query returns a table object with unknown shape, and the outer query uses SQL DSL depending on some properties of that table object, it can also cause the projection reverse propagation mechanism.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+private List<Book> findBooks(
+    @Nullable String name, 
+    Fetcher<Book> fetcher
+) {
+    BookTable table = BookTable.$;
+    BaseTable1<BookTable> baseTable =
+        sqlClient
+            .createBaseQuery(table)
+            .where(table.edition().eq(3))
+            .addSelect(table)
+            .asBaseTable();
+    return sqlClient
+        .createQuery(baseTable)
+        .where(
+            // highlight-next-line
+            baseTable.get_1().name().eqIf(name)
+        )
+        .select(baseTable.get_1().fetch(fetcher))
+        .execute();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+private fun findBooks(
+    name: String?, 
+    fetcher: Fetcher<Book>
+): List<Book> {
+    val baseTable = baseTableSymbol {
+        sqlClient.createBaseQuery(Book::class) {
+            where(table.edition eq 3)
+            selections.add(table)
+        }
+    }
+    return sqlClient.createQuery(baseTable) {
+        where(
+            // highlight-next-line
+            table._1.name `eq?` name
+        )
+        select(table._1.fetch(fetcher))
+    }.execute()
+}
+```
+
+</TabItem>
+</Tabs>
+
+Let me observe two cases:
+
+1.  Does not trigger projection reverse propagation
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = findBooks(
+        null,
+        BookFetcher.$,
+    )
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = findBooks(
+        null, 
+        newFetcher(Book::class).by {  }
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    Here:
+    -   The name parameter is null, dynamic predicates *(Java's `eqIf` and Kotlin's `eq?`)* cause the outer query's where clause to be ignored
+    -   The [Object Fetcher](./object-fetcher/) parameter is too simple, only requiring `id-only` objects
+
+    Therefore, no projection requirements for non-id fields are reverse propagated to the base-query, and the final generated SQL statement is very simple
+
+    ```sql
+    select
+        tb_1_.c1 
+    from (
+        select
+            tb_2_.ID c1
+        from BOOK tb_2_
+        where
+            tb_2_.EDITION = ? /* 3 */
+    ) tb_1_
+    ```
+
+2.  The outer query adds a where condition triggering projection reverse propagation *(but not through [Object Fetcher](./object-fetcher/))*, causing the base-query to return the name column
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = findBooks(
+        // highlight-next-line
+        "GraphQL in Action",
+        BookFetcher.$,
+    )
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = findBooks(
+        // highlight-next-line
+        "GraphQL in Action", 
+        newFetcher(Book::class).by {  }
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    The generated SQL is as follows:
+
+    ```sql
+    select
+        tb_1_.c1 from (
+        select
+            tb_2_.ID c1,
+            -- highlight-next-line
+            tb_2_.NAME c2
+        from BOOK tb_2_
+        where
+            tb_2_.EDITION = ? /* 3 */
+    ) tb_1_
+    where
+        -- highlight-next-line
+        tb_1_.c2 = ? /* GraphQL in Action */
+    ```
+
+3.  The outer query:
+    -   Triggers projection reverse propagation through where conditions, requiring the internal base-query to return the name column
+    -   Also triggers projection reverse propagation through [Object Fetcher](./object-fetcher/), requiring the internal base-query to return the name column
+
+    The base-query will automatically **merge** both requirements, querying the name column only once
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    List<Book> books = findBooks(
+        // highlight-next-line
+        "GraphQL in Action",
+        // highlight-next-line
+        BookFetcher.$.name(),
+    )
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val books = findBooks(
+        // highlight-next-line
+        "GraphQL in Action", 
+        newFetcher(Book::class).by { 
+            // highlight-next-line
+            name()
+         }
+    )
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    The generated SQL is as follows:
+
+    ```sql
+    select
+        tb_1_.c1,
+        -- highlight-next-line
+        tb_1_.c2 // 1. Outer query fetches name
+    from (
+        select
+            tb_2_.ID c1,
+            -- highlight-next-line
+            tb_2_.NAME c2 // Finally, base-query only queries name once
+        from BOOK tb_2_
+        where
+            tb_2_.EDITION = ? /* 3 */
+    ) tb_1_
+    where
+        -- highlight-next-line
+        tb_1_.c2 = ? // 2. Outer query uses where condition to check name
+    ```
+
+    As can be seen, the outer query triggers projection reverse propagation through two different methods *([Object Fetcher](./object-fetcher/) and where conditions)* *(requiring the internal base-query to return the name column)*,
+    but the internal query only queries the name column once. 
+    
+    That is, projection requirements for the same columns from different projection reverse propagation demands in the outer query will be automatically merged.
+
+    :::tip
+    Since projection reverse propagation automatically merges requests for the same columns, using base-query to return expression columns only becomes meaningful when expressions are very complex.
+
+    Therefore, it is not recommended for the internal base-query to return simple column property expressions alone. In most cases, the internal base-query can directly return the original table object.
+    :::
+
+## Weak Join
+
+Here, we:
+-   Call the table corresponding to the original entity type as Entity Table
+-   Call the temporary table built by base-query as Derived Table
+
+So, whether entity tables or derived tables, both can perform `weakJoin` operations on derived tables.
+
+:::info
+Jimmer table joins have two important characteristics:
+-   Unnecessary table joins will be automatically ignored, see [Optimizing Unnecessary Joins](./dynamic-join/optimization)
+-   Conflicting table joins will be automatically merged, see [Merging Conflicting Joins](./dynamic-join/merge)
+
+Since these contents have been discussed in detail in related chapters, this article will not repeat them, but only list the writing methods for JOIN operations related to derived tables.
+:::
+
+### Derived Table JOIN Derived Table
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable rawBook = BookTable.$;
+BaseTable2<BookTable, NumericExpression<Integer>> baseBook =
+    sqlClient
+        .createBaseQuery(rawBook)
+        .addSelect(rawBook)
+        .addSelect(
+            Expression.numeric().sql(
+                Integer.class,
+                "row_number() over(order by %e desc)",
+                rawBook.price()
+            )
+        )
+        .asBaseTable();
+AuthorTable rawAuthor = AuthorTable.$;
+BaseTable2<AuthorTable, NumericExpression<Integer>> baseAuthor =
+    sqlClient
+        .createBaseQuery(rawAuthor)
+        .addSelect(rawAuthor)
+        .addSelect(
+            Expression.numeric().sql(
+                Integer.class,
+                "row_number() over(order by %e asc)",
+                rawAuthor.firstName().length()
+                    .plus(rawAuthor.lastName().length())
+            )
+        )
+        .asBaseTable();
+BaseTable2<AuthorTable, NumericExpression<Integer>> joinedBaseAuthor =
+    // highlight-next-line
+    baseBook.weakJoin(
+        baseAuthor,
+        (bb, ba) ->
+            bb.get_1().id().eq(ba.get_1().asTableEx().books().id())
+    );
+List<Tuple2<Book, Author>> tuples = sqlClient
+    .createQuery(baseBook)
+    .where(baseBook.get_2().lt(4))
+    .where(joinedBaseAuthor.get_2().lt(4))
+    .select(
+        baseBook.get_1(),
+        joinedBaseAuthor.get_1()
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val baseBook = baseTableSymbol {
+    sqlClient.createBaseQuery(Book::class) {
+        selections
+            .add(table)
+            .add(
+                sql(Int::class, "row_number() over(order by %e desc)") {
+                    expression(table.price)
+                }
+            )
+    }
+}
+val baseAuthor = baseTableSymbol {
+    sqlClient.createBaseQuery(Author::class) {
+        selections
+            .add(table)
+            .add(
+                sql(Int::class, "row_number() over(order by %e asc)") {
+                    expression(
+                        table.firstName.length() +
+                            table.lastName.length()
+                    )
+                }
+            )
+    }
+}
+val tuples = sqlClient.createQuery(baseBook) {
+    // highlight-next-line
+    val joinedAuthor = table.weakJoin(baseAuthor) {
+        source._1.id eq target._1.asTableEx().books.id
+    }
+    where += table._2 lt 4
+    where += joinedAuthor._2 lt 4
+    select(
+        table._1,
+        joinedAuthor._1
+    )
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+Generates the following SQL:
+
+```sql
+select
+    tb_1_.c1,
+    tb_1_.c2,
+    tb_1_.c3,
+    tb_1_.c4,
+    tb_1_.c5,
+    tb_2_.c6,
+    tb_2_.c7,
+    tb_2_.c8,
+    tb_2_.c9 from (
+    select
+        tb_3_.ID c1,
+        tb_3_.NAME c2,
+        tb_3_.EDITION c3,
+        tb_3_.PRICE c4,
+        tb_3_.STORE_ID c5,
+        row_number() over(order by tb_3_.PRICE desc) c10
+    from BOOK tb_3_
+) tb_1_
+-- highlight-next-line
+inner join (
+    select
+        tb_4_.ID c6,
+        tb_4_.FIRST_NAME c7,
+        tb_4_.LAST_NAME c8,
+        tb_4_.GENDER c9,
+        row_number() over(order by (
+            length(tb_4_.FIRST_NAME) + 
+            length(tb_4_.LAST_NAME)
+        ) asc) c11
+    from AUTHOR tb_4_
+) tb_2_
+inner join BOOK_AUTHOR_MAPPING tb_5_
+    on tb_2_.c6 = tb_5_.AUTHOR_ID
+    on tb_1_.c1 = tb_5_.BOOK_ID
+where
+        tb_1_.c10 < ? /* 4 */
+    and
+        tb_2_.c11 < ? /* 4 */
+```
+
+### Entity Table JOIN Derived Table
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable book = BookTable.$;
+AuthorTable rawAuthor = AuthorTable.$;
+BaseTable2<AuthorTable, NumericExpression<Integer>> baseAuthor =
+    sqlClient
+        .createBaseQuery(rawAuthor)
+        .addSelect(rawAuthor)
+        .addSelect(
+            Expression.numeric().sql(
+                Integer.class,
+                "row_number() over(order by %e asc)",
+                rawAuthor.firstName().length().plus(rawAuthor.lastName().length())
+            )
+        )
+        .asBaseTable();
+BaseTable2<AuthorTable, NumericExpression<Integer>> joinedBaseAuthor =
+    // highlight-next-line
+    book.asTableEx().weakJoin(
+        baseAuthor,
+        (b, ba) ->
+            b.id().eq(ba.get_1().asTableEx().books().id())
+    );
+List<Tuple2<Book, Author>> tuples = sqlClient
+    .createQuery(book)
+    .where(joinedBaseAuthor.get_2().lt(4))
+    .select(
+        book,
+        joinedBaseAuthor.get_1()
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val baseAuthor = baseTableSymbol {
+    sqlClient.createBaseQuery(Author::class) {
+        selections
+            .add(table)
+            .add(
+                sql(Int::class, "row_number() over(order by %e asc)") {
+                    expression(
+                        table.firstName.length() +
+                            table.lastName.length()
+                    )
+                }
+            )
+    }
+}
+val tuples = sqlClient.createQuery(Book::class) {
+    // highlight-next-line
+    val joinedAuthor = table.asTableEx().weakJoin(baseAuthor) {
+        source.id eq target._1.asTableEx().books.id
+    }
+    where += joinedAuthor._2 lt 4
+    select(
+        table,
+        joinedAuthor._1
+    )
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+Generates the following SQL:
+
+```sql
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_1_.STORE_ID,
+    tb_2_.c1,
+    tb_2_.c2,
+    tb_2_.c3,
+    tb_2_.c4
+from BOOK tb_1_
+-- highlight-next-line
+inner join (
+    (
+        select
+            tb_3_.ID c1,
+            tb_3_.FIRST_NAME c2,
+            tb_3_.LAST_NAME c3,
+            tb_3_.GENDER c4,
+            row_number() over(order by (
+                length(tb_3_.FIRST_NAME) + 
+                length(tb_3_.LAST_NAME)
+            ) asc) c5
+        from AUTHOR tb_3_
+    ) tb_2_
+    inner join BOOK_AUTHOR_MAPPING tb_4_
+        on tb_2_.c1 = tb_4_.AUTHOR_ID
+)
+    on tb_1_.ID = tb_4_.BOOK_ID
+where
+    tb_2_.c5 < ? /* 4 */
+```
+
+## CTE
+
+CTE (Common Table Expression) is about rewriting the previous Derived Table SQL
+
+```sql
+select ...
+--highlight-start
+from (
+    select ...
+    from my_table
+) tb_1_
+--highlight-end
+```
+
+to CTE style SQL, as follows
+
+```sql
+--highlight-start
+with tb_1_(...) as (
+    select ...
+    from my_table
+)
+--highlight-end
+select ...
+from tb_1_ 
+```
+
+Except for the different writing style of the generated SQL, **there is no difference in functionality from the content described earlier**.
+
+Therefore, we can simply rewrite the first example from the beginning of this article using CTE syntax without much elaboration.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable book = BookTable.$;
+AuthorTableEx author = AuthorTableEx.$;
+BaseTable2<BookTable, NumericExpression<Integer>> baseTable =
+    sqlClient
+        .createBaseQuery(book)
+        .addSelect(book)
+        .addSelect(
+            Expression.numeric().sql(
+                Integer.class,
+                "dense_rank() over(" +
+                    "order by %e desc" +
+                    ")",
+                sqlClient.createSubQuery(author)
+                    .where(author.books().id().eq(book.id()))
+                    .selectCount()
+            )
+        )
+        // highlight-next-line
+        .asCteBaseTable();
+List<Book> books =
+    sqlClient
+        .createQuery(baseTable)
+        .where(baseTable.get_2().eq(1))
+        .select(baseTable.get_1())
+        .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val baseTable = 
+    // highlight-next-line
+    cteBaseTableSymbol {
+        sqlClient.createBaseQuery(Book::class) {
+            selections
+                .add(table)
+                .add(
+                    sql(Int::class, "dense_rank() over(order by %e desc)") {
+                        expression(
+                            subQuery(Author::class) {
+                                where(table.books.id eq parentTable.id)
+                                select(rowCount())
+                            }
+                        )
+                    }
+                )
+        }
+    }
+val books = 
+    sqlClient.createQuery(baseTable) {
+        where(table._2 eq 1)
+        select(table._1)
+    }.execute()
+```
+
+</TabItem>
+</Tabs>
+
+-   Java code uses `asCteBaseTable` instead of `asBaseTable`
+-   Kotlin code uses `cteBaseTableSymbol` instead of `baseTableSymbol`
+
+The final generated SQL is as follows:
+
+```sql
+-- highlight-next-line
+with tb_1_(c1, c2, c3, c4, c5, c6) as (
+    select
+        tb_2_.ID,
+        tb_2_.NAME,
+        tb_2_.EDITION,
+        tb_2_.PRICE,
+        tb_2_.STORE_ID,
+        dense_rank() over(order by (
+            select
+                count(1)
+            from AUTHOR tb_3_
+            inner join BOOK_AUTHOR_MAPPING tb_4_
+                on tb_3_.ID = tb_4_.AUTHOR_ID
+            where
+                tb_4_.BOOK_ID = tb_2_.ID
+        ) desc)
+    from BOOK tb_2_
+) 
+select
+    tb_1_.c1,
+    tb_1_.c2,
+    tb_1_.c3,
+    tb_1_.c4,
+    tb_1_.c5 from tb_1_
+where
+    tb_1_.c6 = ? /* 1 */
+```
+
+## Recursive-CTE
+
+SQL's CTE has a very important feature, which is when using `union all` operations to construct base-query:
+
+-   The first part of the `union all` operation simply selects some initial data
+-   The second part of the `union all` operation joins **the CTE itself**
+
+Since the query statement defining the CTE joins the derived table defined by the CTE itself, this is a recursive query
+
+> Recursive CTE is very useful when dealing with tree structures described by self-referential tables
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+TreeNodeTable table = TreeNodeTable.$;
+BaseTable2<TreeNodeTable, NumericExpression<Integer>> baseTable =
+    // highlight-next-line
+    TypedBaseQuery.unionAllRecursively(
+        sqlClient
+            .createBaseQuery(table)
+            .where(table.parentId().isNull())
+            .addSelect(table)
+            .addSelect(Expression.constant(1)),
+        // highlight-next-line
+        recursiveRef -> {
+            MutableRecursiveBaseQuery<BaseTable2<TreeNodeTable, NumericExpression<Integer>>> q =
+                sqlClient
+                    .createBaseQuery(
+                        table,
+                        recursiveRef,
+                        (t, r) -> t.parentId().eq(r.get_1().id())
+                    );
+            return q
+                .addSelect(table)
+                .addSelect(
+                    // highlight-next-line
+                    q.recursive()
+                        .get_2()
+                        .plus(Expression.constant(1))
+                );
+        }
+    ).asCteBaseTable();
+List<Tuple2<TreeNode, Integer>> tuples = sqlClient
+    .createQuery(baseTable)
+    .orderBy(baseTable.get_2(), baseTable.get_1().name())
+    .select(
+        baseTable.get_1().fetch(TreeNodeFetcher.$.name()),
+        baseTable.get_2()
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val baseTable = cteBaseTableSymbol {
+    sqlClient.createBaseQuery(TreeNode::class) {
+        where(table.parentId.isNull())
+        selections
+            .add(table)
+            .add(constant(1))
+    // highlight-next-line
+    }.unionAllRecursively {
+        sqlClient.createBaseQuery(
+            TreeNode::class, 
+            // highlight-next-line
+            it, 
+            {source.parentId eq target._1.id }
+        ) {
+            selections
+                .add(table)
+                .add(
+                    // highlight-next-line
+                    recursive._2 + 1
+                )
+        }
+    }
+}
+val tuples = sqlClient.createQuery(baseTable) {
+    orderBy(table._2, table._1.name)
+    select(
+        table._1.fetchBy {
+            name()
+        },
+        table._2
+    )
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+Generates the following SQL:
+
+```sql
+with tb_1_(c1, c2, c3) as (
+        select
+            tb_2_.ID,
+            tb_2_.NAME,
+            1
+        from TREE_NODE tb_2_
+        where
+            tb_2_.PARENT_ID is null
+        -- highlight-next-line
+        union all
+        select
+            tb_4_.ID,
+            tb_4_.NAME,
+            tb_1_.c3 + ? /* 1 */
+        from TREE_NODE tb_4_
+        -- highlight-next-line
+        inner join tb_1_
+            on tb_4_.PARENT_ID = tb_1_.c1
+    ) select
+    tb_1_.c1,
+    tb_1_.c2,
+    tb_1_.c3 from tb_1_
+order by
+    tb_1_.c3 asc,
+    tb_1_.c2 asc
+```
+
+The final query returns the following data *(some blank lines have been manually added for readability)*
+
+```json
+Tuple2(_1={"id":1,"name":"Home"}, _2=1)
+
+Tuple2(_1={"id":9,"name":"Clothing"}, _2=2)
+Tuple2(_1={"id":2,"name":"Food"}, _2=2)
+
+Tuple2(_1={"id":6,"name":"Bread"}, _2=3)
+Tuple2(_1={"id":3,"name":"Drinks"}, _2=3)
+Tuple2(_1={"id":18,"name":"Man"}, _2=3)
+Tuple2(_1={"id":10,"name":"Woman"}, _2=3)
+
+Tuple2(_1={"id":7,"name":"Baguette"}, _2=4)
+Tuple2(_1={"id":19,"name":"Casual wear"}, _2=4)
+Tuple2(_1={"id":11,"name":"Casual wear"}, _2=4)
+Tuple2(_1={"id":8,"name":"Ciabatta"}, _2=4)
+Tuple2(_1={"id":4,"name":"Coca Cola"}, _2=4)
+Tuple2(_1={"id":5,"name":"Fanta"}, _2=4)
+Tuple2(_1={"id":22,"name":"Formal wear"}, _2=4)
+Tuple2(_1={"id":15,"name":"Formal wear"}, _2=4)
+
+Tuple2(_1={"id":12,"name":"Dress"}, _2=5)
+Tuple2(_1={"id":20,"name":"Jacket"}, _2=5)
+Tuple2(_1={"id":21,"name":"Jeans"}, _2=5)
+Tuple2(_1={"id":14,"name":"Jeans"}, _2=5)
+Tuple2(_1={"id":13,"name":"Miniskirt"}, _2=5)
+Tuple2(_1={"id":24,"name":"Shirt"}, _2=5)
+Tuple2(_1={"id":17,"name":"Shirt"}, _2=5)
+Tuple2(_1={"id":23,"name":"Suit"}, _2=5)
+Tuple2(_1={"id":16,"name":"Suit"}, _2=5)
+```
+
+As can be seen:
+
+-   Whether in Java or Kotlin, using `unionAllRecursively` is the key to using `Recursive CTE`
+-   `createBaseQuery` has a lambda parameter overload that accepts a `recursiveRef` parameter representing the placeholder for the CTE itself *(in Kotlin it's `it`)*
+-   Java needs to use local variable to record an object of type `MutableRecursiveBaseQuery` in order to use its `.recursive()` method to get the table object that the CTE itself represents
+
+:::info
+Actually, in the SQL specification, `union` can also be used for `Recursive CTE`, but it is generally considered an inefficient operation and should be avoided.
+
+Therefore, Jimmer's Recursive CTE stipulates that only `union all` can be used, not `union`.
+:::

@@ -1094,3 +1094,183 @@ Filters can not only filter associated objects, but also sort them. The principl
 
     `filter(it -> args.where(args.getTable().firstName().ilike("a")))`
 :::
+
+### Reference Fetch Type
+
+By default, Jimmer uses batch-optimized additional queries to fetch associated objects.
+
+However, for reference association properties *(i.e., non-collection associations, `@ManyToOne` or `OneToOne`)*, the fetching mode for associated objects can be configured. As shown below:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable table = Tables.BOOK_TABLE;
+
+List<Book> books = sqlClient
+    .createQuery(table)
+    .where(table.name().eq("GraphQL in Action"))
+    .select(
+        table.fetch(
+            Fetchers.BOOK_FETCHER
+                .allScalarFields()
+                .store(
+                    // highlight-next-line
+                    ReferenceFetchType.JOIN_ALWAYS,
+                    Fetchers.BOOK_STORE_FETCHER
+                            .allScalarFields()
+                )
+        )
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val books = sqlClient.createQuery(Book::class) {
+    where(table.name eq "GraphQL in Action")
+    select(
+        table.fetchBy { 
+            allScalarFields()
+            store(
+                // highlight-next-line
+                ReferenceFetchType.JOIN_ALWAYS
+            ) {
+                allScalarFields()
+            }
+        }
+    )
+}
+```
+
+</TabItem>
+</Tabs>
+
+This generates the following SQL:
+
+```csharp
+select
+    tb_1_.ID,
+    tb_1_.NAME,
+    tb_1_.EDITION,
+    tb_1_.PRICE,
+    tb_2_.ID,
+    tb_2_.NAME,
+    tb_2_.WEBSITE
+from BOOK tb_1_
+// highlight-start
+left join BOOK_STORE tb_2_
+    on tb_1_.STORE_ID = tb_2_.ID
+// highlight-end
+where
+    tb_1_.NAME = ? /* GraphQL in Action */
+```
+
+The resulting data is as follows:
+
+```json
+[
+    {
+        "id": 10,
+        "name": "GraphQL in Action",
+        "edition": 1,
+        "price": 80,
+        // highlight-next-line
+        "store": {
+            "id": 2,
+            "name": "MANNING",
+            "website": null
+        }
+    },
+    {
+        "id": 11,
+        "name": "GraphQL in Action",
+        "edition": 2,
+        "price": 81,
+        // highlight-next-line
+        "store": {
+            "id": 2,
+            "name": "MANNING",
+            "website": null
+        }
+    },
+    {
+        "id": 12,
+        "name": "GraphQL in Action",
+        "edition": 3,
+        "price": 80,
+        // highlight-next-line
+        "store": {
+            "id": 2,
+            "name": "MANNING",
+            "website": null
+        }
+    }
+]
+```
+
+In the example above, we used `ReferenceFetchType.JOIN_ALWAYS`, which is one of the supported options. The complete list of options is as follows:
+
+-   AUTO: 
+
+    Default option, uses global configuration
+
+-   SELECT: 
+
+    Uses batch-optimized additional queries to fetch associated objects
+
+-   JOIN_IF_NO_CACHE:
+
+    -   If the association property to be fetched has enabled [association cache](../../cache/cache-type/association), equivalent to `SELECT`
+
+    -   Otherwise, equivalent to `JOIN_ALWAYS`
+
+-   JOIN_ALWAYS:
+
+    Uses SQL's `left join` operation to query both the current object and associated objects in a single SQL query.
+
+    > This configuration makes the SQL query for the current object more complex, but doesn't result in generating more SQL queries.
+
+If you fetch a reference association without explicitly specifying `ReferenceFetchType` or set it to `AUTO`, it will follow the global configuration. How do you specify the global configuration?
+
+-   Using jimmer-spring-starter
+
+    ```sh title = "application.yml"
+    jimmer:
+        #highlight-next-line
+        default-reference-fetch-type: JOIN_IF_NO_CACHE
+    ```
+
+-   Using original jimmer
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    JSqlClient sqlClient = JSqlClient.newBuilder()
+        // highlight-next-line
+        .setDefaultListBatchSize(ReferenceFetchType.JOIN_IF_NO_CACHE)
+        .build();
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    val sqlClient = newKSqlClient {
+        // highlight-next-line
+        setDefaultListBatchSize(ReferenceFetchType.JOIN_IF_NO_CACHE)
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+:::info
+Note:
+1.  When setting the global configuration, you cannot specify `ReferenceFetchType.AUTO`, otherwise an exception will be thrown
+
+2.  If no global configuration is set, then `ReferenceFetchType.AUTO` in the object fetcher *(whether explicitly specified or by default)* will be interpreted as `ReferenceFetchType.SELECT`
+:::

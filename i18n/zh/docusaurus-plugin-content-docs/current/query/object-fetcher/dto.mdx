@@ -32,14 +32,15 @@ Jimmer提供了[DTO语言](../../object/view/dto-language)。
 
 1.  **在实体定义所在项目中**，建立目录`src/main/dto`
 
-2.  在`src/main/dto`下，按实体类型所处的包路径建立子目录`com/yourcompany/yourproject/model`
+2.  在`src/main/dto`下，建立文件`Book.dto`
 
-3.  在上一步建立的目录下，建立文件`Book.dto`，文件必须和实体类同名，扩展名必须为`dto`
+3.  编辑此文件，利用DTO语言，定义Book实体的各种DTO形状
 
-4.  编辑此文件，利用DTO语言，定义Book实体的各种DTO形状
+    ```js title="Book.dto"
+    export com.yourcompany.yourproject.model.Book 
+        -> package com.yourcompany.yourproject.model.dto
 
-    ```sh title="Book.dto"
-    # highlight-next-line
+    // highlight-next-line
     BookDetailView {
         
         #allScalars
@@ -216,14 +217,14 @@ println(view)
 
 打印结果如下 *(为方便阅读，人为进行了格式化)*
 
-```sh
-# highlight-next-line
+```js
+// highlight-next-line
 BookDetailView(
     id=1, 
     name=Learning GraphQL, 
     edition=1, 
     price=50.00, 
-    # highlight-next-line
+    // highlight-next-line
     store=BookDetailView.TargetOf_store(
         id=1, 
         name=O'REILLY, 
@@ -231,14 +232,14 @@ BookDetailView(
         version=0
     ), 
     authors=[
-        # highlight-next-line
+        // highlight-next-line
         BookDetailView.TargetOf_authors(
             id=2, 
             firstName=Alex, 
             lastName=Banks, 
             gender=MALE
         ), 
-        # highlight-next-line
+        // highlight-next-line
         BookDetailView.TargetOf_authors(
             id=1, 
             firstName=Eve, 
@@ -441,3 +442,292 @@ val books = sqlClient
 :::tip
 所有底层查询API都可以用`viewType`替换`fetcher`，再次印证了本文开头所说DTO语言本质上是对象抓取器的另外一种表达方式。
 :::
+
+## 关联属性特有配置
+
+:::note
+Jimmer DTO分为三种
+
+1.  Output DTO
+2.  Input DTO
+3.  Specification DTO
+
+本文所讨论的DTO，用于定义对象抓取器并将其查询结果类型映射为静态对象，属于Output DTO。
+
+因此，本节所介绍的内容，是Output DTO特有的配置。
+:::
+
+在[对象抓取器/关联属性](./association)中，我们介绍了关联属性的一些特有配置。
+
+1. BatchSize
+2. 关联级分页
+3. 属性过滤器
+4. 引用抓取方式
+
+在[对象抓取器/递归查询](./recursive)中，我们介绍了
+
+1. 限制递归深度
+2. 控制每个节点是否递归
+
+同理，作为类型抓取器更加类型化的体现，Output DTO也同样具备这些配置
+
+### BatchSize
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !batch(2)
+    authors {
+        #allScalars
+    }
+}
+```
+
+### 关联级分页
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !limit(10, 90) // limit: 10, offset: 90
+    authors {
+        #allScalars
+    }
+}
+```
+
+或
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !limit(10) // limit: 10, offset: 0
+    authors {
+        #allScalars
+    }
+}
+```
+
+### 属性过滤器
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-start
+    !where(firstName ilike '%a%' or lastName ilike '%a%')
+    !orderBy(firstName asc, lastName asc)
+    // highlight-end
+    authors {
+        #allScalars
+    }
+}
+```
+
+为了限制DTO语言的复杂度，`!where`和`!orderBy`故意限制了语法复杂度，以`!where`中的条件表达式为例
+
+1.  支持`and`和`or`，以及通过`()`改变运算符优先级。
+2.  变量必须是关联实体 *(本例中为`Author`)* 中能映射到数据库列的属性，即，标量属性和关联id。
+    > 如果属性是[复合字段](../../mapping/advanced/embedded)，可以实现用`.`链路引用内部属性，例如`fullName.firstName`。
+3.  支持二元运算符`=`、`<>`、`!=`、`<`、`<=`、`>`、`>=`、`like`、和`ilike`，其中`<>`和`!=`等价。
+4.  支持一元云运算`is null`和`is not null`。
+
+显然，设计目的在于控制DTO语言的复杂性。如果要编写任意复杂的筛选和排序，请使用`!filter`，如下：
+
+1.  首先，新建一个类。
+
+    -   对于Java而言，请实现`org.babyfish.jimmer.sql.fetcher.FieldFilter<T>`接口
+    -   对于Kotlin而言，请实现`org.babyfish.jimmer.sql.kt.fetcher.KFieldFilter<E>`接口
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java title="AuthorFilter.java"
+    package com.yourcompany.yourpackage.strategy;
+
+    ...省略import语句...
+
+    public class AuthorsPropFilter implements FieldFilter<AuthorTable> {
+
+        @Override
+        public void apply(FieldFilterArgs<AuthorTable> args) {
+            AuthorTable table = args.getTable();
+            args
+                .where(
+                        Predicate.or(
+                                table.firstName().ilike("a"),
+                                table.lastName().ilke("b")
+                        )
+                )
+                .orderBy(
+                        table.firstName(),
+                        table.lastName()
+                );
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin title="AuthorFilter"
+    package com.yourcompany.yourpackage.strategy
+
+    ...省略import语句...
+
+    class AuthorsPropFilter : KFieldFilter<Author> {
+
+        override fun KFieldFilterDsl<Author>.applyTo() {
+            where(
+                or(
+                    table.firstName ilike "a",
+                    table.lastName ilike "a",
+                )
+            )
+            orderBy(
+                table.firstName,
+                table.lastName
+            )
+        }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    可见，此类型允许我们使用完整的[Jimmer DSL](../expression)的能力，实现任意复杂的筛选和排序逻辑。
+
+2.  在DTO声明中使用上述Java/Kotlin类
+
+    ```js title="Book.dto"
+    export com.yourcompany.yourproject.model.Book 
+        -> package com.yourcompany.yourproject.model.dto
+
+    // highlight-next-line
+    import com.yourcompany.yourpackage.strategy.AuthorsPropFilter
+
+    BookDetailView {
+
+        #allScalars
+
+        // highlight-next-line
+        !filter(AuthorsPropFilter)
+        authors {
+            #allScalars
+        }
+    }
+    ```
+
+### 引用抓取方式
+
+```js title="Book.dto"
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !fetchType(JOIN_ALWASY)
+    store {
+        #allScalars
+    }
+}
+```
+
+:::note
+注意：和对象抓取器一样，只能为引用关联 *(非集合关联，`@ManyToOne`或`@OneToOne`)* 属性指定抓取方式
+:::
+
+### 限制递归深度
+
+```js title="Book.dto"
+export com.yourcompany.yourproject.model.Book 
+    -> package com.yourcompany.yourproject.model.dto
+
+BookDetailView {
+
+    #allScalars
+
+    // highlight-next-line
+    !depth(2)
+    childNodes*
+}
+```
+
+### 控制每个节点是否递归
+
+1.  首先，新建一个类，实现`org.babyfish.jimmer.sql.fetcher.RecursionStrategy<E>`接口
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java title="ChildNodesRecursionStrategy.java"
+    package com.yourcompany.yourpackage.strategy;
+
+    ...省略import语句...
+
+    public class ChildNodesRecursionStrategy implements RecursionStrategy<TreeNode> {
+
+        @Override
+        public boolean isRecursive(Args<TreeNode> args) {
+            return !args.getEntity().name().equals("Clothing");
+        }
+    }
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin title="ChildNodesRecursionStrategy.kt"
+    package com.yourcompany.yourpackage.strategy
+
+    ...省略import语句...
+    
+    class ChildNodesRecursionStrategy : RecursionStrategy<TreeNode> {
+        override fun isRecursive(args: RecursionStrategy.Args<TreeNode>): Boolean {
+            return args.entity.name != "Clothing"
+        }
+    }
+    ```
+
+    </TabItem>
+    </Tabs>
+
+2.  在DTO声明中使用上述Java/Kotlin类
+
+    ```js title="Book.dto"
+    export com.yourcompany.yourproject.model.Book 
+        -> package com.yourcompany.yourproject.model.dto
+
+    // highlight-next-line
+    import com.yourcompany.yourpackage.strategy.ChildNodesRecursionStrategy
+
+    BookDetailView {
+
+        #allScalars
+
+        // highlight-next-line
+        !recursion(ChildNodesRecursionStrategy)
+        childNodes*
+    }
+    ```

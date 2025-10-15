@@ -34,21 +34,49 @@ import DynamicJoin from './_dsl/dynamic-join.mdx';
 import ImplicitSubquery from './_dsl/implicit-subquery.mdx';
 import SuperQBE from './_dsl/super-qbe.mdx';
 
-## 1. What is Jimmer
+Here's the English translation of the provided Markdown file:
 
-Jimmer is a bilingual Java/Kotlin framework
+## 1. What is Jimmer?
 
--   It includes a revolutionary ORM
+Jimmer is the most advanced ORM in the JVM, supporting both Java and Kotlin
 
--   Based on this ORM, it has built a comprehensive solution, including
+-   ORM core
 
-    - DTO language
-    - A more comprehensive and powerful caching mechanism, as well as highly automated cache consistency
-    - More powerful client documentation and code generation capabilities, including Jimmer's unique remote exceptions
-    - Quickly create GraphQL services
-    - Cross-microservice remote entity associations
+    -   All read and write related APIs are designed for operating on arbitrarily complex data structures, not just simple objects
 
-## 2. ORM Part
+        -   Entity objects can be incomplete, meaning any read or write operation can target only specific properties of an object, not all properties
+        -   Directly read and write arbitrarily complex data structures, with the hierarchy and shape of the data structure freely specified by the specific business scenario, without requiring unified design upfront
+
+    -   Designed for batch operations
+
+        -   Query functionality has no `N + 1` problems, even if entity objects have user-defined complex business calculation properties
+        -   Fully leverages the underlying data batch modification capabilities, with objects at each layer of the saved data structure using JDBC batch operations
+        -   Fully utilizes the underlying database's upsert capabilities, avoiding select statements in complex batch modifications whenever possible, and if not possible, clearly explaining why to the user
+        -   Even when performing complex batch modifications, detailed investigation and translation of common database constraint errors is provided, making direct handling of database constraint exceptions by business projects a thing of the past
+
+    -   Strong type DSL support
+
+        -   Strong type DSL doesn't conflict with using database-specific capabilities; you can still use features specific to particular database products
+        -   Designed for arbitrarily complex multi-table dynamic queries, changing the industry status quo where most dynamic query solutions only target single-table operations
+        -   Intelligently optimizes generated SQL
+        -   Not just for generating SQL, but to go beyond Native SQL, providing more convenient capabilities
+
+-   Based on this ORM, a comprehensive solution has been built, including
+
+    -   DTO language, which solves the problem of business models and data models not being completely consistent in most cases at an extremely low cost
+    -   More comprehensive and powerful caching mechanisms, and highly automated cache consistency
+    -   More powerful client documentation and code generation capabilities, including Jimmer's original remote exceptions
+    -   Rapid creation of GraphQL services
+    -   Remote entity associations across microservices
+
+>   Currently not completed, but features that will be supported in `1.0.0`
+> 
+>   1. Support for subqueries as base tables in `from` or `join`
+>   2. Support for more powerful non-object query APIs
+>   3. Support for inheritance and polymorphism in entity models
+>   4. Support for foreign keys referencing non-id properties
+
+## 2. A new ORM, why?
 
 ### Existing Pain Points
 

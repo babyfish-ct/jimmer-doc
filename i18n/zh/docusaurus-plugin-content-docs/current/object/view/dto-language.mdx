@@ -64,7 +64,7 @@ Jimmer不要求`src/main/dto`目录必须在实体类型所在的项目中。事
 
 Jimmer只要求在包含dto文件的项目中使用`jimmer-apt`或`jimmer-ksp`，它们负责DTO文件的编译和相关代码的生成。
 
-> 对于Java项目而言，除了`jimmer-apt`外，有可能还还需要多一个额外的配置，请参见[注意事项](#22-注意事项)
+> 对于Java项目而言，除了`jimmer-apt`外，有可能还还需要多一个额外的配置，请参见[注意事项](#23-注意事项)
 :::
 
 ### 2.1. 两种创建文件的方法
@@ -957,7 +957,7 @@ BookView {
 
 -   对view和input而言，`flat`函数只能用于引用关联 *(一对一或多对一)*，不能用于集合关联 *(一对多或多对多)*，用于把关联DTO的属性提升到当前DTO类型，得到不含关联的平坦对象。
 
--   对于specification而言，`flat`函数没有上述限制，可以用于集合关联。请查看(../../query/super_qbe)。
+-   对于specification而言，`flat`函数没有上述限制，可以用于集合关联。请查看 [@Super QBE](../../query/super_qbe)。
 
 以官方例子中的`TreeNode`实体为例 *(事实上，这个例子是错误的，我们稍后会讨论这个问题)*
 
@@ -1008,12 +1008,11 @@ FlatTreeNodeView {
             #allScalars(TreeNode)
         }
         # highlight-next-line
-        flat(grandParent) {
-            as(^ -> parent) {
+        flat(parent) {
+            as(^ -> grandParent) {
                 #allScalars(TreeNode)
             }
-            
-        }   
+        }
     }
 }
 ```

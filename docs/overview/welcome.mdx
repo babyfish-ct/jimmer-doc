@@ -1,25 +1,39 @@
 ---
 sidebar_position: 1
-title: Before Reading
+title: Welcome ✦
 ---
 
-## Where are the Examples and Getting started?
+Here's the English translation of the provided Markdown file:
 
-When facing a new framework, the first reaction of developers is to look for examples and quick start guides.
+## Getting Started Notes
 
-- Examples: [Quick Preview/Standard Examples](../quick-view/standard-demo)
+Jimmer is an ORM framework that uses precompilation technology, with most of its magic coming from compile time rather than runtime. Therefore, precompilation is required:
 
-- Get started: [Quick Preview/Get Started](../quick-view/get-started/)
+- For Java, this means APT, [Annotation Processor Tool](https://www.jetbrains.com/help/idea/annotation-processors-support.html)
 
-However, if you observe the documentation structure carefully, you will find that their positions in the directory structure are not particularly front. Why is that?
+- For Kotlin, this means KSP, [Kotlin Symbol Processing](https://kotlinlang.org/docs/ksp-overview.html)
 
-Because Jimmer is a revolutionary technology, providing a completely new technical solution at a time when developers thought the technology ecosystem for accessing RDBMS from the JVM was already solidified and couldn't possibly undergo a major transformation.
-Therefore, it is necessary to first discuss these changes and clearly explain the incredible benefits they will bring to real-world projects.
+For readers with no experience with JVM precompilation frameworks, the project's build approach may be unfamiliar. Instead of directly writing code, it's recommended to first run the simplest official example:
 
-This field already has a plethora of choices *(to the point of being over-served)*, and if the new technical solution's approach and methodology are similar to previous works, it would not bring about a ground-breaking change and cliff-like efficiency boost to real-world project development. Instead, it would simply be adding another choice to the already numerous choices.
-In that case, there would be no need to develop an entirely new project, as it would only add confusion to the industry.
+- Java: [jimmer-examples/java/jimmer-simple](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-simple)
 
-In summary, it is recommended to understand Jimmer's innovations and the significant benefits they will bring before looking at the standard examples and quick start guide; attempting to understand them with your previous path to success and psychological expectations may be counter-productive at first.
+- Kotlin: [jimmer-examples/kotlin/jimmer-simpl-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-simple-kt)
+
+By successfully running these simple examples, readers will quickly become familiar with the build process for this type of project:
+
+- No environment setup is required, as the project uses an H2 in-memory database and automatically creates data on startup
+
+- If you open the project in an IDE before the first compilation, you may find some types are undefined because these types are automatically generated after precompilation. Please ignore the related errors and directly click the IDE's Run button - the errors will disappear automatically
+
+- Using the community-contributed [Jimmer-Buddy](https://github.com/Enaium/JimmerBuddy) plugin can improve the development experience during the precompilation process
+
+## Where are the examples and quick start guides?
+
+When facing a new framework, developers' first reaction is to ask where the examples and quick start guides are:
+
+- Included examples: [Official Examples](https://github.com/babyfish-ct/jimmer-examples)
+
+- Quick start: [Get Started](../quick-view/get-started/)
 
 ## About This Documentation
 

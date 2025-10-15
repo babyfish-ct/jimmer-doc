@@ -14,10 +14,10 @@ function HomepageHeader() {
     return locale === 'zh' || locale == 'zh_CN' || locale == 'zh_cn';
   }, [i18n.currentLocale]);
   const title = useMemo(() => {
-    return isZh ? "Jimmer, 针对Java和Kotlin的革命性ORM" : siteConfig.title;
+    return isZh ? "Jimmer, JVM最先进的ORM" : siteConfig.title;
   }, [isZh, siteConfig.title]);
   const tagline = useMemo(() => {
-    return isZh ? "不只是ORM，还是一套集成化方案" : siteConfig.tagline;
+    return isZh ? "支持Java & Kotlin" : siteConfig.tagline;
   }, [isZh, siteConfig.tagline]);
   const tutorial = useMemo(() => {
     return isZh ? "进入教程" : "Goto Tutorial";
@@ -28,7 +28,6 @@ function HomepageHeader() {
         <h1 className="hero__title">{title}</h1>
         <p>
           <span className="hero__subtitle">{tagline}</span>
-          {isZh && <span style={{fontStyle: "italic"}}> (也是中国人自己的集成化方案)</span>}
         </p>
         <div className={styles.buttons}>
           <Link

@@ -147,10 +147,10 @@ const EN =
                         <span style={{color:"blue"}}>Blue parts</span>: For entity objects that exist in both new and old data structures, modify associations if they have changed
                     </li>
                     <li>
-                        <span style={{color:"green"}}>Green parts</span>: For entity objects that exist in the old data structure but not in the new one, decouple this object, clear associations and possibly delete data
+                        <span style={{color:"green"}}>Green parts</span>: For entity objects that exist in the new data structure but not in the old one, insert data and establish associations
                     </li>
                     <li>
-                        <span style={{color:"red"}}>Red parts</span>: For entity objects that exist in the new data structure but not in the old one, insert data and establish associations
+                        <span style={{color:"red"}}>Red parts</span>: For entity objects that exist in the old data structure but not in the new one, decouple this object, clear associations and possibly delete data
                     </li>
                 </ul>
             </li>

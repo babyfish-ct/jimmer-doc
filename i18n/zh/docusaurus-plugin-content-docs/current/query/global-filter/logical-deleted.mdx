@@ -196,7 +196,7 @@ List<Book> books = sqlClient
 ```kotlin
 val books = sqlClient
     .filters { ❶
-        cfg.setBehavior(LogicalDeletedBehavior.IGNORED)
+        setBehavior(LogicalDeletedBehavior.IGNORED)
     }
     .createQuery(table)
     .select(table)
@@ -246,7 +246,7 @@ List<Book> books = sqlClient
 ```kotlin
 val books = sqlClient
     .filters { ❶
-        cfg.setBehavior(LogicalDeletedBehavior.REVERSED)
+        setBehavior(LogicalDeletedBehavior.REVERSED)
     }
     .createQuery(table)
     .select(table)

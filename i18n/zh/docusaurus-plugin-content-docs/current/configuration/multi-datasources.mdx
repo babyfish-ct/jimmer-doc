@@ -163,8 +163,8 @@ public class SqlClientConfig {
         )
 
     @Bean
-    public JSqlClient sqlClient() = ❸
-        TransactionalSqlClients.kotlin()
+    fun sqlClient(): KSqlClient = TransactionalSqlClients.kotlin() ❸
+
 }
 ```
 

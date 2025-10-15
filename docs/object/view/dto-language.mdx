@@ -64,7 +64,7 @@ Jimmer does not require the `src/main/dto` directory to be in the project where 
 
 Jimmer only requires using `jimmer-apt` or `jimmer-ksp` in projects containing dto files. They are responsible for compiling dto files and generating related code.
 
-> For Java projects, in addition to `jimmer-apt`, it may be necessary to add an extra configuration. Please refer to [Notes](#22-notes).
+> For Java projects, in addition to `jimmer-apt`, it may be necessary to add an extra configuration. Please refer to [Notes](#23-notes).
 :::
 
 ### 2.1. Two ways to create files
@@ -968,7 +968,7 @@ This code has the exact same function as the previous example, but no longer ass
 
 -   For view and input, the `flat` function can only be used for referential associations *(one-to-one or many-to-one)*, not collection associations *(one-to-many or many-to-many)*. It is used to promote the properties of associated DTOs to the current DTO type to obtain a flattened object without associations.
 
--   For specification, the `flat` function does not have the above restrictions and can be used for collection associations. Please check (../../query/super_qbe).
+-   For specification, the `flat` function does not have the above restrictions and can be used for collection associations. Please check [@Super QBE] (../../query/super_qbe).
 
 Take the `TreeNode` entity in the official example *(in fact, this example is wrong, we will discuss this issue later)*:
 
@@ -1019,8 +1019,8 @@ FlatTreeNodeView {
             #allScalars(TreeNode)
         }
         # highlight-next-line
-        flat(grandParent) {
-            as(^ -> parent) {
+        flat(parent) {
+            as(^ -> grandParent) {
                 #allScalars(TreeNode)
             }
             

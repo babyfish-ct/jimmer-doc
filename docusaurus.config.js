@@ -10,6 +10,7 @@ const config = {
   url: 'https://github.com',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
+  baseUrl: '/',
   onBrokenAnchors: 'throw',
   favicon: 'https://raw.githubusercontent.com/babyfish-ct/jimmer-doc/main/logo.png',
 

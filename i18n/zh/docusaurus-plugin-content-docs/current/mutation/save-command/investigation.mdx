@@ -911,8 +911,7 @@ Jimmer提供两种注册方法，以上文提及的`NotUniqueExceptionTranslator
 
     ```java
     @Component
-    public class NotUniqueExceptionTranslator
-    extends ExceptionTranslator<SaveException.NotUnique> {
+    public class NotUniqueExceptionTranslator implements ExceptionTranslator<SaveException.NotUnique> {
         
         @Override
         public @Nullable Exception translate(
@@ -989,8 +988,7 @@ Jimmer提供两种注册方法，以上文提及的`NotUniqueExceptionTranslator
 
     ```java
     @Component
-    public class IllegalTargetIdExceptionTranslator
-    extends ExceptionTranslator<SaveException.IllegalTargetId> {
+    public class IllegalTargetIdExceptionTranslator implements ExceptionTranslator<SaveException.IllegalTargetId> {
         
         @Override
         public @Nullable Exception translate(

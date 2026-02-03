@@ -29,7 +29,7 @@ Jimmer实体并非POJO，但可以靠`org.babyish.jimmer.jackson.ImmutableModule
 
 ```java
 @Entity
-@public interface Book {
+public interface Book {
 
     @Id
     @GeneratedValue(generatorType = SnowflakeIdGenerator.class)
@@ -48,15 +48,15 @@ Jimmer实体并非POJO，但可以靠`org.babyish.jimmer.jackson.ImmutableModule
 
 ```kotlin
 @Entity
-@public interface Book {
+interface Book {
 
     @Id
-    @GeneratedValue(generatorType = SnowflakeIdGenerator.class)
+    @GeneratedValue(generatorType = SnowflakeIdGenerator::class)
     // highlight-next-line
-    @JsonConverter(LongToStringConverter.class)
-    long id();
+    @JsonConverter(LongToStringConverter::class)
+    val id: Long
 
-    String name();
+    val name: String
 
     ...省略其他属性...
 }

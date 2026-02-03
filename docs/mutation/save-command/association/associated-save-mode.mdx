@@ -149,7 +149,7 @@ For `save`, `saveEntities` and `saveInputs`, the default `AssociatedSaveMode` is
 
     ```kotlin
     val book = Book { ...omitted... }
-    sqlCient.save(book, AssociatedSaveMode.MERGE);
+    sqlClient.save(book, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -170,7 +170,7 @@ For `save`, `saveEntities` and `saveInputs`, the default `AssociatedSaveMode` is
 
     ```kotlin
     val books = listOf<Book>(...omitted...)
-    sqlCient.saveEntities(books, AssociatedSaveMode.MERGE);
+    sqlClient.saveEntities(books, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -191,7 +191,7 @@ For `save`, `saveEntities` and `saveInputs`, the default `AssociatedSaveMode` is
 
     ```kotlin
     val inputs = listOf<BookInput>(...omitted...)
-    sqlCient.saveInputs(inputs, AssociatedSaveMode.MERGE);
+    sqlClient.saveInputs(inputs, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -225,7 +225,7 @@ Taking `insert`, `insertEntities` and `insertInputs` as examples, the default `A
 
     ```kotlin
     val book = Book { ...omitted... }
-    sqlCient.insert(book, AssociatedSaveMode.MERGE);
+    sqlClient.insert(book, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -246,7 +246,7 @@ Taking `insert`, `insertEntities` and `insertInputs` as examples, the default `A
 
     ```kotlin
     val books = listOf<Book>(...omitted...)
-    sqlCient.insertEntities(books, AssociatedSaveMode.MERGE);
+    sqlClient.insertEntities(books, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -267,7 +267,7 @@ Taking `insert`, `insertEntities` and `insertInputs` as examples, the default `A
 
     ```kotlin
     val inputs = listOf<BookInput>(...omitted...)
-    sqlCient.insertInputs(inputs, AssociatedSaveMode.MERGE);
+    sqlClient.insertInputs(inputs, AssociatedSaveMode.MERGE);
     ```
 
     </TabItem>
@@ -299,7 +299,7 @@ Besides setting save method parameters, we can also modify `AssociatedSaveMode` 
 
     ```kotlin
     val book = Book { ...omitted... }
-    sqlCient.save(book) {
+    sqlClient.save(book) {
         // highlight-next-line
         setAssociatedMode(
             Book::authors,
@@ -342,7 +342,7 @@ Besides setting save method parameters, we can also modify `AssociatedSaveMode` 
 
     ```kotlin
     val book = Book { ...omitted... }
-    sqlCient.save(book) {
+    sqlClient.save(book) {
         // highlight-next-line
         setAssociatedModeAll(
             AssociatedSaveMode.MERGE

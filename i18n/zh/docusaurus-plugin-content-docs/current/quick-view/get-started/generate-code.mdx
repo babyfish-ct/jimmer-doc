@@ -7,6 +7,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import {GeneratedJava, GeneratedKt, Generated} from '@site/src/components/Image';
 import Precompiler from '../../_shared/precompiler.mdx';
+import { VersionBadgeAdmonition } from '@site/src/components/VersionBadgeAdmonition';
 
 ## 代码生成
 
@@ -38,6 +39,8 @@ Jimmer定义数据类型需要如下4个注解之一
 一旦实体项目中有数据类型使用了后面三种注解中的任何，就会导致一个问题：用户编写的实体代码本身只需要依赖`jimmer-core`，但是代码生成器生成的代码需要依赖`jimmer-sql`。
 
 为解决这个问题，请如此配置依赖
+
+<VersionBadgeAdmonition />
 
 <Tabs groupId="buildTool">
 <TabItem value="java" label="Maven">

@@ -1,17 +1,15 @@
-name: Deploy
+name: Build Test
 on:
   workflow_dispatch: {}
-  push:
+  pull_request:
     branches:
       - main
 
 jobs:
-  deploy:
+  test-build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: '${{ github.workflow }}-${{ github.ref }}'
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
@@ -22,11 +20,8 @@ jobs:
           node-version: 18
           cache: 'yarn'
 
+      # https://classic.yarnpkg.com/en/docs/cli/install
       - run: yarn install --frozen-lockfile
+
+      # Only build to verify that it is available, not deploy
       - run: yarn build
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build

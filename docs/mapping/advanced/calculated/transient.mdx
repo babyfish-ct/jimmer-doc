@@ -194,7 +194,7 @@ public class BookStoreAvgPriceResolver implements TransientResolver<Long, BigDec
         return Tuple2.toMap(
             sqlClient
                 .createQuery(table) 
-                .where(table.storeId().in(storeIds)) ❶
+                .where(table.storeId().in(ids)) ❶
                 .groupBy(table.storeId()) ❷
                 .select(
                     table.storeId(),  
@@ -227,7 +227,7 @@ class BookStoreAvgPriceResolver(
     override fun resolve(ids: Collection<Long>): Map<Long, BigDecimal> =
         sqlClient
             .createQuery(Book::class) {
-                where(table.store.id valueIn storeIds) ❶
+                where(table.store.id valueIn ids) ❶
                 groupBy(table.store.id) ❷
                 select(
                     table.store.id,

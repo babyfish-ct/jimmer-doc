@@ -1085,6 +1085,122 @@ com.yourcompany.yourproject.FlatTreeNodeView(
 
 请参见<ViewMore buttonText="Output DTO是否该用flat模式的争议"><FlatProblem/></ViewMore>
 
+### 10.5. fold函数
+
+`fold`是`flat`的结构逆操作。
+
+-   `flat`是把嵌套对象展开到当前DTO。
+
+-   `fold`是把当前层级的多个属性重新分组为一个嵌套DTO对象。
+
+最简单的例子如下：
+
+```sh title="Book.dto"
+BookFoldView {
+    id
+    fold(summary) {
+        name
+        edition
+    }
+}
+```
+
+这个DTO不再把`name`和`edition`暴露为顶层属性，而是通过一个嵌套属性`summary`来表达它们。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setId(10L);
+    draft.setName("GraphQL in Action");
+    draft.setEdition(3);
+});
+
+BookFoldView view = new BookFoldView(book);
+
+System.out.println(view);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    id = 10L
+    name = "GraphQL in Action"
+    edition = 3
+}
+
+val view = BookFoldView(book)
+
+println(view)
+```
+
+</TabItem>
+</Tabs>
+
+打印结果大致如下：
+
+```txt
+BookFoldView(
+    id = 10,
+    summary = BookFoldView.Summary(
+        name = GraphQL in Action,
+        edition = 3
+    )
+)
+```
+
+默认情况下，fold后的嵌套属性是非null的。如果需要可空对象，可以使用`?`：
+
+```sh title="Book.dto"
+BookNullableFoldView {
+    id
+    fold(summary)? {
+        name
+        edition
+    }
+}
+```
+
+和`flat`一样，`fold`也可以嵌套：
+
+```sh title="Book.dto"
+BookNestedFoldView {
+    id
+    name
+    fold(summary) {
+        name
+        fold(detail) {
+            name
+            edition
+        }
+    }
+}
+```
+
+它也可以和`flat`组合使用：
+
+```sh title="Book.dto"
+BookFoldInsideFlatView {
+    id
+    flat(store) {
+        fold(key) {
+            name
+        }
+    }
+}
+```
+
+此时，嵌套对象仍然会被`flat`提升，因此生成的属性名会变成`storeKey`。
+
+`fold`支持`view`、`input`和`specification`。
+
+-   对`input`而言，调用`toEntity()`时，fold中的属性会被重新拆回当前实体，不会额外创建一层实体结构。
+
+-   对`specification`而言，`fold`只是DTO结构工具，用于分组查询参数，并不会改变底层查询语义。
+
 ## 11. 自定义字段
 
 ### 11.1 初识自定义字段

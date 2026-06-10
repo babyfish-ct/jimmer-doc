@@ -573,3 +573,9 @@ System.out.println(book);
         associatedIdNotIn(store) as excludedStoreIds
     }
     ```
+
+:::info
+如果实体通过整个id的[@MapsId](../maps-id)来表达关联，那么像`messageId`这样的属性仍然是真正的`@Id`属性，而不是`@IdView`。
+
+这种情况下，不要为它添加`@IdView`，因为`@MapsId`已经定义了它与关联之间的关系。
+:::

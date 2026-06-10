@@ -1,0 +1,296 @@
+---
+sidebar_position: 2
+title: "@MapsId"
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+`@MapsId`和JPA中的同名注解类似，用来标记拥有方关联，其外键列会映射到当前实体的id中。
+
+## 物理层动机
+
+`@MapsId`并不仅仅是为了声明一个对象关联。它真正要描述的是一种物理表设计：某个关联的外键列，恰好就是当前表的主键列，或者是当前表组合主键中的一部分。
+
+换句话说，以下两种情况适合使用`@MapsId`：
+
+-   关联的FK和当前表的PK完全是同一组列
+-   关联的FK是当前表组合PK中的一个片段
+
+这和列名是否叫`id`没有必然关系。关键在于数据库模式里的列是否复用，而不是Java/Kotlin属性名是否叫`id`。
+
+常见的物理模型有两类：
+
+-   共享主键的一对一：
+
+    `message_delivery.message_id`同时是：
+
+    -   `message_delivery`的主键
+    -   指向`message`的外键
+
+-   组合主键中的一部分同时又是外键：
+
+    `tenant_document.tenant_id`同时是：
+
+    -   `tenant_document`组合主键的一部分
+    -   指向`tenant`的外键
+
+第一种情况是把整个PK映射自目标对象，第二种情况是只映射组合PK中的某个路径。
+
+## 映射整个id
+
+如果省略注解参数，表示映射当前实体的整个id。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="MessageDelivery.java"
+@Entity
+public interface MessageDelivery {
+
+    @Id
+    long messageId();
+
+    String status();
+
+    @OneToOne
+    @MapsId
+    @JoinColumn
+    Message message();
+}
+
+@Entity
+public interface Message {
+
+    @Id
+    long id();
+
+    String text();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="MessageDelivery.kt"
+@Entity
+interface MessageDelivery {
+
+    @Id
+    val messageId: Long
+
+    val status: String
+
+    @OneToOne
+    @MapsId
+    @JoinColumn
+    val message: Message
+}
+
+@Entity
+interface Message {
+
+    @Id
+    val id: Long
+
+    val text: String
+}
+```
+
+</TabItem>
+</Tabs>
+
+这里的`MessageDelivery.messageId`是当前实体真正的id属性，并不是[@IdView](./view/id-view)，因此不应该为它添加`@IdView`。
+
+这里仍然需要`@JoinColumn`，因为这是拥有方关联。不过，这里无需显式指定`name`。Jimmer会根据当前[命名策略](../base/naming-strategy)确定列名。在默认命名策略下，属性名`message`会映射为FK列`message_id`。
+
+:::info
+当`@MapsId`映射整个标量id时，拥有方的id属性完全可以命名为`messageId`、`tenantId`这类“看起来像关联id”的名字，但它本质上仍然是普通的`@Id`属性。
+:::
+
+保存对象时，Jimmer会保持id属性和拥有方关联的一致性：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+MessageDelivery delivery =
+    MessageDeliveryDraft.$.produce(draft -> {
+        draft.setMessageId(101L);
+        draft.setStatus("READ");
+        draft.applyMessage(message -> {
+            message.setId(101L);
+            message.setText("Hi");
+        });
+    });
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val delivery = MessageDelivery {
+    messageId = 101L
+    status = "READ"
+    message {
+        id = 101L
+        text = "Hi"
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 映射部分id
+
+如果指定注解参数，则表示映射嵌入式id中的某个路径。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="TenantDocument.java"
+@Embeddable
+public interface TenantDocumentId {
+
+    long tenantId();
+
+    long documentId();
+}
+
+@Entity
+public interface TenantDocument {
+
+    @Id
+    @PropOverride(prop = "tenantId", columnName = "TENANT_ID")
+    @PropOverride(prop = "documentId", columnName = "DOCUMENT_ID")
+    TenantDocumentId id();
+
+    String name();
+
+    @ManyToOne
+    @MapsId("tenantId")
+    @JoinColumn(name = "TENANT_ID", referencedColumnName = "ID")
+    Tenant tenant();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="TenantDocument.kt"
+@Embeddable
+interface TenantDocumentId {
+
+    val tenantId: Long
+
+    val documentId: Long
+}
+
+@Entity
+interface TenantDocument {
+
+    @Id
+    @PropOverride(prop = "tenantId", columnName = "TENANT_ID")
+    @PropOverride(prop = "documentId", columnName = "DOCUMENT_ID")
+    val id: TenantDocumentId
+
+    val name: String
+
+    @ManyToOne
+    @MapsId("tenantId")
+    @JoinColumn(name = "TENANT_ID", referencedColumnName = "ID")
+    val tenant: Tenant
+}
+```
+
+</TabItem>
+</Tabs>
+
+这里，只有`TenantDocument.id.tenantId`来自`Tenant.id`，而`documentId`仍然是本地id的一部分。
+
+另一个典型的整个id映射例子，是明细表的主键同时也是父表的外键。在这种设计下，明细行无法脱离父行独立存在，并且两者共享同一个主键值。`@MapsId`正是这种结构最自然的映射方式。
+
+## 查询优化
+
+由于映射后的id列本来就存在于拥有方表上，因此很多面向id的操作不需要join目标表。
+
+-   在谓词、排序、分组和select中使用关联id时，可以直接复用拥有方表上的列。
+
+    <Tabs groupId="language">
+    <TabItem value="java" label="Java">
+
+    ```java
+    q.where(document.asTableEx().tenant().id().eq(1L));
+    q.groupBy(document.asTableEx().tenant().id());
+    q.orderBy(document.asTableEx().tenant().id().asc());
+    return q.select(document.asTableEx().tenant().id());
+    ```
+
+    </TabItem>
+    <TabItem value="kotlin" label="Kotlin">
+
+    ```kotlin
+    where(table.tenant.id eq 1L)
+    groupBy(table.tenant.id)
+    orderBy(table.tenant.id.asc())
+    select(table.tenant.id)
+    ```
+
+    </TabItem>
+    </Tabs>
+
+    生成的SQL如下：
+
+    ```sql
+    select tb_1_.TENANT_ID
+    from TENANT_DOCUMENT tb_1_
+    where tb_1_.TENANT_ID = ?
+    group by tb_1_.TENANT_ID
+    order by tb_1_.TENANT_ID asc
+    ```
+
+-   当`@MapsId`关联仅仅被用作桥接路径时，Jimmer可以移除中间join。
+
+    ```java
+    q.where(
+        document
+            .asTableEx()
+            .tenant()
+            .documents()
+            .name()
+            .eq("Spec")
+    );
+    return q.select(document.id());
+    ```
+
+    生成的SQL如下：
+
+    ```sql
+    select tb_1_.TENANT_ID, tb_1_.DOCUMENT_ID
+    from TENANT_DOCUMENT tb_1_
+    inner join TENANT_DOCUMENT tb_2_ on tb_1_.TENANT_ID = tb_2_.TENANT_ID
+    where tb_2_.NAME = ?
+    ```
+
+:::tip
+只有在不改变查询语义时，这个优化才会生效。实际表现为：关联路径的可空性必须允许移除该join，并且不能使用桥接目标本身的列或条件。
+:::
+
+如果桥接目标本身被使用，Jimmer就会保留join：
+
+```java
+q.where(document.asTableEx().tenant().name().eq("Tenant"));
+q.where(document.asTableEx().tenant().documents().name().eq("Spec"));
+return q.select(document.id());
+```
+
+生成的SQL如下：
+
+```sql
+select tb_1_.TENANT_ID, tb_1_.DOCUMENT_ID
+from TENANT_DOCUMENT tb_1_
+inner join TENANT tb_2_ on tb_1_.TENANT_ID = tb_2_.ID
+inner join TENANT_DOCUMENT tb_3_ on tb_2_.ID = tb_3_.TENANT_ID
+where tb_2_.NAME = ? and tb_3_.NAME = ?
+```

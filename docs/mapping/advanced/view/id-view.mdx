@@ -577,3 +577,9 @@ Other features make no assumptions about whether an association property has a c
         associatedIdNotIn(store) as excludedStoreIds
     }
     ```
+
+:::info
+If an entity uses whole-id [@MapsId](../maps-id), an id property like `messageId` is still the real `@Id` property, not an `@IdView`.
+
+In that case, do not annotate it with `@IdView`. `@MapsId` already defines its relationship with the association.
+:::

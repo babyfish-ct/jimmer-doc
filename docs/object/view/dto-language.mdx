@@ -1097,6 +1097,122 @@ The `flat` solution also has drawbacks. For **output** DTOs, the `flat` solution
 
 Please refer to <ViewMore buttonText="Controversy over whether output DTOs should use flat mode"><FlatProblem/></ViewMore>
 
+### 10.5. fold Function
+
+`fold` is the structural inverse of `flat`.
+
+-   `flat` expands a nested object into the current DTO.
+
+-   `fold` groups several current-level properties into a nested DTO object.
+
+The simplest example is as follows:
+
+```sh title="Book.dto"
+BookFoldView {
+    id
+    fold(summary) {
+        name
+        edition
+    }
+}
+```
+
+This DTO no longer exposes `name` and `edition` as top-level properties. Instead, it has a nested `summary` property.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setId(10L);
+    draft.setName("GraphQL in Action");
+    draft.setEdition(3);
+});
+
+BookFoldView view = new BookFoldView(book);
+
+System.out.println(view);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val book = Book {
+    id = 10L
+    name = "GraphQL in Action"
+    edition = 3
+}
+
+val view = BookFoldView(book)
+
+println(view)
+```
+
+</TabItem>
+</Tabs>
+
+The printed result is roughly:
+
+```txt
+BookFoldView(
+    id = 10,
+    summary = BookFoldView.Summary(
+        name = GraphQL in Action,
+        edition = 3
+    )
+)
+```
+
+By default, folded properties are non-null. If you need a nullable nested object, use `?`:
+
+```sh title="Book.dto"
+BookNullableFoldView {
+    id
+    fold(summary)? {
+        name
+        edition
+    }
+}
+```
+
+Like `flat`, `fold` can be nested:
+
+```sh title="Book.dto"
+BookNestedFoldView {
+    id
+    name
+    fold(summary) {
+        name
+        fold(detail) {
+            name
+            edition
+        }
+    }
+}
+```
+
+It can also be combined with `flat`:
+
+```sh title="Book.dto"
+BookFoldInsideFlatView {
+    id
+    flat(store) {
+        fold(key) {
+            name
+        }
+    }
+}
+```
+
+In this case, the nested object is still promoted by `flat`, so the generated property name becomes `storeKey`.
+
+`fold` is supported by `view`, `input`, and `specification`.
+
+-   For `input`, folded properties are unpacked back into the current entity when calling `toEntity()`. They do not create an extra entity layer.
+
+-   For `specification`, `fold` is only a DTO-structure tool. It groups query parameters but does not change the underlying query semantics.
+
 ## 11. Custom Fields
 
 ### 11.1 Introduction to Custom Fields

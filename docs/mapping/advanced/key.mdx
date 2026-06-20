@@ -134,6 +134,13 @@ The unique constraint defined by `@Key` is only for non-hidden data, not all dat
         where DELETED = false;
     ```
 
+    For the boolean logical deletion shown above, when the entity is also annotated
+    with `@KeyUniqueConstraint`, Jimmer can use this conditional unique index for
+    key-based upsert on dialects that can express a conflict predicate, such as
+    PostgreSQL. For H2 tests, Jimmer renders equivalent `merge ... on ... and
+    DELETED = false` SQL. Dialects that cannot express this predicate fall back to
+    a select-based decision before insert or update.
+
 ## Dynamic Overrides 
 
 Configuration specified by the annotation `@Key` is called static configuration.

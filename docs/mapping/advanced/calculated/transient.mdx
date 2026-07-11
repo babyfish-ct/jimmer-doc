@@ -983,3 +983,183 @@ That is, in the process of querying complex data structures by object fetchers, 
   
 Therefore, the functionality provided by object fetchers is actually an arbitrary mix of SQL and non-SQL operations.
 :::
+
+
+## Resolver Context (Experimental) {#resolver-context}
+
+:::info Experimental Status
+This feature is **experimental**. It requires opt-in in Kotlin via `@ExperimentalTransientResolverContext`,
+and is marked `@ApiStatus.Experimental` in Java. The API surface may change in future releases.
+:::
+
+Jimmer 0.10.13+ provides an overload of `resolve` that receives a `TransientResolverContext` / `KTransientResolverContext`.
+This allows the resolver implementation to inspect the current immutable property metadata, the database connection,
+and the source ids being resolved.
+
+### Why use resolver context?
+
+Without context, a shared generic resolver cannot know **which** concrete entity or property is currently being resolved.
+In real projects this forces duplication:
+
+<Tabs groupId="language">
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+// Without context – each concrete entity needs its own resolver
+class ProductCategoryBreadcrumbResolver : KTransientResolver<Long, String?> { ... }
+class DeviceCategoryBreadcrumbResolver : KTransientResolver<Long, String?> { ... }
+// Both implement the same tree/breadcrumb algorithm – only the entity type differs.
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+// Without context – each concrete entity needs its own resolver
+public class ProductCategoryBreadcrumbResolver implements TransientResolver<Long, String> { ... }
+public class DeviceCategoryBreadcrumbResolver implements TransientResolver<Long, String> { ... }
+// Both implement the same tree/breadcrumb algorithm – only the entity type differs.
+```
+
+</TabItem>
+</Tabs>
+
+With context, one shared resolver can dispatch the same algorithm for any concrete entity:
+
+<Tabs groupId="language">
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Component
+class BaseTreeBreadcrumbResolver : KTransientResolver<Long, String?> {
+
+    @OptIn(ExperimentalTransientResolverContext::class)
+    override fun resolve(
+        ids: Collection<Long>,
+        ctx: KTransientResolverContext
+    ): Map<Long, String?> {
+        val declaringType = ctx.prop.declaringType
+        val propName = ctx.prop.name
+        // Run the same algorithm, using declaringType to know
+        // which concrete entity's table/columns to query.
+        return ... // compute breadcrumb for each id
+    }
+}
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+@Component
+public class BaseTreeBreadcrumbResolver implements TransientResolver<Long, String> {
+
+    @Override
+    public Map<Long, String> resolve(Collection<Long> ids, TransientResolverContext ctx) {
+        ImmutableProp prop = ctx.getProp();
+        ImmutableType declaringType = prop.getDeclaringType();
+        // Run the same algorithm for any concrete tree entity.
+        return ... // compute breadcrumb for each id
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+### Context properties
+
+`KTransientResolverContext` / `TransientResolverContext` exposes:
+
+- `connection` – the current JDBC connection (useful if resolver is not Spring-managed).
+- `prop` – the `ImmutableProp` currently being resolved.
+- `resolver` – the resolver instance being invoked.
+- `sourceIds` – the set of source entity ids.
+
+### Backward compatibility
+
+Existing resolvers that only override `resolve(Collection<ID>)` do **not** need to change.
+The new overload has a default implementation that delegates to the original one.
+
+<Tabs groupId="language">
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+// Old style – still works
+class MyResolver : KTransientResolver<Long, String> {
+    override fun resolve(ids: Collection<Long>): Map<Long, String> = ...
+}
+
+// New style – opt-in
+class MyResolver : KTransientResolver<Long, String> {
+    @OptIn(ExperimentalTransientResolverContext::class)
+    override fun resolve(
+        ids: Collection<Long>,
+        ctx: KTransientResolverContext
+    ): Map<Long, String> = ...
+}
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+// Old style – still works
+public class MyResolver implements TransientResolver<Long, String> {
+    @Override
+    public Map<Long, String> resolve(Collection<Long> ids) { ... }
+}
+
+// New style
+public class MyResolver implements TransientResolver<Long, String> {
+    @Override
+    public Map<Long, String> resolve(Collection<Long> ids, TransientResolverContext ctx) { ... }
+}
+```
+
+</TabItem>
+</Tabs>
+
+
+## Generic Mapped Superclass Inheritance {#generic-mapped-superclass}
+
+Jimmer 0.10.13+ supports self-bounded generic mapped superclasses with `where` constraints.
+This allows defining a reusable tree/base entity hierarchy that concrete entities can extend.
+
+### Self-bounded generic tree base
+
+```kotlin
+@MappedSuperclass
+interface BaseTreeNode<T> where T : BaseTreeNode<T> {
+    @ManyToOne
+    val parent: T?
+
+    @OneToMany(mappedBy = "parent")
+    val children: List<T>
+}
+
+@MappedSuperclass
+interface BaseNamed {
+    val name: String
+}
+
+@MappedSuperclass
+interface BaseNamedTreeNode<T> : BaseTreeNode<T>, BaseNamed
+    where T : BaseNamedTreeNode<T>
+
+@Entity
+interface ProductCategory : BaseNamedTreeNode<ProductCategory> {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long
+}
+```
+
+This hierarchy compiles correctly: `ProductCategory` inherits `parent`, `children` (with proper recursive type `ProductCategory`), and `name` while also providing its own `@Id`.
+
+### Why this is useful
+
+Without generic mapped superclass inheritance, each concrete tree entity must redeclare its `parent` and `children` associations separately.
+With the generic base, the tree structure is defined once and reused across all tree-shaped entities.
+
+Combined with [resolver context](#resolver-context), a single shared resolver can serve calculated properties (e.g. breadcrumbs) for all concrete tree entities that extend the same generic base.

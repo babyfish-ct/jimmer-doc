@@ -985,3 +985,182 @@ where
 
 所以，对象抓取器提供的功能，其实是SQL操作和非SQL操作的任意混合。
 :::
+
+
+## Resolver Context（实验性） {#resolver-context}
+
+:::info 实验性状态
+此功能为 **实验性功能**。Kotlin 中需通过 `@ExperimentalTransientResolverContext` 显式 opt-in，
+Java 中标记为 `@ApiStatus.Experimental`。未来版本中 API 可能发生变化。
+:::
+
+Jimmer 0.10.13+ 提供了 `resolve` 的重载方法，接收 `TransientResolverContext` / `KTransientResolverContext`。
+这允许 resolver 实现检查当前的不可变属性元数据、数据库连接以及正在解析的源 ID。
+
+### 为什么需要 resolver context？
+
+没有 context 时，一个共享的泛型 resolver 无法知道当前正在解析的是**哪个**具体实体或属性。
+在实际项目中，这会导致重复代码：
+
+<Tabs groupId="language">
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+// 没有 context —— 每个具体实体都需要自己的 resolver
+class ProductCategoryBreadcrumbResolver : KTransientResolver<Long, String?> { ... }
+class DeviceCategoryBreadcrumbResolver : KTransientResolver<Long, String?> { ... }
+// 两者都实现相同的树/面包屑算法 —— 只有实体类型不同。
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+// 没有 context —— 每个具体实体都需要自己的 resolver
+public class ProductCategoryBreadcrumbResolver implements TransientResolver<Long, String> { ... }
+public class DeviceCategoryBreadcrumbResolver implements TransientResolver<Long, String> { ... }
+// 两者都实现相同的树/面包屑算法 —— 只有实体类型不同。
+```
+
+</TabItem>
+</Tabs>
+
+有了 context，一个共享 resolver 可以为任何具体实体分发相同的算法：
+
+<Tabs groupId="language">
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Component
+class BaseTreeBreadcrumbResolver : KTransientResolver<Long, String?> {
+
+    @OptIn(ExperimentalTransientResolverContext::class)
+    override fun resolve(
+        ids: Collection<Long>,
+        ctx: KTransientResolverContext
+    ): Map<Long, String?> {
+        val declaringType = ctx.prop.declaringType
+        val propName = ctx.prop.name
+        // 运行相同的算法，使用 declaringType 来知道
+        // 要查询哪个具体实体的表/列。
+        return ... // 为每个 id 计算面包屑
+    }
+}
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+@Component
+public class BaseTreeBreadcrumbResolver implements TransientResolver<Long, String> {
+
+    @Override
+    public Map<Long, String> resolve(Collection<Long> ids, TransientResolverContext ctx) {
+        ImmutableProp prop = ctx.getProp();
+        ImmutableType declaringType = prop.getDeclaringType();
+        // 为任何具体树实体运行相同的算法。
+        return ... // 为每个 id 计算面包屑
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+### Context 属性
+
+`KTransientResolverContext` / `TransientResolverContext` 暴露了以下属性：
+
+- `connection` – 当前 JDBC 连接（适用于 resolver 未被 Spring 管理的情况）。
+- `prop` – 当前正在解析的 `ImmutableProp`。
+- `resolver` – 正在被调用的 resolver 实例。
+- `sourceIds` – 源实体 ID 的集合。
+
+### 向后兼容性
+
+只覆盖 `resolve(Collection<ID>)` 的已有 resolver **无需**做任何改动。
+新的重载方法有一个默认实现，委托给原始方法。
+
+<Tabs groupId="language">
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+// 旧风格 —— 仍然可用
+class MyResolver : KTransientResolver<Long, String> {
+    override fun resolve(ids: Collection<Long>): Map<Long, String> = ...
+}
+
+// 新风格 —— opt-in
+class MyResolver : KTransientResolver<Long, String> {
+    @OptIn(ExperimentalTransientResolverContext::class)
+    override fun resolve(
+        ids: Collection<Long>,
+        ctx: KTransientResolverContext
+    ): Map<Long, String> = ...
+}
+```
+
+</TabItem>
+<TabItem value="java" label="Java">
+
+```java
+// 旧风格 —— 仍然可用
+public class MyResolver implements TransientResolver<Long, String> {
+    @Override
+    public Map<Long, String> resolve(Collection<Long> ids) { ... }
+}
+
+// 新风格
+public class MyResolver implements TransientResolver<Long, String> {
+    @Override
+    public Map<Long, String> resolve(Collection<Long> ids, TransientResolverContext ctx) { ... }
+}
+```
+
+</TabItem>
+</Tabs>
+
+
+## 泛型映射父类继承 {#generic-mapped-superclass}
+
+Jimmer 0.10.13+ 支持带 `where` 约束的自限界泛型映射父类。
+这允许定义一个可复用的树/基实体层次结构，具体实体可以继承。
+
+### 自限界泛型树基类
+
+```kotlin
+@MappedSuperclass
+interface BaseTreeNode<T> where T : BaseTreeNode<T> {
+    @ManyToOne
+    val parent: T?
+
+    @OneToMany(mappedBy = "parent")
+    val children: List<T>
+}
+
+@MappedSuperclass
+interface BaseNamed {
+    val name: String
+}
+
+@MappedSuperclass
+interface BaseNamedTreeNode<T> : BaseTreeNode<T>, BaseNamed
+    where T : BaseNamedTreeNode<T>
+
+@Entity
+interface ProductCategory : BaseNamedTreeNode<ProductCategory> {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long
+}
+```
+
+此层次结构可以正确编译：`ProductCategory` 继承了 `parent`、`children`（具有正确的递归类型 `ProductCategory`）和 `name`，同时提供了自己的 `@Id`。
+
+### 为什么需要这个功能
+
+没有泛型映射父类继承时，每个具体树实体必须分别重新声明其 `parent` 和 `children` 关联。
+有了泛型基类后，树结构只定义一次，即可在所有树形实体中复用。
+
+结合 [resolver context](#resolver-context)，单个共享 resolver 可以为所有继承同一泛型基类的具体树实体提供计算属性（例如面包屑路径）。

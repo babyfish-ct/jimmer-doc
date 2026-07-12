@@ -7,7 +7,11 @@ title: 低代码查询
 
 它并不替代常规 SQL DSL。如果每个接口都有独立的查询形状，仍应直接使用普通 DSL；如果很多列表页都遵循同一套模式，例如可选等值过滤、关键词搜索、范围查询、`in` 查询和默认排序，则适合使用低代码查询。
 
-## 依赖配置
+## KSP 配置
+
+低代码查询会生成 Kotlin 扩展函数，因此它只提供 KSP 处理器，不提供 Java APT 处理器。
+
+请使用和当前 Kotlin 版本兼容的 KSP 插件版本：
 
 ```kotlin
 plugins {
@@ -21,13 +25,37 @@ dependencies {
 }
 ```
 
-默认生成包名为 `<entity-package>.generated.lowquery`，也可以显式指定：
+KSP 参数是可选的。默认生成包名为 `<entity-package>.generated.lowquery`；只有希望把所有生成的查询辅助函数集中到一个包下时，才需要覆盖它：
 
 ```kotlin
 ksp {
     arg("jimmerLowQuery.generatedPackage", "com.example.generated.lowquery")
 }
 ```
+
+完整的 Gradle Kotlin DSL 配置示例：
+
+```kotlin
+plugins {
+    kotlin("jvm")
+    id("com.google.devtools.ksp") version "<ksp-version>"
+}
+
+dependencies {
+    implementation("org.babyfish.jimmer:jimmer-sql-kotlin:<jimmer-version>")
+    implementation("org.babyfish.jimmer:jimmer-low-query-annotations:<jimmer-version>")
+    ksp("org.babyfish.jimmer:jimmer-ksp:<jimmer-version>")
+    ksp("org.babyfish.jimmer:jimmer-low-query-processor:<jimmer-version>")
+}
+
+ksp {
+    arg("jimmerLowQuery.generatedPackage", "com.example.generated.lowquery")
+}
+```
+
+:::note
+实体代码生成仍然需要正常使用 Jimmer KSP 处理器（`jimmer-ksp`）。低代码查询是额外的 KSP 处理器，用于根据实体模型生成查询辅助函数。
+:::
 
 ## 为实体添加注解
 

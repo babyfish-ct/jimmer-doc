@@ -7,15 +7,19 @@ Jimmer DDL Compiler is a compile-time DDL generator for Jimmer entities. It can 
 
 Use it when you want schema SQL to be derived from the same entity model used by runtime queries and mutations. For production systems, review generated SQL before applying it, especially when destructive changes are enabled.
 
-## Kotlin/KSP usage
+## KSP configuration for Kotlin projects
+
+Kotlin projects should use the KSP processor. Configure the KSP plugin version that matches your Kotlin version.
 
 ```kotlin
 plugins {
     kotlin("jvm")
-    id("com.google.devtools.ksp")
+    id("com.google.devtools.ksp") version "<ksp-version>"
 }
 
 dependencies {
+    implementation("org.babyfish.jimmer:jimmer-sql-kotlin:<jimmer-version>")
+    ksp("org.babyfish.jimmer:jimmer-ksp:<jimmer-version>")
     ksp("org.babyfish.jimmer:jimmer-ddl-compiler:<jimmer-version>")
 }
 
@@ -29,10 +33,24 @@ ksp {
 }
 ```
 
-## Java/APT usage
+If you want generated SQL and the snapshot file to be packaged as application resources, add the generated resources directory to `main` resources:
+
+```kotlin
+sourceSets {
+    main {
+        resources.srcDir("$buildDir/generated/jimmer-ddl/main/resources")
+    }
+}
+```
+
+## APT configuration for Java projects
+
+Java projects should use the annotation processor through `annotationProcessor` and pass options with `-A...` compiler arguments:
 
 ```kotlin
 dependencies {
+    implementation("org.babyfish.jimmer:jimmer-sql:<jimmer-version>")
+    annotationProcessor("org.babyfish.jimmer:jimmer-apt:<jimmer-version>")
     annotationProcessor("org.babyfish.jimmer:jimmer-ddl-compiler:<jimmer-version>")
 }
 
@@ -40,6 +58,72 @@ tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.add("-AjimmerDdl.enabled=true")
     options.compilerArgs.add("-AjimmerDdl.databaseType=postgresql")
 }
+```
+
+For a full Gradle Java configuration:
+
+```kotlin
+plugins {
+    java
+}
+
+dependencies {
+    implementation("org.babyfish.jimmer:jimmer-sql:<jimmer-version>")
+    annotationProcessor("org.babyfish.jimmer:jimmer-apt:<jimmer-version>")
+    annotationProcessor("org.babyfish.jimmer:jimmer-ddl-compiler:<jimmer-version>")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.addAll(
+        listOf(
+            "-AjimmerDdl.enabled=true",
+            "-AjimmerDdl.databaseType=postgresql",
+            "-AjimmerDdl.outputFormat=flyway",
+            "-AjimmerDdl.outputDir=$projectDir/build/generated/jimmer-ddl/main/resources/db/migration",
+            "-AjimmerDdl.version=1001",
+            "-AjimmerDdl.description=jimmer_auto_ddl_generated",
+            "-AjimmerDdl.compareDatabase=false",
+        )
+    )
+}
+
+sourceSets {
+    main {
+        resources.srcDir("$buildDir/generated/jimmer-ddl/main/resources")
+    }
+}
+```
+
+For Maven Java projects, configure `maven-compiler-plugin`:
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>org.babyfish.jimmer</groupId>
+                <artifactId>jimmer-apt</artifactId>
+                <version>${jimmer.version}</version>
+            </path>
+            <path>
+                <groupId>org.babyfish.jimmer</groupId>
+                <artifactId>jimmer-ddl-compiler</artifactId>
+                <version>${jimmer.version}</version>
+            </path>
+        </annotationProcessorPaths>
+        <compilerArgs>
+            <arg>-AjimmerDdl.enabled=true</arg>
+            <arg>-AjimmerDdl.databaseType=postgresql</arg>
+            <arg>-AjimmerDdl.outputFormat=flyway</arg>
+            <arg>-AjimmerDdl.outputDir=${project.build.directory}/generated/jimmer-ddl/main/resources/db/migration</arg>
+            <arg>-AjimmerDdl.version=1001</arg>
+            <arg>-AjimmerDdl.description=jimmer_auto_ddl_generated</arg>
+            <arg>-AjimmerDdl.compareDatabase=false</arg>
+        </compilerArgs>
+    </configuration>
+</plugin>
 ```
 
 ## Output files

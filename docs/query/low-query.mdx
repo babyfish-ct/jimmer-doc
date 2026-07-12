@@ -7,7 +7,11 @@ Low Query is a KSP-based helper for Kotlin projects. It reads query annotations 
 
 It is not a replacement for the normal SQL DSL. Use the normal DSL when each endpoint has its own query shape. Use Low Query when many list pages follow the same pattern: optional equality filters, keyword search, ranges, `in` filters, and stable default ordering.
 
-## Dependencies
+## KSP configuration
+
+Low Query generates Kotlin extension functions, so it is a KSP-only processor. It does not provide a Java APT processor.
+
+Use a KSP plugin version compatible with your Kotlin version:
 
 ```kotlin
 plugins {
@@ -21,13 +25,37 @@ dependencies {
 }
 ```
 
-The generated package defaults to `<entity-package>.generated.lowquery`. You can override it:
+The KSP option is optional. The generated package defaults to `<entity-package>.generated.lowquery`; override it only when you want all generated query helpers in one package:
 
 ```kotlin
 ksp {
     arg("jimmerLowQuery.generatedPackage", "com.example.generated.lowquery")
 }
 ```
+
+For a complete Gradle Kotlin DSL setup:
+
+```kotlin
+plugins {
+    kotlin("jvm")
+    id("com.google.devtools.ksp") version "<ksp-version>"
+}
+
+dependencies {
+    implementation("org.babyfish.jimmer:jimmer-sql-kotlin:<jimmer-version>")
+    implementation("org.babyfish.jimmer:jimmer-low-query-annotations:<jimmer-version>")
+    ksp("org.babyfish.jimmer:jimmer-ksp:<jimmer-version>")
+    ksp("org.babyfish.jimmer:jimmer-low-query-processor:<jimmer-version>")
+}
+
+ksp {
+    arg("jimmerLowQuery.generatedPackage", "com.example.generated.lowquery")
+}
+```
+
+:::note
+Keep using the normal Jimmer KSP processor (`jimmer-ksp`) for entity code generation. Low Query is an additional KSP processor that generates query helpers from the entity model.
+:::
 
 ## Add annotations to entities
 

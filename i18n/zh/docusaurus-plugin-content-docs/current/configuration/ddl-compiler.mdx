@@ -1,0 +1,124 @@
+---
+sidebar_position: 18
+title: DDL 编译器
+---
+
+Jimmer DDL 编译器是基于编译期的实体建表 SQL 生成工具。它既可以作为 Kotlin KSP 处理器运行，也可以作为 Java 注解处理器运行，读取 Jimmer 实体元数据，并输出特定方言的 SQL 文件，例如 Flyway migration。
+
+当希望数据库结构 SQL 和运行时查询、保存所使用的实体模型保持一致时，可以使用它。生产环境中，尤其是在允许破坏性变更时，仍应先审查生成的 SQL 再执行。
+
+## Kotlin/KSP 用法
+
+```kotlin
+plugins {
+    kotlin("jvm")
+    id("com.google.devtools.ksp")
+}
+
+dependencies {
+    ksp("org.babyfish.jimmer:jimmer-ddl-compiler:<jimmer-version>")
+}
+
+ksp {
+    arg("jimmerDdl.enabled", "true")
+    arg("jimmerDdl.databaseType", "postgresql")
+    arg("jimmerDdl.outputFormat", "flyway")
+    arg("jimmerDdl.outputDir", "$projectDir/build/generated/jimmer-ddl/main/resources/db/migration")
+    arg("jimmerDdl.version", "1001")
+    arg("jimmerDdl.description", "jimmer_auto_ddl_generated")
+}
+```
+
+## Java/APT 用法
+
+```kotlin
+dependencies {
+    annotationProcessor("org.babyfish.jimmer:jimmer-ddl-compiler:<jimmer-version>")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-AjimmerDdl.enabled=true")
+    options.compilerArgs.add("-AjimmerDdl.databaseType=postgresql")
+}
+```
+
+## 输出文件
+
+默认输出目录为：
+
+```text
+build/generated/jimmer-ddl/main/resources/db/migration
+```
+
+当 `jimmerDdl.outputFormat` 为 `flyway` 时，编译器会写出类似这样的文件：
+
+```text
+V1001__jimmer_auto_ddl_generated.sql
+```
+
+当它为 `plain` 时，编译器会写出：
+
+```text
+jimmer_auto_ddl_generated.sql
+```
+
+## 数据库比对和离线生成
+
+如果存在 JDBC 配置，并且启用了 `jimmerDdl.compareDatabase`，编译器会读取当前数据库结构，并和实体推导出的目标结构做 diff，生成增量 SQL。
+
+如果数据库无法读取，或者没有可用的 JDBC URL，则会回退为离线生成。离线生成会使用下面介绍的快照文件，在多次构建之间生成增量 SQL。
+
+## 快照模型
+
+编译器会在 generated resources 下写出快照：
+
+```text
+build/generated/jimmer-ddl/main/resources/.jimmer-ddl/entity-table-snapshot.properties
+```
+
+快照记录实体到表名的映射以及表结构哈希。后续构建时，编译器可以比较上一次快照和当前实体模型，从而输出增量 SQL；也可以识别由 `@Table(name = ...)` 变化导致的表重命名。
+
+## 配置项
+
+| 配置项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `jimmerDdl.enabled` | `true` | 是否启用生成。 |
+| `jimmerDdl.profiles` | 空 | 逗号分隔的 profile 名称。每个 profile 可以通过 `jimmerDdl.profile.<name>.<option>` 覆盖配置。 |
+| `jimmerDdl.databaseType` | `auto` | 方言代码，例如 `postgresql`、`mysql`、`h2`、`sqlite`、`sqlserver`、`oracle`、`dm`、`kingbase` 或 `taos`。`auto` 会在可用时从 JDBC URL 推断。 |
+| `jimmerDdl.outputFormat` | `flyway` | `flyway` 写出 `V<version>__<description>.sql`；`plain` 写出 `<description>.sql`。 |
+| `jimmerDdl.outputDir` | `build/generated/jimmer-ddl/main/resources/db/migration` | 生成 SQL 的输出目录。 |
+| `jimmerDdl.version` | `1001` | Flyway 版本前缀。 |
+| `jimmerDdl.description` | `jimmer_auto_ddl_generated` | 输出文件描述。 |
+| `jimmerDdl.includePackages` | 空 | 可选的包名前缀白名单，逗号分隔。 |
+| `jimmerDdl.excludePackages` | 空 | 可选的包名前缀黑名单，逗号分隔。 |
+| `jimmerDdl.includeForeignKeys` | `true` | 在方言支持时生成外键语句。 |
+| `jimmerDdl.includeIndexes` | `true` | 生成索引语句。 |
+| `jimmerDdl.includeComments` | `true` | 生成注释语句。 |
+| `jimmerDdl.includeSequences` | `true` | 生成序列语句。 |
+| `jimmerDdl.includeManyToManyTables` | `true` | 生成多对多中间表。 |
+| `jimmerDdl.compareDatabase` | `true` | 在可用时读取数据库并生成 diff SQL。 |
+| `jimmerDdl.nullabilityRepairOnly` | `false` | 将较高风险的离线结构变更规划限制为可空性修复。 |
+| `jimmerDdl.sourceFingerprint` | 空 | 可选源码指纹，会写入快照。 |
+| `jimmerDdl.jdbcUrl` | 空 | 数据库比对使用的显式 JDBC URL。 |
+| `jimmerDdl.jdbcUsername` | 空 | JDBC 用户名。 |
+| `jimmerDdl.jdbcPassword` | 空 | JDBC 密码。 |
+| `jimmerDdl.jdbcSchema` | 空 | JDBC schema 名称。 |
+| `jimmerDdl.jdbcDriver` | 空 | JDBC 驱动类名。 |
+| `jimmerDdl.springResourcePath` | 空 | 可选 Spring 资源路径，用于发现数据源配置。 |
+| `jimmerDdl.springProfile` | `local` | 读取 YAML 数据源配置时使用的 Spring profile。 |
+
+## 多 Profile
+
+Profile 可以让一次编译为多个数据库目标或输出目录生成 SQL：
+
+```kotlin
+ksp {
+    arg("jimmerDdl.profiles", "postgres,mysql")
+
+    arg("jimmerDdl.profile.postgres.databaseType", "postgresql")
+    arg("jimmerDdl.profile.postgres.outputDir", "$projectDir/build/generated/jimmer-ddl/postgres/db/migration")
+
+    arg("jimmerDdl.profile.mysql.databaseType", "mysql")
+    arg("jimmerDdl.profile.mysql.outputDir", "$projectDir/build/generated/jimmer-ddl/mysql/db/migration")
+}
+```

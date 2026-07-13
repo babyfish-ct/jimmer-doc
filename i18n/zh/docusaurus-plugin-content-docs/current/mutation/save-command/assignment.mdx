@@ -1,0 +1,126 @@
+---
+sidebar_position: 7
+title: 赋值表达式
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+默认情况下，保存指令会用被保存对象中的值更新每个已加载属性。对于计数器递增之类的原子操作，
+新的列值必须由数据库动态计算，而不能直接使用对象中的静态值。
+
+## 基本用法
+
+下面的指令把输入价格累加到数据库中的当前价格：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setId(1L);
+    draft.setPrice(new BigDecimal("2.00"));
+});
+
+sqlClient
+    .getEntities()
+    .saveCommand(book)
+    .setMode(SaveMode.UPDATE_ONLY)
+    .set(
+        BookTable.class,
+        BookProps.PRICE,
+        (target, values) ->
+            target.price().plus(values.newNumber(BookProps.PRICE))
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.save(
+    Book {
+        id = 1L
+        price = BigDecimal("2.00")
+    }
+) {
+    setMode(SaveMode.UPDATE_ONLY)
+    set(Book::price) {
+        target.price + newNonNull(Book::price)
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+它会生成右值为SQL表达式的赋值：
+
+```sql
+update BOOK
+set PRICE = PRICE + ? /* 2.00 */
+where ID = ? /* 1 */
+```
+
+`target`表示数据库中已有的数据行。Java中的`newNumber`或Kotlin中的`newNonNull`
+表示被保存对象里已经加载的值。对于可空目标，Kotlin使用`setNullable`；通过`newNullable`
+引用被保存对象中的可空值：
+
+```kotlin
+setNullable(BookStore::website) {
+    newNullable(BookStore::website)
+}
+```
+
+:::info
+Java提供`newValue`、`newString`、`newNumber`和`newComparable`，使返回的表达式在
+SQL DSL中具有最有用的静态类型。
+:::
+
+## 保存模式
+
+赋值表达式支持：
+
+-   `UPDATE_ONLY`
+-   `UPSERT`找到已有数据行时执行的update分支
+
+它不支持`INSERT_ONLY`。insert仍然从被保存对象中获取值；`set`只用于自定义update赋值。
+
+## 对象形状和UpsertMask
+
+`set`不会把属性添加到保存操作中。它只替换一个已经被对象的加载形状选中的赋值；对于upsert，
+该属性还必须被`UpsertMask`允许更新。
+
+因此：
+
+-   目标属性必须在被保存对象中处于已加载状态。
+-   如果配置了`UpsertMask`，目标属性必须是mask允许更新的属性。
+-   通过`newValue`、`newNonNull`或其他`new*`函数引用的每个对象属性也必须处于已加载状态。
+-   输入属性本身不必是update目标；它可以只提供计算另一个属性所需的值。
+
+违反这些规则会在执行DML语句之前被报告。
+
+:::tip
+同样的规则也适用于图保存中的嵌套实体。保存过程到达对应实体类型时，赋值表达式就会生效。
+:::
+
+## 限制
+
+赋值目标必须是当前实体的物理标量列。ID、版本、鉴别器、逻辑删除属性、关联属性、计算属性和
+远程属性都不能作为目标。
+
+表达式可以通过`target`读取当前实体的物理标量属性，但不能创建表连接。同一个指令中，每个目标
+最多配置一次。
+
+## 保存结果
+
+赋值表达式的结果由数据库计算，因此Jimmer不会假定它等于被保存对象中的任何值。当保存结果或
+事务触发器需要被更新的属性时，Jimmer会在数据库支持的情况下通过DML returning读取实际的
+更新后值，否则执行后续查询。
+
+## 乐观锁
+
+赋值表达式和[自定义乐观锁](./optimistic-locking)使用同一套被保存值表达式API。在这两个API中，
+表表达式都表示数据库中的当前行，而`new*`函数都表示被保存对象。它们可以在同一个指令中使用：
+乐观锁条件决定是否接受update，`set`则决定被接受的数据行如何更新。

@@ -1,0 +1,194 @@
+---
+sidebar_position: 1
+title: Entity Mapping
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Single Table
+
+Add `@Inheritance` to the root entity and let derived entities extend it in the
+ordinary Java/Kotlin type system:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Client.java"
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+public interface Client {
+
+    @Id
+    long id();
+
+    @Discriminator
+    @Column(name = "CLIENT_TYPE")
+    String type();
+
+    String name();
+}
+```
+
+```java title="Organization.java"
+@Entity
+@DiscriminatorValue("ORG")
+public interface Organization extends Client {
+
+    String taxCode();
+}
+```
+
+```java title="Person.java"
+@Entity
+public interface Person extends Client {
+
+    String firstName();
+
+    String lastName();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="Client.kt"
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+interface Client {
+
+    @Id
+    val id: Long
+
+    @Discriminator
+    @Column(name = "CLIENT_TYPE")
+    val type: String
+
+    val name: String
+}
+```
+
+```kotlin title="Organization.kt"
+@Entity
+@DiscriminatorValue("ORG")
+interface Organization : Client {
+
+    val taxCode: String
+}
+```
+
+```kotlin title="Person.kt"
+@Entity
+interface Person : Client {
+
+    val firstName: String
+
+    val lastName: String
+}
+```
+
+</TabItem>
+</Tabs>
+
+All properties are stored in one table. Columns declared only by a derived type
+must be nullable at database level because rows of other types do not use them.
+
+```text
+CLIENT
+├── ID
+├── CLIENT_TYPE
+├── NAME
+├── TAX_CODE       -- Organization
+├── FIRST_NAME     -- Person
+└── LAST_NAME      -- Person
+```
+
+## Discriminator
+
+The hierarchy must have one physical discriminator column, exposed by a scalar
+property decorated with `@Discriminator`. The property type can be `String` or
+an enum.
+
+`@DiscriminatorValue` assigns the stored value for an entity type. If it is
+omitted for an instantiable leaf type, the simple entity type name is used. An
+explicit value is preferable when the database representation must remain
+stable after a code rename.
+
+The discriminator property is read-only:
+
+-   It can be selected in the query DSL or a fetcher.
+-   Jimmer selects it internally when required to materialize the actual type.
+-   Save and update operations derive it from the entity type instead of taking
+    an arbitrary value from the object.
+
+An inheritance type that has derived types but no `@DiscriminatorValue` is
+abstract in the Jimmer model. Adding `@DiscriminatorValue` makes the root or an
+intermediate type instantiable as its own branch.
+
+## Joined Tables
+
+For joined inheritance, use `InheritanceType.JOINED` and map each entity type to
+its physical table:
+
+```java
+@Entity
+@Table(name = "CLIENT")
+@Inheritance(strategy = InheritanceType.JOINED)
+public interface Client {
+    // id, discriminator and common properties
+}
+
+@Entity
+@Table(name = "ORGANIZATION")
+@DiscriminatorValue("ORG")
+public interface Organization extends Client {
+    // properties stored in ORGANIZATION
+}
+
+@Entity
+@Table(name = "PERSON")
+public interface Person extends Client {
+    // properties stored in PERSON
+}
+```
+
+The root table contains the id, discriminator, and root properties. Each derived
+table uses the same id as both its primary key and a foreign key to the table of
+its direct entity supertype.
+
+```text
+CLIENT                   ORGANIZATION             PERSON
+├── ID                   ├── ID (PK, FK)          ├── ID (PK, FK)
+├── CLIENT_TYPE          └── TAX_CODE             ├── FIRST_NAME
+└── NAME                                          └── LAST_NAME
+```
+
+Joined inheritance also supports multiple levels. Each entity type contributes
+one physical table; mapped-superclass properties are stored in the first entity
+table that inherits them.
+
+### Physical Delete
+
+By default, Jimmer explicitly deletes rows from joined derived tables before it
+deletes the root row. If all joined foreign keys use `ON DELETE CASCADE`, this
+extra work can be disabled:
+
+```java
+@Inheritance(
+    strategy = InheritanceType.JOINED,
+    joinedTableDissociateAction = JoinedTableDissociateAction.LAX
+)
+```
+
+Use `LAX` only when the schema guarantees the cascade. The portable default is
+`JoinedTableDissociateAction.DELETE`.
+
+## Common Rules
+
+-   `@Inheritance` is declared once, on the root entity.
+-   Every concrete branch is an `@Entity`, not a `@MappedSuperclass`.
+-   The hierarchy has one id property inherited from the root.
+-   Associations may target either the root or a derived entity type.
+-   Schema validation understands both strategies, including discriminator
+    columns and joined-table primary-key/foreign-key structure.
+-   Table-per-class inheritance is not supported.

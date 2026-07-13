@@ -101,6 +101,9 @@ val books = sqlClient
 
         这就是人们常说的游标查询
 
+    -   `stream`：返回由JDBC游标支持的`java.util.stream.Stream`。和`execute`不同，它不会把
+        所有数据行物化为一个List。使用后必须关闭Stream。
+
     -   `count`：在用户编写的原始数据查询基础上，自动生成分页查询所需要的count聚合查询，并执行获取分页前的数据总行数。
 
         :::info
@@ -145,3 +148,94 @@ val books = sqlClient
      执行结果
 (其类型由❷处select指定)
 ```
+
+## 流式结果
+
+如果结果可以顺序处理，而且不应该全部保留在内存中，可以使用`stream`。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable book = BookTable.$;
+
+try (Stream<Tuple2<Integer, String>> rows = sqlClient
+    .createQuery(book)
+    .where(book.name().eq("Learning GraphQL"))
+    .orderBy(book.edition())
+    .select(book.edition(), book.name())
+    .stream()
+) {
+    rows.forEach(this::exportRow);
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.createQuery(Book::class) {
+    where(table.name eq "Learning GraphQL")
+    orderBy(table.edition)
+    select(table.edition, table.name)
+}.stream().use { rows ->
+    rows.forEach(::exportRow)
+}
+```
+
+</TabItem>
+</Tabs>
+
+关闭Stream会关闭它持有的JDBC `ResultSet`和`Statement`，即使只读取了一部分数据也是如此。
+Java代码必须使用try-with-resources，Kotlin代码必须使用`use`。
+
+Stream可以包含标量值、Tuple、复合对象或实体。实体抓取器可以使用通过SQL JOIN加载的关联，
+但不能使用读取根数据后还需要执行额外select的关联。这种后置抓取必须先得到完整的根结果，
+因此流式查询会拒绝它。
+
+:::tip
+和`execute`一样，`stream`也有接受显式JDBC `Connection`的重载。
+:::
+
+### JDBC选项
+
+可以为单个查询配置JDBC fetch size和query timeout：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+try (Stream<Book> books = sqlClient
+    .createQuery(BookTable.$)
+    .jdbcFetchSize(500)
+    .jdbcQueryTimeout(30)
+    .select(BookTable.$)
+    .stream()
+) {
+    books.forEach(this::exportBook);
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.createQuery(Book::class) {
+    jdbc {
+        fetchSize = 500
+        queryTimeout = 30
+    }
+    select(table)
+}.stream().use { books ->
+    books.forEach(::exportBook)
+}
+```
+
+</TabItem>
+</Tabs>
+
+`fetchSize`是每次往返获取数据行数量的驱动提示，不同数据库和驱动可能有不同解释。
+`queryTimeout`使用JDBC定义的秒数。
+
+可以通过SQL client builder的`setDefaultJdbcFetchSize`和`setDefaultJdbcQueryTimeout`
+设置所有语句的默认值。语句局部值会覆盖对应的client默认值。

@@ -101,6 +101,10 @@ Now let's explain the code:
 
         This is what people often refer to as cursor queries.
 
+    -   `stream`: Return a `java.util.stream.Stream` backed by the JDBC cursor.
+        Unlike `execute`, it does not materialize all rows as a list. The stream
+        must be closed after use.
+
     -   `count`: Based on the original data query written by users, automatically generate the count aggregate query needed for paging, execute and get total rows before paging.  
 
         :::info
@@ -146,3 +150,101 @@ create new queries without modifying current one)
      Execution Result
 (Result type is specified by ❷ select)
 ```
+
+## Streaming Results
+
+Use `stream` when the result can be processed sequentially and should not be
+fully retained in memory.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable book = BookTable.$;
+
+try (Stream<Tuple2<Integer, String>> rows = sqlClient
+    .createQuery(book)
+    .where(book.name().eq("Learning GraphQL"))
+    .orderBy(book.edition())
+    .select(book.edition(), book.name())
+    .stream()
+) {
+    rows.forEach(this::exportRow);
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.createQuery(Book::class) {
+    where(table.name eq "Learning GraphQL")
+    orderBy(table.edition)
+    select(table.edition, table.name)
+}.stream().use { rows ->
+    rows.forEach(::exportRow)
+}
+```
+
+</TabItem>
+</Tabs>
+
+Closing the stream closes its JDBC result set and statement, including when the
+stream is only partially consumed. Always use try-with-resources in Java or
+`use` in Kotlin.
+
+The stream can contain scalar values, tuples, embeddable objects, or entities.
+An entity fetcher may use associations loaded by SQL joins, but it cannot use an
+association that requires a secondary select after the root rows are read. Such
+post-fetch processing needs the complete root result and is therefore rejected
+for streaming.
+
+:::tip
+Like `execute`, `stream` has an overload that accepts an explicit JDBC
+`Connection`.
+:::
+
+### JDBC Options
+
+The JDBC fetch size and query timeout can be configured for an individual query:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+try (Stream<Book> books = sqlClient
+    .createQuery(BookTable.$)
+    .jdbcFetchSize(500)
+    .jdbcQueryTimeout(30)
+    .select(BookTable.$)
+    .stream()
+) {
+    books.forEach(this::exportBook);
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.createQuery(Book::class) {
+    jdbc {
+        fetchSize = 500
+        queryTimeout = 30
+    }
+    select(table)
+}.stream().use { books ->
+    books.forEach(::exportBook)
+}
+```
+
+</TabItem>
+</Tabs>
+
+`fetchSize` is a driver hint for the number of rows fetched per round trip;
+drivers and databases may interpret it differently. `queryTimeout` uses the
+JDBC timeout in seconds.
+
+Defaults for all statements can be set with
+`setDefaultJdbcFetchSize` and `setDefaultJdbcQueryTimeout` on the SQL client
+builder. A local value overrides the corresponding client default.

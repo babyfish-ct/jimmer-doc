@@ -1,0 +1,139 @@
+---
+sidebar_position: 7
+title: Assignment Expressions
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+By default, a save command updates each loaded property with the value from the
+saved object. For atomic operations such as incrementing a counter, the new
+column value must instead be calculated by the database.
+
+## Basic Usage
+
+The following command adds the input price to the current database price:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book book = Immutables.createBook(draft -> {
+    draft.setId(1L);
+    draft.setPrice(new BigDecimal("2.00"));
+});
+
+sqlClient
+    .getEntities()
+    .saveCommand(book)
+    .setMode(SaveMode.UPDATE_ONLY)
+    .set(
+        BookTable.class,
+        BookProps.PRICE,
+        (target, values) ->
+            target.price().plus(values.newNumber(BookProps.PRICE))
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.save(
+    Book {
+        id = 1L
+        price = BigDecimal("2.00")
+    }
+) {
+    setMode(SaveMode.UPDATE_ONLY)
+    set(Book::price) {
+        target.price + newNonNull(Book::price)
+    }
+}
+```
+
+</TabItem>
+</Tabs>
+
+It generates an assignment whose right-hand side is a SQL expression:
+
+```sql
+update BOOK
+set PRICE = PRICE + ? /* 2.00 */
+where ID = ? /* 1 */
+```
+
+`target` represents the existing database row. `newNumber` in Java, or
+`newNonNull` in Kotlin, represents a loaded value from the object being saved.
+For a nullable target, Kotlin uses `setNullable`; nullable saved values are
+referenced through `newNullable`:
+
+```kotlin
+setNullable(BookStore::website) {
+    newNullable(BookStore::website)
+}
+```
+
+:::info
+Java exposes `newValue`, `newString`, `newNumber`, and `newComparable` so the
+returned expression has the most useful static type for the SQL DSL.
+:::
+
+## Save Modes
+
+Assignment expressions are supported by:
+
+-   `UPDATE_ONLY`
+-   The update branch of `UPSERT` when the row already exists
+
+They are not supported by `INSERT_ONLY`. An insert still takes its values from
+the saved object; `set` only customizes an update assignment.
+
+## Object Shape and Upsert Mask
+
+`set` does not add a property to the save operation. It replaces the assignment
+for a property that has already been selected by the loaded object shape and,
+for an upsert, by its `UpsertMask`.
+
+Consequently:
+
+-   The target property must be loaded in the saved object.
+-   If an `UpsertMask` is present, the target must be updatable according to the
+    mask.
+-   Every saved-object property referenced through `newValue`, `newNonNull`, or
+    another `new*` function must also be loaded.
+-   An input property does not have to be an update target itself. It may only
+    provide a value used to calculate another property.
+
+Violating one of these rules is reported before the DML statement is executed.
+
+:::tip
+The same rules apply to nested entities in a graph save. The assignment is used
+whenever its entity type is reached during the save.
+:::
+
+## Restrictions
+
+An assignment target must be a local physical scalar column. IDs, versions,
+discriminators, logical-deletion properties, associations, calculated
+properties, and remote properties cannot be targets.
+
+The expression can read local physical scalar properties from `target`, but it
+cannot create joins. Configure each target at most once on a command.
+
+## Save Result
+
+The result of an assignment expression is calculated by the database, so Jimmer
+does not assume that it equals any value from the saved object. When the updated
+property is needed by the save result or a transaction trigger, Jimmer reads the
+actual post-update value through DML returning where supported, or through a
+follow-up query.
+
+## Optimistic Locking
+
+Assignment expressions and [custom optimistic locking](./optimistic-locking)
+use the same saved-value expression API. In both APIs, the table expression is
+the current database row and the `new*` functions refer to the saved object.
+They can be used together in one command: the lock predicate decides whether
+the update is accepted, while `set` decides how an accepted row is updated.

@@ -166,6 +166,64 @@ Accordingly, for the automatically generated `BookSpecification` class, on the o
     </TabItem>
     </Tabs>
 
+## Composing Specifications
+
+Large searches are often built from reusable specification fragments. Generated
+specifications can be combined with `and`, `or`, and `not` without exposing
+their internal predicates.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+JSpecification<Book, ?> specification = JSpecification.and(
+    nameSpecification,
+    JSpecification.or(priceSpecification, storeSpecification)
+);
+
+JSpecification<Book, ?> negated =
+    JSpecification.not(specification);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val specification = KSpecification.and(
+    nameSpecification,
+    KSpecification.or(priceSpecification, storeSpecification)
+)
+
+val negated = KSpecification.not(specification)
+```
+
+</TabItem>
+</Tabs>
+
+The composition methods accept varargs or an `Iterable`. Null elements are
+ignored, which is convenient when optional request parameters create optional
+fragments. If no non-null specification remains, the result is null and can be
+passed directly to `where`.
+
+Each fragment remains an independent predicate group, so nested combinations
+preserve the requested parentheses:
+
+```text
+name AND (price OR store)
+```
+
+Specifications for types in the same entity inheritance hierarchy can also be
+composed. The result uses their closest common entity type, while each derived
+specification keeps its own type restriction. This allows, for example, an `OR`
+between `PersonSpecification` and `OrganizationSpecification` in a root
+`Client` query. Specifications from unrelated entity hierarchies are rejected.
+
+:::caution
+Use `JSpecification` in Java or `KSpecification` in Kotlin for composition.
+The common `Specification` interface is the framework-neutral parameter type
+and does not expose the composition helpers.
+:::
+
 ## Attribute Mapping
 
 ### Map Attributes  

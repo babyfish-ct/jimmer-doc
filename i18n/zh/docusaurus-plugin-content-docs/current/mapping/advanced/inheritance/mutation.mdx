@@ -1,0 +1,132 @@
+---
+sidebar_position: 3
+title: 修改操作
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 保存派生对象
+
+保存实际的派生实体对象即可。Jimmer根据对象类型计算鉴别器，并写入映射策略要求的所有物理阶段。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Organization organization = Immutables.createOrganization(draft -> {
+    draft.setId(100L);
+    draft.setName("Acme");
+    draft.setTaxCode("ACME-001");
+});
+
+sqlClient.getEntities().save(organization);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.save(
+    Organization {
+        id = 100L
+        name = "Acme"
+        taxCode = "ACME-001"
+    }
+)
+```
+
+</TabItem>
+</Tabs>
+
+对于`SINGLE_TABLE`，根属性和派生属性存储在同一行中。对于`JOINED`，Jimmer把根表和派生表语句
+协调为一个保存操作。批量保存会根据实际类型和物理阶段进行分组。
+
+继承实体出现在图保存中时，行为完全相同。乐观锁、事务触发器、关联、逻辑删除和
+[赋值表达式](../../../mutation/save-command/assignment)都会在正确的阶段继续生效。
+
+## 抽象类型
+
+抽象继承类型没有自己的鉴别器值，因此不能被insert或upsert。它可以和`UPDATE_ONLY`一起使用，
+更新所有匹配具体分支共享的属性：
+
+```java
+sqlClient
+    .getEntities()
+    .saveCommand(clientWithOnlyIdAndName)
+    .setMode(SaveMode.UPDATE_ONLY)
+    .execute();
+```
+
+该操作要求关闭类型变更，并把类型匹配模式设置为`AUTO`或`POLYMORPHIC`。
+
+## 类型匹配模式
+
+save、update和delete指令使用与根查询相同的`TypeMatchMode`：
+
+-   `AUTO`精确匹配可实例化类型，多态匹配抽象类型。
+-   `EXACT`只匹配请求的类型。
+-   `POLYMORPHIC`匹配请求的类型及其所有可实例化子类型。
+
+修改指令默认使用`AUTO`。
+
+Java保存指令：
+
+```java
+command.setTypeMatchMode(TypeMatchMode.POLYMORPHIC);
+```
+
+Kotlin保存DSL：
+
+```kotlin
+setTypeMatchMode(TypeMatchMode.POLYMORPHIC)
+```
+
+关联实体可以通过`setAssociatedTypeMatchModeAll`、实体类型或关联属性单独配置。可变update和
+delete语句也提供`setTypeMatchMode`。
+
+## 改变实体类型
+
+默认禁止把数据库中同一个ID从一个继承分支变成另一个分支。这样可以防止运行时类型错误的对象
+悄悄改写鉴别器；对于连接表继承，还能防止数据在派生表之间被意外移动。
+
+只有当这种转换是业务操作的一部分时才应该显式启用：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+sqlClient
+    .getEntities()
+    .saveCommand(organization)
+    .setTypeChangeAllowed(true)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.save(organization) {
+    setTypeChangeAllowed()
+}
+```
+
+</TabItem>
+</Tabs>
+
+可以通过`setDefaultTypeChangeAllowed`全局启用，也可以通过
+`setAssociatedTypeChangeAllowed*`系列API为关联实体单独配置。
+
+:::caution
+`typeChangeAllowed`不能和多态保存匹配组合使用。指令必须先精确识别一个源分支，才能安全执行
+类型转换。
+:::
+
+## 连接表继承的删除语义
+
+删除连接表派生类型时，Jimmer会删除派生数据和根数据，并保持关联、触发器和逻辑删除语义。
+删除抽象类型或多态匹配类型时，每个ID都会被路由到适用的物理分支。
+
+映射级别的`joinedTableDissociateAction`决定Jimmer是否显式删除派生表数据（默认的`DELETE`），
+还是依赖数据库的`ON DELETE CASCADE`（`LAX`）。详见[实体映射](./mapping#物理删除)。

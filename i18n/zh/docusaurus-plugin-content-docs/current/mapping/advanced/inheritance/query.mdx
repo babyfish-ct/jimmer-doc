@@ -1,0 +1,141 @@
+---
+sidebar_position: 2
+title: 查询
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 根类型和派生类型查询
+
+查询根实体可以读取所有可实例化分支。即使对象抓取器没有包含鉴别器属性，Jimmer也会在内部读取
+它，并返回实际实体类型的对象。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+ClientTable client = ClientTable.$;
+
+List<Client> clients = sqlClient
+    .createQuery(client)
+    .select(client.fetch(ClientFetcher.$.name()))
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val clients = sqlClient.createQuery(Client::class) {
+    select(table.fetchBy {
+        name()
+    })
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+例如，鉴别器为`ORG`的数据行会返回`Organization`对象，`Person`数据行会返回`Person`对象。
+直接为`Organization`创建的查询只返回该分支，并通过普通的生成表类型暴露其属性。
+
+## 类型专属的抓取分支
+
+根对象抓取器需要加载派生类型声明的属性时，使用`forType`：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+ClientFetcher fetcher = ClientFetcher.$
+    .name()
+    .forType(OrganizationFetcher.$.taxCode())
+    .forType(PersonFetcher.$.firstName().lastName());
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val clients = sqlClient.createQuery(Client::class) {
+    select(table.fetchBy {
+        name()
+        forType(Organization::class) {
+            taxCode()
+        }
+        forType(Person::class) {
+            firstName()
+            lastName()
+        }
+    })
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+每个返回对象只加载与其实际类型匹配的分支。类型分支也可以包含关联，两种继承策略都支持它。
+
+## 类型条件和向下转型
+
+生成的根表和中间类型表提供多态操作：
+
+| 操作 | 含义 |
+| --- | --- |
+| `instanceOf(Type)` | 匹配`Type`及其所有可实例化派生类型 |
+| `exactType(Type)` | 只匹配精确类型 |
+| `treatAs(TypeTable)` | 使用inner语义向下转型；不匹配的数据行被排除 |
+| `tryTreatAs(TypeTable)` | 使用left/nullable语义向下转型；不匹配的数据行产生null派生属性 |
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+ClientTable client = ClientTable.$;
+OrganizationTable organization =
+    client.treatAs(OrganizationTable.class);
+
+sqlClient
+    .createQuery(client)
+    .where(client.instanceOf(Organization.class))
+    .select(client.id(), organization.taxCode())
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.createQuery(Client::class) {
+    val organization = table.asTableEx().treatAs<Organization>()
+    where(table.asTableEx().instanceOf<Organization>())
+    select(table.id, organization.taxCode)
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+这些操作也可以用于目标属于继承层次的关联路径。
+
+## 根查询的类型匹配
+
+根查询默认使用`TypeMatchMode.POLYMORPHIC`。如果可实例化根类型的查询只需要鉴别器精确等于
+根类型的数据，使用`TypeMatchMode.EXACT`：
+
+```java
+sqlClient
+    .createQuery(ClientTable.$)
+    .typeMatchMode(TypeMatchMode.EXACT)
+    .select(ClientTable.$)
+    .execute();
+```
+
+`TypeMatchMode`包含三个值：
+
+-   `AUTO`：可实例化类型使用精确匹配，抽象类型使用多态匹配。
+-   `EXACT`：只匹配请求的类型；不能用于抽象类型。
+-   `POLYMORPHIC`：匹配请求的类型及其所有可实例化派生类型。
+
+继承感知的修改操作使用相同的枚举值，但默认值是`AUTO`，详见[修改操作](./mutation)。

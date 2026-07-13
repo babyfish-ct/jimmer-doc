@@ -168,6 +168,58 @@ data class BookSpecification(
     </TabItem>
     </Tabs>
 
+## 组合Specification
+
+大型搜索通常由可复用的specification片段构成。生成的specification可以通过`and`、`or`和
+`not`组合，而无需暴露其内部predicate。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+JSpecification<Book, ?> specification = JSpecification.and(
+    nameSpecification,
+    JSpecification.or(priceSpecification, storeSpecification)
+);
+
+JSpecification<Book, ?> negated =
+    JSpecification.not(specification);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val specification = KSpecification.and(
+    nameSpecification,
+    KSpecification.or(priceSpecification, storeSpecification)
+)
+
+val negated = KSpecification.not(specification)
+```
+
+</TabItem>
+</Tabs>
+
+组合方法既可以接受可变参数，也可以接受`Iterable`。null元素会被忽略，这非常适合让可选的请求
+参数生成可选片段。如果没有剩余的非null specification，结果为null，可以直接传给`where`。
+
+每个片段仍然是独立的predicate分组，因此嵌套组合会保留需要的括号：
+
+```text
+name AND (price OR store)
+```
+
+同一个实体继承层次中的不同类型specification也可以组合。结果使用它们最近的公共实体类型，
+每个派生specification仍然保留自己的类型限制。例如，可以在根`Client`查询中对
+`PersonSpecification`和`OrganizationSpecification`执行`OR`。来自无关实体层次的
+specification会被拒绝。
+
+:::caution
+Java使用`JSpecification`组合，Kotlin使用`KSpecification`组合。公共`Specification`接口是
+框架无关的参数类型，不提供组合方法。
+:::
+
 ## 属性映射
 
 ### 映射属性

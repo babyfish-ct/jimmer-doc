@@ -1,0 +1,183 @@
+---
+sidebar_position: 1
+title: 实体映射
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## 单表继承
+
+在根实体上添加`@Inheritance`，派生实体通过普通的Java/Kotlin类型继承它：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="Client.java"
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+public interface Client {
+
+    @Id
+    long id();
+
+    @Discriminator
+    @Column(name = "CLIENT_TYPE")
+    String type();
+
+    String name();
+}
+```
+
+```java title="Organization.java"
+@Entity
+@DiscriminatorValue("ORG")
+public interface Organization extends Client {
+
+    String taxCode();
+}
+```
+
+```java title="Person.java"
+@Entity
+public interface Person extends Client {
+
+    String firstName();
+
+    String lastName();
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="Client.kt"
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+interface Client {
+
+    @Id
+    val id: Long
+
+    @Discriminator
+    @Column(name = "CLIENT_TYPE")
+    val type: String
+
+    val name: String
+}
+```
+
+```kotlin title="Organization.kt"
+@Entity
+@DiscriminatorValue("ORG")
+interface Organization : Client {
+
+    val taxCode: String
+}
+```
+
+```kotlin title="Person.kt"
+@Entity
+interface Person : Client {
+
+    val firstName: String
+
+    val lastName: String
+}
+```
+
+</TabItem>
+</Tabs>
+
+所有属性都存储在同一张表中。只由某个派生类型声明的列在数据库中必须可空，因为其他类型的数据行
+不会使用这些列。
+
+```text
+CLIENT
+├── ID
+├── CLIENT_TYPE
+├── NAME
+├── TAX_CODE       -- Organization
+├── FIRST_NAME     -- Person
+└── LAST_NAME      -- Person
+```
+
+## 鉴别器
+
+继承层次必须包含一个物理鉴别器列，由被`@Discriminator`修饰的标量属性暴露。该属性的类型可以是
+`String`或枚举。
+
+`@DiscriminatorValue`指定实体类型在数据库中的存储值。如果一个可实例化的叶子类型没有配置它，
+则使用实体类型的简单名称。如果数据库表示不能随着代码重命名而改变，建议显式指定该值。
+
+鉴别器属性是只读的：
+
+-   可以在查询DSL或对象抓取器中选择它。
+-   为了创建实际类型的对象，Jimmer会在需要时自动读取它。
+-   save和update根据实体类型计算鉴别器，而不是接受对象中任意指定的值。
+
+如果一个继承实体存在派生类型，但自身没有`@DiscriminatorValue`，Jimmer会把它视为抽象类型。
+为根类型或中间类型添加`@DiscriminatorValue`，可以让它拥有自己的可实例化分支。
+
+## 连接表继承
+
+连接表继承使用`InheritanceType.JOINED`，并为每个实体类型映射相应的物理表：
+
+```java
+@Entity
+@Table(name = "CLIENT")
+@Inheritance(strategy = InheritanceType.JOINED)
+public interface Client {
+    // id、鉴别器和公共属性
+}
+
+@Entity
+@Table(name = "ORGANIZATION")
+@DiscriminatorValue("ORG")
+public interface Organization extends Client {
+    // 存储在ORGANIZATION中的属性
+}
+
+@Entity
+@Table(name = "PERSON")
+public interface Person extends Client {
+    // 存储在PERSON中的属性
+}
+```
+
+根表包含ID、鉴别器和根属性。每张派生表使用相同的ID，它既是主键，也是指向直接实体父类型表的
+外键。
+
+```text
+CLIENT                   ORGANIZATION             PERSON
+├── ID                   ├── ID (PK, FK)          ├── ID (PK, FK)
+├── CLIENT_TYPE          └── TAX_CODE             ├── FIRST_NAME
+└── NAME                                          └── LAST_NAME
+```
+
+连接表继承也支持多级继承。每个实体类型贡献一张物理表；`MappedSuperclass`声明的属性存储在
+第一个继承它们的实体表中。
+
+### 物理删除
+
+默认情况下，Jimmer会先显式删除连接派生表中的数据，再删除根表数据。如果所有连接外键都配置了
+`ON DELETE CASCADE`，可以关闭这些额外操作：
+
+```java
+@Inheritance(
+    strategy = InheritanceType.JOINED,
+    joinedTableDissociateAction = JoinedTableDissociateAction.LAX
+)
+```
+
+只有数据库schema保证级联删除时才能使用`LAX`。可移植的默认值是
+`JoinedTableDissociateAction.DELETE`。
+
+## 通用规则
+
+-   `@Inheritance`只在根实体上声明一次。
+-   每个具体分支都是`@Entity`，而不是`@MappedSuperclass`。
+-   整个继承层次共享从根类型继承的一个ID属性。
+-   关联既可以指向根实体，也可以指向派生实体。
+-   数据库schema校验支持两种策略，包括鉴别器列和连接表的主键/外键结构。
+-   不支持table-per-class继承。

@@ -1,0 +1,148 @@
+---
+sidebar_position: 3
+title: Mutations
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Saving Derived Objects
+
+Save the actual derived entity object. Jimmer derives the discriminator from its
+type and writes every physical stage required by the mapping strategy.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Organization organization = Immutables.createOrganization(draft -> {
+    draft.setId(100L);
+    draft.setName("Acme");
+    draft.setTaxCode("ACME-001");
+});
+
+sqlClient.getEntities().save(organization);
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.save(
+    Organization {
+        id = 100L
+        name = "Acme"
+        taxCode = "ACME-001"
+    }
+)
+```
+
+</TabItem>
+</Tabs>
+
+For `SINGLE_TABLE`, this is one row containing the root and derived properties.
+For `JOINED`, Jimmer coordinates the root and derived table statements as one
+save operation. Batch saves are grouped by actual type and physical stage.
+
+The same behavior applies when inherited entities appear inside a graph save.
+Optimistic locking, transaction triggers, associations, logical deletion, and
+[assignment expressions](../../../mutation/save-command/assignment) continue to
+work at the appropriate stage.
+
+## Abstract Types
+
+An abstract inheritance type cannot be inserted or upserted because it has no
+discriminator value of its own. It can be used with `UPDATE_ONLY` to update
+properties shared by all matching concrete branches:
+
+```java
+sqlClient
+    .getEntities()
+    .saveCommand(clientWithOnlyIdAndName)
+    .setMode(SaveMode.UPDATE_ONLY)
+    .execute();
+```
+
+For this operation, type changes must be disabled and the type match mode must
+be `AUTO` or `POLYMORPHIC`.
+
+## Type Match Mode
+
+Save, update, and delete commands use the same `TypeMatchMode` values as root
+queries:
+
+-   `AUTO` matches an instantiable type exactly and an abstract type
+    polymorphically.
+-   `EXACT` matches only the requested type.
+-   `POLYMORPHIC` matches the requested type and every instantiable subtype.
+
+Mutation commands use `AUTO` by default.
+
+For a save command:
+
+```java
+command.setTypeMatchMode(TypeMatchMode.POLYMORPHIC);
+```
+
+For a Kotlin save DSL:
+
+```kotlin
+setTypeMatchMode(TypeMatchMode.POLYMORPHIC)
+```
+
+The mode can also be configured for associated entities with
+`setAssociatedTypeMatchModeAll`, by entity type, or by association property.
+Mutable update and delete statements expose `setTypeMatchMode` as well.
+
+## Changing the Entity Type
+
+Changing an existing id from one inheritance branch to another is disabled by
+default. This prevents an object of the wrong runtime type from silently
+rewriting the discriminator and, for joined inheritance, moving data between
+derived tables.
+
+Enable it only for commands where such a transition is part of the business
+operation:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+sqlClient
+    .getEntities()
+    .saveCommand(organization)
+    .setTypeChangeAllowed(true)
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.save(organization) {
+    setTypeChangeAllowed()
+}
+```
+
+</TabItem>
+</Tabs>
+
+It can be enabled globally with `setDefaultTypeChangeAllowed`, or separately for
+associated entities with the `setAssociatedTypeChangeAllowed*` APIs.
+
+:::caution
+`typeChangeAllowed` cannot be combined with polymorphic save matching. The
+command must identify one exact source branch before it can safely perform a
+type transition.
+:::
+
+## Delete Semantics for Joined Inheritance
+
+Deleting a joined derived type removes its derived rows and the root row while
+respecting associations, triggers, and logical deletion. Deleting an
+abstract or polymorphically matched type routes each id through the applicable
+physical branch.
+
+The mapping-level `joinedTableDissociateAction` controls whether Jimmer deletes
+derived table rows explicitly (`DELETE`, the default) or relies on database
+`ON DELETE CASCADE` (`LAX`). See [Entity Mapping](./mapping#physical-delete).

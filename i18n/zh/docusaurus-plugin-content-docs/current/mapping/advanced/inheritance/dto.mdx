@@ -1,0 +1,101 @@
+---
+sidebar_position: 4
+title: DTO
+---
+
+DTO语言可以从继承根类型生成多态视图或输入对象。公共属性按普通方式声明，各类型专属属性放在
+`#types`分支中。
+
+```text title="Client.dto"
+export com.example.model.Client
+    -> package com.example.dto
+
+ClientView {
+    id
+    name
+    #types {
+        Organization {
+            taxCode
+        }
+        Person {
+            firstName
+            lastName
+        }
+    }
+}
+```
+
+生成的DTO元数据会创建带有对应`forType`分支的根对象抓取器。实体转换为DTO时，根据实体的实际
+类型选择生成的分支。
+
+## 穷尽分支和默认分支
+
+如果每个可实例化实体类型都必须显式声明分支，使用`#exhaustive`：
+
+```text
+ClientView {
+    id
+    #types {
+        #exhaustive
+        Organization {
+            taxCode
+        }
+        Person {
+            firstName
+        }
+    }
+}
+```
+
+缺少任何具体分支都会导致编译错误。不使用`#exhaustive`时，没有显式分支的类型使用一个只包含
+公共属性的隐式兜底分支。
+
+可以通过`default`自定义兜底分支，或者为它指定生成的类名：
+
+```text
+ClientView {
+    id
+    #types {
+        default class Other {
+            name
+        }
+        Organization class Company {
+            taxCode
+        }
+    }
+}
+```
+
+显式分支也可以通过`class SomeName`自定义生成的Java/Kotlin名称。
+
+## 多态输入对象
+
+输入DTO支持相同的语法：
+
+```text
+input ClientInput {
+    id
+    name
+    #types {
+        #exhaustive
+        Organization {
+            taxCode
+        }
+        Person {
+            firstName
+            lastName
+        }
+    }
+}
+```
+
+生成的输入分支实现`Input<Client>`，并转换成匹配的派生实体类型，因此可以直接传给保存指令。
+
+对于JSON多态，Jimmer根据实体鉴别器属性和每个分支的鉴别器值生成Jackson类型元数据。如果外部
+API使用不同的类型标签，可以在DTO文件中使用标准的`@JsonTypeInfo`、`@JsonTypeName`和
+`@JsonSubTypes`覆盖这些元数据。
+
+鉴别器属性也可以作为普通DTO字段被选择、通过`as`重命名，或者被默认输入分支用于把转换路由到
+已知实体类型。
+
+DTO语言的通用语法请参考[DTO语言](../../../object/view/dto-language)。

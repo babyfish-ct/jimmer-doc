@@ -1,0 +1,148 @@
+---
+sidebar_position: 2
+title: Queries
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+## Root and Derived Queries
+
+Query the root entity to read every instantiable branch. Even when the
+discriminator property is not part of the fetcher, Jimmer reads it internally
+and returns an object of the actual entity type.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+ClientTable client = ClientTable.$;
+
+List<Client> clients = sqlClient
+    .createQuery(client)
+    .select(client.fetch(ClientFetcher.$.name()))
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val clients = sqlClient.createQuery(Client::class) {
+    select(table.fetchBy {
+        name()
+    })
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+For example, an `ORG` row is returned as `Organization`, while a `Person` row is
+returned as `Person`. A query created directly for `Organization` only returns
+that branch and exposes its properties through the normal generated table type.
+
+## Type-specific Fetcher Branches
+
+Use `forType` when a root fetcher must load properties declared by derived
+types:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+ClientFetcher fetcher = ClientFetcher.$
+    .name()
+    .forType(OrganizationFetcher.$.taxCode())
+    .forType(PersonFetcher.$.firstName().lastName());
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val clients = sqlClient.createQuery(Client::class) {
+    select(table.fetchBy {
+        name()
+        forType(Organization::class) {
+            taxCode()
+        }
+        forType(Person::class) {
+            firstName()
+            lastName()
+        }
+    })
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+Only the matching branch is loaded on each returned object. Type branches can
+also contain associations and work for both inheritance strategies.
+
+## Type Predicates and Downcasts
+
+Generated root and intermediate tables provide polymorphic operations:
+
+| Operation | Meaning |
+| --- | --- |
+| `instanceOf(Type)` | Match `Type` and all of its instantiable derived types |
+| `exactType(Type)` | Match only the exact type |
+| `treatAs(TypeTable)` | Downcast with inner semantics; non-matching rows are removed |
+| `tryTreatAs(TypeTable)` | Downcast with left/nullable semantics; non-matching rows produce null derived properties |
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+ClientTable client = ClientTable.$;
+OrganizationTable organization =
+    client.treatAs(OrganizationTable.class);
+
+sqlClient
+    .createQuery(client)
+    .where(client.instanceOf(Organization.class))
+    .select(client.id(), organization.taxCode())
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.createQuery(Client::class) {
+    val organization = table.asTableEx().treatAs<Organization>()
+    where(table.asTableEx().instanceOf<Organization>())
+    select(table.id, organization.taxCode)
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+These operations are also available on association paths whose target belongs
+to an inheritance hierarchy.
+
+## Root Query Type Matching
+
+Root queries use `TypeMatchMode.POLYMORPHIC` by default. Use
+`TypeMatchMode.EXACT` when an instantiable root query must return only rows whose
+discriminator is exactly the root type:
+
+```java
+sqlClient
+    .createQuery(ClientTable.$)
+    .typeMatchMode(TypeMatchMode.EXACT)
+    .select(ClientTable.$)
+    .execute();
+```
+
+`TypeMatchMode` has three values:
+
+-   `AUTO`: exact for an instantiable type, polymorphic for an abstract type.
+-   `EXACT`: only the requested type; invalid for an abstract type.
+-   `POLYMORPHIC`: the requested type and all instantiable derived types.
+
+Inheritance-aware mutations use the same values but default to `AUTO`, as
+described in [Mutations](./mutation).

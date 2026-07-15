@@ -1,0 +1,110 @@
+---
+sidebar_position: 4
+title: DTOs
+---
+
+The DTO language can generate a polymorphic view or input from an inheritance
+root. Common properties are declared normally and type-specific properties are
+placed in `#types` branches.
+
+```text title="Client.dto"
+export com.example.model.Client
+    -> package com.example.dto
+
+ClientView {
+    id
+    name
+    #types {
+        Organization {
+            taxCode
+        }
+        Person {
+            firstName
+            lastName
+        }
+    }
+}
+```
+
+The generated DTO metadata creates a root fetcher with matching `forType`
+branches. Converting an entity to the DTO selects the generated branch according
+to the actual entity type.
+
+## Exhaustive and Default Branches
+
+Use `#exhaustive` when every instantiable entity type must have an explicit
+branch:
+
+```text
+ClientView {
+    id
+    #types {
+        #exhaustive
+        Organization {
+            taxCode
+        }
+        Person {
+            firstName
+        }
+    }
+}
+```
+
+Compilation fails if a concrete branch is missing. Without `#exhaustive`, types
+without an explicit branch use an implicit catch-all branch containing the
+common properties.
+
+Declare `default` to customize that catch-all branch or give it a generated
+class name:
+
+```text
+ClientView {
+    id
+    #types {
+        default class Other {
+            name
+        }
+        Organization class Company {
+            taxCode
+        }
+    }
+}
+```
+
+An explicit branch can also use `class SomeName` to customize its generated
+Java/Kotlin name.
+
+## Polymorphic Inputs
+
+The same syntax is supported by input DTOs:
+
+```text
+input ClientInput {
+    id
+    name
+    #types {
+        #exhaustive
+        Organization {
+            taxCode
+        }
+        Person {
+            firstName
+            lastName
+        }
+    }
+}
+```
+
+Generated input branches implement `Input<Client>` and convert to the matching
+derived entity type, so they can be passed directly to save commands.
+
+For JSON polymorphism, Jimmer generates Jackson type metadata using the entity
+discriminator property and each branch's discriminator value. Standard
+`@JsonTypeInfo`, `@JsonTypeName`, and `@JsonSubTypes` annotations in the DTO file
+can override that metadata when the external API uses different type tags.
+
+The discriminator property may also be selected as an ordinary DTO field,
+renamed with `as`, or used by a default input branch to route conversion to a
+known entity type.
+
+For the general DTO language syntax, see [DTO Language](../../../object/view/dto-language).

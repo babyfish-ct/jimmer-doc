@@ -1,0 +1,208 @@
+---
+sidebar_position: 18
+title: DDL Compiler
+---
+
+Jimmer DDL Compiler is a compile-time DDL generator for Jimmer entities. It can run as a Kotlin KSP processor or a Java annotation processor, read Jimmer entity metadata, and write dialect-specific SQL files such as Flyway migrations.
+
+Use it when you want schema SQL to be derived from the same entity model used by runtime queries and mutations. For production systems, review generated SQL before applying it, especially when destructive changes are enabled.
+
+## KSP configuration for Kotlin projects
+
+Kotlin projects should use the KSP processor. Configure the KSP plugin version that matches your Kotlin version.
+
+```kotlin
+plugins {
+    kotlin("jvm")
+    id("com.google.devtools.ksp") version "<ksp-version>"
+}
+
+dependencies {
+    implementation("org.babyfish.jimmer:jimmer-sql-kotlin:<jimmer-version>")
+    ksp("org.babyfish.jimmer:jimmer-ksp:<jimmer-version>")
+    ksp("org.babyfish.jimmer:jimmer-ddl-compiler:<jimmer-version>")
+}
+
+ksp {
+    arg("jimmerDdl.enabled", "true")
+    arg("jimmerDdl.databaseType", "postgresql")
+    arg("jimmerDdl.outputFormat", "flyway")
+    arg("jimmerDdl.outputDir", "$projectDir/build/generated/jimmer-ddl/main/resources/db/migration")
+    arg("jimmerDdl.version", "1001")
+    arg("jimmerDdl.description", "jimmer_auto_ddl_generated")
+}
+```
+
+If you want generated SQL and the snapshot file to be packaged as application resources, add the generated resources directory to `main` resources:
+
+```kotlin
+sourceSets {
+    main {
+        resources.srcDir("$buildDir/generated/jimmer-ddl/main/resources")
+    }
+}
+```
+
+## APT configuration for Java projects
+
+Java projects should use the annotation processor through `annotationProcessor` and pass options with `-A...` compiler arguments:
+
+```kotlin
+dependencies {
+    implementation("org.babyfish.jimmer:jimmer-sql:<jimmer-version>")
+    annotationProcessor("org.babyfish.jimmer:jimmer-apt:<jimmer-version>")
+    annotationProcessor("org.babyfish.jimmer:jimmer-ddl-compiler:<jimmer-version>")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-AjimmerDdl.enabled=true")
+    options.compilerArgs.add("-AjimmerDdl.databaseType=postgresql")
+}
+```
+
+For a full Gradle Java configuration:
+
+```kotlin
+plugins {
+    java
+}
+
+dependencies {
+    implementation("org.babyfish.jimmer:jimmer-sql:<jimmer-version>")
+    annotationProcessor("org.babyfish.jimmer:jimmer-apt:<jimmer-version>")
+    annotationProcessor("org.babyfish.jimmer:jimmer-ddl-compiler:<jimmer-version>")
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.addAll(
+        listOf(
+            "-AjimmerDdl.enabled=true",
+            "-AjimmerDdl.databaseType=postgresql",
+            "-AjimmerDdl.outputFormat=flyway",
+            "-AjimmerDdl.outputDir=$projectDir/build/generated/jimmer-ddl/main/resources/db/migration",
+            "-AjimmerDdl.version=1001",
+            "-AjimmerDdl.description=jimmer_auto_ddl_generated",
+            "-AjimmerDdl.compareDatabase=false",
+        )
+    )
+}
+
+sourceSets {
+    main {
+        resources.srcDir("$buildDir/generated/jimmer-ddl/main/resources")
+    }
+}
+```
+
+For Maven Java projects, configure `maven-compiler-plugin`:
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>org.babyfish.jimmer</groupId>
+                <artifactId>jimmer-apt</artifactId>
+                <version>${jimmer.version}</version>
+            </path>
+            <path>
+                <groupId>org.babyfish.jimmer</groupId>
+                <artifactId>jimmer-ddl-compiler</artifactId>
+                <version>${jimmer.version}</version>
+            </path>
+        </annotationProcessorPaths>
+        <compilerArgs>
+            <arg>-AjimmerDdl.enabled=true</arg>
+            <arg>-AjimmerDdl.databaseType=postgresql</arg>
+            <arg>-AjimmerDdl.outputFormat=flyway</arg>
+            <arg>-AjimmerDdl.outputDir=${project.build.directory}/generated/jimmer-ddl/main/resources/db/migration</arg>
+            <arg>-AjimmerDdl.version=1001</arg>
+            <arg>-AjimmerDdl.description=jimmer_auto_ddl_generated</arg>
+            <arg>-AjimmerDdl.compareDatabase=false</arg>
+        </compilerArgs>
+    </configuration>
+</plugin>
+```
+
+## Output files
+
+The default output directory is:
+
+```text
+build/generated/jimmer-ddl/main/resources/db/migration
+```
+
+When `jimmerDdl.outputFormat` is `flyway`, the compiler writes files named like:
+
+```text
+V1001__jimmer_auto_ddl_generated.sql
+```
+
+When it is `plain`, the compiler writes:
+
+```text
+jimmer_auto_ddl_generated.sql
+```
+
+## Database comparison and offline generation
+
+If JDBC settings are available and `jimmerDdl.compareDatabase` is enabled, the compiler reads the current database schema and emits diff SQL against the desired schema derived from entities.
+
+If the database cannot be read, or no JDBC URL is available, it falls back to offline generation. Offline generation uses the snapshot file described below to generate incremental SQL between builds.
+
+## Snapshot model
+
+The compiler writes a generated snapshot under generated resources:
+
+```text
+build/generated/jimmer-ddl/main/resources/.jimmer-ddl/entity-table-snapshot.properties
+```
+
+The snapshot records entity-to-table mappings and table hashes. On later builds, the compiler can compare the previous snapshot with the current entity model and emit incremental SQL. It can also detect table renames caused by `@Table(name = ...)` changes.
+
+## Options
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `jimmerDdl.enabled` | `true` | Enables or disables generation. |
+| `jimmerDdl.profiles` | empty | Comma-separated profile names. Each profile can override options through `jimmerDdl.profile.<name>.<option>`. |
+| `jimmerDdl.databaseType` | `auto` | Dialect code such as `postgresql`, `mysql`, `h2`, `sqlite`, `sqlserver`, `oracle`, `dm`, `kingbase`, or `taos`. `auto` resolves from JDBC URL when available. |
+| `jimmerDdl.outputFormat` | `flyway` | `flyway` writes `V<version>__<description>.sql`; `plain` writes `<description>.sql`. |
+| `jimmerDdl.outputDir` | `build/generated/jimmer-ddl/main/resources/db/migration` | Output directory for generated SQL. |
+| `jimmerDdl.version` | `1001` | Flyway version prefix. |
+| `jimmerDdl.description` | `jimmer_auto_ddl_generated` | Output file description. |
+| `jimmerDdl.includePackages` | empty | Optional comma-separated package allow-list. |
+| `jimmerDdl.excludePackages` | empty | Optional comma-separated package deny-list. |
+| `jimmerDdl.includeForeignKeys` | `true` | Generates foreign key statements when the dialect supports them. |
+| `jimmerDdl.includeIndexes` | `true` | Generates index statements. |
+| `jimmerDdl.includeComments` | `true` | Generates comments. |
+| `jimmerDdl.includeSequences` | `true` | Generates sequences. |
+| `jimmerDdl.includeManyToManyTables` | `true` | Generates many-to-many junction tables. |
+| `jimmerDdl.compareDatabase` | `true` | Reads the configured database and emits diff SQL when possible. |
+| `jimmerDdl.nullabilityRepairOnly` | `false` | Limits risky offline alteration planning to nullability repair. |
+| `jimmerDdl.sourceFingerprint` | empty | Optional source fingerprint stored in the snapshot. |
+| `jimmerDdl.jdbcUrl` | empty | Explicit JDBC URL used by database comparison. |
+| `jimmerDdl.jdbcUsername` | empty | JDBC username. |
+| `jimmerDdl.jdbcPassword` | empty | JDBC password. |
+| `jimmerDdl.jdbcSchema` | empty | JDBC schema name. |
+| `jimmerDdl.jdbcDriver` | empty | JDBC driver class name. |
+| `jimmerDdl.springResourcePath` | empty | Optional Spring resource path used to discover datasource settings. |
+| `jimmerDdl.springProfile` | `local` | Spring profile used when reading YAML datasource settings. |
+
+## Multiple profiles
+
+Profiles let one compilation generate SQL for multiple database targets or output directories:
+
+```kotlin
+ksp {
+    arg("jimmerDdl.profiles", "postgres,mysql")
+
+    arg("jimmerDdl.profile.postgres.databaseType", "postgresql")
+    arg("jimmerDdl.profile.postgres.outputDir", "$projectDir/build/generated/jimmer-ddl/postgres/db/migration")
+
+    arg("jimmerDdl.profile.mysql.databaseType", "mysql")
+    arg("jimmerDdl.profile.mysql.outputDir", "$projectDir/build/generated/jimmer-ddl/mysql/db/migration")
+}
+```

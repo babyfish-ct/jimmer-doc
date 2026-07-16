@@ -55,6 +55,101 @@ set FIRST_NAME = concat(tb_1_.FIRST_NAME, ?)
 where tb_1_.FIRST_NAME = ?
 ```
 
+## Returning Updated Rows
+
+If the updated values are needed immediately, the update can return selected
+columns from every affected row in the same database statement.
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+AuthorTable author = Tables.AUTHOR_TABLE;
+
+List<Tuple2<Long, String>> rows = sqlClient
+    .createUpdate(author)
+    .set(
+        author.firstName(),
+        author.firstName().concat("*")
+    )
+    .where(author.firstName().eq("Dan"))
+    .returning(author.id(), author.firstName())
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rows: List<Tuple2<Long, String>> = sqlClient
+    .createUpdateReturning(Author::class) {
+        set(
+            table.firstName,
+            concat(table.firstName, value("*"))
+        )
+        where(table.firstName eq "Dan")
+        returning(table.id, table.firstName)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+Java adds `returning(...)` to the `MutableUpdate` created by `createUpdate`.
+Kotlin uses `createUpdateReturning` because its lambda must return the executable
+created by `returning(...)`; `executeUpdateReturning` is the corresponding
+shortcut that executes it immediately.
+
+A single selection produces a list of that value. Multiple selections produce
+a tuple, and Java can also use a generated typed tuple mapper. Like queries, the
+returned rows can be consumed as a list with `execute()` or as a closeable
+stream with `stream()`:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+try (Stream<Tuple2<Long, String>> rows = sqlClient
+        .createUpdate(author)
+        .set(author.firstName(), "Daniel")
+        .where(author.firstName().eq("Dan"))
+        .returning(author.id(), author.firstName())
+        .stream()) {
+    rows.forEach(System.out::println);
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.createUpdateReturning(Author::class) {
+    set(table.firstName, "Daniel")
+    where(table.firstName eq "Dan")
+    returning(table.id, table.firstName)
+}.stream().use { rows ->
+    rows.forEach(::println)
+}
+```
+
+</TabItem>
+</Tabs>
+
+Update returning is currently supported by `H2Dialect` and `PostgresDialect`.
+Using it with a dialect that does not support update returning throws an
+exception.
+
+Only physical column properties belonging to the updated table can be selected.
+Associations, formulas, arbitrary expressions, and columns from joined tables
+cannot be returned. For `JOINED` inheritance, assignments and returned columns
+must belong to the same physical table.
+
+Unlike [save result fetching](./save-command/returning), this is an explicit DML
+API: it does not build a residual fetcher or execute a fallback select. If a
+complete entity graph is required after a save, use
+`saveCommand(...).execute(fetcher)` instead.
+
 ## Using JOIN
 
 By default, update statements do not support joins, which will cause exceptions:

@@ -1,0 +1,130 @@
+---
+sidebar_position: 5
+title: Save Result
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+These options control how a [save command result](../mutation/save-command/returning)
+is materialized. They do not change which rows are inserted or updated.
+
+## Global Configuration
+
+The defaults are:
+
+| Spring Boot property | SqlClient builder method | Default |
+| --- | --- | --- |
+| `jimmer.default-save-returning-enabled` | `setDefaultSaveReturningEnabled` | `true` |
+| `jimmer.default-save-result-reads-all-properties` | `setDefaultSaveResultReadsAllProperties` | `false` |
+
+With Spring Boot:
+
+```yaml title="application.yml"
+jimmer:
+  default-save-returning-enabled: true
+  default-save-result-reads-all-properties: false
+```
+
+Without Spring Boot:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+JSqlClient sqlClient = JSqlClient
+    .newBuilder()
+    // Other configuration omitted
+    .setDefaultSaveReturningEnabled(true)
+    .setDefaultSaveResultReadsAllProperties(false)
+    .build();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val sqlClient = newKSqlClient {
+    // Other configuration omitted
+    setDefaultSaveReturningEnabled(true)
+    setDefaultSaveResultReadsAllProperties(false)
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Per-command Override
+
+A save command can override both defaults:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book modifiedBook = sqlClient
+    .saveCommand(book)
+    .setSaveReturningEnabled(false)
+    .setSaveResultReadsAllProperties(true)
+    .execute(fetcher)
+    .getModifiedEntity();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val modifiedBook = sqlClient
+    .saveCommand(book) {
+        setSaveReturningEnabled(false)
+        setSaveResultReadsAllProperties(true)
+    }
+    .execute(fetcher)
+    .modifiedEntity
+```
+
+</TabItem>
+</Tabs>
+
+The same methods are available for batch save commands.
+
+## `saveReturningEnabled`
+
+When enabled, Jimmer may add current-row DML returning to a save statement to
+materialize unresolved local properties. When it is disabled, those properties
+are obtained through the normal residual fetch instead.
+
+Usually this option should remain enabled. Jimmer already falls back
+automatically when the dialect, batch correlation, or mutation shape cannot use
+returning safely. Disable it when a database or JDBC driver has a
+known returning problem, when diagnosing generated DML, or when an application
+must deliberately keep the non-returning mutation form.
+
+This setting affects automatic returning used by save commands. It does not
+enable or disable the explicit update-returning API described in
+[Update Statement](../mutation/update-statement#returning-updated-rows).
+
+## `saveResultReadsAllProperties`
+
+When disabled, Jimmer can reuse requested local values whose final value is
+known from the saved object. Unloaded or database-computed values are still read
+when necessary.
+
+Enable this option when the database may alter values that were explicitly
+provided by the application and the returned entity must contain the exact
+stored representation. Typical examples are:
+
+- A database trigger normalizes or replaces an assigned value
+- The database applies rounding, truncation, timezone conversion, or another
+  coercion that must be visible immediately
+- A generated rule changes a column even though that property was loaded in the
+  saved object
+
+When enabled, only properties selected by the result fetcher are affected. The
+option does not implicitly request all scalar fields or associations. Requested
+local columns are read by DML returning where possible and by a residual query
+otherwise.
+
+Do not enable it merely for assignment expressions or `@DatabaseDefault`
+properties. Their values are not source-known, so Jimmer already materializes
+them from the database automatically.

@@ -1,0 +1,106 @@
+---
+sidebar_position: 8
+title: 保存结果获取
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+保存指令通常返回修改后的实体。如果调用方需要指定的结果形状，可以把fetcher传给`execute`：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookFetcher fetcher = BookFetcher.$
+    .name()
+    .edition()
+    .store(BookStoreFetcher.$.name());
+
+Book modifiedBook = sqlClient
+    .saveCommand(book)
+    .execute(fetcher)
+    .getModifiedEntity();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val fetcher = newFetcher(Book::class).by {
+    name()
+    edition()
+    store {
+        name()
+    }
+}
+
+val modifiedBook = sqlClient
+    .saveCommand(book)
+    .execute(fetcher)
+    .modifiedEntity
+```
+
+</TabItem>
+</Tabs>
+
+批量保存指令也提供相同的重载。也可以用生成的输出DTO类型代替fetcher，此时结果通过
+`modifiedView`提供转换后的DTO。
+
+## 结果如何被物化
+
+Jimmer通过三个步骤构造结果：
+
+1. 复用保存后值已经确定的属性，例如直接由保存对象写入的普通属性。
+2. 如果数据库方言和当前变更形式支持，通过DML语句的`returning`直接读取尚未解析的本表列。
+3. 只为请求形状中仍未解析的部分生成**残余fetcher（residual fetcher）**，并用后续查询加载它们。
+
+例如，同一个fetcher请求的标量列可以由update语句直接返回，而关联对象在之后查询。
+调用方最终仍然得到一个符合所请求fetcher形状的实体。
+
+这是实现层面的优化，而不是一种新的保存模式。禁用save returning、使用不支持的方言，
+或者当前变更无法安全返回行，只会改变结果的获取方式，不会改变结果契约。
+
+内置的当前行returning实现由`H2Dialect`和`PostgresDialect`提供。其他方言仍使用残余fetch，
+除非方言实现本身提供了相应能力。
+
+## DML可以返回的内容
+
+Save returning可以物化当前实体的列，包括：
+
+- ID和普通标量列
+- 版本列和鉴别器列
+- 外键ID列
+- [赋值表达式](./assignment)计算出的值
+- 标记为`@DatabaseDefault`且未加载的属性
+
+对于`JOINED`继承，每个物理表独立决定是否使用returning。根表返回根属性，分支表返回分支属性。
+
+fetcher中的以下内容通常属于残余部分，由普通查询加载：
+
+- 关联和嵌套fetcher
+- 公式属性和瞬态属性
+- 不存储在当前物理表中的数据
+- 当前数据库方言或DML形式无法返回的本表列
+
+Jimmer不会为了使用returning而把高效的批量变更拆成逐行语句。只有在返回行能够通过ID、
+键或方言保证的顺序与保存对象安全对应时才使用批量returning；否则保留批量变更，之后再获取
+尚未解析的结果。
+
+## 读取数据库中的实际值
+
+默认情况下，没有使用自定义表达式写入的已加载属性被认为是已知的：Jimmer可以直接把保存
+对象中的值复制到结果中。这通常是最快的行为。
+
+有时数据库会再次修改这样的值，例如通过触发器、规范化规则、生成列或数据库特有的类型转换。
+此时可以启用`saveResultReadsAllProperties`，让结果fetcher请求的属性从数据库读取，而不是由
+保存对象补全。
+
+该选项本身不会请求实体的所有属性，结果形状仍由fetcher决定。它只改变已请求本表属性的来源：
+可以使用returning时由DML返回，否则使用后续查询。
+
+自定义赋值结果或未加载的`@DatabaseDefault`属性本来就是未知值，Jimmer已经会自动从数据库
+读取它们，无需为此启用该选项。
+
+全局、Spring Boot和单条指令的配置方式请参见
+[保存结果配置](../../configuration/save-result)。

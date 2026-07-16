@@ -49,10 +49,97 @@ println("Affected row count: $affectedRowCount")
 最终生成的SQL
 
 ```csharp
-update AUTHOR tb_1_ 
-set FIRST_NAME = concat(tb_1_.FIRST_NAME, ?) 
+update AUTHOR tb_1_
+set FIRST_NAME = concat(tb_1_.FIRST_NAME, ?)
 where tb_1_.FIRST_NAME = ?
 ```
+
+## 返回更新后的行
+
+如果需要立即获得更新后的值，update可以在同一条数据库语句中返回每个受影响行的指定列。
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+AuthorTable author = Tables.AUTHOR_TABLE;
+
+List<Tuple2<Long, String>> rows = sqlClient
+    .createUpdate(author)
+    .set(
+        author.firstName(),
+        author.firstName().concat("*")
+    )
+    .where(author.firstName().eq("Dan"))
+    .returning(author.id(), author.firstName())
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rows: List<Tuple2<Long, String>> = sqlClient
+    .createUpdateReturning(Author::class) {
+        set(
+            table.firstName,
+            concat(table.firstName, value("*"))
+        )
+        where(table.firstName eq "Dan")
+        returning(table.id, table.firstName)
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+Java在`createUpdate`创建的`MutableUpdate`上调用`returning(...)`。Kotlin使用
+`createUpdateReturning`，因为它的lambda需要返回`returning(...)`创建的可执行对象；
+`executeUpdateReturning`是立即执行它的快捷方法。
+
+单个选择返回该值的列表，多个选择返回tuple；Java还可以使用生成的强类型tuple mapper。
+和查询一样，可以用`execute()`把返回行读取为列表，也可以用`stream()`以可关闭流的形式处理：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+try (Stream<Tuple2<Long, String>> rows = sqlClient
+        .createUpdate(author)
+        .set(author.firstName(), "Daniel")
+        .where(author.firstName().eq("Dan"))
+        .returning(author.id(), author.firstName())
+        .stream()) {
+    rows.forEach(System.out::println);
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+sqlClient.createUpdateReturning(Author::class) {
+    set(table.firstName, "Daniel")
+    where(table.firstName eq "Dan")
+    returning(table.id, table.firstName)
+}.stream().use { rows ->
+    rows.forEach(::println)
+}
+```
+
+</TabItem>
+</Tabs>
+
+Update returning目前由`H2Dialect`和`PostgresDialect`支持。对不支持update returning的方言
+使用该API会抛出异常。
+
+只能选择属于被更新表的物理列属性，不能返回关联、公式、任意表达式或join表中的列。
+对于`JOINED`继承，赋值和返回列必须属于同一个物理表。
+
+与[保存结果获取](./save-command/returning)不同，这是显式DML API：它不会创建残余fetcher，
+也不会执行fallback查询。如果保存后需要完整的实体图，请使用
+`saveCommand(...).execute(fetcher)`。
 
 ## 使用JOIN
 

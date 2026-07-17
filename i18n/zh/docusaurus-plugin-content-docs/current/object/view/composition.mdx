@@ -304,6 +304,73 @@ BookView for Book {
 每个DTO和片段的实际实体目标，包括通过`for`指定的目标。`includes`是白名单，随后
 `excludes`优先生效。多个包或类型前缀可以用逗号或分号分隔。
 
+## 发布DTO源码Bundle
+
+库可以只把`.dto`源码作为资源发布，由每个使用方生成自己的Java或Kotlin DTO类。
+这个资源构件不需要包含预编译的DTO类。
+
+在构件中加入以下marker：
+
+```text
+META-INF/jimmer/dto-bundle.properties
+```
+
+例如，Gradle生产方可以把`src/main/dto`作为资源根目录打包：
+
+```kotlin
+sourceSets {
+    main {
+        resources.srcDir("src/main/dto")
+    }
+}
+```
+
+把marker放在
+`src/main/resources/META-INF/jimmer/dto-bundle.properties`。
+
+空marker表示DTO根目录就是classpath根目录。例如，DTO源码可以在构件中保存为
+`com/example/model/Book.dto`。如果构件使用其他根目录，请指定相对资源路径：
+
+```properties
+path=jimmer-dto
+```
+
+目前只支持`path`属性。Jimmer通过精确的classpath名称查找marker，然后只扫描已标记
+构件中的`.dto`文件。普通JAR以及Gradle或IDE产生的展开class/resource目录都受支持。
+
+在使用方把DTO构件加入处理器classpath：
+
+```kotlin title="Kotlin/KSP"
+dependencies {
+    implementation("com.example:catalog-model:1.0")
+    ksp("com.example:catalog-dto:1.0")
+}
+```
+
+```kotlin title="Java/APT"
+dependencies {
+    implementation("com.example:catalog-model:1.0")
+    annotationProcessor("com.example:catalog-dto:1.0")
+}
+```
+
+DTO源码引用的不可变模型类型仍必须位于普通编译classpath。DTO bundle依赖只向APT或
+KSP提供源码声明。
+
+默认启用bundle发现。可以在不影响本地DTO目录的情况下将其关闭：
+
+```kotlin title="Kotlin/KSP"
+ksp {
+    arg("jimmer.dto.bundle.enabled", "false")
+}
+```
+
+```kotlin title="Java/APT"
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-Ajimmer.dto.bundle.enabled=false")
+}
+```
+
 ## 如何选择
 
 如果关联对象应具有命名的公开类型，以及独立的元数据和转换契约，请复用DTO。如果多个

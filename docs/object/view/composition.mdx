@@ -336,6 +336,79 @@ fragment, including a target specified with `for`. `includes` is a whitelist,
 then `excludes` takes precedence. Several package/type prefixes can be separated
 with commas or semicolons.
 
+## Publishing DTO Source Bundles
+
+A library can publish `.dto` sources as resources and let each consumer generate
+its own Java or Kotlin DTO classes. The resource artifact does not need to
+contain precompiled DTO classes.
+
+Add this marker to the artifact:
+
+```text
+META-INF/jimmer/dto-bundle.properties
+```
+
+For example, a Gradle producer can package `src/main/dto` as a resource root:
+
+```kotlin
+sourceSets {
+    main {
+        resources.srcDir("src/main/dto")
+    }
+}
+```
+
+Place the marker under
+`src/main/resources/META-INF/jimmer/dto-bundle.properties`.
+
+An empty marker means that the DTO root is the classpath root. For example, a
+DTO source can be stored as `com/example/model/Book.dto` in the artifact. If the
+artifact uses another root, specify its relative resource path:
+
+```properties
+path=jimmer-dto
+```
+
+Only `path` is supported. Jimmer discovers the marker by its exact classpath
+name, then scans `.dto` files only inside marked artifacts. Both ordinary JARs
+and expanded class/resource directories produced by Gradle or an IDE are
+supported.
+
+Add the DTO artifact to the processor classpath of the consumer:
+
+```kotlin title="Kotlin/KSP"
+dependencies {
+    implementation("com.example:catalog-model:1.0")
+    ksp("com.example:catalog-dto:1.0")
+}
+```
+
+```kotlin title="Java/APT"
+dependencies {
+    implementation("com.example:catalog-model:1.0")
+    annotationProcessor("com.example:catalog-dto:1.0")
+}
+```
+
+The immutable model types referenced by the DTO sources must still be available
+on the normal compile classpath. The DTO bundle dependency only supplies the
+source declarations to APT or KSP.
+
+Bundle discovery is enabled by default. It can be disabled without affecting
+local DTO directories:
+
+```kotlin title="Kotlin/KSP"
+ksp {
+    arg("jimmer.dto.bundle.enabled", "false")
+}
+```
+
+```kotlin title="Java/APT"
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-Ajimmer.dto.bundle.enabled=false")
+}
+```
+
 ## Choosing a Mechanism
 
 Use a reusable DTO when the associated object should have a named public type

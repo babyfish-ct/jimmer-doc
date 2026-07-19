@@ -1,0 +1,118 @@
+---
+sidebar_position: 5
+title: 保存结果
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+以下选项控制[保存指令结果](../mutation/save-command/returning)的物化方式，不改变哪些行被插入或更新。
+
+## 全局配置
+
+默认值如下：
+
+| Spring Boot属性 | SqlClient构建器方法 | 默认值 |
+| --- | --- | --- |
+| `jimmer.default-save-returning-enabled` | `setDefaultSaveReturningEnabled` | `true` |
+| `jimmer.default-save-result-reads-all-properties` | `setDefaultSaveResultReadsAllProperties` | `false` |
+
+使用Spring Boot：
+
+```yaml title="application.yml"
+jimmer:
+  default-save-returning-enabled: true
+  default-save-result-reads-all-properties: false
+```
+
+不使用Spring Boot：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+JSqlClient sqlClient = JSqlClient
+    .newBuilder()
+    // 省略其他配置
+    .setDefaultSaveReturningEnabled(true)
+    .setDefaultSaveResultReadsAllProperties(false)
+    .build();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val sqlClient = newKSqlClient {
+    // 省略其他配置
+    setDefaultSaveReturningEnabled(true)
+    setDefaultSaveResultReadsAllProperties(false)
+}
+```
+
+</TabItem>
+</Tabs>
+
+## 单条指令覆盖
+
+保存指令可以覆盖两个全局默认值：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+Book modifiedBook = sqlClient
+    .saveCommand(book)
+    .setSaveReturningEnabled(false)
+    .setSaveResultReadsAllProperties(true)
+    .execute(fetcher)
+    .getModifiedEntity();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val modifiedBook = sqlClient
+    .saveCommand(book) {
+        setSaveReturningEnabled(false)
+        setSaveResultReadsAllProperties(true)
+    }
+    .execute(fetcher)
+    .modifiedEntity
+```
+
+</TabItem>
+</Tabs>
+
+批量保存指令也提供相同的方法。
+
+## `saveReturningEnabled`
+
+启用后，Jimmer可以给保存DML添加当前行returning，以物化尚未解析的本表属性。禁用后，
+这些属性由普通的残余fetch获取。
+
+通常应该保持启用。数据库方言、批量结果对应关系或当前变更形式无法安全使用
+returning时，Jimmer会自动回退。只有在数据库或JDBC驱动的returning存在已知问题、需要诊断
+生成的DML，或应用明确要求保持非returning的变更形式时，才需要禁用它。
+
+该设置只影响保存指令自动使用的returning，不会启用或禁用
+[Update语句](../mutation/update-statement#返回更新后的行)中的显式update-returning API。
+
+## `saveResultReadsAllProperties`
+
+禁用时，Jimmer可以复用保存对象中最终值已知的本表属性。未加载或由数据库计算的值仍会在
+必要时读取。
+
+如果数据库可能修改应用显式提供的值，并且返回实体必须包含数据库中实际存储的形式，请启用
+该选项。常见场景包括：
+
+- 数据库触发器规范化或替换被赋的值
+- 数据库进行舍入、截断、时区转换或其他需要立即反映在结果中的类型转换
+- 即使属性已在保存对象中加载，生成规则仍会改变对应列
+
+启用后，仅影响结果fetcher选择的属性。该选项不会隐式请求所有标量字段或关联。已请求的本表列
+尽可能由DML returning读取，否则由残余查询读取。
+
+不要仅仅为了赋值表达式或`@DatabaseDefault`属性启用它。这些值不是输入端已知值，Jimmer本来
+就会自动从数据库物化它们。

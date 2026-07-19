@@ -69,7 +69,11 @@ Jimmer only requires using `jimmer-apt` or `jimmer-ksp` in projects containing d
 
 ### 2.1. Two ways to create files
 
-Multiple dto files can be defined under the `src/main/dto` directory, with each file corresponding to an original entity.
+Multiple dto files can be defined under the `src/main/dto` directory. By default,
+the file path and name identify the entity used by declarations in that file.
+Individual declarations can also select another entity with `for`, so one file
+can describe DTOs for several entities. See [DTO Composition](./composition) for
+multi-target files, imports, reusable DTOs, and fragments.
 
 Assuming there is a Jimmer entity type whose full type name is `com.yourcompany.yourproject.Book`, and this class is decorated with `@org.babyfish.jimmer.sql.Entity` *(DTO language only supports Entity types)*, there are two ways to create dto files.
 
@@ -444,7 +448,7 @@ In fact, `#allScalars` supports multiple parameters, for example:
 |#allScalars(this, TenantAware, CommonEntity)|createdTime, modifiedTime, tenant, id, name, edition, price|
 
 :::info
--   If the `#allScalars` macro is used, it must be defined as the first property, otherwise it will cause compile errors.
+-   The `#allScalars` macro can appear anywhere among the property declarations.
 
 -   If parameters are specified for the `#allScalars` macro, each parameter must be the current entity or its base type, otherwise it will cause compile errors.
 :::
@@ -1486,12 +1490,11 @@ The above four styles are equivalent. You can freely choose the style you like.
 
 ## 13. Implementing Interfaces
 
-DTO types are low-value information, and if different DTO types are allowed to reference each other, it would lead to a problem: 
-the early effect is convenience, but the later effect is difficulty in maintenance.
-Therefore, Jimmer prohibits users from seeking reusability in low-value DTO types.
-
-However, sometimes there is indeed a need to find commonalities between different DTO types *(especially for internal classes of DTO)*, in order to facilitate abstraction and design.
-For this purpose, the DTO language provides a compromise: DTO types are allowed to implement existing Java/Kotlin interfaces, provided that the abstract properties in the interface are a subset of the properties in the DTO and can be implemented by the DTO type.
+DTO language provides explicit reuse through [reusable association DTOs and
+fragments](./composition). Implementing a Java/Kotlin interface serves a
+different purpose: It makes a generated DTO conform to an existing application
+API contract. The abstract properties in the interface must be a subset of the
+DTO properties and must be implementable by the generated DTO type.
 
 DTO code as follows
 
@@ -1600,10 +1603,12 @@ If a property in the DTO overrides an abstract property in the interface, then i
 Apart from this, the DTO language does not perform much validation on interface implementation. If the user makes other mistakes, it will result in generating incorrect Java/Kotlin types, which will be handled by the Java/Kotlin compiler.
 :::
 
-## 12. Related Links
+## 14. Related Links
 
-As mentioned earlier, the DTO language has two more powerful features that are not discussed in depth in this article due to length limitations, but have been separated into other documents. Here we emphasize them again:
+The following DTO language features are described in separate documents:
 
 - [Handling Null Values in Input DTO](../../mutation/save-command/input-dto/null-handling)
 
 - [Specification DTO, Super QBE](../../query/super_qbe)
+
+- [DTO Composition](./composition)

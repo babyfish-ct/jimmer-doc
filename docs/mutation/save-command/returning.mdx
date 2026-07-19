@@ -1,0 +1,124 @@
+---
+sidebar_position: 8
+title: Save Result Fetching
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+A save command normally returns the modified entity. When the caller needs a
+specific result shape, pass a fetcher to `execute`:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookFetcher fetcher = BookFetcher.$
+    .name()
+    .edition()
+    .store(BookStoreFetcher.$.name());
+
+Book modifiedBook = sqlClient
+    .saveCommand(book)
+    .execute(fetcher)
+    .getModifiedEntity();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val fetcher = newFetcher(Book::class).by {
+    name()
+    edition()
+    store {
+        name()
+    }
+}
+
+val modifiedBook = sqlClient
+    .saveCommand(book)
+    .execute(fetcher)
+    .modifiedEntity
+```
+
+</TabItem>
+</Tabs>
+
+The same overloads are available for batch save commands. A generated output
+DTO type can also be passed instead of a fetcher; in that case the result
+exposes `modifiedView`.
+
+## How the Result Is Materialized
+
+Jimmer builds the result in three steps:
+
+1. It reuses values whose post-save value is already known, such as ordinary
+   values written from the saved object.
+2. If the dialect and mutation shape support it, unresolved local columns are
+   read directly from the DML statement by `returning`.
+3. It derives a **residual fetcher** containing only the still-unresolved part
+   of the requested shape and executes follow-up queries for that part.
+
+For example, a returned scalar column can be read by the update itself, while
+an associated object requested by the same fetcher is loaded afterwards. The
+caller still receives one entity matching the requested fetcher shape.
+
+This is an implementation optimization, not a separate save mode. Disabling
+save returning, using an unsupported dialect, or using a mutation shape that
+cannot safely return rows changes how the result is obtained, not the result
+contract.
+
+The built-in current-row returning implementations are provided by `H2Dialect`
+and `PostgresDialect`. Other dialects continue through residual fetching unless
+they provide the corresponding capability.
+
+## What Can Be Returned by DML
+
+Save returning can materialize current-entity columns, including:
+
+- IDs and ordinary scalar columns
+- Version and discriminator columns
+- Foreign-key ID columns
+- Values produced by [assignment expressions](./assignment)
+- Unloaded properties marked with `@DatabaseDefault`
+
+For `JOINED` inheritance, returning is decided independently for each physical
+table. A root table can return root properties and a branch table can return
+branch properties.
+
+The following parts of a fetcher are normally residual and are loaded by
+ordinary queries:
+
+- Associations and nested fetchers
+- Formulas and transient properties
+- Data that is not stored in the current physical table
+- Any local columns that the current dialect or DML shape cannot return
+
+Jimmer does not split an efficient batch mutation into one statement per row
+merely to use returning. Batch returning is used only when returned rows can be
+correlated safely with the saved objects; otherwise the batch mutation is kept
+and the unresolved result is fetched afterwards.
+
+## Reading Actual Database Values
+
+By default, a loaded property written without a custom expression is considered
+known: Jimmer can copy its value from the saved object into the result. This is
+usually the fastest behavior.
+
+Sometimes the database can change even such a value, for example through a
+trigger, normalization rule, generated column, or database-specific coercion.
+In that case, enable `saveResultReadsAllProperties` so properties requested by
+the result fetcher are read from the database instead of being completed from
+the saved object.
+
+This option does not request every entity property by itself. The fetcher still
+defines the result shape. It only changes where requested local values come
+from: DML returning when possible, or a follow-up query otherwise.
+
+Values that are inherently unknown, such as a custom assignment result or an
+unloaded `@DatabaseDefault` property, are already read automatically; enabling
+this option is not required for them.
+
+See [Save Result Configuration](../../configuration/save-result) for global,
+Spring Boot, and per-command settings.

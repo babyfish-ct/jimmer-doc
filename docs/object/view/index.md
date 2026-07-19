@@ -23,6 +23,9 @@ As a comprehensive solution, Jimmer is not limited to ORM itself, but considers 
 
     [DTO Language](./dto-language.mdx) is designed for that part of the DTO types that cannot be eliminated, with the goal of making them extremely cheap.
 
+    [DTO Composition](./composition.mdx) explains how generated DTO types and
+    source-only fragments can be reused without copying declarations.
+
 -   MapStruct
 
     A solution that combines the [MapStruct](https://mapstruct.org/) framework and can implement arbitrarily complex conversion logic.

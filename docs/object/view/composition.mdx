@@ -1,0 +1,420 @@
+---
+sidebar_position: 2
+title: DTO Composition
+---
+
+DTO language provides two complementary composition mechanisms:
+
+| Mechanism | Purpose | Generates a type |
+|---|---|---|
+| Reusable DTO | Use an existing DTO as the concrete type of an association | Yes |
+| Fragment | Add a reusable set of properties to the current DTO | No |
+
+They solve different problems. A reusable DTO preserves an object boundary,
+while a fragment only contributes properties to the DTO being compiled.
+
+## Reusing DTO Types
+
+Normally, an association with an inline body generates a nested DTO type:
+
+```text
+BookView {
+    store {
+        id
+        name
+    }
+}
+```
+
+If the same associated shape is needed in several DTOs, declare it once and
+reference it after `->`:
+
+```text
+package com.example.api.dto
+
+import com.example.model.*
+
+StoreView for BookStore {
+    id
+    name
+}
+
+AuthorView for Author {
+    id
+    firstName
+    lastName
+}
+
+BookView for Book {
+    id
+    name
+    store -> StoreView
+    authors -> AuthorView
+}
+```
+
+The generated `BookView.store` property has type `StoreView`, and
+`BookView.authors` has type `List<AuthorView>`. Jimmer reuses the referenced
+DTO's fetcher and conversion metadata; it does not generate `TargetOf_store` or
+`TargetOf_authors` classes for these properties.
+
+An alias can be combined with reuse:
+
+```text
+BookView for Book {
+    store as storeInfo -> StoreView
+}
+```
+
+The association itself still determines whether the generated property is a
+single value or a list. Existing `?` and `!` rules control nullability on the
+association edge.
+
+### Output and Input DTOs
+
+An association in an output DTO must reference a compatible output view. An
+association in an input DTO must reference an input DTO:
+
+```text
+input StoreInput for BookStore {
+    id
+    name
+}
+
+input BookInput for Book {
+    id
+    name
+    store -> StoreInput
+}
+```
+
+The association target entity and the entity represented by the referenced DTO
+must match exactly. For example, an association to `BookStore` cannot reference
+a DTO for an unrelated type, a base type, or a subtype. An output view cannot
+be used as writable input.
+
+For input DTOs, the parent association keeps its own input strategy and presence
+semantics. The referenced input DTO controls its child fields and its own
+conversion to an immutable object.
+
+### Specifications
+
+Specifications support the same association reuse syntax:
+
+```text
+fragment AuthorFilters for Author {
+    like/i(firstName, lastName) as name
+}
+
+specification StoreSpecification for BookStore {
+    ge(name)
+    le(name)
+}
+
+specification AuthorSpecification for Author {
+    #include(AuthorFilters)
+}
+
+specification BookSpecification for Book {
+    like/i(name)
+    store -> StoreSpecification
+    authors -> AuthorSpecification
+}
+```
+
+The generated `BookSpecification` uses `StoreSpecification` and
+`AuthorSpecification` directly instead of generating `TargetOf_store` and
+`TargetOf_authors`. Both singular and list associations use one nested
+specification object: the association cardinality controls how its predicates
+are applied, not the generated property type. Existing query semantics remain
+unchanged, such as a join for a singular association and an `exists` predicate
+for a list association.
+
+The referenced specification must represent the exact association target and
+can be declared with an explicit `for` target or come from a compiled
+dependency. Fragments remain DTO-kind neutral, so they can export functions
+such as `like`, `ge`, and `le`; those declarations are validated when included
+by a specification.
+
+### Association Configuration
+
+The referenced DTO defines the shape of the associated object. Fetch
+configuration remains local to the association that uses it:
+
+```text
+BookView for Book {
+    !fetchType(JOIN_ALWAYS)
+    store -> StoreView
+
+    !batch(32)
+    !orderBy(lastName asc, firstName asc)
+    authors -> AuthorView
+}
+```
+
+Configurations such as `!fetchType`, `!batch`, `!where`, and `!orderBy` are not
+copied into `StoreView` or `AuthorView`.
+
+### Polymorphism and Module Boundaries
+
+A polymorphic view or input DTO produced with `#types` can be reused through its
+generated root DTO type. Branch selection, fetching, and conversion continue to
+be handled by that DTO's generated metadata. This works for both singular and
+list associations.
+
+Reusable DTOs can also come from a compiled dependency. Import the generated
+DTO type in the same way as any other type. Its public `View<T>` or `Input<T>`
+contract and generated metadata are sufficient for reuse.
+
+Direct or indirect reusable-DTO cycles are rejected during compilation because
+they would create cyclic metadata initialization. Use the DTO language's
+explicit recursive association support for recursive object graphs.
+
+## Fragments
+
+A fragment is a named, source-level set of DTO properties:
+
+```text
+fragment BookSummaryFields for Book {
+    id
+    name
+    edition
+}
+
+BookSummaryView for Book {
+    #include(BookSummaryFields)
+}
+
+BookDetailView for Book {
+    #include(BookSummaryFields)
+    price
+    store -> StoreView
+}
+```
+
+`#include` can appear anywhere in a DTO or another fragment body. A fragment
+does not generate a Java/Kotlin class, runtime metadata, a converter, or an API
+schema. It only contributes its final property declarations to the including
+DTO.
+
+Fragments can use the normal property-producing DTO syntax, including:
+
+- Explicit properties, aliases, annotations, and custom properties
+- Macros such as `#allScalars`
+- Inline and reusable-DTO associations and their configurations
+- `flat`, `fold`, and recursive associations
+- Other fragments
+
+`#types` is not allowed inside a fragment because it defines a generated DTO
+type hierarchy rather than a property set.
+
+A fragment does not declare whether it is a view, input, or specification. Its
+properties are checked using the rules of each DTO that includes it. Therefore,
+one fragment can be used by several DTO kinds when all of its declarations are
+valid for those kinds.
+
+### Additive Composition and Exclusions
+
+Each fragment resolves its own macros, included fragments, positive properties,
+and exclusions before exporting a final ordered property set:
+
+```text
+fragment BookScalars for Book {
+    #allScalars
+    -price
+}
+
+BookView for Book {
+    #include(BookScalars)
+    price
+}
+```
+
+`BookScalars` does not export `price`, so `BookView` can add it again. An
+exclusion in the including DTO can remove a property contributed by a fragment
+or macro:
+
+```text
+BookView for Book {
+    #include(BookScalars)
+    -edition
+}
+```
+
+Composition is additive between fragments. A fragment exports only its final
+properties; it cannot remove a property supplied by a sibling fragment.
+
+### Conflicts
+
+Two contributors cannot produce the same final DTO property name:
+
+```text
+fragment A for Book {
+    name
+}
+
+fragment B for Book {
+    name
+}
+
+BookView for Book {
+    #include(A)
+    #include(B) // Compile error: duplicated property alias "name"
+}
+```
+
+This is an error even if both declarations have the same shape or came from a
+common fragment. A root exclusion cannot hide such a conflict because conflicts
+are checked before exclusions are applied.
+
+Association properties are atomic at a composition boundary. Two fragments
+that both export `store`, even with identical nested shapes, conflict; their
+nested properties are not merged recursively.
+
+### Target and Visibility
+
+A fragment is resolved against its declared entity target. It can be included
+by a DTO for the same type or for a subtype that inherits the mapped
+properties. Including a subtype fragment in a base-type DTO is invalid.
+
+Fragments are source-only and can be reused within the current DTO compilation.
+They can be referenced by a same-package name, an import, or a qualified name.
+Unlike generated DTO types, fragments cannot be imported from a compiled
+dependency.
+
+Fragment inclusion cycles are compile errors and report the inclusion path.
+
+## Multi-target DTO Files
+
+The file name or `export` statement still provides the default entity target for
+declarations without `for`. Individual DTOs and fragments can override it:
+
+```text title="Book.dto"
+import com.example.model.Author
+
+BookView {
+    id
+    name
+}
+
+AuthorView for Author {
+    id
+    firstName
+    lastName
+}
+```
+
+A file does not need a default target when every declaration specifies one. This
+is useful for keeping related DTOs in one generated package:
+
+```text title="Catalog.dto"
+package com.example.api.dto
+
+import com.example.model.*
+
+StoreView for BookStore {
+    id
+    name
+}
+
+BookView for Book {
+    id
+    name
+    store -> StoreView
+}
+```
+
+The `package` statement selects the package of generated DTO types and is also
+the default namespace for resolving DTO and fragment names. Declarations in the
+same generated package can reference each other without imports. Explicit,
+grouped, aliased, and wildcard imports are supported; ambiguous wildcard matches
+are compile errors.
+
+If the processor options `jimmer.source.includes` or `jimmer.source.excludes`
+are used, filtering is applied to the actual entity target of every DTO and
+fragment, including a target specified with `for`. `includes` is a whitelist,
+then `excludes` takes precedence. Several package/type prefixes can be separated
+with commas or semicolons.
+
+## Publishing DTO Source Bundles
+
+A library can publish `.dto` sources as resources and let each consumer generate
+its own Java or Kotlin DTO classes. The resource artifact does not need to
+contain precompiled DTO classes.
+
+Add this marker to the artifact:
+
+```text
+META-INF/jimmer/dto-bundle.properties
+```
+
+For example, a Gradle producer can package `src/main/dto` as a resource root:
+
+```kotlin
+sourceSets {
+    main {
+        resources.srcDir("src/main/dto")
+    }
+}
+```
+
+Place the marker under
+`src/main/resources/META-INF/jimmer/dto-bundle.properties`.
+
+An empty marker means that the DTO root is the classpath root. For example, a
+DTO source can be stored as `com/example/model/Book.dto` in the artifact. If the
+artifact uses another root, specify its relative resource path:
+
+```properties
+path=jimmer-dto
+```
+
+Only `path` is supported. Jimmer discovers the marker by its exact classpath
+name, then scans `.dto` files only inside marked artifacts. Both ordinary JARs
+and expanded class/resource directories produced by Gradle or an IDE are
+supported.
+
+Add the DTO artifact to the processor classpath of the consumer:
+
+```kotlin title="Kotlin/KSP"
+dependencies {
+    implementation("com.example:catalog-model:1.0")
+    ksp("com.example:catalog-dto:1.0")
+}
+```
+
+```kotlin title="Java/APT"
+dependencies {
+    implementation("com.example:catalog-model:1.0")
+    annotationProcessor("com.example:catalog-dto:1.0")
+}
+```
+
+The immutable model types referenced by the DTO sources must still be available
+on the normal compile classpath. The DTO bundle dependency only supplies the
+source declarations to APT or KSP.
+
+Bundle discovery is enabled by default. It can be disabled without affecting
+local DTO directories:
+
+```kotlin title="Kotlin/KSP"
+ksp {
+    arg("jimmer.dto.bundle.enabled", "false")
+}
+```
+
+```kotlin title="Java/APT"
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-Ajimmer.dto.bundle.enabled=false")
+}
+```
+
+## Choosing a Mechanism
+
+Use a reusable DTO when the associated object should have a named public type
+with its own metadata and conversion contract. Use a fragment when several DTOs
+need the same properties but should remain independent generated types.
+
+Neither mechanism introduces DTO class inheritance: reusable DTOs preserve a
+nested object boundary, while fragments flatten declarations into the current
+DTO.

@@ -70,6 +70,7 @@ const config = {
   ],
 
   plugins:[
+    require.resolve('./plugins/recent-updates'),
     [
       'content-docs',
       {
@@ -112,6 +113,11 @@ const config = {
         {
           type: 'localeDropdown',
           position: 'left',
+        },
+        {
+          to: '/recent-updates',
+          position: 'left',
+          label: 'Recent updates',
         },
         {
           type: "search",

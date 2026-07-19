@@ -1,0 +1,202 @@
+.page {
+  min-height: calc(100vh - var(--ifm-navbar-height));
+  padding: 4rem 0 5rem;
+  background:
+    radial-gradient(circle at 50% 0, rgb(46 133 85 / 10%), transparent 28rem),
+    var(--ifm-background-color);
+}
+
+.header {
+  max-width: 48rem;
+  margin: 0 auto 3.5rem;
+  text-align: center;
+}
+
+.header h1 {
+  margin-bottom: 0.75rem;
+  font-size: clamp(2.25rem, 6vw, 3.75rem);
+  letter-spacing: -0.04em;
+}
+
+.header > p:last-child {
+  margin: 0;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 1.1rem;
+}
+
+.eyebrow {
+  margin-bottom: 0.75rem;
+  color: var(--ifm-color-primary);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.timeline {
+  position: relative;
+  max-width: 58rem;
+  margin: 0 auto;
+}
+
+.timeline::before {
+  position: absolute;
+  top: 0.75rem;
+  bottom: 0.75rem;
+  left: 0.45rem;
+  width: 2px;
+  background: var(--ifm-color-emphasis-300);
+  content: '';
+}
+
+.update {
+  position: relative;
+  padding: 0 0 1.5rem 2.5rem;
+}
+
+.marker {
+  position: absolute;
+  top: 1.65rem;
+  left: 0;
+  width: 0.95rem;
+  height: 0.95rem;
+  border: 3px solid var(--ifm-background-color);
+  border-radius: 50%;
+  background: var(--ifm-color-primary);
+  box-shadow: 0 0 0 2px var(--ifm-color-primary);
+}
+
+.card {
+  padding: 1.5rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 0.9rem;
+  background: var(--ifm-card-background-color);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 5%);
+}
+
+.commitHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.commitHeader time {
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.commitHeader h2 {
+  margin: 0.35rem 0 0;
+  font-size: 1.25rem;
+  line-height: 1.45;
+}
+
+.commitHeader h2 a {
+  color: var(--ifm-heading-color);
+}
+
+.commitHeader h2 a:hover {
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+.hash {
+  flex: none;
+  padding: 0.25rem 0.55rem;
+  border-radius: 0.4rem;
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-emphasis-800);
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.8rem;
+}
+
+.hash:hover {
+  background: var(--ifm-color-primary-lightest);
+  color: var(--ifm-color-primary-darkest);
+  text-decoration: none;
+}
+
+.author {
+  margin: 0.75rem 0 1.25rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.9rem;
+}
+
+.documents {
+  padding-top: 1rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.documentsLabel {
+  display: block;
+  margin-bottom: 0.65rem;
+  color: var(--ifm-color-emphasis-700);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.documentLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.documentLinks a {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--ifm-color-primary-lightest);
+  border-radius: 999px;
+  background: rgb(46 133 85 / 8%);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.documentLinks a:hover {
+  background: rgb(46 133 85 / 15%);
+  text-decoration: none;
+}
+
+.emptyDocuments {
+  margin: 0;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 576px) {
+  .page {
+    padding: 2.5rem 0 3.5rem;
+  }
+
+  .header {
+    margin-bottom: 2.5rem;
+  }
+
+  .update {
+    padding-left: 1.75rem;
+  }
+
+  .timeline::before {
+    left: 0.3rem;
+  }
+
+  .marker {
+    top: 1.4rem;
+    left: -0.15rem;
+  }
+
+  .card {
+    padding: 1.15rem;
+  }
+
+  .commitHeader {
+    display: block;
+  }
+
+  .hash {
+    display: inline-block;
+    margin-top: 0.75rem;
+  }
+}

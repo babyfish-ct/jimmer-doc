@@ -7,8 +7,6 @@ In this section, we will introduce the various queries in Jimmer without conside
 
 There are three groundbreaking capabilities:
 
-For repetitive back-office list pages, [Low Query](./low-query) can generate typed Kotlin query helpers from entity annotations.
-
 -   [Object Fetcher](./object-fetcher)
 
     One statement to query data structure of arbitrary shape, like [GraphQL](https://graphql.org/)

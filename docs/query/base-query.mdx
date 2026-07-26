@@ -105,9 +105,10 @@ For this example:
 
 -   The internal base-query returns two columns *(the first column is a table object, the second column is a simple expression)*. The external query uses `get_1()`/`_1` and `get_2()`/`_2` to use them.
 
-    > Base-queries support returning 1-9 columns
+    > This positional form supports 1-9 logical columns. For larger or reusable
+    > row shapes, use a [typed tuple](./typed-tuple).
 
--   Unlike `createQuery` and `createSubQuery` *(which haven't been introduced yet but will appear in later chapters)*, `createBaseQuery` does not use the `select(selection1, selection2, ..., selectionN)` method to specify projections, but instead:
+-   This example uses the positional base-query projection API:
 
     -   Java uses `.addSelect(...).addSelect(...)...addSelect(...)` style code to specify projections
 
@@ -115,7 +116,9 @@ For this example:
 
     :::info
     -   Chain programming style must be adopted, and syntax cannot be interrupted at the language level to ensure successful compilation
-    -   Base-query uses special projection specification methods to implement the important feature that will be introduced later: **Reverse Projection Propagation**. Please ignore the intention of this design for now.
+    -   This positional API implements the important feature introduced later:
+        **Reverse Projection Propagation**. A generated typed-tuple mapper can
+        alternatively be passed to `select` to create a named base table.
     :::
 
 This query generates the following SQL:
@@ -184,17 +187,44 @@ The result is:
 ]
 ```
 
+## Named Base Tables
+
+For report queries, positional properties such as `_1` and `_2` quickly become
+hard to read. [`@TypedTuple`](./typed-tuple) lets one declaration serve both as
+an ordinary query result projection and as the named row shape of a derived
+table or CTE:
+
+```kotlin
+val statistics = sqlClient.createBaseQuery(Book::class) {
+    groupBy(table.storeId)
+    select(
+        StoreStatisticsMapper
+            .storeId(table.storeId.asNonNull())
+            .bookCount(rowCount())
+    )
+}.asCteBaseTable()
+
+sqlClient.createQuery(statistics) {
+    where(table.bookCount gt 2L)
+    select(table.storeId)
+}
+```
+
+Code generation provides `StoreStatisticsTable` for Java and non-null/nullable
+variants for Kotlin. Named tables also work with weak joins, unions and
+recursive CTEs, and they are not limited to nine logical properties. See
+[Typed Tuple](./typed-tuple) for Java and Kotlin declarations and complete
+examples.
+
 ## Reverse Projection Propagation
 
 ### Unique Projection Column Settings for BaseQuery
 
-As mentioned above:
+The positional API shown above uses the following projection methods:
 
->   Unlike `createQuery` and `createSubQuery` *(which haven't been introduced yet but will appear in later chapters)*, `createBaseQuery` does not use the `select(selection1, selection2, ..., selectionN)` method to specify projections, but instead:
->
->   -   Java uses `.addSelect(...).addSelect(...)...addSelect(...)` style code to specify projections
->
->   -   Kotlin uses `selections.add(...).add(...)...add(...)` style code to specify projections
+-   Java uses `.addSelect(...).addSelect(...)...addSelect(...)`.
+
+-   Kotlin uses `selections.add(...).add(...)...add(...)`.
 
 :::caution
 Chain programming style must be adopted, and syntax cannot be interrupted at the language level to ensure successful compilation.

@@ -647,7 +647,7 @@ BookDetailView {
     #allScalars
 
     // highlight-next-line
-    !fetchType(JOIN_ALWASY)
+    !fetchType(JOIN_ALWAYS)
     store {
         #allScalars
     }
@@ -657,6 +657,10 @@ BookDetailView {
 :::note
 注意：和对象抓取器一样，只能为引用关联 *(非集合关联，`@ManyToOne`或`@OneToOne`)* 属性指定抓取方式
 :::
+
+可选值为`SELECT`、`JOIN_IF_NO_CACHE`和`JOIN_ALWAYS`，其语义与
+[`ReferenceFetchType`](./association)相同。`JOIN_ALWAYS`会自动对non-null引用使用
+inner join，对nullable引用使用left join。
 
 ### 限制递归深度
 

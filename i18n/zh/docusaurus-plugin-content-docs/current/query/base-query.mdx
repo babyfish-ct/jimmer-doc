@@ -106,10 +106,10 @@ val books =
 
 -   内部的base-query返回了两列 *(第一列是表对象，第二列是简单表达式)*。外部查询使用`get_1()`/`_1`和`get_2()`/`_2`来使用他们
 
-    > base-query支持返回1~9列
+    > 这种位置化形式支持返回1~9个逻辑列。对于更大或需要复用的行结构，请使用
+    > [typed tuple](./typed-tuple)。
 
--   和`createQuery`以及`createSubQuery`*(截止目前为止暂时没有被介绍，后学章节出现)* 不同，
-    `createBaseQuery`不使用`select(selection1, selection2, ..., selectionN)`方法指定投影，而是
+-   本例使用位置化的base-query投影API：
 
     -   Java使用`.addSelect(...).addSelect(...)...addSelect(...)`风格的代码指定投影
 
@@ -117,7 +117,8 @@ val books =
 
     :::info
     -   须采用链式编程风格，语法层面不可中断，才能保证成功的编译
-    -   base-query采用特殊的投影指定方法是为了实现稍后即将介绍的重要特性：**投影反向传播**，这里请读者先行忽略此设计的意图。
+    -   该位置化API用于实现稍后介绍的重要特性：**投影反向传播**。另一种方式是把生成的
+        typed-tuple mapper传给`select`，从而创建命名base table。
     :::
 
 此查询会生成如下SQL
@@ -186,17 +187,41 @@ where
 ]
 ```
 
+## 命名Base Table
+
+对于报表查询，`_1`、`_2`这样的位置化属性很快就会变得难以阅读。
+[`@TypedTuple`](./typed-tuple)可以让一个声明同时作为普通查询的结果投影，以及derived
+table或CTE的命名行结构：
+
+```kotlin
+val statistics = sqlClient.createBaseQuery(Book::class) {
+    groupBy(table.storeId)
+    select(
+        StoreStatisticsMapper
+            .storeId(table.storeId.asNonNull())
+            .bookCount(rowCount())
+    )
+}.asCteBaseTable()
+
+sqlClient.createQuery(statistics) {
+    where(table.bookCount gt 2L)
+    select(table.storeId)
+}
+```
+
+代码生成器为Java提供`StoreStatisticsTable`，为Kotlin提供non-null和nullable两个版本。
+命名table也适用于weak join、union和recursive CTE，并且不受九个逻辑属性的限制。
+Java和Kotlin的声明方式及完整示例请参阅[Typed Tuple](./typed-tuple)。
+
 ## 投影反向传播
 
 ### BaseQuery独有的投影列设置
 
-上文提及
+上面的位置化API使用如下投影方法：
 
->   和`createQuery`以及`createSubQuery`*(截止目前为止暂时没有被介绍，后学章节出现)* 不同，`createBaseQuery`不使用`select(selection1, selection2, ..., selectionN)`方法制定投影，而是
->
->   -   Java使用`.addSelect(...).addSelect(...)...addSelect(...)`风格的代码指定投影
->
->   -   Kotlin使用`selections.add(...).add(...)...add(...)`风格的代码指定投影
+-   Java使用`.addSelect(...).addSelect(...)...addSelect(...)`。
+
+-   Kotlin使用`selections.add(...).add(...)...add(...)`。
 
 :::caution
 须采用链式编程风格，语法层面不可中断，才能保证成功的编译

@@ -1,0 +1,201 @@
+---
+sidebar_position: 2
+title: Typed Tuple
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+When a query selects several expressions, its default result is `Tuple2`,
+`Tuple3`, and so on. That is convenient for a local query, but a reusable report
+usually needs a meaningful row type instead of positional `_1`, `_2` properties.
+
+`@TypedTuple` generates two related APIs from one row declaration:
+
+-   A mapper that can be passed to `select` and materializes the declared row
+    type directly.
+
+-   A named table facade that exposes the same row when the query is used as a
+    [base query](./base-query).
+
+## Declaration
+
+Declare an ordinary immutable class and annotate it with `@TypedTuple`:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="StoreStatistics.java"
+@TypedTuple
+@lombok.Data
+public class StoreStatistics {
+
+    private final UUID storeId;
+
+    private final long bookCount;
+
+    private final BigDecimal avgPrice;
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="StoreStatistics.kt"
+@TypedTuple
+data class StoreStatistics(
+    val storeId: UUID,
+    val bookCount: Long,
+    val avgPrice: BigDecimal?
+)
+```
+
+</TabItem>
+</Tabs>
+
+The annotation processor generates `StoreStatisticsMapper`. It preserves the
+declared property order and checks the selection type of every property at
+compile time.
+
+:::tip
+Java records are supported too:
+
+```java
+@TypedTuple
+public record StoreStatistics(
+    UUID storeId,
+    long bookCount,
+    BigDecimal avgPrice
+) {}
+```
+:::
+
+## Select Projection
+
+Use the generated mapper instead of selecting several expressions separately:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable book = BookTable.$;
+
+List<StoreStatistics> rows = sqlClient
+    .createQuery(book)
+    .where(book.storeId().isNotNull())
+    .groupBy(book.storeId())
+    .select(
+        StoreStatisticsMapper
+            .storeId(book.storeId())
+            .bookCount(Expression.rowCount())
+            .avgPrice(book.price().avgAsDecimal())
+    )
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val rows: List<StoreStatistics> = sqlClient
+    .createQuery(Book::class) {
+        where(table.storeId.isNotNull())
+        groupBy(table.storeId)
+        select(
+            StoreStatisticsMapper
+                .storeId(table.storeId.asNonNull())
+                .bookCount(rowCount())
+                .avgPrice(avgAsDecimal(table.price))
+        )
+    }
+    .execute()
+```
+
+</TabItem>
+</Tabs>
+
+The SQL projection is unchanged, but each JDBC row is now materialized as
+`StoreStatistics`; no application-level conversion from `Tuple3` is required.
+The same projection can also be used by `stream` and by DML `returning` APIs
+that accept a projection.
+
+## Base Query and CTE
+
+The same mapper can be selected by `createBaseQuery`. In this case code
+generation also provides `StoreStatisticsTable`, whose properties are DSL
+expressions rather than materialized values:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable book = BookTable.$;
+
+StoreStatisticsTable statistics = sqlClient
+    .createBaseQuery(book)
+    .where(book.storeId().isNotNull())
+    .groupBy(book.storeId())
+    .select(
+        StoreStatisticsMapper
+            .storeId(book.storeId())
+            .bookCount(Expression.rowCount())
+            .avgPrice(book.price().avgAsDecimal())
+    )
+    .asCteBaseTable();
+
+List<Tuple2<UUID, BigDecimal>> rows = sqlClient
+    .createQuery(statistics)
+    .where(statistics.getBookCount().gt(2L))
+    .select(statistics.getStoreId(), statistics.getAvgPrice())
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val statistics = sqlClient
+    .createBaseQuery(Book::class) {
+        where(table.storeId.isNotNull())
+        groupBy(table.storeId)
+        select(
+            StoreStatisticsMapper
+                .storeId(table.storeId.asNonNull())
+                .bookCount(rowCount())
+                .avgPrice(avgAsDecimal(table.price))
+        )
+    }
+    .asCteBaseTable()
+
+val rows = sqlClient.createQuery(statistics) {
+    where(table.bookCount gt 2L)
+    select(table.storeId, table.avgPrice)
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+Use `asBaseTable()` for a derived table and `asCteBaseTable()` for a CTE. The
+generated named facade is preserved when the base query is used in weak joins,
+unions, or recursive CTEs. Kotlin additionally generates
+`StoreStatisticsTable.Nullable`, which is used when an outer weak join makes
+all columns of the joined table nullable.
+
+Named typed tables are not limited to nine logical properties. A property can
+represent either a scalar expression or an entity table; an entity table may
+expand to several physical SQL columns and still occupies one typed-tuple
+property.
+
+:::caution
+A typed tuple can always be used as a normal query result projection. To use it
+as a base table, however, every selected property must be representable by a SQL
+base table. Fetcher selections and output DTO selections are therefore not
+allowed inside the typed base-query projection.
+
+All branches of a union or recursive CTE must use the same generated typed
+projection.
+:::
+
+The positional `BaseTable1` ... `BaseTable9` API remains available for small,
+local base queries.

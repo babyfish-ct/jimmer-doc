@@ -648,7 +648,7 @@ BookDetailView {
     #allScalars
 
     // highlight-next-line
-    !fetchType(JOIN_ALWASY)
+    !fetchType(JOIN_ALWAYS)
     store {
         #allScalars
     }
@@ -658,6 +658,12 @@ BookDetailView {
 :::note
 Note: Just like object fetchers, fetch methods can only be specified for reference associations *(non-collection associations, `@ManyToOne` or `@OneToOne`)* properties
 :::
+
+The available values are `SELECT`, `JOIN_IF_NO_CACHE`, and `JOIN_ALWAYS`; they
+have the same semantics as
+[`ReferenceFetchType`](./association#reference-fetch-type).
+`JOIN_ALWAYS` automatically uses an inner join for a non-null reference and a
+left join for a nullable reference.
 
 ### Limit recursion depth
 

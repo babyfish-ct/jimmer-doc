@@ -783,7 +783,7 @@ RobotView {
 
 ## 10. 关联属性
 
-对关联属性的处理是DTO语言一个非常强大的功能，存在三种用法
+对关联属性的处理是DTO语言一个非常强大的功能，存在四种用法
 
 -   直接使用
 -   递归关联
@@ -917,6 +917,51 @@ RobotView {
         ...略...
     }
     ```
+
+#### 配置Output View的关联加载
+
+Output DTO可以配置每个关联的加载方式。配置指令需要紧挨着写在关联属性之前：
+
+```sh title="Book.dto"
+BookDetailView {
+
+    #allScalars
+
+    // 在根SQL语句中加载该引用关联
+    !fetchType(JOIN_ALWAYS)
+    store {
+        id
+        name
+    }
+
+    // 配置该集合的二次查询
+    !where(firstName ilike '%a%' or lastName ilike '%a%')
+    !orderBy(lastName asc, firstName asc)
+    !batch(32)
+    !limit(20)
+    authors {
+        id
+        firstName
+        lastName
+    }
+}
+```
+
+-   `!fetchType(SELECT | JOIN_IF_NO_CACHE | JOIN_ALWAYS)`控制引用关联的加载方式。
+    `JOIN_ALWAYS`对non-null引用使用inner join，对nullable引用使用left join；DTO不会独立
+    指定SQL join type。
+
+-   `!where(...)`使用简单谓词过滤关联行。
+
+-   `!orderBy(...)`、`!limit(limit, offset)`和`!batch(size)`用于配置集合加载，
+    其中offset可以省略。
+
+-   需要任意Jimmer DSL逻辑时，可以用`!filter(FilterType)`代替`!where`和`!orderBy`。
+    递归关联还支持`!depth`和`!recursion`。
+
+这些指令影响生成的fetcher，而不影响生成的DTO数据类，并且仅适用于output DTO。
+完整语法以及自定义filter/recursion的实现方式请参阅
+[Output DTO关联配置](../../query/object-fetcher/dto)。
 
 ### 10.2 递归关联
 

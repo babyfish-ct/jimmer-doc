@@ -176,6 +176,99 @@ weak join、union或recursive CTE时，生成的命名facade仍会被保留。Ko
 命名typed table不受九个逻辑属性的限制。属性既可以代表标量表达式，也可以代表实体表；
 一个实体表可以展开为多个物理SQL列，但仍然只占用一个typed-tuple属性。
 
+### 向外传递实体表
+
+当大部分列来自同一个实体、只有少量列是计算结果时，不需要在typed tuple中重复声明
+实体的所有属性，只需声明一个entity-valued属性：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookWithMetrics.java"
+@TypedTuple
+@lombok.Data
+public class BookWithMetrics {
+
+    private final Book book;
+
+    private final long authorCount;
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookWithMetrics.kt"
+@TypedTuple
+data class BookWithMetrics(
+    val book: Book,
+    val authorCount: Long
+)
+```
+
+</TabItem>
+</Tabs>
+
+把table本身传给该mapper属性，这与位置化API中的`addSelect(table)`或
+`selections.add(table)`完全对应：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable book = BookTable.$;
+AuthorTableEx author = AuthorTableEx.$;
+
+BookWithMetricsTable report = sqlClient
+    .createBaseQuery(book)
+    .select(
+        BookWithMetricsMapper
+            .book(book)
+            .authorCount(
+                sqlClient.createSubQuery(author)
+                    .where(author.books().id().eq(book.id()))
+                    .selectCount()
+            )
+    )
+    .asCteBaseTable();
+
+sqlClient.createQuery(report)
+    .select(report.getBook().name(), report.getAuthorCount())
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val report = sqlClient
+    .createBaseQuery(Book::class) {
+        select(
+            BookWithMetricsMapper
+                .book(table)
+                .authorCount(
+                    subQuery(Author::class) {
+                        where(table.books.id eq parentTable.id)
+                        selectCount()
+                    }
+                )
+        )
+    }
+    .asCteBaseTable()
+
+sqlClient.createQuery(report) {
+    select(table.book.name, table.authorCount)
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+生成的`book`访问器在Java中是`BookTable`，在Kotlin中是`KNonNullTable<Book>`。
+投影反向传播仍然有效：内部查询只导出外部查询需要的`Book`列，以及实际使用的计算列。
+在外部查询中选择`book`本身或对其应用fetcher时，也会像位置化table selection一样向内
+传播所需的实体shape。
+
 :::caution
 Typed tuple始终可以用作普通查询的结果投影。但是，要将其用作base table，每个selection
 都必须能由SQL base table表示。因此，typed base-query投影中不允许fetcher selection和

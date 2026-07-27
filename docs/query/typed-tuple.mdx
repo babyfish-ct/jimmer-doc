@@ -187,6 +187,102 @@ represent either a scalar expression or an entity table; an entity table may
 expand to several physical SQL columns and still occupies one typed-tuple
 property.
 
+### Passing an Entity Table Through
+
+When most columns come from one entity and only a few columns are calculated,
+do not repeat all entity properties in the typed tuple. Declare one
+entity-valued property instead:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java title="BookWithMetrics.java"
+@TypedTuple
+@lombok.Data
+public class BookWithMetrics {
+
+    private final Book book;
+
+    private final long authorCount;
+}
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin title="BookWithMetrics.kt"
+@TypedTuple
+data class BookWithMetrics(
+    val book: Book,
+    val authorCount: Long
+)
+```
+
+</TabItem>
+</Tabs>
+
+Pass the table itself to that mapper property, just like `addSelect(table)` or
+`selections.add(table)` in the positional API:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+BookTable book = BookTable.$;
+AuthorTableEx author = AuthorTableEx.$;
+
+BookWithMetricsTable report = sqlClient
+    .createBaseQuery(book)
+    .select(
+        BookWithMetricsMapper
+            .book(book)
+            .authorCount(
+                sqlClient.createSubQuery(author)
+                    .where(author.books().id().eq(book.id()))
+                    .selectCount()
+            )
+    )
+    .asCteBaseTable();
+
+sqlClient.createQuery(report)
+    .select(report.getBook().name(), report.getAuthorCount())
+    .execute();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+val report = sqlClient
+    .createBaseQuery(Book::class) {
+        select(
+            BookWithMetricsMapper
+                .book(table)
+                .authorCount(
+                    subQuery(Author::class) {
+                        where(table.books.id eq parentTable.id)
+                        selectCount()
+                    }
+                )
+        )
+    }
+    .asCteBaseTable()
+
+sqlClient.createQuery(report) {
+    select(table.book.name, table.authorCount)
+}.execute()
+```
+
+</TabItem>
+</Tabs>
+
+The generated `book` accessor is a `BookTable` in Java and a
+`KNonNullTable<Book>` in Kotlin. Reverse projection propagation still applies:
+the inner query exports only the `Book` columns required by the outer query,
+along with the calculated columns that are actually used. Selecting `book`
+itself, or applying a fetcher to it in the outer query, propagates that requested
+entity shape in the same way as a positional table selection.
+
 :::caution
 A typed tuple can always be used as a normal query result projection. To use it
 as a base table, however, every selected property must be representable by a SQL

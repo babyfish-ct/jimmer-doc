@@ -60,6 +60,11 @@ Java直接使用`selectedStores.id()`，Kotlin直接使用`sourceTable.id`，无
 包装。投影反向传播只导出mutation需要的列，因此未使用的`website`等属性不会被选择。
 过滤条件仍决定哪些行参与操作。
 
+映射也可以访问source的关联，例如Java的`selectedStores.asTableEx().books().name()`
+或Kotlin的`sourceTable.asTableEx().books.name`。这些连接添加到使用source的外层查询中；
+source会自动导出连接所需的ID或外键列，嵌套source也会逐层传播这些列。
+to-many连接遵循普通SQL连接语义，每个匹配的关联都会产生一行source数据。
+
 同一个source也适用于`createUpsert`、returning指令和普通查询。查询示例、嵌套source和
 集合操作的行为请参阅[直接选择实体表](../query/base-query#直接选择实体表)。
 导出的table始终绑定到source查询，不能用作mutation目标；应像上例一样单独指定目标表。

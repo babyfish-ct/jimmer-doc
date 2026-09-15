@@ -183,7 +183,7 @@ class BookRepository(
             .createQuery(Book::class) {
                 // highlight-next-line
                 where(specification)
-                select(table.fetch(table))
+                select(table.fetch(fetcher))
             }
             .execute()  
 }

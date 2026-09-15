@@ -64,7 +64,7 @@ class BookRepository(
                 // highlight-next-line 
                 where(table.price.`between?`(minPrice, maxPrice)) 
             }
-            .select(table.fetch(table))
+            .select(table.fetch(fetcher))
             .execute() 
 }
 ```

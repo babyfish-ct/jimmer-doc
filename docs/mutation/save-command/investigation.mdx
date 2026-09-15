@@ -136,7 +136,7 @@ This code will generate the following two SQL statements:
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](./mysql)
+    For specific details, please refer to [MySQL Issues](./mysql.mdx)
     :::
 
     1.  ```sql
@@ -210,7 +210,7 @@ This code will generate the following two SQL statements:
         The row violated the constraint can not be located by the `java.sql.BatchUpdateException` thrown by batch operation, 
         so all rows need to be investigatd
 
-        > Postgres and MySQL with batch capabilities enabled (see [MySQL Issues](./mysql)) both fall into this scenario
+        > Postgres and MySQL with batch capabilities enabled (see [MySQL Issues](./mysql.mdx)) both fall into this scenario
 
     Either way, Jimmer can investigate and identify the problem.
 
@@ -299,7 +299,7 @@ This code will generate the following two SQL statements:
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](./mysql)
+    For specific details, please refer to [MySQL Issues](./mysql.mdx)
     :::
 
     1.  ```sql
@@ -375,7 +375,7 @@ This code will generate the following two SQL statements:
         The row violated the constraint can not be located by the `java.sql.BatchUpdateException` thrown by batch operation, 
         so all rows need to be investigatd
 
-        > Postgres and MySQL with batch capabilities enabled (see [MySQL Issues](./mysql)) both fall into this scenario
+        > Postgres and MySQL with batch capabilities enabled (see [MySQL Issues](./mysql.mdx)) both fall into this scenario
 
     Either way, Jimmer can investigate and identify the problem.
 
@@ -397,7 +397,7 @@ org.babyfish.jimmer.sql.exception.SaveException$NotUnique:
 ```
 
 :::info
-In the [Mapping/Advanced Mapping/Key](../../mapping/advanced/key) article, we introduced that entities can be configured with multiple unique constraints *(or unique indexes)* *(in fact, this documentation has not been modified yet)*.
+In the [Mapping/Advanced Mapping/Key](../../mapping/advanced/key.mdx) article, we introduced that entities can be configured with multiple unique constraints *(or unique indexes)* *(in fact, this documentation has not been modified yet)*.
 
 If an entity has more than one unique constraint *(or unique index)*, Jimmer will investigate them one by one.
 :::
@@ -414,7 +414,7 @@ In save commands, associations are divided into [long associations and short ass
 
 Therefore, this issue is specific to short associations. In the following examples, all associated objects are id-only objects.
 
-In [Mapping/Basic Mapping/Real and Fake Foreign Keys](../../mapping/base/foreignkey), we introduced that Jimmer supports both real and fake foreign keys.
+In [Mapping/Basic Mapping/Real and Fake Foreign Keys](../../mapping/base/foreignkey.mdx), we introduced that Jimmer supports both real and fake foreign keys.
 Only real foreign keys involve database constraint violation issues, so we'll discuss them separately.
 
 ### Fake Foreign Keys
@@ -579,7 +579,7 @@ This code will generate two SQL statements
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](./mysql)
+    For specific details, please refer to [MySQL Issues](./mysql.mdx)
     :::
 
     1.  ```sql
@@ -645,7 +645,7 @@ This code will generate two SQL statements
         The row violated the constraint can not be located by the `java.sql.BatchUpdateException` thrown by batch operation, 
         so all rows need to be investigatd
 
-        > Postgres and MySQL with batch capabilities enabled (see [MySQL Issues](./mysql)) both fall into this scenario
+        > Postgres and MySQL with batch capabilities enabled (see [MySQL Issues](./mysql.mdx)) both fall into this scenario
 
     Either way, Jimmer can investigate the problem.
 

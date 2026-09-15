@@ -46,7 +46,7 @@ save operation. Batch saves are grouped by actual type and physical stage.
 
 The same behavior applies when inherited entities appear inside a graph save.
 Optimistic locking, transaction triggers, associations, logical deletion, and
-[assignment expressions](../../../mutation/save-command/assignment) continue to
+[assignment expressions](../../../mutation/save-command/assignment.mdx) continue to
 work at the appropriate stage.
 
 ## Abstract Types
@@ -145,4 +145,4 @@ physical branch.
 
 The mapping-level `joinedTableDissociateAction` controls whether Jimmer deletes
 derived table rows explicitly (`DELETE`, the default) or relies on database
-`ON DELETE CASCADE` (`LAX`). See [Entity Mapping](./mapping#physical-delete).
+`ON DELETE CASCADE` (`LAX`). See [Entity Mapping](./mapping.mdx#physical-delete).

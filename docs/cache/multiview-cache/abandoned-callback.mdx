@@ -26,7 +26,7 @@ Using multi-view caches is relatively strict and the following three conditions 
 
     -   For calculated properties, the `getParameterMapRef` method of `TransientResolver<ID, V>/KTransientResolver<ID, V>` must not return null.
     
-3.  The object fetch cannot use [property-level filters](../../query/object-fetcher/association#property-level-filters).
+3.  The object fetch cannot use [property-level filters](../../query/object-fetcher/association.mdx#property-level-filters).
 
 If these prerequisite conditions are not fully met, even if cache is specified for association or calculated properties, Jimmer will abandon them. Although the reasons have been explained in detail in previous documents, troubleshooting such issues during actual development is inconvenient. 
 
@@ -62,7 +62,7 @@ This callback interface tells developers that although cache is specified for a 
 
     -   PARAMETERIZED_CACHE_REQUIRED: The `getParameters` method of some `CacheableFilter<E>/KCacheableFilter<E>` objects affecting the association properties or the `getParameterMapRef` method of `TransientResolver<ID, V>/KTransientResolver<ID, V>` implementing the calculated properties returns a Map of non-zero length, but the cache configured for that property by the developer is not a multi-view cache.
 
-    -   FIELD_FILTER_USED: The developer uses property-level filters for the property in [object fetchers](../../query/object-fetcher).
+    -   FIELD_FILTER_USED: The developer uses property-level filters for the property in [object fetchers](../../query/object-fetcher/index.md).
 
 Developers can implement the `CacheAbandonedCallback` interface themselves, create an object, and register it with SqlClient. There is no limit on the number of registered callback objects.
 

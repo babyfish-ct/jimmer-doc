@@ -41,7 +41,7 @@ The save command supports 5 save modes that control how the aggregate root itsel
 :::caution
 Save modes only affect the aggregate root object, not other associated objects.
 
-For associated objects, please refer to [Associated Object Save Mode](./association/associated-save-mode).
+For associated objects, please refer to [Associated Object Save Mode](./association/associated-save-mode.mdx).
 :::
 
 ## 1. INSERT_ONLY
@@ -139,7 +139,7 @@ insert into BOOK(
 
 :::caution
 By default, MySQL batch operations are not used. 
-For specific details, please refer to [MySQL Issues](./mysql)
+For specific details, please refer to [MySQL Issues](./mysql.mdx)
 :::
 
 1.  ```sql
@@ -353,7 +353,7 @@ public interface Book {
 </TabItem>
 </Tabs>
 
-Here `Book.name` and `Book.edition` are annotated with [@Key](../../mapping/advanced/key).
+Here `Book.name` and `Book.edition` are annotated with [@Key](../../mapping/advanced/key.mdx).
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -452,7 +452,7 @@ where
 
 :::caution
 By default, MySQL batch operations are not used. 
-For specific details, please refer to [MySQL Issues](./mysql)
+For specific details, please refer to [MySQL Issues](./mysql.mdx)
 :::
 
 1.  ```sql
@@ -577,7 +577,7 @@ merge into BOOK(
 
 :::caution
 By default, MySQL batch operations are not used. 
-For specific details, please refer to [MySQL Issues](./mysql)
+For specific details, please refer to [MySQL Issues](./mysql.mdx)
 :::
 
 1.  ```sql
@@ -771,7 +771,7 @@ In this situation, Jimmer will first execute a query, then based on the query re
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](./mysql)
+    For specific details, please refer to [MySQL Issues](./mysql.mdx)
     :::
 
     1.  ```sql
@@ -820,7 +820,7 @@ In this situation, Jimmer will first execute a query, then based on the query re
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](./mysql)
+    For specific details, please refer to [MySQL Issues](./mysql.mdx)
     :::
 
     1.  ```sql
@@ -959,7 +959,7 @@ merge into BOOK(
 
 :::caution
 By default, MySQL batch operations are not used. 
-For specific details, please refer to [MySQL Issues](./mysql)
+For specific details, please refer to [MySQL Issues](./mysql.mdx)
 :::
 
 1.  ```sql
@@ -1168,7 +1168,7 @@ values
 
 :::caution
 By default, MySQL batch operations are not used. 
-For specific details, please refer to [MySQL Issues](./mysql)
+For specific details, please refer to [MySQL Issues](./mysql.mdx)
 :::
 
 1.  ```sql
@@ -1332,7 +1332,7 @@ values
 
 :::caution
 By default, MySQL batch operations are not used. 
-For specific details, please refer to [MySQL Issues](./mysql)
+For specific details, please refer to [MySQL Issues](./mysql.mdx)
 :::
 
 1.  ```sql
@@ -1539,10 +1539,10 @@ Jimmer will first group these objects by format, then apply all the above functi
 ## Control an Upsert Update
 
 Save mode selects the insert/update behavior. To limit the properties changed
-on a conflict, use an [upsert mask](./upsert-mask). To skip an update based on
-stored and incoming values, use [setUpdateWhere](./update-where).
+on a conflict, use an [upsert mask](./upsert-mask.mdx). To skip an update based on
+stored and incoming values, use [setUpdateWhere](./update-where.mdx).
 
 `forbidUpdate()` selects no entity-property update assignments; it does not
 mean `INSERT_IF_ABSENT`, because a self-assignment can still be required by
-save semantics. Check [isAccepted](./returning#acceptance) instead of deriving
+save semantics. Check [isAccepted](./returning.mdx#acceptance) instead of deriving
 acceptance from the affected-row count.

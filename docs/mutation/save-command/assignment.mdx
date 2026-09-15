@@ -94,7 +94,7 @@ the saved object; `set` only customizes an update assignment.
 
 `set` does not add a property to the save operation. It replaces the assignment
 for a property that has already been selected by the loaded object shape and,
-for an upsert, by its [upsert mask](./upsert-mask).
+for an upsert, by its [upsert mask](./upsert-mask.mdx).
 
 Consequently:
 
@@ -118,7 +118,7 @@ whenever its entity type is reached during the save.
 An assignment target must be a local physical scalar column. IDs,
 discriminators, logical-deletion properties, associations, calculated
 properties, and remote properties cannot be targets. A version property is
-allowed when the root command uses [VersionMode.ASSIGNMENT](./version-mode).
+allowed when the root command uses [VersionMode.ASSIGNMENT](./version-mode.mdx).
 The target must still be loaded and selected for update.
 
 The expression can read local physical scalar properties from `target`, but it
@@ -134,7 +134,7 @@ follow-up query.
 
 ## Optimistic Locking
 
-Assignment expressions and [custom optimistic locking](./optimistic-locking)
+Assignment expressions and [custom optimistic locking](./optimistic-locking.mdx)
 use the same saved-value expression API. In both APIs, the table expression is
 the current database row and the `new*` functions refer to the saved object.
 They can be used together in one command: the lock predicate decides whether
@@ -142,12 +142,12 @@ the update is accepted, while `set` decides how an accepted row is updated.
 
 ## Conditional Updates
 
-Use [setUpdateWhere](./update-where) to skip an ineligible update without an
+Use [setUpdateWhere](./update-where.mdx) to skip an ineligible update without an
 optimistic-lock exception. It controls whether the update happens; `set`
-controls the assigned value. [Result acceptance](./returning#acceptance) distinguishes
+controls the assigned value. [Result acceptance](./returning.mdx#acceptance) distinguishes
 an accepted update from a rejected one.
 
-For a query source, [upsert from select](../insert-from-select) provides
+For a query source, [upsert from select](../insert-from-select.mdx) provides
 `update(target, expression)` without an insert value, or three-argument `merge`
 with separate insert and update expressions. These query-based assignments do
 not require a loaded input entity property.

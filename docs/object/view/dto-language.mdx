@@ -31,7 +31,7 @@ The DTO language is designed for that part of the DTO types that cannot be elimi
 
 As a comprehensive solution, Jimmer is not limited to ORM itself, but considers the whole project. To solve this problem, it provides the DTO language.
 
-The DTO language is a very powerful feature provided by Jimmer, and is a concept highly similar to [Object Fetcher](../../query/object-fetcher), but at an earlier stage during compilation.
+The DTO language is a very powerful feature provided by Jimmer, and is a concept highly similar to [Object Fetcher](../../query/object-fetcher/index.md), but at an earlier stage during compilation.
 
 The DTO language is used to quickly define the shape of data structures. Based on these shapes, DTOs can be compile-time
 
@@ -39,19 +39,19 @@ The DTO language is used to quickly define the shape of data structures. Based o
 
 -   Generate mutual conversion logic between DTO static objects and Jimmer dynamic objects
 
--   Generate [Object Fetchers](../../query/object-fetcher) that match perfectly with the DTO shape definitions
+-   Generate [Object Fetchers](../../query/object-fetcher/index.md) that match perfectly with the DTO shape definitions
 
-Using the DTO language to quickly build DTO types is a solution tailored for Jimmer with extremely high development efficiency, much faster than using [mapstruct](./mapstruct), and is the recommended approach.
+Using the DTO language to quickly build DTO types is a solution tailored for Jimmer with extremely high development efficiency, much faster than using [mapstruct](./mapstruct.mdx), and is the recommended approach.
 
 ### 1.3. Application Scenarios
 
 The application scenarios of the DTO language:
 
--   [Serve as return results in query APIs *(optional, not recommended, don't use unnecessarily)*](../../query/object-fetcher/dto) 
+-   [Serve as return results in query APIs *(optional, not recommended, don't use unnecessarily)*](../../query/object-fetcher/dto.mdx) 
 
--   [Serve as input parameters in save APIs *(required)*](../../mutation/save-command/input-dto/dto-lang)
+-   [Serve as input parameters in save APIs *(required)*](../../mutation/save-command/input-dto/dto-lang.mdx)
 
--   [Serve as input parameters in super QBE queries *(optional, recommended)*](../../query/super_qbe)
+-   [Serve as input parameters in super QBE queries *(optional, recommended)*](../../query/super_qbe.mdx)
 
 ## 2. Create File
 
@@ -72,7 +72,7 @@ Jimmer only requires using `jimmer-apt` or `jimmer-ksp` in projects containing d
 Multiple dto files can be defined under the `src/main/dto` directory. By default,
 the file path and name identify the entity used by declarations in that file.
 Individual declarations can also select another entity with `for`, so one file
-can describe DTOs for several entities. See [DTO Composition](./composition) for
+can describe DTOs for several entities. See [DTO Composition](./composition.mdx) for
 multi-target files, imports, reusable DTOs, and fragments.
 
 Assuming there is a Jimmer entity type whose full type name is `com.yourcompany.yourproject.Book`, and this class is decorated with `@org.babyfish.jimmer.sql.Entity` *(DTO language only supports Entity types)*, there are two ways to create dto files.
@@ -187,11 +187,11 @@ open class BookView(
 
 It was mentioned earlier that the DTO language has three use cases:
 
--   [Serve as return values in query APIs *(optional, not recommended, don't use unnecessarily)*](../../query/object-fetcher/dto)
+-   [Serve as return values in query APIs *(optional, not recommended, don't use unnecessarily)*](../../query/object-fetcher/dto.mdx)
 
--   [Serve as input parameters in save APIs *(required)*](../../mutation/save-command/input-dto/dto-lang) 
+-   [Serve as input parameters in save APIs *(required)*](../../mutation/save-command/input-dto/dto-lang.mdx) 
 
--   [Serve as input parameters in super QBE queries *(optional, recommended)*](../../query/super_qbe)
+-   [Serve as input parameters in super QBE queries *(optional, recommended)*](../../query/super_qbe.mdx)
 
 So, the DTO language can define three types of DTOs:
 
@@ -199,7 +199,7 @@ So, the DTO language can define three types of DTOs:
 
 -   input: Declared with the `input` keyword, which can be understood as Input DTO.
 
--   specification: Declared with the `specification` keyword. It is not closely related to DTO itself, but can be used as a query parameter to support [super QBE queries](../../query/super_qbe).
+-   specification: Declared with the `specification` keyword. It is not closely related to DTO itself, but can be used as a query parameter to support [super QBE queries](../../query/super_qbe.mdx).
 
 ```sh title="Book.dto"
 BookView {
@@ -241,7 +241,7 @@ This means:
     It is recommended that input DTOs end with `Input`
     :::
 
--   `BookSpecification` and `AnotherBookSpecification` are used as query parameters to support [super QBE queries](../../query/super_qbe). The generated Java/Kotlin types implement the `org.babyfish.jimmer.Specification<E>` interface
+-   `BookSpecification` and `AnotherBookSpecification` are used as query parameters to support [super QBE queries](../../query/super_qbe.mdx). The generated Java/Kotlin types implement the `org.babyfish.jimmer.Specification<E>` interface
 
     :::note
     It is recommended that query parameter DTOs end with `Specification`
@@ -300,7 +300,7 @@ Compared with Output DTO, Input DTO has the following differences:
     > However, this does not mean Jimmer will simply assume like other ORMs such as JPA that lacking an id property means an insert operation 
     while having an id property means an update operation. 
     > 
-    > Jimmer has smarter strategies in this regard, please refer to [Save Commands/Save Modes](../../mutation/save-command/save-mode). This article will not repeat the details. 
+    > Jimmer has smarter strategies in this regard, please refer to [Save Commands/Save Modes](../../mutation/save-command/save-mode.mdx). This article will not repeat the details. 
     
     If the developer does not accept this default behavior, there are two ways to write the DTO code: 
     
@@ -333,15 +333,15 @@ Compared with Output DTO, Input DTO has the following differences:
     For properties that are allowed to be null in the original entity, how to map them through Input DTO is a complex topic. 
     Jimmer provides comprehensive and powerful support. 
     
-    Please refer to [Modification/Save Command/Input DTO/Handle Null Values](../../mutation/save-command/input-dto/null-handling).
+    Please refer to [Modification/Save Command/Input DTO/Handle Null Values](../../mutation/save-command/input-dto/null-handling.mdx).
     :::
 
 ### 3.3 specification-specific functionalities
 
-The role of `specification` is similar to `input`, used to decorate input types, but `specification` does not provide the ability to convert between entity objects, but is used as a query parameter to support [super QBE queries](../../query/super_qbe). 
+The role of `specification` is similar to `input`, used to decorate input types, but `specification` does not provide the ability to convert between entity objects, but is used as a query parameter to support [super QBE queries](../../query/super_qbe.mdx). 
 
 :::tip
-[Super QBE Query](../../query/super_qbe) is a very powerful feature of Jimmer that is not explained here. Please refer to the [relevant section](../../query/super_qbe).
+[Super QBE Query](../../query/super_qbe.mdx) is a very powerful feature of Jimmer that is not explained here. Please refer to the [relevant section](../../query/super_qbe.mdx).
 :::
 
 ## 4. Simple properties
@@ -538,7 +538,7 @@ input UpdateBookInput {
     Jimmer provides comprehensive and powerful support. 
     
     Due to length limitations, this issue forms a separate article. 
-    Please refer to [Modification/Save Command/Input DTO/Handle Null Values](../../mutation/save-command/input-dto/null-handling).
+    Please refer to [Modification/Save Command/Input DTO/Handle Null Values](../../mutation/save-command/input-dto/null-handling.mdx).
     :::
 
 ### 7.2. `!`
@@ -975,7 +975,7 @@ BookDetailView {
 These directives affect the generated fetcher, not the generated DTO data
 class. They are available only for output DTOs. For the complete syntax and
 custom filter/recursion implementations, see
-[Output DTO association configurations](../../query/object-fetcher/dto#association-property-specific-configurations).
+[Output DTO association configurations](../../query/object-fetcher/dto.mdx#association-property-specific-configurations).
 
 ### 10.2 Recursive Association  
 
@@ -996,8 +996,8 @@ TreeNodeView {
 Here is the translation into English:
 
 For <ViewMore buttonText="short associations"><ShortAssociation/></ViewMore>, 
-while of course we can choose to define [@IdView](../../mapping/advanced/view/id-view) properties on the entities and 
-simply reference them in DTOs, we can't always rely on entity types having declared [@IdView](../../mapping/advanced/view/id-view) properties. 
+while of course we can choose to define [@IdView](../../mapping/advanced/view/id-view.mdx) properties on the entities and 
+simply reference them in DTOs, we can't always rely on entity types having declared [@IdView](../../mapping/advanced/view/id-view.mdx) properties. 
 A better approach should not make that assumption. 
 
 Therefore, the DTO language supports the `id` function on associated properties to achieve the same purpose:
@@ -1015,7 +1015,7 @@ BookView {
 }
 ```
 
-This code has the exact same function as the previous example, but no longer assumes the entity type always declares [@IdView](../../mapping/advanced/view/id-view) properties, which is a better solution.
+This code has the exact same function as the previous example, but no longer assumes the entity type always declares [@IdView](../../mapping/advanced/view/id-view.mdx) properties, which is a better solution.
 
 ### 10.4. flat Function  
 
@@ -1540,7 +1540,7 @@ The above four styles are equivalent. You can freely choose the style you like.
 ## 13. Implementing Interfaces
 
 DTO language provides explicit reuse through [reusable association DTOs and
-fragments](./composition). Implementing a Java/Kotlin interface serves a
+fragments](./composition.mdx). Implementing a Java/Kotlin interface serves a
 different purpose: It makes a generated DTO conform to an existing application
 API contract. The abstract properties in the interface must be a subset of the
 DTO properties and must be implementable by the generated DTO type.
@@ -1656,8 +1656,8 @@ Apart from this, the DTO language does not perform much validation on interface 
 
 The following DTO language features are described in separate documents:
 
-- [Handling Null Values in Input DTO](../../mutation/save-command/input-dto/null-handling)
+- [Handling Null Values in Input DTO](../../mutation/save-command/input-dto/null-handling.mdx)
 
-- [Specification DTO, Super QBE](../../query/super_qbe)
+- [Specification DTO, Super QBE](../../query/super_qbe.mdx)
 
-- [DTO Composition](./composition)
+- [DTO Composition](./composition.mdx)

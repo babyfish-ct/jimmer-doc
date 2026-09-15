@@ -70,7 +70,7 @@ Here is just a simple list of precautions. Please ignore these terms for now. Th
 
     -   As the mirror side of @OneToOne association
 
--   If the associated entity has [global filters](../../query/global-filter) applied, then for one-to-one/many-to-one associations must be nullable even if they are directly based on foreign keys, unless all of the following conditions are met:
+-   If the associated entity has [global filters](../../query/global-filter/index.md) applied, then for one-to-one/many-to-one associations must be nullable even if they are directly based on foreign keys, unless all of the following conditions are met:
 
     -   All global filters applied to the associated entity implement the `AssociationIntegrityAssuranceFilter`/`KAssociationIntegrityAssuranceFilter` interface. 
 
@@ -85,4 +85,4 @@ However, when saving data, developers may not expect users to modify the foreign
 - `@OneToOne(inputNotNull = true)`
 - `@ManyToOne(inputNotNull = true)`
 
-If `inputNotNull` is configured for an associated property, it will be given priority consideration in [database validation](../../configuration/database-validation) to verify that the foreign key field in the database cannot be null.
+If `inputNotNull` is configured for an associated property, it will be given priority consideration in [database validation](../../configuration/database-validation.mdx) to verify that the foreign key field in the database cannot be null.

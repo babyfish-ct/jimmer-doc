@@ -74,9 +74,9 @@ interface BookStore {
 </TabItem>
 </Tabs>
 
-Jimmer will deduce the table name corresponding to the `BookStore` interface based on the [naming strategy](./naming-strategy). 
+Jimmer will deduce the table name corresponding to the `BookStore` interface based on the [naming strategy](./naming-strategy.mdx). 
 
-If the default [naming strategy](./naming-strategy) is not overridden by the user, the table name for interface `BookStore` is `BOOK_STORE`. So the previous code is equivalent to:
+If the default [naming strategy](./naming-strategy.mdx) is not overridden by the user, the table name for interface `BookStore` is `BOOK_STORE`. So the previous code is equivalent to:
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -138,9 +138,9 @@ interface Author {
 </TabItem>
 </Tabs>
 
-Jimmer will deduce the column name corresponding to the `firstName` property based on the [naming strategy](./naming-strategy).
+Jimmer will deduce the column name corresponding to the `firstName` property based on the [naming strategy](./naming-strategy.mdx).
 
-If the default [naming strategy](./naming-strategy) is not overridden by the user, the column name for property `firstName` is `FIRST_NAME`. So the previous code is equivalent to:  
+If the default [naming strategy](./naming-strategy.mdx) is not overridden by the user, the column name for property `firstName` is `FIRST_NAME`. So the previous code is equivalent to:  
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -176,7 +176,7 @@ interface Author {
 </Tabs>
 
 :::caution
-`@Column` is only used to explicitly specify column names for non-associative properties. For foreign key column names of many-to-one or one-to-one association properties, they must be specified through `@JoinColumn`. See [Association Mapping](./association) for more.
+`@Column` is only used to explicitly specify column names for non-associative properties. For foreign key column names of many-to-one or one-to-one association properties, they must be specified through `@JoinColumn`. See [Association Mapping](./association/index.md) for more.
 :::
 
 ## @Id  
@@ -217,7 +217,7 @@ The id field must be non-null *(for Java, `long` is used here instead of `Long`)
 
 Unlike JPA, which encourages declaring the id as a nullable type, Jimmer does not use this method to express not specifying the id during data insertion. The dynamism of Jimmer objects themselves can easily express this problem.
 
-See [Nullity](./nullity) for details.  
+See [Nullity](./nullity.mdx) for details.  
 :::
 
 ## @GeneratedValue  
@@ -295,9 +295,9 @@ interface Book {
 </TabItem>
 </Tabs>
 
-Here, the sequence name in the database is not specified through the `sequenceName` of `@GeneratorValue`. Jimmer will deduce the sequence name based on the [naming strategy](./naming-strategy).  
+Here, the sequence name in the database is not specified through the `sequenceName` of `@GeneratorValue`. Jimmer will deduce the sequence name based on the [naming strategy](./naming-strategy.mdx).  
 
-If the default [naming strategy](./naming-strategy) is not overridden by the user, the sequence name here is `BOOK_ID_SEQ`. So the previous code is equivalent to:
+If the default [naming strategy](./naming-strategy.mdx) is not overridden by the user, the sequence name here is `BOOK_ID_SEQ`. So the previous code is equivalent to:
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">

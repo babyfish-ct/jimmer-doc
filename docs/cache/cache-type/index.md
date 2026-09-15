@@ -5,6 +5,6 @@ title: Cache type
 
 Here, we will introduce three types of cache
 
--   [Object Cache](./object)
--   [Association Cache](./association)
--   [Calculation Cache](./calculation)
+-   [Object Cache](./object.mdx)
+-   [Association Cache](./association.mdx)
+-   [Calculation Cache](./calculation.mdx)

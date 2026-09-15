@@ -311,9 +311,9 @@ Tuple2{
 ``` 
 
 :::caution
-The association pseudo entity `Association<S, T>` is simple and special, does not support or need [object fetchers](./object-fetcher).  
+The association pseudo entity `Association<S, T>` is simple and special, does not support or need [object fetchers](./object-fetcher/index.md).  
 
-However, its association properties `source` and `target` can support [object fetchers](./object-fetcher), such as:
+However, its association properties `source` and `target` can support [object fetchers](./object-fetcher/index.md), such as:
 
 <Tabs groupId="language">
 <TabItem value="kotlin" label="Kotlin">
@@ -342,7 +342,7 @@ select(
 
 Readers may think that association table queries exist to allow developers to write more performant queries.
 
-But this is not the case. Due to optimizations like [phantom joins](./dynamic-join/optimization#phantom-joins) and [half joins](./dynamic-join/optimization#half-joins), whether association table queries are used or not, similar functionality and performance can be achieved. Using association table queries is completely up to user preference.
+But this is not the case. Due to optimizations like [phantom joins](./dynamic-join/optimization.mdx#phantom-joins) and [half joins](./dynamic-join/optimization.mdx#half-joins), whether association table queries are used or not, similar functionality and performance can be achieved. Using association table queries is completely up to user preference.
 
 ### 1. Use association table subquery to achieve a function  
 
@@ -415,7 +415,7 @@ Where:
 
 -   ❶ `association.target` is a real JOIN that generates SQL JOIN to the `AUTHOR` table for condition check.  
 
--   ❷ `association.source` is a [phantom join](./dynamic-join/optimization#phantom-joins) that does not generate a SQL join.
+-   ❷ `association.source` is a [phantom join](./dynamic-join/optimization.mdx#phantom-joins) that does not generate a SQL join.
 
 The final generated SQL is:
 
@@ -488,7 +488,7 @@ val books = sqlClient
 </TabItem>
 </Tabs>
 
-❶  `author.books` is a [half join](./dynamic-join/optimization#half-joins) that only generates SQL JOIN from `AUTHOR` to the `BOOK_AUTHOR_MAPPING` table, without further join to the `BOOK` table.
+❶  `author.books` is a [half join](./dynamic-join/optimization.mdx#half-joins) that only generates SQL JOIN from `AUTHOR` to the `BOOK_AUTHOR_MAPPING` table, without further join to the `BOOK` table.
 
 The final generated SQL is:
 

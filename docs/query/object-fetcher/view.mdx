@@ -11,7 +11,7 @@ import TabItem from '@theme/TabItem';
 
 For data structures, frontends and backends have different preferences. Backends prefer structured data, while frontends prefer flattened data.
 
-For IdOnly objects, Jimmer provides the [@IdView](../../mapping/advanced/view/id-view) annotation to easily flatten IdOnly objects into a field.
+For IdOnly objects, Jimmer provides the [@IdView](../../mapping/advanced/view/id-view.mdx) annotation to easily flatten IdOnly objects into a field.
 
 ### Modify the Example Entity Interface
 
@@ -150,7 +150,7 @@ In some scenarios, the join table of a many-to-many association contains not onl
 
 A join table with additional fields besides the two IDs cannot be directly mapped to a `ManyToMany` association. We have no choice but to create three entity types: the original two entities and an intermediate entity. Each side entity has a one-to-many association pointing to the intermediate entity, and the intermediate entity has two many-to-one associations pointing to the two side entities.
 
-Fortunately, Jimmer provides [@ManyToManyView](../../mapping/advanced/view/many-to-many-view) to abstract a many-to-many association between the two side entities on top of this three-entity structure.
+Fortunately, Jimmer provides [@ManyToManyView](../../mapping/advanced/view/many-to-many-view.mdx) to abstract a many-to-many association between the two side entities on top of this three-entity structure.
 
 To better demonstrate, instead of using books and authors, a more realistic example with students, courses, and learning_link tables is used.
 
@@ -386,7 +386,7 @@ With the introduction of the intermediate entity, Student and Course entities ar
 
 Besides, the intermediate `LearningLink` entity should be hidden as much as possible, only used when reading/writing scores.
 
-[@ManyToManyView](../../mapping/advanced/view/many-to-many-view) properties *(e.g. `Student.courses` in this example)* can be used in object fetchers to reduce the path length.
+[@ManyToManyView](../../mapping/advanced/view/many-to-many-view.mdx) properties *(e.g. `Student.courses` in this example)* can be used in object fetchers to reduce the path length.
 
 For example, the following query gets all course names for the student with id 1:
 

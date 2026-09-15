@@ -3,6 +3,6 @@ sidebar_position: 10
 title: Microservice
 ---
 
-This configuration is explained in [Spring Section/SpringCloud and Remote Association/Enable Jimmer to Support Microservices](../spring/spring-cloud#enable-microservice-support-in-jimmer).
+This configuration is explained in [Spring Section/SpringCloud and Remote Association/Enable Jimmer to Support Microservices](../spring/spring-cloud.mdx#enable-microservice-support-in-jimmer).
 
 Therefore, this article will not repeat the explanation, it just serves as a link reference.

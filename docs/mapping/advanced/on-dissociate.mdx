@@ -9,9 +9,9 @@ import DissociateMode from '../../_shared/dissociate-mode.md';
 
 ## Concepts
 
-@`org.babyfish.jimmer.sql.OnDissociate` is used together with [Modification/Save Command](../../mutation/save-command) and [Modification/Delete Command](../../mutation/delete-command)
+@`org.babyfish.jimmer.sql.OnDissociate` is used together with [Modification/Save Command](../../mutation/save-command/index.md) and [Modification/Delete Command](../../mutation/delete-command.mdx)
 
-- [Modification/Save Command](../../mutation/save-command)
+- [Modification/Save Command](../../mutation/save-command/index.md)
 
     <table>
     <thead>
@@ -66,7 +66,7 @@ import DissociateMode from '../../_shared/dissociate-mode.md';
 
     - `BookStore-2` needs to be disassociated from `Book-11` and `Book-12`.
 
-- [Modification/Delete Command](../../mutation/delete-command)
+- [Modification/Delete Command](../../mutation/delete-command.mdx)
 
     This is easy to understand. Child objects need to be disassociated before deleting the parent object.
 
@@ -118,7 +118,7 @@ The parameter of the `OnDissociate` annotation in the above code is called the d
 
 <DissociateMode/>
 
-This article only introduces the configuration of OnDissociate. For how to use it further, please refer to [Save Command/Dissociation Operations](../../mutation/save-command/association/dissociation) and [Delete Commands](../../mutation/delete-command).
+This article only introduces the configuration of OnDissociate. For how to use it further, please refer to [Save Command/Dissociation Operations](../../mutation/save-command/association/dissociation.mdx) and [Delete Commands](../../mutation/delete-command.mdx).
 
 ## Dynamic Overrides 
 
@@ -126,7 +126,7 @@ Configuration specified by the annotation `@OnDissociate` is called static confi
 
 Sometimes, different businesses may have different requirements for dissociation operations. Therefore, dissociation configurations can be dynamically overridden at runtime.
 
--   [Modification/Save Command](../../mutation/save-command)
+-   [Modification/Save Command](../../mutation/save-command/index.md)
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -153,7 +153,7 @@ Sometimes, different businesses may have different requirements for dissociation
     </TabItem>
     </Tabs>
 
--   [Modification/Delete Command](../../mutation/delete-command)
+-   [Modification/Delete Command](../../mutation/delete-command.mdx)
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">

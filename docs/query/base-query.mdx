@@ -106,7 +106,7 @@ For this example:
 -   The internal base-query returns two columns *(the first column is a table object, the second column is a simple expression)*. The external query uses `get_1()`/`_1` and `get_2()`/`_2` to use them.
 
     > This positional form supports 1-9 logical columns. For larger or reusable
-    > row shapes, use a [typed tuple](./typed-tuple).
+    > row shapes, use a [typed tuple](./typed-tuple.mdx).
 
 -   This example uses the positional base-query projection API:
 
@@ -250,7 +250,7 @@ from (
 
 The source also works with `createBaseQuery(source)`, `asCteBaseTable()`,
 compatible unions and recursive CTEs, and
-[insert/upsert commands](../mutation/insert-from-select#select-an-entity-table).
+[insert/upsert commands](../mutation/insert-from-select.mdx#select-an-entity-table).
 Required columns propagate through nested sources. With `distinct`, `union`,
 `intersect`, or `minus`, the entity selection retains the fields needed to
 preserve row identity and multiplicity.
@@ -262,7 +262,7 @@ Use `select(mapper)` for a named custom projection.
 ## Named Base Tables
 
 For report queries, positional properties such as `_1` and `_2` quickly become
-hard to read. [`@TypedTuple`](./typed-tuple) lets one declaration serve both as
+hard to read. [`@TypedTuple`](./typed-tuple.mdx) lets one declaration serve both as
 an ordinary query result projection and as the named row shape of a derived
 table or CTE:
 
@@ -285,7 +285,7 @@ sqlClient.createQuery(statistics) {
 Code generation provides `StoreStatisticsTable` for Java and non-null/nullable
 variants for Kotlin. Named tables also work with weak joins, unions and
 recursive CTEs, and they are not limited to nine logical properties. See
-[Typed Tuple](./typed-tuple) for Java and Kotlin declarations and complete
+[Typed Tuple](./typed-tuple.mdx) for Java and Kotlin declarations and complete
 examples.
 
 ## Reverse Projection Propagation
@@ -367,12 +367,12 @@ Individual positional selections support the following two operations. The direc
     
     Among these, returning table objects with unknown shapes *(2)* is what reverse projection propagation is concerned with and is the focus of this chapter.
 
-    > Note: You cannot apply [Object Fetchers](./object-fetcher/) to returned table objects, or return [Output DTOs](./object-fetcher/dto).
+    > Note: You cannot apply [Object Fetchers](./object-fetcher/index.md) to returned table objects, or return [Output DTOs](./object-fetcher/dto.mdx).
     :::
 
 The following approaches are not allowed:
 
--   <span style={{textDecoration:"line-through"}}>Object queries using [Object Fetchers](./object-fetcher/) is prohibited</span>
+-   <span style={{textDecoration:"line-through"}}>Object queries using [Object Fetchers](./object-fetcher/index.md) is prohibited</span>
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -414,7 +414,7 @@ The following approaches are not allowed:
     </TabItem>
     </Tabs>
 
--   <span style={{textDecoration:"line-through"}}>Returning [Output DTOs](./object-fetcher/dto) is prohibited</span>
+-   <span style={{textDecoration:"line-through"}}>Returning [Output DTOs](./object-fetcher/dto.mdx) is prohibited</span>
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -436,9 +436,9 @@ The following approaches are not allowed:
     </Tabs>
 
 :::info
-Object queries based on [Object Fetchers](./object-fetcher/)/[Output DTOs](./object-fetcher/dto) are one of Jimmer's core features, but BaseQuery projection query APIs do not allow such queries.
+Object queries based on [Object Fetchers](./object-fetcher/index.md)/[Output DTOs](./object-fetcher/dto.mdx) are one of Jimmer's core features, but BaseQuery projection query APIs do not allow such queries.
 
-This is not to prohibit using this capability; **quite the opposite**, this is to provide better abstraction and better use of [Object Fetchers](./object-fetcher/) and [Output DTOs](./object-fetcher/dto).
+This is not to prohibit using this capability; **quite the opposite**, this is to provide better abstraction and better use of [Object Fetchers](./object-fetcher/index.md) and [Output DTOs](./object-fetcher/dto.mdx).
 :::
 
 ### Introduction to Reverse Projection Propagation Mechanism
@@ -477,20 +477,20 @@ Obviously, this is an inside-out projection propagation process. The projections
 :::tip
 Therefore, Jimmer adopts an **outside-in** reverse projection propagation mechanism:
 
--   If the internal base-query returns objects, it must return original table objects and cannot use [Object Fetchers](./object-fetcher/) or [Output DTOs](./object-fetcher/dto), indicating that the shape of the returned objects is unknown.
+-   If the internal base-query returns objects, it must return original table objects and cannot use [Object Fetchers](./object-fetcher/index.md) or [Output DTOs](./object-fetcher/dto.mdx), indicating that the shape of the returned objects is unknown.
 
 -   Finally, which specific columns the internal base-query should return is automatically determined based on the needs of the external query, without the need to explicitly specify them in the internal base-query.
 
     Methods for external queries to control which specific columns the internal base-query should return include:
     
-    -   [Object Fetchers](./object-fetcher/)
-    -   [Output DTO](./object-fetcher/dto) types
+    -   [Object Fetchers](./object-fetcher/index.md)
+    -   [Output DTO](./object-fetcher/dto.mdx) types
     -   Column properties used in DSL
     
     Reverse projection propagation not only greatly simplifies complexity but also brings intelligent and practical features that native SQL does not have.
 :::
 
-Now, using [Object Fetchers](./object-fetcher/) as an example, let's write a function:
+Now, using [Object Fetchers](./object-fetcher/index.md) as an example, let's write a function:
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -572,7 +572,7 @@ private fun findBooks(
 
 Now let's look at 3 cases:
 
--   Simple [Object Fetcher](./object-fetcher/)
+-   Simple [Object Fetcher](./object-fetcher/index.md)
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -600,7 +600,7 @@ Now let's look at 3 cases:
     </TabItem>
     </Tabs>
 
-    Since the [Object Fetcher](./object-fetcher/) is simple, both inner and outer queries return fewer columns, generating the following SQL:
+    Since the [Object Fetcher](./object-fetcher/index.md) is simple, both inner and outer queries return fewer columns, generating the following SQL:
 
     ```sql
     select
@@ -649,7 +649,7 @@ Now let's look at 3 cases:
     ]
     ```
 
--   Moderately complex [Object Fetcher](./object-fetcher/)
+-   Moderately complex [Object Fetcher](./object-fetcher/index.md)
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -677,7 +677,7 @@ Now let's look at 3 cases:
     </TabItem>
     </Tabs>
 
-    Since the [Object Fetcher](./object-fetcher/) is relatively complex, both inner and outer queries return more columns, generating the following SQL:
+    Since the [Object Fetcher](./object-fetcher/index.md) is relatively complex, both inner and outer queries return more columns, generating the following SQL:
 
     ```sql
     select
@@ -741,7 +741,7 @@ Now let's look at 3 cases:
     ]
     ```
 
--   Complex [Object Fetcher](./object-fetcher/)
+-   Complex [Object Fetcher](./object-fetcher/index.md)
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -776,7 +776,7 @@ Now let's look at 3 cases:
     </TabItem>
     </Tabs>
 
-    Since the [Object Fetcher](./object-fetcher/) includes join fetch operations, the query naturally also fetches associated objects through joins, generating the following SQL:
+    Since the [Object Fetcher](./object-fetcher/index.md) includes join fetch operations, the query naturally also fetches associated objects through joins, generating the following SQL:
 
     ```sql
     select
@@ -964,7 +964,7 @@ private fun findBooks(
 
 Now let's look at two cases:
 
--   Simple [Object Fetcher](./object-fetcher/)
+-   Simple [Object Fetcher](./object-fetcher/index.md)
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -992,7 +992,7 @@ Now let's look at two cases:
     </TabItem>
     </Tabs>
 
-    Since the [Object Fetcher](./object-fetcher/) is simple, both inner and outer queries return fewer columns, generating the following SQL:
+    Since the [Object Fetcher](./object-fetcher/index.md) is simple, both inner and outer queries return fewer columns, generating the following SQL:
 
     ```sql
     select
@@ -1055,7 +1055,7 @@ Now let's look at two cases:
     ]
     ```
 
--   Relatively complex [Object Fetcher](./object-fetcher/)
+-   Relatively complex [Object Fetcher](./object-fetcher/index.md)
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -1083,7 +1083,7 @@ Now let's look at two cases:
     </TabItem>
     </Tabs>
 
-    Since the [Object Fetcher](./object-fetcher/) is relatively complex, both inner and outer queries return more columns, generating the following SQL:
+    Since the [Object Fetcher](./object-fetcher/index.md) is relatively complex, both inner and outer queries return more columns, generating the following SQL:
 
     ```sql
     select
@@ -1167,7 +1167,7 @@ In the reverse projection propagation process from outside to inside, if the bas
 
 ### Projection Column Merging
 
-In fact, [Object Fetcher](./object-fetcher/) and [Output DTO](./object-fetcher/dto) are not the only reasons causing projection reverse propagation.
+In fact, [Object Fetcher](./object-fetcher/index.md) and [Output DTO](./object-fetcher/dto.mdx) are not the only reasons causing projection reverse propagation.
 
 If a base-query returns a table object with unknown shape, and the outer query uses SQL DSL depending on some properties of that table object, it can also cause the projection reverse propagation mechanism.
 
@@ -1253,7 +1253,7 @@ Let me observe two cases:
 
     Here:
     -   The name parameter is null, dynamic predicates *(Java's `eqIf` and Kotlin's `eq?`)* cause the outer query's where clause to be ignored
-    -   The [Object Fetcher](./object-fetcher/) parameter is too simple, only requiring `id-only` objects
+    -   The [Object Fetcher](./object-fetcher/index.md) parameter is too simple, only requiring `id-only` objects
 
     Therefore, no projection requirements for non-id fields are reverse propagated to the base-query, and the final generated SQL statement is very simple
 
@@ -1269,7 +1269,7 @@ Let me observe two cases:
     ) tb_1_
     ```
 
-2.  The outer query adds a where condition triggering projection reverse propagation *(but not through [Object Fetcher](./object-fetcher/))*, causing the base-query to return the name column
+2.  The outer query adds a where condition triggering projection reverse propagation *(but not through [Object Fetcher](./object-fetcher/index.md))*, causing the base-query to return the name column
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -1316,7 +1316,7 @@ Let me observe two cases:
 
 3.  The outer query:
     -   Triggers projection reverse propagation through where conditions, requiring the internal base-query to return the name column
-    -   Also triggers projection reverse propagation through [Object Fetcher](./object-fetcher/), requiring the internal base-query to return the name column
+    -   Also triggers projection reverse propagation through [Object Fetcher](./object-fetcher/index.md), requiring the internal base-query to return the name column
 
     The base-query will automatically **merge** both requirements, querying the name column only once
 
@@ -1370,7 +1370,7 @@ Let me observe two cases:
         tb_1_.c2 = ? // 2. Outer query uses where condition to check name
     ```
 
-    As can be seen, the outer query triggers projection reverse propagation through two different methods *([Object Fetcher](./object-fetcher/) and where conditions)* *(requiring the internal base-query to return the name column)*,
+    As can be seen, the outer query triggers projection reverse propagation through two different methods *([Object Fetcher](./object-fetcher/index.md) and where conditions)* *(requiring the internal base-query to return the name column)*,
     but the internal query only queries the name column once. 
     
     That is, projection requirements for the same columns from different projection reverse propagation demands in the outer query will be automatically merged.
@@ -1391,8 +1391,8 @@ So, whether entity tables or derived tables, both can perform `weakJoin` operati
 
 :::info
 Jimmer table joins have two important characteristics:
--   Unnecessary table joins will be automatically ignored, see [Optimizing Unnecessary Joins](./dynamic-join/optimization)
--   Conflicting table joins will be automatically merged, see [Merging Conflicting Joins](./dynamic-join/merge)
+-   Unnecessary table joins will be automatically ignored, see [Optimizing Unnecessary Joins](./dynamic-join/optimization.mdx)
+-   Conflicting table joins will be automatically merged, see [Merging Conflicting Joins](./dynamic-join/merge.mdx)
 
 Since these contents have been discussed in detail in related chapters, this article will not repeat them, but only list the writing methods for JOIN operations related to derived tables.
 :::
@@ -1948,8 +1948,8 @@ Therefore, Jimmer's Recursive CTE stipulates that only `union all` can be used, 
 `createBaseQuery()` can also be called without a root entity or association
 table. Such a query selects literals, parameters, native expressions, or scalar
 subqueries. In Kotlin, use `createBaseQuery { select(...) }` without an entity
-class. A [typed-tuple mapper](./typed-tuple) gives the result named properties;
-the [insert-from-select example](../mutation/insert-from-select) shows a complete
+class. A [typed-tuple mapper](./typed-tuple.mdx) gives the result named properties;
+the [insert-from-select example](../mutation/insert-from-select.mdx) shows a complete
 Java/Kotlin declaration and rootless source.
 
 The result can be exposed with `asBaseTable()` or `asCteBaseTable()`, combined
@@ -1959,4 +1959,4 @@ with other compatible queries through `union`/`unionAll`, and reused by
 Base tables are also accepted by `createInsert` and `createUpsert`. The source
 may use joins, filters, aggregates, unions, or recursive CTEs. The mutation's
 single-physical-table restriction applies to its target, not to the source.
-See [Insert and Upsert from Select](../mutation/insert-from-select).
+See [Insert and Upsert from Select](../mutation/insert-from-select.mdx).

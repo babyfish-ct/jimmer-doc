@@ -32,7 +32,7 @@ Jimmer has complete sample projects. For how to use Jimmer's Spring Boot Starter
 
 You need to create a global object of this type, which is the API entry point for all ORM behaviors of Jimmer.
 
->   [Multiple data sources](../../configuration/multi-datasources) require creating multiple global objects. 
+>   [Multiple data sources](../../configuration/multi-datasources.mdx) require creating multiple global objects. 
 >   However, here we discuss the most common case of a single data source, where one global object is sufficient.
 
 Since we are using the Jimmer Spring Boot Starter, in this case, please specify the following configuration in `application.yml` *(or `application.properties`)*
@@ -293,7 +293,7 @@ class BookInput(
 
 :::info
 `Book.id` on entities cannot be null, but `BookInput.id` on DTOs here is allowed to be null.  
-See [DTO Language/3.2. Input-specific functionalities](../../object/view/dto-language#32-input-specific-functionalities)
+See [DTO Language/3.2. Input-specific functionalities](../../object/view/dto-language.mdx#32-input-specific-functionalities)
 :::
 
 </ViewMore>  
@@ -419,7 +419,7 @@ class CompositeBookStoreInput(
 
 :::info
 `BookStore.id` on entities cannot be null, but `CompositeBookStoreInput.id` on DTOs here is allowed to be null.  
-See [DTO Language/3.2. Input-specific functionalities](../../object/view/dto-language#32-input-specific-functionalities)
+See [DTO Language/3.2. Input-specific functionalities](../../object/view/dto-language.mdx#32-input-specific-functionalities)
 :::
 
 </ViewMore>  

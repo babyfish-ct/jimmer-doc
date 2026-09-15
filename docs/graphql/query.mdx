@@ -39,7 +39,7 @@ All association properties and calculated properties of entity objects are autom
 :::caution
 So far, the GraphQL protocol does not support recursive queries for self-associated properties.
 
-Therefore, it is not possible to expose functionality like [recursive queries in object fetchers](../query/object-fetcher/recursive) through GraphQL. This is a functionality sacrifice that must currently be accepted when using GraphQL. 
+Therefore, it is not possible to expose functionality like [recursive queries in object fetchers](../query/object-fetcher/recursive.mdx) through GraphQL. This is a functionality sacrifice that must currently be accepted when using GraphQL. 
 :::
 
 ## Implement GraphQL Service 
@@ -118,7 +118,7 @@ class BookStoreService(
 </TabItem>
 </Tabs>
 
-Unlike previous REST services, this example does **not** use [object fetchers](../query/object-fetcher), returning the simplest orphan objects *(orphan objects contain neither associated properties nor calculated properties)*.  
+Unlike previous REST services, this example does **not** use [object fetchers](../query/object-fetcher/index.md), returning the simplest orphan objects *(orphan objects contain neither associated properties nor calculated properties)*.  
 
 Although we return orphan objects here, if the client's GraphQL request contains associated objects, Jimmer will still automatically load the required associated properties.
 

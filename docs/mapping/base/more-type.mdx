@@ -13,7 +13,7 @@ In addition to boolean, number, string, UUID, date, and enumeration, scalar prop
 -   Custom types
 
 :::info
-Enum types are not discussed in this article, please refer to [Enum Mapping](../advanced/enum)
+Enum types are not discussed in this article, please refer to [Enum Mapping](../advanced/enum.mdx)
 :::
 
 ## Array Types
@@ -143,7 +143,7 @@ So what SQL type does the JSON type correspond to?
 
 For Postgres, it supports operations on the internal structure of JSON, please see [JSON Operations in Postgres](https://www.postgresql.org/docs/9.5/functions-json.html). How should Jimmer implement such operations?
 
-Jimmer's SQL DSL can mix in Native SQL expressions, please see [Native Expressions](../../query/native-sql), this article will not repeat it. Note:
+Jimmer's SQL DSL can mix in Native SQL expressions, please see [Native Expressions](../../query/native-sql.mdx), this article will not repeat it. Note:
 
 :::caution
 [JSON Operations in Postgres](https://www.postgresql.org/docs/9.5/functions-json.html) use `?`, which happens to be the parameter for JDBC, please use `??` instead.
@@ -153,4 +153,4 @@ Jimmer's SQL DSL can mix in Native SQL expressions, please see [Native Expressio
 
 If the JSON type still cannot meet your requirements (e.g., you expect to map some Postgres-specific types), you can use `ScalarProvider` to customize types.
 
-Please refer to [ScalarProvider](../../configuration/scala-provider), this article will not repeat it.
+Please refer to [ScalarProvider](../../configuration/scala-provider.mdx), this article will not repeat it.

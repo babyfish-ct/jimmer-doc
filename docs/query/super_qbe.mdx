@@ -6,7 +6,7 @@ title: Super QBE
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Super QBE is a very powerful feature that uses [DTO Language](../object/view/dto-language) to generate parameter types for complex queries and automatically implement query logic.
+Super QBE is a very powerful feature that uses [DTO Language](../object/view/dto-language.mdx) to generate parameter types for complex queries and automatically implement query logic.
 
 ## Create File  
 
@@ -21,7 +21,7 @@ export com.yourcompany.yourproject.model.Book
     -> package com.yourcompany.yourproject.dto
 ```
 
-The above steps, as well as how to compile DTO files, are discussed in detail in [DTO Language #2. Create File](../object/view/dto-language#2-create-file), and will not be repeated here.
+The above steps, as well as how to compile DTO files, are discussed in detail in [DTO Language #2. Create File](../object/view/dto-language.mdx#2-create-file), and will not be repeated here.
 
 ## Define Specification Type  
 
@@ -133,7 +133,7 @@ Accordingly, for the automatically generated `BookSpecification` class, on the o
 
 -   Use in Spring Data Repository
 
-    Jimmer integrates Spring Data, so Spring Data Repository can be defined, please refer to [Spring Data Style](../spring/repository) to learn more.
+    Jimmer integrates Spring Data, so Spring Data Repository can be defined, please refer to [Spring Data Style](../spring/repository/index.md) to learn more.
 
     Jimmer's Spring Data Repository has two query styles, abstract methods and default methods. The code using specification in default methods is the same as above, so let's look at an example of using specification in abstract query methods:
 
@@ -287,7 +287,7 @@ data class BookSpecification(
 We find that in the generated code, the `name` field can be null, which is where the specialty of specification lies.
 
 :::tip
-Specifications are used as query parameters. To support dynamic queries, all properties are nullable by default unless explicitly specified as non-nullable using `!` *(see [DTO Language #7. Nullability](../object/view/dto-language#7-nullability))*.
+Specifications are used as query parameters. To support dynamic queries, all properties are nullable by default unless explicitly specified as non-nullable using `!` *(see [DTO Language #7. Nullability](../object/view/dto-language.mdx#7-nullability))*.
 :::
 
 ### Usage  
@@ -652,7 +652,7 @@ specification BookSpecification {
 }
 ```
 
-We find that the code above uses the `flat` function. The `flat` function is discussed in detail in [DTO Language #10.4-flat function](../object/view/dto-language#104-flat-function), and will not be repeated here.  
+We find that the code above uses the `flat` function. The `flat` function is discussed in detail in [DTO Language #10.4-flat function](../object/view/dto-language.mdx#104-flat-function), and will not be repeated here.  
 
 :::info
 Since `specification` serves as a parameter for complex queries, it is very likely to be HTTP GET parameters. Using the `flat` function to eliminate associations and generate flattened DTO objects is more beneficial for developing HTTP GET APIs based on Spring MVC.
@@ -773,13 +773,13 @@ where
         )
 ```
 
--   ❶ `Book.store` is a reference association that does not break [pagination safety](./dynamic-join/table-ex).
+-   ❶ `Book.store` is a reference association that does not break [pagination safety](./dynamic-join/table-ex.mdx).
 
-    So only [dynamic JOIN](./dynamic-join/) is needed to apply the filtering condition represented by the `storeName` property of the DTO object.
+    So only [dynamic JOIN](./dynamic-join/index.md) is needed to apply the filtering condition represented by the `storeName` property of the DTO object.
 
--   ❷ `Book.authors` is a collection association that breaks [pagination safety](./dynamic-join/table-ex).
+-   ❷ `Book.authors` is a collection association that breaks [pagination safety](./dynamic-join/table-ex.mdx).
 
-    So [subqueries](./sub-query) must be used instead of [dynamic JOIN](./dynamic-join/) to apply the filtering condition represented by the `authorName` property of the DTO object.
+    So [subqueries](./sub-query.mdx) must be used instead of [dynamic JOIN](./dynamic-join/index.md) to apply the filtering condition represented by the `authorName` property of the DTO object.
 
 ## Logical OR  
 
@@ -810,7 +810,7 @@ specification BookSpecification {
 
 Here, the DTO property `authorName` maps two properties, `firstName` and `lastName`. This is called multi-property mapping.
 
--   Multi-property mapping can only be used in `specification` and cannot be used in other types described in [DTO Language](../object/view/dto-language).
+-   Multi-property mapping can only be used in `specification` and cannot be used in other types described in [DTO Language](../object/view/dto-language.mdx).
 
 -   The types of multiple properties mapped by QBE functions must be completely consistent *(but nullability is allowed to differ)*. For example, both `firstName` and `lastName` here are of type `String`.
 

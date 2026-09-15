@@ -28,7 +28,7 @@ Database validation is a very important feature that is used to verify the consi
 
 -   For the id property of each entity in the entity model, verify that the database has a primary key constraint that exactly matches.
 
--   For true foreign keys defined in the entity model (see [True and False Foreign Keys](../mapping/base/foreignkey)), verify that the database has exactly matching foreign key constraints.
+-   For true foreign keys defined in the entity model (see [True and False Foreign Keys](../mapping/base/foreignkey.mdx)), verify that the database has exactly matching foreign key constraints.
 :::
 
 ## Enable Validation
@@ -84,11 +84,11 @@ There are two ways to start validation:
 
 ## Resolve Table Conflicts
 
--   Entity types must correspond to a table in the database, whether the table name is explicitly configured by the developer via `@Table` or automatically determined by the [naming strategy](../mapping/base/naming-strategy). 
+-   Entity types must correspond to a table in the database, whether the table name is explicitly configured by the developer via `@Table` or automatically determined by the [naming strategy](../mapping/base/naming-strategy.mdx). 
 
--   Association properties based on join tables must correspond to a real join table in the database, whether the table name is explicitly configured by the developer via `@JoinTable` or automatically determined by the [naming strategy](../mapping/base/naming-strategy).
+-   Association properties based on join tables must correspond to a real join table in the database, whether the table name is explicitly configured by the developer via `@JoinTable` or automatically determined by the [naming strategy](../mapping/base/naming-strategy.mdx).
 
--   The ID whose auto growth strategy is `SEQUENCE` must correspond to a sequence in the database, whether the sequence name is explicitly configured by the developer via `@GeneratedValue` or automatically determined by the [naming strategy](../mapping/base/naming-strategy) .
+-   The ID whose auto growth strategy is `SEQUENCE` must correspond to a sequence in the database, whether the sequence name is explicitly configured by the developer via `@GeneratedValue` or automatically determined by the [naming strategy](../mapping/base/naming-strategy.mdx) .
 
 When the program starts, Jimmer needs to query the database metadata to verify whether these tables or sequences exist. And if they exist, whether their internal structures are correct *(for tables)*.
 

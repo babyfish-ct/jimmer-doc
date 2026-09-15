@@ -27,11 +27,11 @@ Simply open either one in an IDE, and run the unit tests.
 
 ## Control the Update Branch
 
--   [Upsert Mask](./upsert-mask): choose different insert and update properties.
--   [Assignment Expressions](./assignment): calculate new values from stored and input values.
--   [Update Conditions](./update-where): reject an update without an optimistic-lock exception.
--   [Version Mode](./version-mode): use the version as an optimistic lock or an assigned value.
--   [Save Result Fetching](./returning): obtain stored values and inspect whether the mutation was accepted.
+-   [Upsert Mask](./upsert-mask.mdx): choose different insert and update properties.
+-   [Assignment Expressions](./assignment.mdx): calculate new values from stored and input values.
+-   [Update Conditions](./update-where.mdx): reject an update without an optimistic-lock exception.
+-   [Version Mode](./version-mode.mdx): use the version as an optimistic lock or an assigned value.
+-   [Save Result Fetching](./returning.mdx): obtain stored values and inspect whether the mutation was accepted.
 
 When the input is a query result instead of an object graph, use
-[Insert and Upsert from Select](../insert-from-select).
+[Insert and Upsert from Select](../insert-from-select.mdx).

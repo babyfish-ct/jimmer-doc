@@ -6,7 +6,7 @@ title: Visibility
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Previous documents have discussed in detail the [dynamic](./dynamic) and immutable properties of Jimmer entities. This introduces a new feature: visibility.
+Previous documents have discussed in detail the [dynamic](./dynamic.mdx) and immutable properties of Jimmer entities. This introduces a new feature: visibility.
 
 ## Entangled Properties
 
@@ -14,7 +14,7 @@ For Jimmer entities, although properties are mostly independent, in some cases m
 
 These cases include:
 
--   Java/Kotlin-based calculated properties *([review details](../mapping/advanced/calculated/formula#1-javakotlin-based-calculation))*
+-   Java/Kotlin-based calculated properties *([review details](../mapping/advanced/calculated/formula.mdx#1-javakotlin-based-calculation))*
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -74,7 +74,7 @@ These cases include:
 
     If treating `Author.firstName` and `Author.lastName` as original properties, then `Author.fullName` can be considered a view property based on them.
 
--   @IdView view properties *([review details](../mapping/advanced/view/id-view))*
+-   @IdView view properties *([review details](../mapping/advanced/view/id-view.mdx))*
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -155,7 +155,7 @@ These cases include:
   
     - `Book.authors` is the original property, `Book.authorIds` is the view property based on it
 
--   @ManyToManyView view properties *([review details](../mapping/advanced/view/many-to-many-view))*
+-   @ManyToManyView view properties *([review details](../mapping/advanced/view/many-to-many-view.mdx))*
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -216,7 +216,7 @@ From an internal implementation perspective, a view property actually shares pri
 
 We introduced entangled properties, with original properties and view properties. The real data is held by the original properties, while the view properties only observe.
 
-When using an [object fetcher](../query/object-fetcher) to fetch a view property, the internal logic will translate it into fetching the original property, for example:
+When using an [object fetcher](../query/object-fetcher/index.md) to fetch a view property, the internal logic will translate it into fetching the original property, for example:
 
 -   Fetching `Author.fullName` is translated internally into fetching `Author.firstName` and `Author.lastName` 
 
@@ -340,9 +340,9 @@ The question above is, with identical underlying logic, why do two queries with 
 
 Jimmer can control the visibility of each property, making it shown or hidden.
 
-Unlike [dynamic](./dynamic) where a property can be loaded or unloaded, visibility is an orthogonal feature, completely unrelated to dynamism.
+Unlike [dynamic](./dynamic.mdx) where a property can be loaded or unloaded, visibility is an orthogonal feature, completely unrelated to dynamism.
 
-Visibility only affects [Jackson serialization](./jackson) of objects *(including their own `toString` behavior)*, deciding whether a property is serialized. Other than that, it does not impact any other behavior of the object.
+Visibility only affects [Jackson serialization](./jackson.mdx) of objects *(including their own `toString` behavior)*, deciding whether a property is serialized. Other than that, it does not impact any other behavior of the object.
 
 So the previous examples can be easily explained:
 
@@ -356,5 +356,5 @@ Only when both conditions below are met will a property participate in Jackson s
 -   Dynamism: the property is set
 -   Visibility: the property is shown
 
-See [tool methods](./tool) for how to control visibility of Jimmer object properties yourself
+See [tool methods](./tool.mdx) for how to control visibility of Jimmer object properties yourself
 :::

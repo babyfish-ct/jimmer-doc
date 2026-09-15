@@ -84,7 +84,7 @@ Different databases have vastly different SQL support, so Jimmer uses dialect co
 
     -   Operations on Jimmer in the code will generate SQL that depends on specific database products, rather than perfect cross-database SQL
 
-    -   When the type of [trigger](../mutation/trigger) is set to `TRANSACTION_ONLY` and cache is used, Jimmer will automatically create the `JIMMER_TRANS_CACHE_OPERATOR` table at startup. `DefaultDialect` does not support this operation, please refer to [Cache Consistency](../cache/consistency)
+    -   When the type of [trigger](../mutation/trigger.mdx) is set to `TRANSACTION_ONLY` and cache is used, Jimmer will automatically create the `JIMMER_TRANS_CACHE_OPERATOR` table at startup. `DefaultDialect` does not support this operation, please refer to [Cache Consistency](../cache/consistency.mdx)
     :::
 
 -   org.babyfish.jimmer.sql.dialect.H2Dialect
@@ -101,7 +101,7 @@ Different databases have vastly different SQL support, so Jimmer uses dialect co
 
 -   org.babyfish.jimmer.sql.dialect.SQLiteDialect
 
-    Because TiDB is a distributed database that does not support foreign key constraints, true foreign keys are not supported by this dialect. Please refer to [True and False Foreign Keys](../mapping/base/foreignkey)
+    Because TiDB is a distributed database that does not support foreign key constraints, true foreign keys are not supported by this dialect. Please refer to [True and False Foreign Keys](../mapping/base/foreignkey.mdx)
 
     Apart from this, `TiDBDialect` has no difference with `MySqlDialect`.
 

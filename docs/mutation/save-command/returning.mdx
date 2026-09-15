@@ -92,7 +92,7 @@ inserted again, but its resolved id can still be used to create the parent's
 association. An owner rejected by an update condition does not proceed with its
 post-associations.
 
-For a query-based mutation, [insert/upsert returning](../insert-from-select)
+For a query-based mutation, [insert/upsert returning](../insert-from-select.mdx)
 contains only rows that took an accepted mutation branch.
 
 ## How the Result Is Materialized
@@ -126,7 +126,7 @@ Save returning can materialize current-entity columns, including:
 - IDs and ordinary scalar columns
 - Version and discriminator columns
 - Foreign-key ID columns
-- Values produced by [assignment expressions](./assignment)
+- Values produced by [assignment expressions](./assignment.mdx)
 - Unloaded properties marked with `@DatabaseDefault`
 
 For `JOINED` inheritance, returning is decided independently for each physical
@@ -166,5 +166,5 @@ Values that are inherently unknown, such as a custom assignment result or an
 unloaded `@DatabaseDefault` property, are already read automatically; enabling
 this option is not required for them.
 
-See [Save Result Configuration](../../configuration/save-result) for global,
+See [Save Result Configuration](../../configuration/save-result.mdx) for global,
 Spring Boot, and per-command settings.

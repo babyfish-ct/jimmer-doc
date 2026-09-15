@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 
 ## Limitations of classic ORM associations  
 
-In [Basic Mapping/Associative Mapping](../../base/association), we learned about the classic associative mappings in ORM, including one-to-one, many-to-one, one-to-many and many-to-many.
+In [Basic Mapping/Associative Mapping](../../base/association/index.md), we learned about the classic associative mappings in ORM, including one-to-one, many-to-one, one-to-many and many-to-many.
 
 However, there is one scenario that makes the choice of mapping mode very tangled. To show this scenario, let's start with a familiar scenario.
 
@@ -636,6 +636,6 @@ For the discussed scenario 3 above, Jimmer gave a two-step solution.
 
 -   When constructing entity objects, only the original property can be set, not the view property.
 
-    This is different from [@IdView](./id-view). For [@IdView](./id-view), both the original property and the view property can be set.
+    This is different from [@IdView](./id-view.mdx). For [@IdView](./id-view.mdx), both the original property and the view property can be set.
 
--   Whether it is the original property or the view property, the preprocessor will generate code to match them, so both can be used in [object fetchers](../../../query/object-fetcher) and strongly typed SQL DSL.
+-   Whether it is the original property or the view property, the preprocessor will generate code to match them, so both can be used in [object fetchers](../../../query/object-fetcher/index.md) and strongly typed SQL DSL.

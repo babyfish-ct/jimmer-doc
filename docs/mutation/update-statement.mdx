@@ -145,7 +145,7 @@ Associations, formulas, arbitrary expressions, and columns from joined tables
 cannot be returned. For `JOINED` inheritance, assignments and returned columns
 must belong to the same physical table.
 
-Unlike [save result fetching](./save-command/returning), this is an explicit DML
+Unlike [save result fetching](./save-command/returning.mdx), this is an explicit DML
 API: it does not build a residual fetcher or execute a fallback select. If a
 complete entity graph is required after a save, use
 `saveCommand(...).execute(fetcher)` instead.

@@ -39,7 +39,7 @@ On insertion, normal loaded values are still available. On a conflict, the
 ordinary update set is the intersection of the loaded shape and the mask,
 excluding the conflict id/key. A mask does not load a missing value.
 
-The mask also constrains targets of public [save assignment expressions](./assignment).
+The mask also constrains targets of public [save assignment expressions](./assignment.mdx).
 Configuring a custom expression for a target excluded by the shape or mask is an error.
 
 ## No Property Updates
@@ -74,7 +74,7 @@ This does not turn the operation into `INSERT_IF_ABSENT`. The dialect may still
 emit a self-assignment to fetch an id, return a row, or preserve other save
 semantics. Such SQL can fire database triggers. An effective `setUpdateWhere`
 still decides whether the matched branch is accepted. Use
-[save mode `INSERT_IF_ABSENT`](./save-mode) when the intended operation is to skip
+[save mode `INSERT_IF_ABSENT`](./save-mode.mdx) when the intended operation is to skip
 an existing row.
 
 ## Configure Both Branches
@@ -122,5 +122,5 @@ and framework-required columns are still supplied, and omitted columns use
 database defaults where available. A missing mandatory value without a default
 causes the normal database error.
 
-Masks select assignments; they do not replace [save modes](./save-mode),
-[update conditions](./update-where), or [version mode](./version-mode).
+Masks select assignments; they do not replace [save modes](./save-mode.mdx),
+[update conditions](./update-where.mdx), or [version mode](./version-mode.mdx).

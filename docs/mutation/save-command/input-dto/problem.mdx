@@ -123,7 +123,7 @@ This issue is especially obvious for insert operations. Unlike update operations
 
 To resolve this issue, Jimmer provides three solutions:
 
--   [Lonely Form](./lonely)
+-   [Lonely Form](./lonely.mdx)
 
     :::caution
     This is a very crude solution, only for learning or very simple projects.
@@ -133,7 +133,7 @@ To resolve this issue, Jimmer provides three solutions:
 
     It is also the only solution that does not require defining Input DTOs.
 
--   [Auto-Generated Input DTOs via DTO Language](./dto-lang)
+-   [Auto-Generated Input DTOs via DTO Language](./dto-lang.mdx)
 
     This solution quickly auto-generates Input DTOs with very little cost.
 
@@ -143,7 +143,7 @@ To resolve this issue, Jimmer provides three solutions:
     All built-in examples use this solution.
     :::
     
--   [Manual Input DTOs via MapStruct](./mapstruct)
+-   [Manual Input DTOs via MapStruct](./mapstruct.mdx)
 
     This solution requires developers to manually create Input DTOs and handle conversion to dynamic objects.
 
@@ -169,4 +169,4 @@ Comparing Jimmer's Input DTOs with [GraphQLInput](https://graphql.org/graphql-js
 
     -   Jimmer's InputDTO is just an alternative representation of the dynamic entity to address security issues. Once the user finishes converting Input DTO to dynamic entity, the huge convenience of persisting arbitrary shaped data structures in one line of code via save commands can still be enjoyed. 
 
-        If developers adopt the [Auto-Generated Input DTOs via DTO Language](./dto-lang) solution, Input DTO classes will be auto-generated, and the conversion logic between Input DTOs and dynamic entities will also be auto-generated. Thus the pain of Input DTO explosion no longer exists. So this is the recommended solution.
+        If developers adopt the [Auto-Generated Input DTOs via DTO Language](./dto-lang.mdx) solution, Input DTO classes will be auto-generated, and the conversion logic between Input DTOs and dynamic entities will also be auto-generated. Thus the pain of Input DTO explosion no longer exists. So this is the recommended solution.

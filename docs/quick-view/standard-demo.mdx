@@ -175,7 +175,7 @@ In fact, relying on CDC push services like [maxwell](https://maxwells-daemon.io/
 
 - Pushing database changes to Jimmer via external CDC technology is called `BinLog Trigger`
 
-Please refer to [Trigger Classification](../mutation/trigger#trigger-classification).
+Please refer to [Trigger Classification](../mutation/trigger.mdx#trigger-classification).
 
 `BinLog Trigger` has better performance and universality (even if the database is changed through other means that bypass Jimmer, such as directly modifying the data using a SQL IDE, it can also be intercepted), so it is the recommended solution.
 

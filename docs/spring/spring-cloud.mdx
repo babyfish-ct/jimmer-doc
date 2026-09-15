@@ -14,7 +14,7 @@ Through vertical splitting, entity types can be divided into different microserv
 :::tip
 Jimmer automatically implements automatic query of remote associated data. 
 
-That is, if the [object fetcher](../query/object-fetcher) contains remote association properties of any depth, it will query different parts of the data across multiple microservices, and finally merge the query results of different parts into the data structure expected by the object fetcher as a whole return. No need for developers to implement remote queries and data splicing themselves.
+That is, if the [object fetcher](../query/object-fetcher/index.md) contains remote association properties of any depth, it will query different parts of the data across multiple microservices, and finally merge the query results of different parts into the data structure expected by the object fetcher as a whole return. No need for developers to implement remote queries and data splicing themselves.
 :::
 
 ## Databases
@@ -248,7 +248,7 @@ interface Author {
 
 -   The many-to-one association `Book.store` must be nullable, because the remote association means its foreign key must reference data in another database, that is, it must be a pseudo foreign key. And in Jimmer, the field corresponding to a pseudo foreign key must be nullable.
 
-    Please refer to [Real and Pseudo Foreign Keys](../mapping/base/foreignkey).
+    Please refer to [Real and Pseudo Foreign Keys](../mapping/base/foreignkey.mdx).
 
 -   For the bidirectional many-to-many association between books and authors, `Book.authors` is the owning side, while `Author.books` is the inverse side *(`mappedBy` of `@ManyToMany` is configured)*.
 

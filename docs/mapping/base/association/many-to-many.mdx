@@ -61,9 +61,9 @@ interface Book {
 
 Many-to-many associations must be implemented based on a join table, even if the `@JoinTable` annotation is not used in the above code, it is actually equivalent to using the annotation.
 
-If no properties are specified for `@JoinTable`, and even `@JoinTable` itself is omitted (like the previous code), Jimmer will deduce the column names corresponding to the `authors` property based on the [naming strategy](../naming-strategy).
+If no properties are specified for `@JoinTable`, and even `@JoinTable` itself is omitted (like the previous code), Jimmer will deduce the column names corresponding to the `authors` property based on the [naming strategy](../naming-strategy.mdx).
 
-If the default [naming strategy](../naming-strategy) is not overridden by the user, the deduced join table information is:
+If the default [naming strategy](../naming-strategy.mdx) is not overridden by the user, the deduced join table information is:
 
 -   Join table name: BOOK_AUTHOR_MAPPING
 -   Join table foreign key column pointing to current entity: BOOK_ID 
@@ -265,5 +265,5 @@ Note:
 
 For the many-to-many association discussed in this article, no business fields other than the two foreign keys can be defined on the join table.
 
-If you want to define more other business fields in the join table of the many-to-many association, please refer to [ManyToManyView](../../advanced/view/many-to-many-view).
+If you want to define more other business fields in the join table of the many-to-many association, please refer to [ManyToManyView](../../advanced/view/many-to-many-view.mdx).
 ```

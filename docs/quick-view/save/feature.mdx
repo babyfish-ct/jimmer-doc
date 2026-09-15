@@ -59,8 +59,8 @@ However, to simplify the discussion here, we directly hard code the object to be
     Here, the id property of the object to be saved is not specified. Jimmer will determine whether related data exists in the database according to the `name` and `edition` properties,  
     so as to decide whether to `INSERT` or `UPDATE`.  
 
-    This is because in the [entity definition](../precondition#book), `Book.name` and `Book.edition` are annotated with `@org.babyfish.jimmer.sql.Key`.  
-    This article is just a quick preview and does not go deep into it. Interested parties can view [Mapping Part/Advanced Mapping/Key](../../mapping/advanced/key) and [Mutation Part/Save Command](../../mutation/save-command).
+    This is because in the [entity definition](../precondition.mdx#book), `Book.name` and `Book.edition` are annotated with `@org.babyfish.jimmer.sql.Key`.  
+    This article is just a quick preview and does not go deep into it. Interested parties can view [Mapping Part/Advanced Mapping/Key](../../mapping/advanced/key.mdx) and [Mutation Part/Save Command](../../mutation/save-command/index.md).
     :::  
 
 -   Save data structures formed by multiple objects  
@@ -240,5 +240,5 @@ Even if you try to verify and limit the shape of the `book` parameter, it is sti
 :::warning
 Therefore, the powerful Jimmer data saving capability can only be used as an underlying support internally in the service, and cannot expose this capability directly to remote clients by using dynamic entities as input parameters, because this will result in the security door wide open.
 
-To safely expose Jimmer's data saving capabilities, please continue reading the next article: [Exposing Features](./export)  
+To safely expose Jimmer's data saving capabilities, please continue reading the next article: [Exposing Features](./export/index.md)  
 :::

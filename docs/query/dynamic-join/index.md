@@ -5,10 +5,10 @@ title: Dynamic JOIN
 
 We will introduce the following contents:
 
--   [Problems of other solutions](./problem)
--   [Chain-style association paths](./chain-style) 
--   [Merge conflict table joins](./merge)
--   [Optimizing unnecessary join](./optimization)
--   [Pagination safety](./table-ex)
--   [Weak join](./weak-join)
+-   [Problems of other solutions](./problem.mdx)
+-   [Chain-style association paths](./chain-style.mdx) 
+-   [Merge conflict table joins](./merge.mdx)
+-   [Optimizing unnecessary join](./optimization.mdx)
+-   [Pagination safety](./table-ex.mdx)
+-   [Weak join](./weak-join.mdx)
 -   [Kotlin table join special features](./kotlin-join.mdx)

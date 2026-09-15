@@ -9,14 +9,14 @@ import { VersionBadgeAdmonition } from '@site/src/components/VersionBadgeAdmonit
 
 ## Concepts
 
-In the [Spring section](../spring), we discussed how to implement REST services with Jimmer and automatically generate client code like TypeScript. 
+In the [Spring section](../spring/index.md), we discussed how to implement REST services with Jimmer and automatically generate client code like TypeScript. 
 
 In addition, Jimmer also supports another development mode to build [GraphQL](https://graphql.org/) services, which is what this article series will discuss.
 
 :::caution
 So far, the GraphQL protocol does not support recursive queries for self-associated properties.
 
-Therefore, it is not possible to expose functionality like [recursive queries in object fetchers](../query/object-fetcher/recursive) through GraphQL. This is a functionality sacrifice that must currently be accepted when using GraphQL.
+Therefore, it is not possible to expose functionality like [recursive queries in object fetchers](../query/object-fetcher/recursive.mdx) through GraphQL. This is a functionality sacrifice that must currently be accepted when using GraphQL.
 :::
 
 Jimmer's support for GraphQL is based on [Spring GraphQL](https://spring.io/projects/spring-graphql).
@@ -67,7 +67,7 @@ dependencies {
 :::info
 If the Jimmer entity types are also defined in the GraphQL project rather than in a separate project, the preprocessor (Annotation Processor for Java, KSP for Kotlin) should also be configured in the build script.
 
-This has already been discussed in detail in the [Generate Code](../quick-view/get-started/generate-code) article and will not be repeated here.
+This has already been discussed in detail in the [Generate Code](../quick-view/get-started/generate-code.mdx) article and will not be repeated here.
 :::
 
 [Spring GraphQL](https://spring.io/projects/spring-graphql) is a Schema-First rather than Code-First approach. 
@@ -78,5 +78,5 @@ This file is a requirement of [Spring GraphQL](https://spring.io/projects/spring
 ## Notes
 
 :::caution
-In the current version, there is a limitation that when providing GraphQL services, [simple calculated properties based on SQL](../mapping/advanced/calculated/formula#2-sql-based-calculation) should NOT be used.
+In the current version, there is a limitation that when providing GraphQL services, [simple calculated properties based on SQL](../mapping/advanced/calculated/formula.mdx#2-sql-based-calculation) should NOT be used.
 :::

@@ -12,7 +12,7 @@ import MergeRoots from './_merge-roots.mdx';
 
 ## Basic Concepts
 
-In [the previous article](../save-mode), we introduced how to control the save mode of aggregate root objects.
+In [the previous article](../save-mode.mdx), we introduced how to control the save mode of aggregate root objects.
 
 This article will discuss how to control the save mode of associated objects. Associated objects support the following save modes:
 
@@ -197,7 +197,7 @@ For `save`, `saveEntities` and `saveInputs`, the default `AssociatedSaveMode` is
     </TabItem>
     </Tabs>
 
-    Here, the `BookInput` class is not an entity type, but rather an automatically generated [Input DTO](../input-dto) type by Jimmer.
+    Here, the `BookInput` class is not an entity type, but rather an automatically generated [Input DTO](../input-dto/index.md) type by Jimmer.
     
     This related content hasn't been introduced before, please ignore it for now.
 
@@ -454,7 +454,7 @@ sqlClient.saveEntities(
 </TabItem>
 </Tabs>
 
-To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
+To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner.mdx#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
 
 Two SQL statements will be generated:
 
@@ -489,7 +489,7 @@ Two SQL statements will be generated:
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](../mysql)
+    For specific details, please refer to [MySQL Issues](../mysql.mdx)
     :::
 
     1.  ```sql
@@ -635,7 +635,7 @@ sqlClient.saveEntities(
 </TabItem>
 </Tabs>
 
-To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
+To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner.mdx#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
 
 Two SQL statements will be generated:
 
@@ -810,7 +810,7 @@ sqlClient.saveEntities(
 </TabItem>
 </Tabs>
 
-To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
+To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner.mdx#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
 
 Two SQL statements will be generated:
 
@@ -850,7 +850,7 @@ Two SQL statements will be generated:
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](../mysql)
+    For specific details, please refer to [MySQL Issues](../mysql.mdx)
     :::
 
     1.  ```sql
@@ -999,7 +999,7 @@ sqlClient.saveEntities(
 </TabItem>
 </Tabs>
 
-To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
+To demonstrate simpler SQL generation, we assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously covered, see [here](./owner.mdx#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
 
 Two SQL statements will be generated:
 
@@ -1042,7 +1042,7 @@ Two SQL statements will be generated:
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](../mysql)
+    For specific details, please refer to [MySQL Issues](../mysql.mdx)
     :::
 
     1.  ```sql
@@ -1368,7 +1368,7 @@ Finally, two SQL statements will be generated:
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](../mysql)
+    For specific details, please refer to [MySQL Issues](../mysql.mdx)
     :::
 
     1.  ```sql
@@ -1526,7 +1526,7 @@ sqlClient.saveEntities(
 </TabItem>
 </Tabs>
 
-To demonstrate simpler SQL generation, let's assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously introduced, please refer to [here](./owner#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
+To demonstrate simpler SQL generation, let's assume that the `targetTransferable` feature of `sqlClient` is enabled, which was previously introduced, please refer to [here](./owner.mdx#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
 
 Three SQL statements will be generated:
 
@@ -1605,7 +1605,7 @@ Three SQL statements will be generated:
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](../mysql)
+    For specific details, please refer to [MySQL Issues](../mysql.mdx)
     :::
 
     1.  ```sql

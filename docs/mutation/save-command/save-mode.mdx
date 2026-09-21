@@ -1542,7 +1542,21 @@ Save mode selects the insert/update behavior. To limit the properties changed
 on a conflict, use an [upsert mask](./upsert-mask). To skip an update based on
 stored and incoming values, use [setUpdateWhere](./update-where).
 
-`forbidUpdate()` selects no entity-property update assignments; it does not
-mean `INSERT_IF_ABSENT`, because a self-assignment can still be required by
-save semantics. Check [isAccepted](./returning#acceptance) instead of deriving
-acceptance from the affected-row count.
+`forbidUpdate()` selects no entity-property update assignments. An existing
+object can still be accepted by `UPSERT`, and saving its associations can
+continue, even when no SQL update is needed. In contrast, `INSERT_IF_ABSENT`
+rejects a conflicting root object. Check [isAccepted](./returning#acceptance)
+instead of deriving acceptance from the affected-row count.
+
+`UPSERT` does not guarantee an SQL update or a transaction-long lock on an
+unchanged root row. For example, saving a book with only its id and an authors
+collection can modify the association table without querying or updating the
+book row. Saving the graph in a transaction does not by itself prevent another
+transaction from deleting that untouched root before its associations are saved.
+
+A technical self-assignment (fake update) can still be needed to obtain an id,
+return existing fields, or evaluate an update condition. Requesting result
+fields can therefore change the SQL, affected-row counts, trigger execution,
+and locking behavior. Do not rely on that implementation detail to lock the
+root; see [pessimistic locking](./pessimistic-locking) for the scope of explicit
+save-command locking.

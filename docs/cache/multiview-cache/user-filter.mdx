@@ -12,7 +12,7 @@ import {SwaggerAuthorize} from '@site/src/components/Image';
 
 ### Basic Concepts
 
-In the [User defined Filters](../../query/global-filter/user-filter) documentation, we introduced that custom global filters need to implement the `Filter/KFilter` interface.
+In the [User defined Filters](../../query/global-filter/user-filter.mdx) documentation, we introduced that custom global filters need to implement the `Filter/KFilter` interface.
 
 However, ordinary filters defined using this interface are not cache-friendly. 
 
@@ -78,11 +78,11 @@ An entity type allows being processed by multiple global filters:
 
     Therefore, these global filters must either all be cache-unfriendly `Filter/KFilter`, or all be cache-friendly `CacheableFilter/KCacheableFilter`. Mixing them together makes no sense.
 
-    If such meaningless mixing occurs accidentally, Jimmer will tell [why cache is abandoned](./abandoned-callback). 
+    If such meaningless mixing occurs accidentally, Jimmer will tell [why cache is abandoned](./abandoned-callback.mdx). 
 
 -   When all global filters are cache-friendly, the data returned by the `getParameters()` method of all `CacheableFilter/KCacheableFilter` objects is merged together as the `SubKey` of the multi-view cache.
 
-    For example, if an entity is processed by two global filters at the same time. One is the filter implied by [logical delete](../../query/global-filter/logical-deleted), denoted as `a`; the other one is a user-defined filter, denoted as `b`. 
+    For example, if an entity is processed by two global filters at the same time. One is the filter implied by [logical delete](../../query/global-filter/logical-deleted.mdx), denoted as `a`; the other one is a user-defined filter, denoted as `b`. 
 
     Assume 
 
@@ -97,7 +97,7 @@ An entity type allows being processed by multiple global filters:
 
 ### Define Cache-friendly Filters 
 
-In the [User-defined Filters](../../query/global-filter/user-filter) documentation, we defined a super type `TenantAware` for entities. Let's review its code again:
+In the [User-defined Filters](../../query/global-filter/user-filter.mdx) documentation, we defined a super type `TenantAware` for entities. Let's review its code again:
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -1286,7 +1286,7 @@ Delete data from redis: [BookStore.avgPrice-1] ❹
 
 -   ❹ The calculated cache `BookStore.avgPrice` of `BookStore` object with id 1 is also affected. This is the most amazing characteristic.
 
-    Although the framework is unaware of the calculation rule used by users in calculated properties, in the [Calculated Cache](../cache-type/calculation) documentation, we discussed the following code in the `BookStoreAvgPriceResolver` class:
+    Although the framework is unaware of the calculation rule used by users in calculated properties, in the [Calculated Cache](../cache-type/calculation.mdx) documentation, we discussed the following code in the `BookStoreAvgPriceResolver` class:
 
     <Tabs groupId="language">
     <TabItem value="java" label="Java">
@@ -1321,7 +1321,7 @@ Delete data from redis: [BookStore.avgPrice-1] ❹
     </TabItem>
     </Tabs>
 
-    If you have forgotten the specific logic of this code, you can review the [Calculated Cache](../cache-type/calculation) documentation. Just focus on the highlighted line. Here, this calculated property cares about changes to the association property `BookStore.books`.
+    If you have forgotten the specific logic of this code, you can review the [Calculated Cache](../cache-type/calculation.mdx) documentation. Just focus on the highlighted line. Here, this calculated property cares about changes to the association property `BookStore.books`.
 
     :::tip
     Modifying the association field between tables is not the only way to trigger association change events. Modifying the filtered field in associated objects that affects global filters, *like `TENANT` here*, can also trigger association change events.

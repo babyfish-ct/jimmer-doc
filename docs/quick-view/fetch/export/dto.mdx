@@ -10,7 +10,7 @@ import { DtoExplosion } from "@site/src/components/Image";
 
 ## Java/Kotlin Applications Use Query Results  
 
-In the [previous article](./entity), we introduced that the web service does not need to define DTO types, directly returns entities, and uses `@FetchBy` annotations to restore all DTO type definitions in automatically generated client code.  
+In the [previous article](./entity.mdx), we introduced that the web service does not need to define DTO types, directly returns entities, and uses `@FetchBy` annotations to restore all DTO type definitions in automatically generated client code.  
 
 However, what if a query result is not returned to the Web remote client, but the server itself uses it?  
 
@@ -349,7 +349,7 @@ After compilation, the following two types `SimpleBookView` and `ComplexView` wi
 
 ### Review Old BookRepository  
 
-In the [Feature Introduction](../feature#improved-repository) article, we wrote a `BookRepository` class  
+In the [Feature Introduction](../feature.mdx#improved-repository) article, we wrote a `BookRepository` class  
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">   
@@ -696,7 +696,7 @@ class BookController(
 
 ## Document Comments
 
-In the [previous article](./entity), we mentioned that Jimmer can copy the document comments in Java/Kotlin code to the client Api, whether it is OpenApi online documentation or generated TypeScript code.
+In the [previous article](./entity.mdx), we mentioned that Jimmer can copy the document comments in Java/Kotlin code to the client Api, whether it is OpenApi online documentation or generated TypeScript code.
 
 The method introduced in this article has the same functionality, but it needs to be explained that the types and properties in the DTO language support document comments like Java/Kotlin types, so the DTO language can override Java/Kotlin document comments. For example, the original entity definition is as follows
 
@@ -824,7 +824,7 @@ If the associated object only has the `id` property, the associated Id will be b
     }
     ```  
 
-If you choose to return DTO *(instead of directly returning entities as in [the previous article](./entity))*, you can define the following DTO code:  
+If you choose to return DTO *(instead of directly returning entities as in [the previous article](./entity.mdx))*, you can define the following DTO code:  
 
 ```title="Book.dto" 
 export com.yourcompany.yourproject.model.Book  

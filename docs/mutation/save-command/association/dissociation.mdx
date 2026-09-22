@@ -38,7 +38,7 @@ Next, let's discuss these two types of dissociation operations.
 
 ## Dissociating Middle Table Associations
 
-We've already demonstrated this simplest form of dissociation when introducing the [REPLACE](./associated-save-mode#5-replace) save mode for associated objects.
+We've already demonstrated this simplest form of dissociation when introducing the [REPLACE](./associated-save-mode.mdx#5-replace) save mode for associated objects.
 
 Therefore, we won't repeat it here.
 
@@ -388,9 +388,9 @@ In fact, different dissociation configurations will lead to different dissociati
 
 NONE's behavior is not fixed, but depends on the global configuration `jimmer.default-dissociate-action-check`:
 
-- If `jimmer.default-dissociate-action-check` is true *(default)* or if the current association is based on a real foreign key *(foreign key constraint exists in database, see [Real vs Fake Foreign Keys](../../../mapping/base/foreignkey))*, treated as [CHECK](#3-check).
+- If `jimmer.default-dissociate-action-check` is true *(default)* or if the current association is based on a real foreign key *(foreign key constraint exists in database, see [Real vs Fake Foreign Keys](../../../mapping/base/foreignkey.mdx))*, treated as [CHECK](#3-check).
 
-- If `jimmer.default-dissociate-action-check` is false and the current association is based on a fake foreign key (no corresponding foreign key constraint in database, see [Real vs Fake Foreign Keys](../../../mapping/base/foreignkey)), treated as [LAX](#2-lax).
+- If `jimmer.default-dissociate-action-check` is false and the current association is based on a fake foreign key (no corresponding foreign key constraint in database, see [Real vs Fake Foreign Keys](../../../mapping/base/foreignkey.mdx)), treated as [LAX](#2-lax).
 
 ### 2. LAX
 
@@ -400,7 +400,7 @@ NONE's behavior is not fixed, but depends on the global configuration `jimmer.de
 
 Clearly, these two rules conflict. In this case, `AssociatedSaveMode.REPLACE` takes precedence, `LAX` is ignored, and it's ultimately treated as [CHECK](#3-check).
 
-Therefore, we cannot demonstrate `LAX` through this article. To understand how `LAX` works, please see [Delete Command](../../delete-command).
+Therefore, we cannot demonstrate `LAX` through this article. To understand how `LAX` works, please see [Delete Command](../../delete-command.mdx).
 
 ### 3. CHECK
 
@@ -448,7 +448,7 @@ interface Book {
 </TabItem>
 </Tabs>
 
-To demonstrate simpler SQL generation, let's assume `sqlClient`'s `targetTransferable` feature is enabled, which was previously discussed, see [here](./owner#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
+To demonstrate simpler SQL generation, let's assume `sqlClient`'s `targetTransferable` feature is enabled, which was previously discussed, see [here](./owner.mdx#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
 
 Running the save code from before will generate three SQL statements:
 
@@ -548,7 +548,7 @@ interface Book {
 </TabItem>
 </Tabs>
 
-To demonstrate simpler SQL generation, let's assume `sqlClient`'s `targetTransferable` feature is enabled, which was previously discussed, see [here](./owner#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
+To demonstrate simpler SQL generation, let's assume `sqlClient`'s `targetTransferable` feature is enabled, which was previously discussed, see [here](./owner.mdx#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
 
 Running the save code from before will generate three SQL statements:
 
@@ -635,7 +635,7 @@ Here when saving `BookStore`, we perform dissociation on the `BookStore.books` a
 However, since the `Book` entity has a deeper association `Book.authors`, we need to consider how to dissociate `Author` objects before deleting `Book` objects.
 
 In fact, if objects that need to be deleted due to dissociation have deeper associations, it evolves into a recursive deletion problem.
-This behavior is detailed in [Delete Command](../../delete-command), which we won't discuss here.
+This behavior is detailed in [Delete Command](../../delete-command.mdx), which we won't discuss here.
 
 Therefore, to simplify the discussion, we'll temporarily ignore the `Author` entity and assume the current system only has `BookStore` and `Book` entity types.
 :::
@@ -682,7 +682,7 @@ interface Book {
 </TabItem>
 </Tabs>
 
-To demonstrate simpler SQL generation, let's assume `sqlClient`'s `targetTransferable` feature is enabled, which was previously discussed, see [here](./owner#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
+To demonstrate simpler SQL generation, let's assume `sqlClient`'s `targetTransferable` feature is enabled, which was previously discussed, see [here](./owner.mdx#2-configuring-whether-different-parent-objects-can-snatch-for-child-objects)
 
 Running the save code from before will generate three SQL statements:
 

@@ -154,23 +154,23 @@ Necessary Explanations:
 
     -   `AUTO`: Does not explicitly specify whether the current operation is logical delete or physical delete
 
-        -   If the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted/entity), perform logical delete.
+        -   If the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted/entity.mdx), perform logical delete.
         
         -   Otherwise, perform physical delete.
 
     -   `LOGICAL`: Explicitly specifies that the current operation is logical delete
 
-        -   If the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted/entity), perform logical delete.
+        -   If the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted/entity.mdx), perform logical delete.
         
         -   Otherwise, throw an exception indicating that the current entity does not support logical delete.
 
     -   `PHYSICAL`: Explicitly specifies that the current operation is physical delete
   
-        Regardless of whether the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted/entity), perform physical delete.
+        Regardless of whether the deleted entity type has a [logical delete field](../mapping/advanced/logical-deleted/entity.mdx), perform physical delete.
 
 ## Logical Delete  
 
-Assuming the entity has a [logical delete field](../mapping/advanced/logical-deleted/entity), for example:
+Assuming the entity has a [logical delete field](../mapping/advanced/logical-deleted/entity.mdx), for example:
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -222,7 +222,7 @@ where ID in(?/* 1L*/)
 
 ## Physical Delete  
 
-If the entity does not have a [logical delete field](../mapping/advanced/logical-deleted/entity), or the delete mode is explicitly specified as `DeleteMode.PHYSICAL`, physical delete is performed. 
+If the entity does not have a [logical delete field](../mapping/advanced/logical-deleted/entity.mdx), or the delete mode is explicitly specified as `DeleteMode.PHYSICAL`, physical delete is performed. 
 
 ### Basic Usage
 
@@ -343,16 +343,16 @@ Because the `BookStore` object has a one-to-many association `BookStore.books`, 
 
 The one-to-many association `BookStore.books` is not a mapping based on a middle table, but a mapping based on a foreign key. How will Jimmer discard those `Book` objects?
 
-Unlike JPA, Jimmer does not allow direct use of `@OneToMany` for association mapping. `@OneToMany` must use the `mappedBy` property. See [@OneToMany](../mapping/base/association/one-to-many) to learn more.  
+Unlike JPA, Jimmer does not allow direct use of `@OneToMany` for association mapping. `@OneToMany` must use the `mappedBy` property. See [@OneToMany](../mapping/base/association/one-to-many.mdx) to learn more.  
 
 This means that through the one-to-many association `BookStore.books` we can certainly find the corresponding many-to-one association `Book.store`.
 
-Next, Jimmer will refer to the [@OnDissociate](../mapping/advanced/on-dissociate) annotation on the many-to-one association property `Book.store`.
+Next, Jimmer will refer to the [@OnDissociate](../mapping/advanced/on-dissociate.mdx) annotation on the many-to-one association property `Book.store`.
 
 <DissociateMode/>
 
 ## Dissociation Examples
-1.  If the foreign key corresponding to `Book.store` is configured by the [@OnDissociate](../mapping/advanced/on-dissociate) annotation as `SET_NULL`, the following SQL is executed:
+1.  If the foreign key corresponding to `Book.store` is configured by the [@OnDissociate](../mapping/advanced/on-dissociate.mdx) annotation as `SET_NULL`, the following SQL is executed:
 
     ```csharp
     update BOOK set STORE_ID = null where STORE_ID in(?)
@@ -368,13 +368,13 @@ Next, Jimmer will refer to the [@OnDissociate](../mapping/advanced/on-dissociate
 
     > If the query does not return any data, skip the subsequent steps.
 
-    - If the foreign key corresponding to `Book.store` is configured by [@OnDissociate](../mapping/advanced/on-dissociate) as `DELETE`, use the new delete command to delete these discarded objects. This is actually the automatic recursive execution capability of the delete command.
+    - If the foreign key corresponding to `Book.store` is configured by [@OnDissociate](../mapping/advanced/on-dissociate.mdx) as `DELETE`, use the new delete command to delete these discarded objects. This is actually the automatic recursive execution capability of the delete command.
 
     - Otherwise, throw an exception.
     
-The above discussed situations all require the developer to use the [@OnDissociate](../mapping/advanced/on-dissociate) annotation on the `Book.store` property. 
+The above discussed situations all require the developer to use the [@OnDissociate](../mapping/advanced/on-dissociate.mdx) annotation on the `Book.store` property. 
 
-However, you can also choose not to use the [@OnDissociate](../mapping/advanced/on-dissociate) annotation, but dynamically specify the dissociateAction configuration for the delete command.
+However, you can also choose not to use the [@OnDissociate](../mapping/advanced/on-dissociate.mdx) annotation, but dynamically specify the dissociateAction configuration for the delete command.
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -413,10 +413,10 @@ val result = sqlClient
 </TabItem>
 </Tabs>
 
-Here, calling the command's `setDissociateAction` method dynamically has the same effect as using the [@OnDissociate](../mapping/advanced/on-dissociate) annotation statically on the `Book.store` property and specifying cascade delete.
+Here, calling the command's `setDissociateAction` method dynamically has the same effect as using the [@OnDissociate](../mapping/advanced/on-dissociate.mdx) annotation statically on the `Book.store` property and specifying cascade delete.
 
 :::info
 1.  If the last parameter of the `setDissociateAction` method is `DissociateAction.SET_NULL`, the associated property being set must be nullable, otherwise it will cause an exception.
 
-2.  If dissociation rules are configured dynamically for the save command and also configured statically in the entity interface through the [@OnDissociate](../mapping/advanced/on-dissociate) annotation, the dynamic configuration takes precedence. 
+2.  If dissociation rules are configured dynamically for the save command and also configured statically in the entity interface through the [@OnDissociate](../mapping/advanced/on-dissociate.mdx) annotation, the dynamic configuration takes precedence. 
 :::

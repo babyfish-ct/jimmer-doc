@@ -8,19 +8,19 @@ import TabItem from '@theme/TabItem';
 import { ViewMore } from '@site/src/components/ViewMore';
 import {CalculatedCache} from '@site/src/components/Image';
 
-Calculated cache refers to mapping the current object id to the calculated value of the user-defined [complex calculated property](../../mapping/advanced/calculated/transient).
+Calculated cache refers to mapping the current object id to the calculated value of the user-defined [complex calculated property](../../mapping/advanced/calculated/transient.mdx).
 
 <CalculatedCache/>
 
 ## Calculated Property Recap
 
-In the [Complex Calculated Properties](../../mapping/advanced/calculated/transient) article, we discussed complex calculated properties in detail.
+In the [Complex Calculated Properties](../../mapping/advanced/calculated/transient.mdx) article, we discussed complex calculated properties in detail.
 
 :::caution
-This article focuses on calculated cache and does not repeat the introduction to [complex calculated properties](../../mapping/advanced/calculated/transient). Please read [complex calculated properties](../../mapping/advanced/calculated/transient) before reading this article.
+This article focuses on calculated cache and does not repeat the introduction to [complex calculated properties](../../mapping/advanced/calculated/transient.mdx). Please read [complex calculated properties](../../mapping/advanced/calculated/transient.mdx) before reading this article.
 :::
 
-In this article, we will add cache support for the calculated property `BookStore.avgPrice` defined in [complex calculated properties](../../mapping/advanced/calculated/transient).
+In this article, we will add cache support for the calculated property `BookStore.avgPrice` defined in [complex calculated properties](../../mapping/advanced/calculated/transient.mdx).
 
 :::info
 To simplify the documentation, this article only discusses `BookStore.avgPrice` and does not discuss the other association-based calculated property `BookStore.newestBooks`. Readers can read and run the following official examples:
@@ -296,7 +296,7 @@ For the calculated property `BookStore.avgPrice`, the following two cases will b
 
 -   Modifying the `PRICE` field of the `BOOK` record will invalidate the `avgPrice` cache data of the bookstore it belongs to.
 
-In the [Complex Calculated Properties](../../mapping/advanced/calculated/transient) article, a class `BookStoreAvgPriceResolver` is defined to support the calculated property `BookStore.avgPrice`. The code is as follows:
+In the [Complex Calculated Properties](../../mapping/advanced/calculated/transient.mdx) article, a class `BookStoreAvgPriceResolver` is defined to support the calculated property `BookStore.avgPrice`. The code is as follows:
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">  
@@ -418,7 +418,7 @@ class BookStoreAvgPriceResolver(
 </TabItem> 
 </Tabs>
 
-These two methods are the built-in [trigger](../../mutation/trigger) response methods of `TransientResolver` that are executed automatically when the database changes. They are responsible for automatically clearing the computed cache when the database changes.
+These two methods are the built-in [trigger](../../mutation/trigger.mdx) response methods of `TransientResolver` that are executed automatically when the database changes. They are responsible for automatically clearing the computed cache when the database changes.
 
 Next, let's implement these two methods.
 

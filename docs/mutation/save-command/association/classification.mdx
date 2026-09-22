@@ -141,7 +141,7 @@ sqlClient.save(book)
 :::note
 The hardcoding of the data structure being saved here is only for demonstration. In actual projects, the data structure being saved is submitted by the frontend interface.
 
-Of course, if the user has defined the `authorIds` property according to the [Mapping/Advanced Mapping/View Properties/IdView](../../../mapping/advanced/view/id-view) article, the above code can be simplified, for example:
+Of course, if the user has defined the `authorIds` property according to the [Mapping/Advanced Mapping/View Properties/IdView](../../../mapping/advanced/view/id-view.mdx) article, the above code can be simplified, for example:
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -164,7 +164,7 @@ val book = Book {
 </TabItem>
 </Tabs>
 
-However, this is not mandatory. To make the example more universal, we don't assume that users have defined [IdView](../../../mapping/advanced/view/id-view) properties for entity types. All subsequent documentation will follow this approach without further reminders.
+However, this is not mandatory. To make the example more universal, we don't assume that users have defined [IdView](../../../mapping/advanced/view/id-view.mdx) properties for entity types. All subsequent documentation will follow this approach without further reminders.
 :::
 
 The generated SQL statements would be:
@@ -277,7 +277,7 @@ The generated SQL statements would be:
     </Tabs>
 
     :::info
-    This step is called [Dissociation Operation](./dissociation), which will be introduced in subsequent documentation. Readers can ignore this for now.
+    This step is called [Dissociation Operation](./dissociation.mdx), which will be introduced in subsequent documentation. Readers can ignore this for now.
     :::
 
 3.  Establish associations between the object *(newly inserted data is `Book(100)`)* and the two objects `Author(4)` and `Author(5)`
@@ -307,7 +307,7 @@ The generated SQL statements would be:
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](../mysql)
+    For specific details, please refer to [MySQL Issues](../mysql.mdx)
     :::
 
     1.  ```sql
@@ -649,7 +649,7 @@ This operation generates two SQL statements:
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](../mysql)
+    For specific details, please refer to [MySQL Issues](../mysql.mdx)
     :::
 
     1.  ```sql
@@ -984,7 +984,7 @@ Taking H2 as an example, it generates three SQL statements:
 
     :::caution
     By default, MySQL batch operations are not used. 
-    For specific details, please refer to [MySQL Issues](../mysql)
+    For specific details, please refer to [MySQL Issues](../mysql.mdx)
     :::
 
     1.  ```sql

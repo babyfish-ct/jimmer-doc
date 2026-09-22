@@ -80,7 +80,7 @@ data class BookInput(
 </TabItem>
 </Tabs>
 
--   ❶ If the id is designated some auto-generation strategy, it is not required. This is also a feature of save commands, see details in [Save Modes](../save-mode).
+-   ❶ If the id is designated some auto-generation strategy, it is not required. This is also a feature of save commands, see details in [Save Modes](../save-mode.mdx).
 
     :::info
     - For Jimmer entities, `id` cannot be null. Missing `id` *(i.e. not assigning it)* represents the object does not have an `id`.
@@ -98,7 +98,7 @@ data class BookInput(
 ## MapStruct Converter
 
 Jimmer extends [MapStruct](https://mapstruct.org/) which can be used to handle conversions between dynamic entities and static Input DTOs.
-How to use the relevant extensions is detailed in [Object/DTO Conversion/MapStruct](../../../object/view/mapstruct), this article will not repeat it.
+How to use the relevant extensions is detailed in [Object/DTO Conversion/MapStruct](../../../object/view/mapstruct.mdx), this article will not repeat it.
 
 Define the `BookInputMapper` interface:
 
@@ -134,7 +134,7 @@ interface BookInputMapper {
 </Tabs>
 
 :::info
-MapStruct's annotation processor needs to be used to generate the implementation class for this interface at compile time. Details are explained in [Object Section/DTO Mapping/MapStruct](../../../object/view/mapstruct) and not repeated here.
+MapStruct's annotation processor needs to be used to generate the implementation class for this interface at compile time. Details are explained in [Object Section/DTO Mapping/MapStruct](../../../object/view/mapstruct.mdx) and not repeated here.
 :::
 
 ## HTTP API

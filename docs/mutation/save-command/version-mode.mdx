@@ -55,7 +55,7 @@ sqlClient.save(store) {
 </Tabs>
 
 An accepted update writes the supplied version unchanged. An older or equal
-version is rejected normally; inspect [result acceptance](./returning#acceptance).
+version is rejected normally; inspect [result acceptance](./returning.mdx#acceptance).
 A new row is inserted independently of the update condition.
 
 An unloaded version still receives the framework's initial value on insertion.
@@ -65,7 +65,7 @@ the existing version on a conflict.
 ## Compute the Next Version
 
 In assignment mode, `@Version` is also a valid target of a
-[save assignment expression](./assignment):
+[save assignment expression](./assignment.mdx):
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -108,5 +108,5 @@ associated entities in a graph save. Switching to `ASSIGNMENT` removes the
 implicit version protection; it does not silently replace it with another check.
 :::
 
-[Insert/upsert from select](../insert-from-select) uses assignment semantics for
+[Insert/upsert from select](../insert-from-select.mdx) uses assignment semantics for
 versions, so source version values do not accidentally enable optimistic locking.

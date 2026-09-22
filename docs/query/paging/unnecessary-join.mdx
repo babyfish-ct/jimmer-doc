@@ -28,7 +28,7 @@ Jimmer will auto-optimize `count-query` to copy over as few table joins as possi
     
     - Although join type is inner join, the association is based on non-null real foreign key.
     
-        So-called real foreign key means there is a foreign key constraint in the database. See [Real vs Fake Foreign Keys](../../mapping/base/foreignkey).
+        So-called real foreign key means there is a foreign key constraint in the database. See [Real vs Fake Foreign Keys](../../mapping/base/foreignkey.mdx).
      
 In summary, to determine whether a table join in the original data-query can be automatically removed in the count-query, use the following optimization rules: 
 

@@ -37,7 +37,7 @@ In other cases, Jimmer will use one-to-one or many-to-one association cache. The
     
 -   The referenced association property is based on a join table rather than a foreign key. 
 
--   When [implementing GraphQL with Jimmer](../../graphql), [Object Fetcher](../../query/object-fetcher) *(GraphQL and Object Fetchers are homogenous functions)* should not be used in aggregate root queries, 
+-   When [implementing GraphQL with Jimmer](../../graphql/index.md), [Object Fetcher](../../query/object-fetcher/index.md) *(GraphQL and Object Fetchers are homogenous functions)* should not be used in aggregate root queries, 
     but object fetcher were incorrectly used in aggregate root queries to obtain objects without foreign keys. However, the GraphQL request body contains many-to-one associations.
 :::
 
@@ -181,9 +181,9 @@ fun cacheFactory(
 ## Sorting Collection Associations  
 
 :::caution
-For collection type associations, if we use the field filter of [object fetchers](../../query/object-fetcher) to implement association-level sorting, it will cause Jimmer to ignore association cache.
+For collection type associations, if we use the field filter of [object fetchers](../../query/object-fetcher/index.md) to implement association-level sorting, it will cause Jimmer to ignore association cache.
 
-To make full use of association cache while keeping the sorting of the associated object collection returned by the [object fetcher](../../query/object-fetcher) query controllable, you can specify the default sorting statically on the entity.
+To make full use of association cache while keeping the sorting of the associated object collection returned by the [object fetcher](../../query/object-fetcher/index.md) query controllable, you can specify the default sorting statically on the entity.
 :::
 
 -   `BookStore.books`
@@ -401,14 +401,14 @@ println(stores)
 
 -   Step 3: Convert associated object id to associated object via object cache
 
-    Such operations have been discussed in detail in [Object Cache](./object), so they are not repeated here. This article focuses on association cache.
+    Such operations have been discussed in detail in [Object Cache](./object.mdx), so they are not repeated here. This article focuses on association cache.
 
     :::caution
     In the cache configuration, if association cache is enabled for an association property but object cache is not enabled for its associated object type, an exception will be thrown.
     :::
 
 :::info
-Previously in [Object Fetcher](../../query/object-fetcher), we saw that Jimmer only needs one SQL statement to query all associated objects based on a batch of current objects, but here two SQL statements are needed, please view:
+Previously in [Object Fetcher](../../query/object-fetcher/index.md), we saw that Jimmer only needs one SQL statement to query all associated objects based on a batch of current objects, but here two SQL statements are needed, please view:
 
 <ViewMore buttonText="The difference compared to not enabling cache">
 
@@ -687,14 +687,14 @@ println(books)
 
 -   Step 3: Convert associated object id to associated object via object cache
 
-    Such operations have been discussed in detail in [Object Cache](./object), so they are not repeated here. This article focuses on association cache.
+    Such operations have been discussed in detail in [Object Cache](./object.mdx), so they are not repeated here. This article focuses on association cache.
 
     :::caution
     In the cache configuration, if association cache is enabled for an association property but object cache is not enabled for its associated object type, an exception will be thrown.
     :::
 
 :::info
-Previously in [Object Fetcher](../../query/object-fetcher), we saw that Jimmer only needs one SQL statement to query all associated objects based on a batch of current objects, but here two SQL statements are needed, please view:
+Previously in [Object Fetcher](../../query/object-fetcher/index.md), we saw that Jimmer only needs one SQL statement to query all associated objects based on a batch of current objects, but here two SQL statements are needed, please view:
 
 <ViewMore buttonText="The difference compared to not enabling cache">
 
@@ -830,7 +830,7 @@ Finally, Jimmer concatenates the 3 steps results as the final data returned to t
 ## Cache Invalidation
 
 :::caution
-To use Jimmer's automatic cache invalidation, [triggers](../../mutation/trigger) need to be enabled first.
+To use Jimmer's automatic cache invalidation, [triggers](../../mutation/trigger.mdx) need to be enabled first.
 :::
 
 ### One-to-Many: BookStore.books
@@ -941,8 +941,8 @@ Delete data from redis: [Author.books-3] ❷
 
 ## Notes on Logical Deletion
 
-If associated objects support [logical deletion](../../query/global-filter/logical-deleted), association caching is still supported by default. 
+If associated objects support [logical deletion](../../query/global-filter/logical-deleted.mdx), association caching is still supported by default. 
 
 :::warning
-However, once the logical deletion is [ignored](../../query/global-filter/logical-deleted#ignore-logical-deletion-filter) or [reversed](../../query/global-filter/logical-deleted#reverse-logical-deletion-filter), association caching will be ignored.
+However, once the logical deletion is [ignored](../../query/global-filter/logical-deleted.mdx#ignore-logical-deletion-filter) or [reversed](../../query/global-filter/logical-deleted.mdx#reverse-logical-deletion-filter), association caching will be ignored.
 :::

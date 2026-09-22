@@ -11,16 +11,16 @@ import TabItem from '@theme/TabItem';
 ## Concept
 
 :::info
-@`org.babyfish.jimmer.sql.Key` is used together with [Save Command](../../mutation/save-command) in mutation section.
+@`org.babyfish.jimmer.sql.Key` is used together with [Save Command](../../mutation/save-command/index.md) in mutation section.
 :::
 
 <Key/>
 
-This article only introduces the configuration of Key. For how to use it further, please refer to [Save Command](../../mutation/save-command).
+This article only introduces the configuration of Key. For how to use it further, please refer to [Save Command](../../mutation/save-command/index.md).
 
 ## Multi-version support
 
-Jimmer supports [logical deletion](./logical-deleted), which hides deleted data instead of actually deleting it.
+Jimmer supports [logical deletion](./logical-deleted/index.md), which hides deleted data instead of actually deleting it.
 
 The unique constraint defined by `@Key` is only for non-hidden data, not all data in the table, so unique constraint cannot be simply defined by the columns of `@key`.
 

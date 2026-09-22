@@ -105,7 +105,7 @@ The finally generated SQL is:
     ```
     
 :::note 
-If JOIN is used in a delete statement, Jimmer will translate it into `select` + `delete`. First use the `select` statement with `join` clause to query the ids of the data to be deleted, then use [Delete Command](./delete-command) to delete the data.
+If JOIN is used in a delete statement, Jimmer will translate it into `select` + `delete`. First use the `select` statement with `join` clause to query the ids of the data to be deleted, then use [Delete Command](./delete-command.mdx) to delete the data.
 
 This scheme is valid for any database.
 :::

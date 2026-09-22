@@ -68,7 +68,7 @@ where tb_1_.NAME = ?
 
 In <ViewMore buttonText="Problems with current solutions"><DynamicJoinProblem/></ViewMore>, we listed two scenarios. 
 
-In the [previous doc](./merge), we discussed solving these two scenarios by utilizing Jimmer SQL DSL's automatic merge of conflicting joins.
+In the [previous doc](./merge.mdx), we discussed solving these two scenarios by utilizing Jimmer SQL DSL's automatic merge of conflicting joins.
 
 Here, we use another approach to solve the same problems.
 
@@ -270,7 +270,7 @@ Here, we use another approach to solve the same problems.
 
             For example: Marking `d` as "used" will naturally also mark `c`, `b` and `table`.
 
-        - `asTableEx` here (and various TableEx types in Java) is a concept to be introduced in later docs [Pagination Safety](./table-ex). Please ignore it for now.
+        - `asTableEx` here (and various TableEx types in Java) is a concept to be introduced in later docs [Pagination Safety](./table-ex.mdx). Please ignore it for now.
         :::
   
 ## Phantom Joins
@@ -323,7 +323,7 @@ For foreign key based associations, there are two ways to filter on the associat
     :::tip
     For one-to-one/many-to-one associations  
     *(like `Book.store` in this example)*,
-    even if the user does not declare an [@IdView](../../mapping/advanced/view/id-view)  
+    even if the user does not declare an [@IdView](../../mapping/advanced/view/id-view.mdx)  
     property for the `Book` entity, 
     the `storeId` property can still be used in SQL DSL.
     :::
@@ -381,18 +381,18 @@ For foreign key based associations, there are two ways to filter on the associat
 
     -   The foreign key may be fake, i.e. there is no corresponding foreign key constraint in the database. This will cause non-null pseudo foreign keys to be unable to fetch non-null associated objects through joining.
 
-    -   The associated object may be affected by [global filters](../global-filter), so it should be ignored even if it exists in the database.
+    -   The associated object may be affected by [global filters](../global-filter/index.md), so it should be ignored even if it exists in the database.
   
 -   However, the two approaches are completely equivalent *when all of the following conditions are met*:
 
     -   The association is a one-to-one or many-to-one association based on foreign key, not through a join table or other reverse association mapping.
 
-    -   The foreign key is real, i.e. there is a corresponding foreign key constraint in the database. See [Real and Fake Foreign Keys](../../mapping/base/foreignkey).
+    -   The foreign key is real, i.e. there is a corresponding foreign key constraint in the database. See [Real and Fake Foreign Keys](../../mapping/base/foreignkey.mdx).
 
-    -   The associated object is not affected by [global filters](../global-filter). Note this refers to either of:
+    -   The associated object is not affected by [global filters](../global-filter/index.md). Note this refers to either of:
 
-        -   [User-defined filters](../global-filter/user-filter)
-        -   [Logical deletion filters](../global-filter/logical-deleted)
+        -   [User-defined filters](../global-filter/user-filter.mdx)
+        -   [Logical deletion filters](../global-filter/logical-deleted.mdx)
 
     In this case, the id of the associated object is actually just the foreign key of the current table, so they are equivalent.
   
@@ -570,12 +570,12 @@ For join table based associations, there are two ways to filter on the associate
     
     :::note
     The `asTableEx` here has no substantial function, it will be introduced in 
-    the next doc [Pagination Safety](./table-ex). Please ignore it for now.
+    the next doc [Pagination Safety](./table-ex.mdx). Please ignore it for now.
     :::
    
     :::caution
     For one-to-many/many-to-many associations *(like `Book.authors` in this example)*,
-    *users must declare an [@IdView](../../mapping/advanced/view/id-view) property 
+    *users must declare an [@IdView](../../mapping/advanced/view/id-view.mdx) property 
     *for the `Book` entity to access the `authorIds` property in SQL DSL.
     :::
    
@@ -626,7 +626,7 @@ For join table based associations, there are two ways to filter on the associate
     
     :::note
     The `asTableEx` here has no substantial function, it will be introduced in 
-    the next doc [Pagination Safety](./table-ex). Please ignore it for now.
+    the next doc [Pagination Safety](./table-ex.mdx). Please ignore it for now.
     :::
    
 -   These two approaches are not equivalent:
@@ -647,16 +647,16 @@ For join table based associations, there are two ways to filter on the associate
     
     -   The foreign key `BOOK_AUTHOR_MAPPING.AUTHOR_ID` may be fake, i.e. there is no corresponding foreign key constraint in the database. This will cause non-null pseudo foreign keys to be unable to fetch non-null associated objects through joining.
 
-    -   The associated object may be affected by [global filters](../global-filter), so it should be ignored even if it exists in the database.
+    -   The associated object may be affected by [global filters](../global-filter/index.md), so it should be ignored even if it exists in the database.
   
 -   However, the two approaches are completely equivalent *when all of the following conditions are met*:
 
-    -   The foreign key in the join table is real, i.e. there is a corresponding foreign key constraint in the database. See [Real and Fake Foreign Keys](../../mapping/base/foreignkey).
+    -   The foreign key in the join table is real, i.e. there is a corresponding foreign key constraint in the database. See [Real and Fake Foreign Keys](../../mapping/base/foreignkey.mdx).
 
-    -   The associated object is not affected by [global filters](../global-filter). Note this refers to either of:
+    -   The associated object is not affected by [global filters](../global-filter/index.md). Note this refers to either of:
 
-        -   [User-defined filters](../global-filter/user-filter)
-        -   [Logical deletion filters](../global-filter/logical-deleted)
+        -   [User-defined filters](../global-filter/user-filter.mdx)
+        -   [Logical deletion filters](../global-filter/logical-deleted.mdx)
 
     In this case, the id of the associated object is actually just the foreign key of the current table, so they are equivalent.
   
@@ -717,7 +717,7 @@ val bookIds = sqlClient
 
 :::note
 The `asTableEx` here has no substantial function, it will be introduced in 
-the next doc [Pagination Safety](./table-ex). Please ignore it for now.
+the next doc [Pagination Safety](./table-ex.mdx). Please ignore it for now.
 :::
 
 The generated SQL:
@@ -793,7 +793,7 @@ val bookIds = sqlClient
 
 :::note
 The `asTableEx` here has no substantial function, it will be introduced in 
-the next doc [Pagination Safety](./table-ex). Please ignore it for now.
+the next doc [Pagination Safety](./table-ex.mdx). Please ignore it for now.
 :::
 
 This time, the generated SQL:

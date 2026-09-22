@@ -7,16 +7,16 @@ In this section, we will introduce all the capabilities in Jimmer related to mod
 
 There are two groundbreaking capabilities:
 
--   [Save Command](./save-command)
+-   [Save Command](./save-command/index.md)
 
     One statement to save complex data of arbitrary shape, find DIFF to change database, like React/Vue.
 
--   [Triggers](./trigger) 
+-   [Triggers](./trigger.mdx) 
 
-    Awareness of data changes whether via Jimmer's own capabilities or integrating with existing CDC solutions. This enables automatic [Caching](../cache) invalidation.
+    Awareness of data changes whether via Jimmer's own capabilities or integrating with existing CDC solutions. This enables automatic [Caching](../cache/index.mdx) invalidation.
 
 ## Query-Based Mutations
 
-[Insert and Upsert from Select](./insert-from-select) maps typed base-query
+[Insert and Upsert from Select](./insert-from-select.mdx) maps typed base-query
 results to a target table, with explicit conflict keys, separate insert/update
 assignments, update conditions, and returning.

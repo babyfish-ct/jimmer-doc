@@ -178,7 +178,7 @@ Table joins based on collection associations lead to duplicate data, which cause
    [firstResult/maxResults specified with collection fetch; applying in memory](https://tech.asimio.net/2021/05/19/Fixing-Hibernate-HHH000104-firstResult-maxResults-warning-using-Spring-Data-JPA.html)
 
    :::tip
-   Note that Jimmer's other feature [Object Fetcher](../object-fetcher) does not use table join to fetch collection associations, so it does not have this problem. Feel free to use it.
+   Note that Jimmer's other feature [Object Fetcher](../object-fetcher/index.md) does not use table join to fetch collection associations, so it does not have this problem. Feel free to use it.
    :::
    
 In summary, using collection joins in top-level queries has obvious drawbacks, but it remains valuable to use collection joins in subqueries.
@@ -193,7 +193,7 @@ Therefore, Jimmer SQL DSL has the following characteristics:
 ## Implicit Subqueries 
 
 :::tip
-For collection associations, JOIN is actually not recommended. [Implicit subqueries](../implicit-subquery) are more recommended. 
+For collection associations, JOIN is actually not recommended. [Implicit subqueries](../implicit-subquery.mdx) are more recommended. 
 
 If you still want to JOIN collection association properties, please continue reading below.
 :::

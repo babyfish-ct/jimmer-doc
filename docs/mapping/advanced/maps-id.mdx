@@ -100,9 +100,9 @@ interface Message {
 </TabItem>
 </Tabs>
 
-Here, `MessageDelivery.messageId` is the real id property of the current entity. It is not an [@IdView](./view/id-view), so it should not be annotated with `@IdView`.
+Here, `MessageDelivery.messageId` is the real id property of the current entity. It is not an [@IdView](./view/id-view.mdx), so it should not be annotated with `@IdView`.
 
-`@JoinColumn` is still required because this is the owning side. However, its `name` does not need to be specified here. Jimmer determines the column name according to the active [naming strategy](../base/naming-strategy). Under the default naming strategy, the property name `message` is mapped to the FK column `message_id`.
+`@JoinColumn` is still required because this is the owning side. However, its `name` does not need to be specified here. Jimmer determines the column name according to the active [naming strategy](../base/naming-strategy.mdx). Under the default naming strategy, the property name `message` is mapped to the FK column `message_id`.
 
 :::info
 When `@MapsId` maps a whole scalar id, naming the owner id as `messageId`, `tenantId`, and so on is legal. That property is still a normal `@Id` property.

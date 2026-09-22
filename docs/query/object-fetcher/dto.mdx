@@ -10,7 +10,7 @@ Previously we introduced using object fetchers to flexibly control the shape of 
 
 Now we introduce an equivalent capability: querying DTO objects.
 
-Jimmer provides a [DTO language](../../object/view/dto-language) 
+Jimmer provides a [DTO language](../../object/view/dto-language.mdx) 
 
 :::tip
 This language is essentially another way to express object fetchers.
@@ -21,12 +21,12 @@ Using this language, developers can quickly define various data structure shapes
 In some cases, after the server queries data in a certain shape, it is not meant to be returned as an HTTP response, but rather used internally to drive subsequent complex business logic. This is an ideal scenario for this approach.
 
 :::caution
-Note that if the server queries data in a certain shape not for its own use, but directly as the HTTP response, it is more recommended to directly return the dynamic entity object and use the solutions in [Generate Client Code](../../client) to automatically generate client code with a great developer experience.
+Note that if the server queries data in a certain shape not for its own use, but directly as the HTTP response, it is more recommended to directly return the dynamic entity object and use the solutions in [Generate Client Code](../../client/index.mdx) to automatically generate client code with a great developer experience.
 :::
 
 ## Defining DTO Shapes 
 
-This article focuses on explaining how to query static DTO types, not a systematic introduction to the DTO language itself. Please refer to [Object section/DTO Mapping/DTO Language](../../object/view/dto-language) for the complete DTO language.
+This article focuses on explaining how to query static DTO types, not a systematic introduction to the DTO language itself. Please refer to [Object section/DTO Mapping/DTO Language](../../object/view/dto-language.mdx) for the complete DTO language.
 
 Assuming the fully qualified name of the `Book` class is `com.yourcompany.yourproject.model.Book`, you can
 
@@ -458,14 +458,14 @@ The DTOs discussed in this article are used to define object fetchers and map th
 Therefore, the configurations introduced in this section are specific to Output DTOs.
 :::
 
-In [Object Fetcher/Association Properties](./association), we introduced some specific configurations for association properties:
+In [Object Fetcher/Association Properties](./association.mdx), we introduced some specific configurations for association properties:
 
 1. BatchSize
 2. Association-level pagination
 3. Property filters
 4. Reference fetching methods
 
-In [Object Fetcher/Recursive Queries](./recursive), we introduced:
+In [Object Fetcher/Recursive Queries](./recursive.mdx), we introduced:
 
 1. Limit recursion depth
 2. Controlling whether each node is recursive
@@ -550,7 +550,7 @@ To limit the complexity of the DTO language, `!where` and `!orderBy` intentional
 
 1.  Supports `and` and `or`, as well as changing operator precedence through `()`.
 2.  Variables must be properties in the associated entity *(in this example, `Author`)* that can be mapped to database columns, i.e., scalar properties and association IDs.
-    > If the property is a [composite field](../../mapping/advanced/embedded), you can use the `.` chain to reference internal properties, such as `fullName.firstName`.
+    > If the property is a [composite field](../../mapping/advanced/embedded.mdx), you can use the `.` chain to reference internal properties, such as `fullName.firstName`.
 3.  Supports binary operators `=`, `<>`, `!=`, `<`, `<=`, `>`, `>=`, `like`, and `ilike`, where `<>` and `!=` are equivalent.
 4.  Supports unary operators `is null` and `is not null`.
 
@@ -617,7 +617,7 @@ Obviously, the design purpose is to control the complexity of the DTO language. 
     </TabItem>
     </Tabs>
 
-    As you can see, this type allows us to use the full capability of the [Jimmer DSL](../expression) to implement arbitrarily complex filtering and sorting logic.
+    As you can see, this type allows us to use the full capability of the [Jimmer DSL](../expression.mdx) to implement arbitrarily complex filtering and sorting logic.
 
 2.  Use the above Java/Kotlin class in the DTO declaration
 
@@ -661,7 +661,7 @@ Note: Just like object fetchers, fetch methods can only be specified for referen
 
 The available values are `SELECT`, `JOIN_IF_NO_CACHE`, and `JOIN_ALWAYS`; they
 have the same semantics as
-[`ReferenceFetchType`](./association#reference-fetch-type).
+[`ReferenceFetchType`](./association.mdx#reference-fetch-type).
 `JOIN_ALWAYS` automatically uses an inner join for a non-null reference and a
 left join for a nullable reference.
 

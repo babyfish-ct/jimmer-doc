@@ -7,7 +7,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 Use `createInsert` or `createUpsert` to write rows supplied by a typed
-[base query](../query/base-query). This is useful for importing query results,
+[base query](../query/base-query.mdx). This is useful for importing query results,
 copying data, and applying computed updates to many rows without constructing
 an entity object for every row.
 
@@ -73,7 +73,7 @@ needed for them, including through nested sources. To-many joins produce one
 source row per matching association, following normal SQL join semantics.
 
 The same source can be passed to `createUpsert` or to returning commands, and
-can be queried independently. See [Select an Entity Table Directly](../query/base-query#select-an-entity-table-directly)
+can be queried independently. See [Select an Entity Table Directly](../query/base-query.mdx#select-an-entity-table-directly)
 for query examples and the behavior of nested sources and set operations.
 An exported table remains bound to its source query and cannot be a mutation
 target. Use a separate target table object, as above. A plain table singleton
@@ -83,7 +83,7 @@ must first be exported by a base query before it can serve as a mutation source.
 
 A source can come from an entity query, an association query, a derived table,
 a CTE, a recursive CTE, or a union. Joins, filters, and aggregations belong in
-that query. A [typed tuple](../query/typed-tuple) gives its columns meaningful names.
+that query. A [typed tuple](../query/typed-tuple.mdx) gives its columns meaningful names.
 
 For a small example, declare the input row and create a rootless query containing
 one new store. The examples below assume the `BookStore` model uses a `Long` id:
@@ -347,7 +347,7 @@ update-only targets.
 
 Versions follow assignment semantics: there is no implicit optimistic-lock
 predicate or automatic increment. An increment must be written explicitly, as
-in the example above. See [Version Mode](./save-command/version-mode) for the
+in the example above. See [Version Mode](./save-command/version-mode.mdx) for the
 corresponding save-command configuration.
 
 ### Keys and Update Conditions
@@ -408,7 +408,7 @@ Insert uses Java `createInsert(...).returning(...)` or Kotlin
 `executeUpsertReturning` helpers that execute immediately.
 
 Returning supports a physical target property, a tuple of such properties, or
-a [typed-tuple mapper](../query/typed-tuple). It returns stored values after the
+a [typed-tuple mapper](../query/typed-tuple.mdx). It returns stored values after the
 mutation, including generated ids and defaults. It contains inserted rows and
 accepted updates, including accepted self-assignments. Skipped conflicts and
 updates rejected by `updateWhere` or a subtype discriminator are excluded.
@@ -471,7 +471,7 @@ materializes the required source values and delegates to the normal save pipelin
 For example, some conflict syntaxes cannot read a source value that has no insert
 assignment, and some dialects cannot return all accepted rows natively.
 
-Both paths preserve defaults, [transaction events](./trigger), and cache
+Both paths preserve defaults, [transaction events](./trigger.mdx), and cache
 invalidation for accepted mutations. Transaction-trigger configurations can
 require the materialized path to obtain old and new rows. Rejected updates and
 skipped inserts emit no mutation event or cache invalidation for the rejected row.
@@ -488,6 +488,6 @@ appropriate transaction isolation level or explicitly lock the required scope.
 Do not assume every supported command executes as one atomic SQL statement.
 :::
 
-For object or graph input, use a [save command](./save-command) instead. Its
-[assignment expressions](./save-command/assignment), [update conditions](./save-command/update-where),
-and [upsert mask](./save-command/upsert-mask) provide the corresponding controls.
+For object or graph input, use a [save command](./save-command/index.md) instead. Its
+[assignment expressions](./save-command/assignment.mdx), [update conditions](./save-command/update-where.mdx),
+and [upsert mask](./save-command/upsert-mask.mdx) provide the corresponding controls.

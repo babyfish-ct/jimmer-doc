@@ -11,17 +11,17 @@ In this section, we introduce how to map a relational database to entity model.
         -   [Nullability](./base/nullity.mdx)
   
     -   Advanced Mapping: 
-        -   [View Properties](./advanced/view/)
+        -   [View Properties](./advanced/view/index.md)
 
-        -   [Calculated Properties](./advanced/calculated/)
+        -   [Calculated Properties](./advanced/calculated/index.md)
 
-        -   [Remote Associations](./advanced/remote)
+        -   [Remote Associations](./advanced/remote.mdx)
 
-        -   [Key](./advanced/key)
+        -   [Key](./advanced/key.mdx)
         
-            Key is very important for [Save Command](../mutation/save-command/)
+            Key is very important for [Save Command](../mutation/save-command/index.md)
 
-        -   [OnDissociate](./advanced/on-dissociate)
+        -   [OnDissociate](./advanced/on-dissociate.mdx)
 
 -   For readers without ORM experience, you'll have to read slowly. 
 

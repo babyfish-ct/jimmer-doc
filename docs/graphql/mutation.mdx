@@ -45,12 +45,12 @@ input BookInput { ❷
 
 ## Define Jimmer Input DTO
 
-Jimmer Input DTOs are introduced in great detail in [Save Command/Input DTO](../mutation/save-command/input-dto), which will not be repeated here.
+Jimmer Input DTOs are introduced in great detail in [Save Command/Input DTO](../mutation/save-command/input-dto/index.md), which will not be repeated here.
 
 Jimmer provides two ways to define Input DTOs:
 
--   [Automatically generate Input DTOs using the DTO language](../object/view/dto-language) 
--   [Manually define Input DTOs based on MapStruct](../object/view/mapstruct)
+-   [Automatically generate Input DTOs using the DTO language](../object/view/dto-language.mdx) 
+-   [Manually define Input DTOs based on MapStruct](../object/view/mapstruct.mdx)
 
 Using the DTO language can achieve our goal very efficiently, so this article adopts this approach.
 
@@ -205,11 +205,11 @@ class BookStoreService(
 
 -   ❷ Use the static Input DTO type `BookInput` to allow users to pass only data structures of specified shapes to conform to [GraphQLInput](https://graphql.org/graphql-js/mutations-and-input-types/)
 
--   ❸ [Save command](../mutation/save-command) to save arbitrary data structures in one line
+-   ❸ [Save command](../mutation/save-command/index.md) to save arbitrary data structures in one line
 
     Here `bookRepository.save(input)` is actually shorthand for `bookRepository.save(input.toEntity())`.
 
     :::tip
-    No matter how simple or relatively complex the data structure defined by the `BookInput` type, it can be saved in one line. This is the core value of the [save command](../mutation/save-command) feature.
+    No matter how simple or relatively complex the data structure defined by the `BookInput` type, it can be saved in one line. This is the core value of the [save command](../mutation/save-command/index.md) feature.
     :::
 ```

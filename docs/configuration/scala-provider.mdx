@@ -8,14 +8,14 @@ import TabItem from '@theme/TabItem';
 
 ## Basic Concepts
 
-In previous documents, we have introduced how to [map enums](../mapping/advanced/enum), and how to use `@Serialized` to [map JSON](../mapping/advanced/json).
+In previous documents, we have introduced how to [map enums](../mapping/advanced/enum.mdx), and how to use `@Serialized` to [map JSON](../mapping/advanced/json.mdx).
 
 However, sometimes neither of these methods can meet our requirements. In this case, we can use `ScalarProvider`.
 
 :::tip
 `ScalarProvider` is the most low-level SPI of Jimmer for custom data types. 
 
-The [Enum Mapping](../mapping/advanced/enum) and [JSON Mapping](../mapping/advanced/json) we discussed before are actually Jimmer's built-in implementations of `ScalarProvider`.
+The [Enum Mapping](../mapping/advanced/enum.mdx) and [JSON Mapping](../mapping/advanced/json.mdx) we discussed before are actually Jimmer's built-in implementations of `ScalarProvider`.
 :::
 
 Multiple `ScalarProvider` can be registered for SqlClient. Each `ScalarProvider` tells Jimmer how to handle a custom data type.
@@ -41,7 +41,7 @@ There are two types of `ScalarProvider`:
     :::
 
 :::tip
-The `@Serialized` annotation discussed in [JSON Mapping](../mapping/advanced/json) can annotate both the return type of properties and entity properties. 
+The `@Serialized` annotation discussed in [JSON Mapping](../mapping/advanced/json.mdx) can annotate both the return type of properties and entity properties. 
 
 This is because the more low-level `ScalarProvider` has two types.
 :::

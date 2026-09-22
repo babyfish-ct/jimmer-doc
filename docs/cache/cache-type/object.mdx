@@ -286,7 +286,7 @@ println(books)
 
     The object fetcher in the code contains the many-to-one association `Book.store` and expects to query non-id properties of the associated object *(information that cannot be expressed by the foreign key of the current table)*, so Jimmer will query the associated object for all aggregate root objects.
 
-    Fortunately, the associated attribute `Book.store` is based on a real foreign key. The foreign key itself represents the id of the parent object. There is no need to obtain the associated object id through additional queries or [association cache](./association).
+    Fortunately, the associated attribute `Book.store` is based on a real foreign key. The foreign key itself represents the id of the parent object. There is no need to obtain the associated object id through additional queries or [association cache](./association.mdx).
 
     Suppose the foreign key `STORE_ID` of the 6 BOOK data has two distinct values after deduplication, 1 and 2.
     
@@ -311,7 +311,7 @@ println(books)
         ) 
     ```
     :::info
-    We only need the `ID` and `NAME` fields, but here all fields are queried, which is different from what was discussed earlier in [Object Fetcher](../../query/object-fetcher). Please view:
+    We only need the `ID` and `NAME` fields, but here all fields are queried, which is different from what was discussed earlier in [Object Fetcher](../../query/object-fetcher/index.md). Please view:
     
     <ViewMore buttonText="The difference compared to not enabling cache">
 
@@ -438,7 +438,7 @@ Finally, Jimmer concatenates the results of the two steps as the final data retu
 ## Cache Invalidation
 
 :::caution
-To use Jimmer's automatic cache invalidation, [triggers](../../mutation/trigger) need to be enabled first. 
+To use Jimmer's automatic cache invalidation, [triggers](../../mutation/trigger.mdx) need to be enabled first. 
 :::
 
 -   If BinLog trigger is enabled, modifying the database by any means can lead to Jimmer's cache consistency intervention. For example, directly execute the following SQL in the SQL IDE:

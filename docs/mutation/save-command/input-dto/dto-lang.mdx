@@ -9,7 +9,7 @@ import { ShortAssociation } from '@site/src/components/ShortAssociation';
 import { LongAssociation } from '@site/src/components/LongAssociation';
 import { ViewMore } from '@site/src/components/ViewMore';
 
-Jimmer provides [DTO language](../../../object/view/dto-language).
+Jimmer provides [DTO language](../../../object/view/dto-language.mdx).
 
 Developers can use this language to quickly define the shape of the Input DTO to be saved. After compilation:
 
@@ -28,9 +28,9 @@ This is the most efficient way to eliminate the pain of Input DTO explosion.
 ## Defining DTO Shape 
 
 This article focuses on explaining how to save static DTO types, not a systematic introduction to DTO language. 
-Please refer to [Object/DTO conversion/DTO Language](../../../object/view/dto-language) to know more.
+Please refer to [Object/DTO conversion/DTO Language](../../../object/view/dto-language.mdx) to know more.
 For reusing input DTOs as association property types and sharing property sets
-between input DTOs, see [DTO Composition](../../../object/view/composition).
+between input DTOs, see [DTO Composition](../../../object/view/composition.mdx).
 
 Assume the fully qualified name of the `Book` class is `com.yourcompany.yourproject.model.Book`. You can:
 
@@ -64,7 +64,7 @@ Assume the fully qualified name of the `Book` class is `com.yourcompany.yourproj
     :::info
     Input DTO shapes used as input parameters must be decorated with the `input` modifier.
     
-    The specific reasons are elaborated in [Object/DTO conversion/DTO Language](../../../object/view/dto-language) and not repeated here.
+    The specific reasons are elaborated in [Object/DTO conversion/DTO Language](../../../object/view/dto-language.mdx) and not repeated here.
     :::
 
 ## Auto-Generated DTO Types
@@ -170,7 +170,7 @@ data class BookInput(
 </TabItem>
 </Tabs>
 
--   ❶ If the id is designated some auto-generation strategy, it is not required. This is also a feature of save commands, see details in [Mutation/Save Command/Save Mode](../save-mode).
+-   ❶ If the id is designated some auto-generation strategy, it is not required. This is also a feature of save commands, see details in [Mutation/Save Command/Save Mode](../save-mode.mdx).
 
     :::info
     -   For Jimmer entities, `id` cannot be null. Missing `id` *(i.e. not assigning it)* represents the object does not have an `id`.

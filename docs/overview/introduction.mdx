@@ -190,7 +190,7 @@ Jimmer entities support two important features: dynamism and immutability
 
     Immer perfectly combines the advantages of immutable and mutable objects, with simple code, powerful functionality, and excellent performance. Therefore, Jimmer chose to port immer to the JVM ecosystem, and the project name is also a tribute to it. <ViewMore buttonText="See a quick demonstration" title="Immutable Objects Ported from immer"><ImmutableStep/></ViewMore>
 
-Reference links: [Dynamism](../object/dynamic), [Immutability](../object/immutable)
+Reference links: [Dynamism](../object/dynamic.mdx), [Immutability](../object/immutable/index.md)
 
 #### 3.1.2. Generated DTO Type
 
@@ -232,7 +232,7 @@ Jimmer objects allow certain properties to be missing, and an object lacking a p
 
     These low-cost, rapidly generated DTO types can be converted to and from Jimmer entity objects; therefore, any two DTO types can be converted to each other using Jimmer entities as an intermediate medium.
 
-Reference links: [DTO language](../object/view/dto-language)
+Reference links: [DTO language](../object/view/dto-language.mdx)
 
 ### 3.2. Fetcher
 
@@ -261,9 +261,9 @@ As mentioned earlier, you can directly use entity objects or the inexpensively g
 :::info
 Users should actively use this feature to query data structures of any complexity, rather than writing business code to retrieve data from different parts and then combine them into a whole, because Fetcher has advantages that are difficult to replicate with business code:
 
--   It can handle not only associated properties but also [complex calculated properties](../mapping/advanced/calculated/transient).
+-   It can handle not only associated properties but also [complex calculated properties](../mapping/advanced/calculated/transient.mdx).
 -   It can fully utilize Jimmer's <ViewMore buttonText="associated property caching" variant="text"><AssociationCache/></ViewMore> and <ViewMore buttonText="calculated property caching" variant="text"><CalculatedCache/></ViewMore> to significantly optimize the performance of querying complex data structures.
--   Entities support [remote associations](../spring/spring-cloud), i.e., ORM associations across microservice boundaries, with Jimmer automatically querying data from different microservices and assembling it into a single data structure.
+-   Entities support [remote associations](../spring/spring-cloud.mdx), i.e., ORM associations across microservice boundaries, with Jimmer automatically querying data from different microservices and assembling it into a single data structure.
 -   The entire deep-dive process is driven by breadth-first recursion to support batch query optimization.
 :::
 
@@ -292,7 +292,7 @@ No work is required from developers, as the ORM itself has powerful capabilities
 
 |Link|Description|
 |---|---|
-|[Quick Preview/Query Any Shape](../quick-view/fetch)|Quick preview: Query any shape|
+|[Quick Preview/Query Any Shape](../quick-view/fetch/index.mdx)|Quick preview: Query any shape|
 |[jimmer-examples/tree/main/java/jimmer-sql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql)|Example project, using Java and Jimmer to build REST services|
 |[jimmer-examples/tree/main/kotlin/jimmer-sql-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/jimmer-sql-kt)|Example project, using Kotlin and Jimmer to build REST services|
 |[jimmer-examples/tree/main/java/jimmer-sql-graphql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql-graphql)|Example project, using Java and Jimmer to build GraphQL services|
@@ -347,7 +347,7 @@ Next, we will demonstrate the basic usage of the Save Command through four cases
 
 |Link|Description|
 |---|---|
-|[Quick Preview/Query Any Shape](../quick-view/save)|Quick preview: Save any shape|
+|[Quick Preview/Query Any Shape](../quick-view/save/index.md)|Quick preview: Save any shape|
 |[jimmer-examples/tree/main/java/save-command](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/save-command)|Example project, using Java and Jimmer to demonstrate various scenarios of Save Command|
 |[jimmer-examples/tree/main/kotlin/save-command-kt](https://github.com/babyfish-ct/jimmer-examples/tree/main/kotlin/save-command-kt)|Example project, using Kotlin and Jimmer to demonstrate various scenarios of Save Command|
 |[jimmer-examples/tree/main/java/jimmer-sql](https://github.com/babyfish-ct/jimmer-examples/tree/main/java/jimmer-sql)|Example project, using Java and Jimmer to build REST services|
@@ -402,13 +402,13 @@ This more convenient feature is called `Super QBE`, Here, we adopt this feature 
 
 |Link|Description|
 |---|---|
-|[Quick Preview/Query Any Shape](../quick-view/dsl)|Quick preview: Arbitrary dynamic queries|
-|[Dynamic Table Join](../query/dynamic-join/)||
-|[Implicit Subquery](../query/implicit-subquery)||
-|[Intelligent Paging](../query/paging)|Not shown in this article|
-|[Native Expression](../query/native-sql)|Not shown in this article, how to embed native SQL fragments in a strongly-typed SQL DSL|
-|[Dynamic Ordering](../query/dynamic-order)|Not shown in this article|
-|[Super QBE](../query/super_qbe)||
+|[Quick Preview/Query Any Shape](../quick-view/dsl/index.md)|Quick preview: Arbitrary dynamic queries|
+|[Dynamic Table Join](../query/dynamic-join/index.md)||
+|[Implicit Subquery](../query/implicit-subquery.mdx)||
+|[Intelligent Paging](../query/paging/index.md)|Not shown in this article|
+|[Native Expression](../query/native-sql.mdx)|Not shown in this article, how to embed native SQL fragments in a strongly-typed SQL DSL|
+|[Dynamic Ordering](../query/dynamic-order.mdx)|Not shown in this article|
+|[Super QBE](../query/super_qbe.mdx)||
 
 Here, no links to relevant examples are provided because all examples involve using the SQL DSL.
 </details>
@@ -466,7 +466,7 @@ Jimmer supports two different types of triggers: BinLog triggers and Transaction
 </tbody>
 </table>
 
-Reference link: [Trigger](../mutation/trigger)
+Reference link: [Trigger](../mutation/trigger.mdx)
 
 ### 3.6. Cache
 
@@ -486,7 +486,7 @@ Jimmer's caching capability is very powerful, with the following 3 features:
 
     -   `id->computed result` caching, i.e., <ViewMore buttonText="Calculated Cache"><CalculatedCache/></ViewMore>
 
-        Calculated caching is designed for [complex computed properties](../mapping/advanced/calculated/transient), avoiding repeated calculations for multiple queries, which is also very helpful for Jimmer's core functionality of querying data structures of any complexity.
+        Calculated caching is designed for [complex computed properties](../mapping/advanced/calculated/transient.mdx), avoiding repeated calculations for multiple queries, which is also very helpful for Jimmer's core functionality of querying data structures of any complexity.
 
     -   Can also be combined with the permission system. Since users with different identities see different data in the database, they should also see different cached data, i.e., <ViewMore buttonText="Multi-View Cache"><MultiViewCache/></ViewMore>
 
@@ -508,7 +508,7 @@ Jimmer's caching capability is very powerful, with the following 3 features:
 
     <ViewMore buttonText="View the effect of cache consistency" title="Highly Automated Cache Consistency"><CacheConsistencyPanel/></ViewMore>
 
-Reference link: [Caching](../cache)
+Reference link: [Caching](../cache/index.mdx)
 
 ### 3.7. Global Filter
 
@@ -516,7 +516,7 @@ Global filters add inherent SQL filtering conditions to entities in a plugin man
 
 Global filters are very flexible and can easily integrate with any IoC framework *(such as Spring)*, allowing free access to business context information and thus implementing filtering logic that is closely integrated with the business.
 
-Reference link: [Global Filter](../query/global-filter)
+Reference link: [Global Filter](../query/global-filter/index.md)
 
 ### 3.8. Draft Interceptor
 
@@ -524,7 +524,7 @@ The Draft Interceptor is similar to the database's before-trigger, giving users 
 
 The Draft Interceptor is very flexible and can easily integrate with any IoC framework *(such as Spring)*, allowing free access to business context information and thus implementing data adjustment logic that is closely integrated with the business.
 
-Reference link: [Interceptor](../mutation/draft-interceptor)
+Reference link: [Interceptor](../mutation/draft-interceptor.mdx)
 
 ### 3.9. Logical Deletion
 
@@ -534,11 +534,11 @@ Logical deletion also provides a built-in Global Filter, which causes data marke
 
 Jimmer's logical deletion supports both entity tables and join tables.
 
-Reference link: [Logical Deletion of Entity Tables](../mapping/advanced/logical-deleted/entity), [Logical Deletion of Join Tables](../mapping/advanced/logical-deleted/join-table)
+Reference link: [Logical Deletion of Entity Tables](../mapping/advanced/logical-deleted/entity.mdx), [Logical Deletion of Join Tables](../mapping/advanced/logical-deleted/join-table.mdx)
 
 ### 3.10. Remote Associations
 
-Jimmer entities support [remote associations](../spring/spring-cloud), i.e., ORM associations across microservice boundaries.
+Jimmer entities support [remote associations](../spring/spring-cloud.mdx), i.e., ORM associations across microservice boundaries.
 
 When querying a specific complex data structure, if the shape of the data structure spans multiple microservices, Jimmer will automatically query data from different microservices and assemble it into a whole to return to the developer.
 
@@ -548,7 +548,7 @@ Remote Associations is just the first feature for microservice development in a 
 After Jimmer gradually matures and releases the official 1.0 version, more features will be added to the microservice technology system to abstract and simplify more tedious details in that system.
 :::
 
-Reference link: [Remote Association Mapping](../mapping/advanced/remote), [Remote Association Support](../spring/spring-cloud)
+Reference link: [Remote Association Mapping](../mapping/advanced/remote.mdx), [Remote Association Support](../spring/spring-cloud.mdx)
 
 ## 4. Ecosystem
 
@@ -586,4 +586,4 @@ Next, we will introduce Jimmer's third-party ecosystem, which are all contribute
 
 ## 5. Notes
 
-When developing with Jimmer, there is a note of caution that needs attention. Please refer to [here](./apt-ksp#notes)
+When developing with Jimmer, there is a note of caution that needs attention. Please refer to [here](./apt-ksp.mdx#notes)

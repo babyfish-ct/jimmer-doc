@@ -26,7 +26,7 @@ Thus, global filters can directly obtain parameters from the IOC framework, such
 :::caution
 1.  After repeated consideration, currently global filters only affect the main table of the top-level query, and have no effect on tables obtained from join operations and tables in subqueries.
 
-    This has no impact on [object fetchers](../object-fetcher) because [object fetchers](../object-fetcher) are not table Join operations.
+    This has no impact on [object fetchers](../object-fetcher/index.md) because [object fetchers](../object-fetcher/index.md) are not table Join operations.
 
 2.  Jimmer provides some simple APIs to query entities (or collections of entities) by id (or collection of ids). These APIs are exceptional and are not affected by global filters.
 :::

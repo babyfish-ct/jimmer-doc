@@ -6,7 +6,7 @@ title: Real and Fake Foreign Keys
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Through the discussion of [Association Mapping](./association), we know that association mapping requires a lot of foreign keys.
+Through the discussion of [Association Mapping](./association/index.md), we know that association mapping requires a lot of foreign keys.
 
 There are two types of foreign keys in Jimmer:
 
@@ -222,7 +222,7 @@ To avoid explicitly specifying the authenticity of foreign keys, use `@JoinColum
 
 Since `ForeignKeyType.AUTO` is the default configuration for the `@JoinColumn` annotation, an even better choice is to make no configuration at all.
 
-Therefore, the code is no different from the sample code in [Association Mapping](./association), so there is no need for sample code here.
+Therefore, the code is no different from the sample code in [Association Mapping](./association/index.md), so there is no need for sample code here.
 
 If the authenticity of the foreign key is not explicitly specified, whether the foreign key is real or fake is automatically determined by the following two steps:
 

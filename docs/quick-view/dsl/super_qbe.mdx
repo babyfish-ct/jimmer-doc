@@ -8,19 +8,19 @@ import TabItem from '@theme/TabItem';
 
 ## Can It Be Simpler
 
-From the [previous article](./feature), we know Jimmer SQL DSL is inherently designed for arbitrary complex dynamic queries, completely different from other frameworks' SQL DSLs that only provide strong typing experience.
+From the [previous article](./feature.mdx), we know Jimmer SQL DSL is inherently designed for arbitrary complex dynamic queries, completely different from other frameworks' SQL DSLs that only provide strong typing experience.
 
 But there are two issues:
 
-1. With more and more parameters introduced in the [previous article](./feature), the method signatures become less Java-friendly. We urgently need to encapsulate all the query parameters into one object.  
+1. With more and more parameters introduced in the [previous article](./feature.mdx), the method signatures become less Java-friendly. We urgently need to encapsulate all the query parameters into one object.  
 
-2. I'm really lazy. I want to achieve all the capabilities introduced in the [previous article](./feature), but I don't want to write those code. I just want to write one line of code.
+2. I'm really lazy. I want to achieve all the capabilities introduced in the [previous article](./feature.mdx), but I don't want to write those code. I just want to write one line of code.
 
-Jimmer's built-in [DTO language](../../object/view/dto-language) can quickly solve the above two problems.  
+Jimmer's built-in [DTO language](../../object/view/dto-language.mdx) can quickly solve the above two problems.  
 
 ## Define Specification DTO  
 
-Since in the article [Query Arbitrary Shape/Exposing Features/Return Output DTO](../fetch/export/dto), we have already had some understanding about the DTO language when introducing Output DTO, this article does not repeat it.
+Since in the article [Query Arbitrary Shape/Exposing Features/Return Output DTO](../fetch/export/dto.mdx), we have already had some understanding about the DTO language when introducing Output DTO, this article does not repeat it.
 
 1. Install the DTO language Intellij plugin: https://github.com/ClearPlume/jimmer-dto *(This step is not required but highly recommended)*  
 
@@ -194,4 +194,4 @@ class BookRepository(
 
 We can see that with only one line of code, complex dynamic queries can be achieved.    
 
-It has the same capabilities as the last example in the [previous article](./feature). No need to repeat here.
+It has the same capabilities as the last example in the [previous article](./feature.mdx). No need to repeat here.

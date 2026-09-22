@@ -27,7 +27,7 @@ Pagination requires executing two SQL queries:
 :::tip
 Jimmer's feature: The developer only needs to write the `data-query` *(actual `data-query` without limit and offset)*, and the framework automatically generates the `count-query`.  
 
-Not only can Jimmer automatically generate `count-query`, it can also optimize `count-query`. This optimization will be discussed in [next article](./unnecessary-join).
+Not only can Jimmer automatically generate `count-query`, it can also optimize `count-query`. This optimization will be discussed in [next article](./unnecessary-join.mdx).
 :::
 
 ## When Used with Spring Data  
@@ -39,7 +39,7 @@ When used with Spring Data, developers derive custom Repository interfaces from 
     :::caution
     This usage is too simple, hiding all details, and is not suitable for discussing pagination here. 
     
-    You can check [Spring Section/Spring Data Style/Abstract Methods](../../spring/repository/abstract) to learn how to implement pagination queries in this way.
+    You can check [Spring Section/Spring Data Style/Abstract Methods](../../spring/repository/abstract.mdx) to learn how to implement pagination queries in this way.
     :::
     
 -   Directly define default methods in the custom interface and implement the query logic yourself.
@@ -306,7 +306,7 @@ return new Page<>( ❺
 ```
 
 :::caution  
-To simplify the discussion, this pseudocode does not consider [reverse sorting optimization](./reverse-sorting).
+To simplify the discussion, this pseudocode does not consider [reverse sorting optimization](./reverse-sorting.mdx).
 :::
 
 -   ❶ Create the query, but do not execute it yet. I can call it the template query.
@@ -337,7 +337,7 @@ To simplify the discussion, this pseudocode does not consider [reverse sorting o
     - `withoutSortingAndPaging()`: The `count-query` does not need the sorting clause `order by` nor the paging clause *(such as H2's `limit ? offset ?`)*
     
     :::tip
-    Not only can Jimmer automatically generate `count-query`, it can also automatically optimize `count-query`, please refer to [Join Optimization](./unnecessary-join).
+    Not only can Jimmer automatically generate `count-query`, it can also automatically optimize `count-query`, please refer to [Join Optimization](./unnecessary-join.mdx).
     :::
   
 -   ❸ `limit(limit, offset)`: Based on the original template query without modification, generate the real `data-query` with pagination limits.

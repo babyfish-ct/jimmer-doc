@@ -399,7 +399,7 @@ Complex forms usually include associations *(such as orders and order details)*,
 
 No matter how complex, viewing this data structure as a whole, it can be saved with a single command.
 
-To make the example representative, we'll use [Input DTO](./input-dto) that hasn't been explained yet. Although the related content hasn't been covered yet, readers can guess its purpose.
+To make the example representative, we'll use [Input DTO](./input-dto/index.md) that hasn't been explained yet. Although the related content hasn't been covered yet, readers can guess its purpose.
 
 Using Jimmer's DTO language, define a type called `BookStoreInput`.
 
@@ -514,4 +514,4 @@ For this, Jimmer adopts a divide-and-conquer approach:
 
 - The save command itself serves as underlying support, accepting Jimmer's dynamic entities, providing absolute flexibility and unlimited possibilities.
 
-- Introducing [InputDTO](./input-dto), automatically generating static types similar to POJO, standardizing and limiting client behavior, and being responsible for accepting request data. Finally, it automatically transforms into an entity object tree, handled by the save command.
+- Introducing [InputDTO](./input-dto/index.md), automatically generating static types similar to POJO, standardizing and limiting client behavior, and being responsible for accepting request data. Finally, it automatically transforms into an entity object tree, handled by the save command.

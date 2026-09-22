@@ -65,9 +65,9 @@ interface Customer {
 </TabItem>
 </Tabs>
 
-Here `@JoinColumn` is not used together to explicitly specify the foreign key column name. Jimmer will deduce the column name corresponding to the `address` property based on the [naming strategy](../naming-strategy).
+Here `@JoinColumn` is not used together to explicitly specify the foreign key column name. Jimmer will deduce the column name corresponding to the `address` property based on the [naming strategy](../naming-strategy.mdx).
 
-If the default [naming strategy](../naming-strategy) is not overridden by the user, the foreign key column name of the `address` property is `ADDRESS_ID`. So the previous code is equivalent to: 
+If the default [naming strategy](../naming-strategy.mdx) is not overridden by the user, the foreign key column name of the `address` property is `ADDRESS_ID`. So the previous code is equivalent to: 
 
 Therefore, the above code is equivalent to the following:
 
@@ -155,9 +155,9 @@ interface Customer {
 </TabItem>
 </Tabs>
 
-Here, no properties are specified for `@JoinTable`. Jimmer will deduce the column names corresponding to the `address` property based on the [naming strategy](../naming-strategy). 
+Here, no properties are specified for `@JoinTable`. Jimmer will deduce the column names corresponding to the `address` property based on the [naming strategy](../naming-strategy.mdx). 
 
-If the default [naming strategy](../naming-strategy) is not overridden by the user, the deduced join table information is:
+If the default [naming strategy](../naming-strategy.mdx) is not overridden by the user, the deduced join table information is:
 
 -   Join table name: CUSTOMER_ADDRESS_MAPPING
 -   Join table foreign key column pointing to current entity: CUSTOMER_ID

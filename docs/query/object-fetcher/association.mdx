@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 import { ViewMore } from '@site/src/components/ViewMore';
 import FilterRef from './_filter-ref.md';
 
-In [last doc](./props) we introduced scalar property fetching. In this doc we discuss association fetching.
+In [last doc](./props.mdx) we introduced scalar property fetching. In this doc we discuss association fetching.
 
 ORM has two types of association properties:
 
@@ -1080,9 +1080,9 @@ Filters can not only filter associated objects, but also sort them. The principl
     -   Many-to-one
     -   Not null
 
-2.  After field filters are used, [association cache](../../cache/cache-type/association) for that field will be ignored. 
+2.  After field filters are used, [association cache](../../cache/cache-type/association.mdx) for that field will be ignored. 
 
-    To use the association cache, global filters supporting [multi-view cache](../../cache/multiview-cache) can be used.
+    To use the association cache, global filters supporting [multi-view cache](../../cache/multiview-cache/index.md) can be used.
 
 3.  A common mistake in real development (Java for example) is:
 
@@ -1223,7 +1223,7 @@ In the example above, we used `ReferenceFetchType.JOIN_ALWAYS`, which is one of 
 
 -   JOIN_IF_NO_CACHE:
 
-    -   If the association property to be fetched has enabled [association cache](../../cache/cache-type/association), equivalent to `SELECT`
+    -   If the association property to be fetched has enabled [association cache](../../cache/cache-type/association.mdx), equivalent to `SELECT`
 
     -   Otherwise, equivalent to `JOIN_ALWAYS`
 

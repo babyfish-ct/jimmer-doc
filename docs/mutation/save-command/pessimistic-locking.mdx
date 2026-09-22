@@ -25,7 +25,7 @@ To solve this problem, the save command allows users to enable pessimistic locki
 
 Before demonstrating pessimistic locks, we need to make the save command execute `2` above rather than `1`. An effective way is to enable in-transaction triggers:
 
-In-transaction triggers are a type of [trigger](../trigger) supported by Jimmer. Jimmer always queries the old data before modification through select operations to simulate the trigger effect.
+In-transaction triggers are a type of [trigger](../trigger.mdx) supported by Jimmer. Jimmer always queries the old data before modification through select operations to simulate the trigger effect.
 
 :::note
 In-transaction triggers are a feature that hasn't been introduced yet, however, readers don't need to pay too much attention to it. Here, we're just using it to ensure Jimmer adopts the query-before-modify strategy.

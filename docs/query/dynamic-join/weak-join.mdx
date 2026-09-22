@@ -14,7 +14,7 @@ However, sometimes we need to join two tables based on some business properties 
 
 For this scenario, you have two options:
 
--   Use [@JoinSql](../../mapping/advanced/join-sql) to declare a ManyToMany association unrelated to primary and foreign keys, then use the association property to perform the join
+-   Use [@JoinSql](../../mapping/advanced/join-sql.mdx) to declare a ManyToMany association unrelated to primary and foreign keys, then use the association property to perform the join
 
     :::info
     This approach is suitable when the corresponding join operation is needed by multiple business scenarios and has high reusability.
@@ -23,7 +23,7 @@ For this scenario, you have two options:
 -   Directly use the weak join explained in this article, without declaring any association properties between entities
 
     :::info
-    This approach is suitable when the corresponding join operation is only needed by some individual business scenarios and you don't want to define a [@JoinSql](../../mapping/advanced/join-sql) based association property in entities just for this purpose.
+    This approach is suitable when the corresponding join operation is only needed by some individual business scenarios and you don't want to define a [@JoinSql](../../mapping/advanced/join-sql.mdx) based association property in entities just for this purpose.
     :::
 
 ## Usage
@@ -128,7 +128,7 @@ private class BookAuthorJoin : KWeakJoin<Book, Author> {
 The reasons for the first two points will be explained later. 
 :::
 
-Developers can even use [NativeSQL expressions](../native-sql) to build more arbitrary join conditions, e.g. *(assuming MySQL is used here, calling the SQL function `substr`)*:
+Developers can even use [NativeSQL expressions](../native-sql.mdx) to build more arbitrary join conditions, e.g. *(assuming MySQL is used here, calling the SQL function `substr`)*:
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -172,7 +172,7 @@ private class BookAuthorJoin : KWeakJoin<Book, Author> {
 :::info
 Here, `Predicate.sql` in Java code and `sql` in Kotlin code are methods to mix native SQL snippets into the strongly typed Jimmer SQL DSL. 
 
-We have never introduced these before, please refer to [NativeSQL expressions](../native-sql).
+We have never introduced these before, please refer to [NativeSQL expressions](../native-sql.mdx).
 :::
 
 ### Use the Join Condition
@@ -234,7 +234,7 @@ val bookIds = sqlClient
         - Kotlin: `weakOuterJoin(BookAuthorJoin::class)`
 
 :::info
-We have introduced a feature called [Merge Conflict Join](./merge) before. It is important that `weakJoin` is compatible with it. 
+We have introduced a feature called [Merge Conflict Join](./merge.mdx) before. It is important that `weakJoin` is compatible with it. 
 
 For the same join source, if `weakJoin` is called multiple times with the same WeakJoin class *(the BookAuthorJoin class here)*, they can be merged into one join operation to avoid duplicate joins in the final SQL.
 

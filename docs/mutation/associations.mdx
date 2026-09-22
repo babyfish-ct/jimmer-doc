@@ -8,9 +8,9 @@ import TabItem from '@theme/TabItem';
 
 ## Overview
 
-First, the association table is hidden by the object model, with no direct corresponding entity type. This problem has been explained in [Query Association Table](../query/associations), so I won't repeat it here.
+First, the association table is hidden by the object model, with no direct corresponding entity type. This problem has been explained in [Query Association Table](../query/associations.mdx), so I won't repeat it here.
 
-In addition, in the [Save Command](./save-command) section, we introduced the save command. It can compare the existing data structure in the database with the new data structure the user wants to save. If a relation property based on the association table has changed, the association table will be modified.
+In addition, in the [Save Command](./save-command/index.md) section, we introduced the save command. It can compare the existing data structure in the database with the new data structure the user wants to save. If a relation property based on the association table has changed, the association table will be modified.
 
 Admittedly, the Save Command feature is very powerful, and modifying the association table is just a very small part of its capabilities. However, sometimes we just need a simple way to insert or delete data directly from the association table, we don't need the full capabilities of the Save Command.  
 
@@ -529,7 +529,7 @@ fun setAuthors(bookId: Long, authorIds: Collection<Long>) {
 It is obvious that dealing with it this way is very cumbersome.  
 
 :::tip
-When the business scenario is no longer simple addition or deletion, [Save Command](./save-command) is a better choice, as follows:
+When the business scenario is no longer simple addition or deletion, [Save Command](./save-command/index.md) is a better choice, as follows:
 :::
 
 <Tabs groupId="language">
@@ -566,7 +566,7 @@ fun setAuthors(bookId: Long, authorIds: Collection<Long>) {
 ## Insert Associations from a Query
 
 To insert many middle-table pairs supplied by a typed query, use
-[Insert and Upsert from Select](./insert-from-select). Association insertion
+[Insert and Upsert from Select](./insert-from-select.mdx). Association insertion
 supports conflict suppression and returning newly inserted pairs. Java accepts
 an `AssociationTable`; Kotlin provides association-property overloads.
 

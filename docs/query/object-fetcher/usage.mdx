@@ -415,7 +415,7 @@ The Annotation processor will automatically generate a Fetcher class for each en
     ```
 
 :::tip
-With the [dynamicity](../../object/dynamic) of Jimmer entities, there is no need to write additional DTOs to achieve diversified query business, just change the shape of the object fetcher.
+With the [dynamicity](../../object/dynamic.mdx) of Jimmer entities, there is no need to write additional DTOs to achieve diversified query business, just change the shape of the object fetcher.
 
 For the output data of the query, eliminating <ViewMore buttonText="DTO explosion problem"><DtoExplosion/></ViewMore> can greatly improve server-side productivity.
 :::
@@ -428,8 +428,8 @@ When object fetchers are used to fetch association properties, they are similar 
 
     -   Fetching collection associations [does not break paginated queries](https://tech.asimio.net/2021/05/19/Fixing-Hibernate-HHH000104-firstResult-maxResults-warning-using-Spring-Data-JPA.html) like [JPA's EntityGraph](https://www.baeldung.com/jpa-entity-graph).
     
-    -   More friendly to [association cache](../../cache/cache-type/association) and [remote associations](../../spring/spring-cloud).
+    -   More friendly to [association cache](../../cache/cache-type/association.mdx) and [remote associations](../../spring/spring-cloud.mdx).
     
 -   JPA's EntityGraph only controls association properties, but object fetchers can control any properties, same as GraphQL, with precision down to each property.
   
--   For infinite recursive structures caused by self-associated properties, object fetchers support [recursive query](./recursive).
+-   For infinite recursive structures caused by self-associated properties, object fetchers support [recursive query](./recursive.mdx).

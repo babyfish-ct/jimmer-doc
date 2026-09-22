@@ -70,9 +70,9 @@ Batch commands support the same configuration and expose acceptance per item.
 
 ## Combine with Assignments and Optimistic Locking
 
-An [assignment expression](./assignment) defines the value written by an
+An [assignment expression](./assignment.mdx) defines the value written by an
 accepted update. `setUpdateWhere` decides whether that update is eligible.
-It remains effective even when an [upsert mask](./upsert-mask) selects no ordinary
+It remains effective even when an [upsert mask](./upsert-mask.mdx) selects no ordinary
 update assignments.
 
 `setOptimisticLock` has a different failure policy: its failed check throws the
@@ -97,6 +97,6 @@ Capable dialects put the predicate directly into the update branch. A native
 When native conditional upsert is unavailable, the save pipeline can check the
 condition through a query before DML. The fallback does not provide an implicit
 concurrency guarantee across those statements. Use suitable transaction isolation
-or [pessimistic locking](./pessimistic-locking) when concurrent changes must be excluded.
+or [pessimistic locking](./pessimistic-locking.mdx) when concurrent changes must be excluded.
 
-See [Save Result Fetching](./returning#acceptance) for the meaning of `isAccepted`.
+See [Save Result Fetching](./returning.mdx#acceptance) for the meaning of `isAccepted`.

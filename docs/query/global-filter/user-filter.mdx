@@ -405,7 +405,7 @@ This will lead to:
 -   Dependent calculated properties also cannot enable <ViewMore buttonText="Calculated Cache"><CalculatedCache/></ViewMore>
 
 To solve this problem, Jimmer supports <ViewMore buttonText="Multi-View Cache"><MultiViewCache/></ViewMore>, but the cost is that related global filters must implement the `CacheableFilter`/`KCacheableFilter` interface. 
-This part of the content is explained in detail in the [Cache/Multi-view Cache/User Defined Cacheable Filters](../../cache/multiview-cache/user-filter) article later, and will not be repeated here.
+This part of the content is explained in detail in the [Cache/Multi-view Cache/User Defined Cacheable Filters](../../cache/multiview-cache/user-filter.mdx) article later, and will not be repeated here.
 
 ### AssociationIntegrityAssuranceFilter 
 
@@ -553,4 +553,4 @@ Once a filter inherits `ShardingFilter` or `KShardingFilter`, these simple APIs 
 
 When user-defined filters and cache are used together, a problem called "multi-view cache" is involved.
 
-Since we haven't introduced cache yet, we'll just make a brief note here. Please refer to [Cache/Multi-view Cache](../../cache/multiview-cache) for details.
+Since we haven't introduced cache yet, we'll just make a brief note here. Please refer to [Cache/Multi-view Cache](../../cache/multiview-cache/index.md) for details.

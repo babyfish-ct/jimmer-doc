@@ -99,9 +99,9 @@ Note:
 
 -   Jimmer annotations rather than Jackson annotations are used here, because:  This is not only an adjustment of the serialization framework Jackson, but also a useful adjustment of
 
-    - [Automatic client/server integration](../../client)
+    - [Automatic client/server integration](../../client/index.mdx)
     
-    - [DTO language](../../object/view/dto-language)
+    - [DTO language](../../object/view/dto-language.mdx)
     
 -   No need to consider null values ​​inside Converter, null values ​​will never be passed as an argument to any Converter method.
 :::  
@@ -148,7 +148,7 @@ We can see that the serialized id is a string rather than a number, thus avoidin
 ### Automatically Applied to IdView Properties  
 
 :::info
-[@IdView properties](../advanced/view/id-view) is advanced mapping content that will be explained later. Readers can skip this section for now and come back later.  
+[@IdView properties](../advanced/view/id-view.mdx) is advanced mapping content that will be explained later. Readers can skip this section for now and come back later.  
 :::  
 
 <Tabs groupId="language">
@@ -246,7 +246,7 @@ We can see that all elements of the serialized `bookIds` property are strings ra
 ### Automatically Applied to DTO  
 
 :::info  
-[DTO](../../object/view/dto-language) is advanced mapping content that will be explained later. Readers can skip this section for now and come back later.
+[DTO](../../object/view/dto-language.mdx) is advanced mapping content that will be explained later. Readers can skip this section for now and come back later.
 :::  
 
 In the `src/main/dto` directory, create any file with the extension `.dto` and edit its code as follows  

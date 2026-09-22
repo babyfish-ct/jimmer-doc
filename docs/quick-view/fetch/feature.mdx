@@ -122,13 +122,13 @@ class BookRepository(
 
     In actual projects, the object is a global object. This chapter document is used for quick preview and does not introduce details. Readers can ignore specific details for the time being and just know that `sqlClient` is the API entry point.  
 
--   The purpose of this article is to control the format of returned objects, not to introduce complex query conditions *(this part of the content is introduced in [Quick Preview/Arbitrary Dynamic Queries](../dsl))*.  
+-   The purpose of this article is to control the format of returned objects, not to introduce complex query conditions *(this part of the content is introduced in [Quick Preview/Arbitrary Dynamic Queries](../dsl/index.md))*.  
 
     So these two methods symbolically use `Book.id` and `Book.name` as filters.  
 
 -   Jimmer is technically neutral, but using Spring-style code often serves to simplify explanation, so this example uses Spring-style writing.  
 
-    However, for convenience of non-Spring users to read, it deliberately does not use [Jimmer support for Spring Data](../../spring/repository) here, but uses the relatively primitive injection of `sqlClient`, which reduces interference from Spring to a minimum.  
+    However, for convenience of non-Spring users to read, it deliberately does not use [Jimmer support for Spring Data](../../spring/repository/index.md) here, but uses the relatively primitive injection of `sqlClient`, which reduces interference from Spring to a minimum.  
 
 -   `Tables.BOOK_TABLE` in Java code is code that Jimmer automatically generates at compile time.  
 

@@ -8,7 +8,7 @@ import TabItem from '@theme/TabItem';
 
 ## Non-Structural Design Example  
 
-Through the content related to [Association Mapping](../base/association), it is not difficult to find that all associations are based on `@JoinColumn` and `@JoinTable` *(may be omitted)*.
+Through the content related to [Association Mapping](../base/association/index.md), it is not difficult to find that all associations are based on `@JoinColumn` and `@JoinTable` *(may be omitted)*.
 
 Although Jimmer supports fake foreign keys *(foreign keys in the developer's mind but without corresponding foreign key constraints in the database)*, all the association mappings we have discussed so far are based on 3NF design of relational databases.
 
@@ -116,7 +116,7 @@ The SQL expression used in `@JsonSql` represents the join condition, where:
 -   `%target_alias`: A special token defined by Jimmer representing the alias of the target table *(`author` table in this example)* 
 
 :::caution
-ORM automatically generates SQL *(which is very important for dynamic queries, especially for ORMs like Jimmer that first proposed the [Dynamic Join](../../query/dynamic-join) concept)*, and users cannot interfere with the aliases of tables in the final SQL.
+ORM automatically generates SQL *(which is very important for dynamic queries, especially for ORMs like Jimmer that first proposed the [Dynamic Join](../../query/dynamic-join/index.md) concept)*, and users cannot interfere with the aliases of tables in the final SQL.
 
 So using `%alias` and `%target_alias` here is the only way.
 :::
@@ -161,11 +161,11 @@ interface Author {
 :::warning
 Unless legacy database compatibility is required, do not perform non-structural design and map it with `@JoinSql`, because non-structural many-to-many associations have many limitations:
 
--   Cannot be used as [Remote Association](./remote)
+-   Cannot be used as [Remote Association](./remote.mdx)
 
--   Cannot participate in [Dynamic Join Optimization](../../query/dynamic-join/optimization) 
+-   Cannot participate in [Dynamic Join Optimization](../../query/dynamic-join/optimization.mdx) 
 
--   Cannot use [Association Cache](../../cache/cache-type/association)
+-   Cannot use [Association Cache](../../cache/cache-type/association.mdx)
 
--   Cannot be saved as part of data structure by [Save Command](../../mutation/save-command). In fact, if the data structure to be saved contains non-structural associations, it will cause exceptions.
+-   Cannot be saved as part of data structure by [Save Command](../../mutation/save-command/index.md). In fact, if the data structure to be saved contains non-structural associations, it will cause exceptions.
 :::

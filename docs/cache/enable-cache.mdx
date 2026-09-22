@@ -108,13 +108,13 @@ Jimmer calls this interface to initialize caches for types and properties. Users
 
     -   `createAssociatedIdListCache`: For one-to-many or many-to-many associations.
 
-    The parameter specifies an [association property](../mapping/base/association). If you want to enable association cache for it, create and return the cache; otherwise return null.
+    The parameter specifies an [association property](../mapping/base/association/index.md). If you want to enable association cache for it, create and return the cache; otherwise return null.
 
     <ViewMore buttonText="Association cache"><AssociationCache/></ViewMore> refers to mapping id to associated id or associated id collection.
 
 -   `createResolverCache`: Enable calculated cache
 
-    The parameter specifies a [complex calculated property](../mapping/advanced/calculated/transient). If you want to enable calculated cache for it, create and return the cache; otherwise, return null.
+    The parameter specifies a [complex calculated property](../mapping/advanced/calculated/transient.mdx). If you want to enable calculated cache for it, create and return the cache; otherwise, return null.
 
     <ViewMore buttonText="Computed cache"><CalculatedCache/></ViewMore> refers to mapping id to calculated result.
 
@@ -222,7 +222,7 @@ public class ChainCacheBuilder<K, V> {
 
     Almost all in-process JVM caches have automatic loading capabilities, such as [Caffeine](https://github.com/ben-manes/caffeine) or Guava Cache used in the above code.
 
--   ❷ The code is only used by [multi-view caches](./multiview-cache). Readers can ignore it for now.
+-   ❷ The code is only used by [multi-view caches](./multiview-cache/index.md). Readers can ignore it for now.
 
 -   ❸ `org.babyfish.jimmer.sql.cache.chain.SimpleBinder` is an interface. Any cache technology without automatic value loading behavior can be adapted through this interface.
 
@@ -241,7 +241,7 @@ If using Jimmer's SpringBoot Starter, you can use the following three cache tech
 |org.babyfish.jimmer.spring.cache.RedisHashBinder|org.babyfish.jimmer.sql.cache.chain.SimpleBinder.Parameterized|Yes|
 
 :::note
-[Multi-view caches](./multiview-cache) will be explained in a subsequent article. Please ignore them for now.
+[Multi-view caches](./multiview-cache/index.md) will be explained in a subsequent article. Please ignore them for now.
 :::
 
 ## Configuring `CacheFactory` 
@@ -323,7 +323,7 @@ val sqlClient = newKSqlClient {
 Earlier we mentioned that if using Jimmer's SpringBoot Starter, you can use the ready-made `org.babyfish.jimmer.spring.cache.RedisValueBinder` without having to adapt Redis yourself.
 
 :::note
-`RedisHashBinder` is related to [multi-view caches](./multiview-cache) and will not be discussed in this article.
+`RedisHashBinder` is related to [multi-view caches](./multiview-cache/index.md) and will not be discussed in this article.
 :::
 
 To build `RedisValueBinder`, you need a [RedisOperations\<String, byte[]>](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/core/RedisOperations.html).

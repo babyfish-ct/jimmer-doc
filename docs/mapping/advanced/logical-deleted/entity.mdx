@@ -17,7 +17,7 @@ Once a logical deletion property is configured for an entity:
 -   By default, all SQL queries against the entity will be automatically appended with a `where logicalDeleteFlag <> already deleted` condition to create the illusion that some data has been deleted. 
 
 :::info
-This doc only covers the mapping configuration of the logical deletion flag field. For how to use the logical deletion functionality, see [Global Filters / Logical Deletion](../../../query/global-filter/logical-deleted).
+This doc only covers the mapping configuration of the logical deletion flag field. For how to use the logical deletion functionality, see [Global Filters / Logical Deletion](../../../query/global-filter/logical-deleted.mdx).
 :::
 
 ## Usage
@@ -355,7 +355,7 @@ Where
 
 ## Multi-Version Data  
 
-Logical deletion does not actually delete data, it only hides the data. This means that data appears in multiple versions. This issue is also described in [Key / Multi-version Support](../key#multi-version-support).  
+Logical deletion does not actually delete data, it only hides the data. This means that data appears in multiple versions. This issue is also described in [Key / Multi-version Support](../key.mdx#multi-version-support).  
 
 Take the example of long type logical deletion that supports multiple versions  
 

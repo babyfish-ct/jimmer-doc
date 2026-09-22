@@ -19,5 +19,5 @@ If you want to define associated Id properties, please
 
 - First complete the association mapping according to this chapter
 
-- Then add associated Id properties according to [IdView](../../advanced/view/id-view)
+- Then add associated Id properties according to [IdView](../../advanced/view/id-view.mdx)
 :::

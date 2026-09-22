@@ -102,7 +102,7 @@ None of the SQL conditions took effect, and all the table joins were not actuall
 referenced by other SQL expressions, so any unused join objects will be ignored.
 :::
 
-生成的SQL如下
+The generated SQL is as follows
 
 ```csharp
 select
@@ -118,7 +118,7 @@ from BOOK tb_1_
 
 ## Usage 2: Specify arguments
 
-如果参数`storeName`和`storeWebsite`都非null
+If both storeName and storeWebsite are non-null
 
 <Tabs groupId="language">
 <TabItem value="java" label="Java">
@@ -149,7 +149,7 @@ All conflicting table joins will be automatically merged, and in the end there w
 only be one JOIN in the generated SQL, without duplication of JOINs.
 :::
 
-生成的SQL如下
+The generated SQL is as follows
 
 ```csharp
 select

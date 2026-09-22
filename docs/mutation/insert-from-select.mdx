@@ -65,6 +65,13 @@ There is no `get_1()`/`_1` wrapper. Reverse projection propagation exports the
 columns required by the mutation, so unused properties such as `website` are
 not selected. The filter still determines which rows participate.
 
+Mappings can also navigate source associations, for example
+`selectedStores.asTableEx().books().name()` in Java or
+`sourceTable.asTableEx().books.name` in Kotlin. These joins are added to the
+consuming query; the source automatically exports the ID or foreign-key columns
+needed for them, including through nested sources. To-many joins produce one
+source row per matching association, following normal SQL join semantics.
+
 The same source can be passed to `createUpsert` or to returning commands, and
 can be queried independently. See [Select an Entity Table Directly](../query/base-query.mdx#select-an-entity-table-directly)
 for query examples and the behavior of nested sources and set operations.

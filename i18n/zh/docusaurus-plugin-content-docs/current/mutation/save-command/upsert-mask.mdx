@@ -66,9 +66,13 @@ sqlClient.save(book) {
 `forbidUpdate()`让upsert更新分支不选择任何实体属性赋值。向便捷形式的`setUpsertMask(...)`
 重载显式传入空数组，含义相同。
 
-这不会把操作改成`INSERT_IF_ABSENT`。方言仍可能为了获取id、返回数据行或保持其他保存语义而
-执行自赋值SQL，这样的SQL可能触发数据库触发器。有效的`setUpdateWhere`仍然决定是否接受匹配
-分支。如果业务意图是跳过已有行，请使用[保存模式`INSERT_IF_ABSENT`](./save-mode)。
+这不会把操作改成`INSERT_IF_ABSENT`：已有对象仍然可以被接受并保存其关联。如果不需要执行
+SQL更新，对象可以被接受，而其自身表的影响行数为零。方言仍可能为了获取id、返回数据行或保持
+其他保存语义而执行自赋值SQL，这样的SQL可能触发数据库触发器。有效的`setUpdateWhere`仍然
+决定是否接受匹配分支。
+
+接受状态和空更新mask都不保证锁定已有行。并发契约请参阅[保存模式](./save-mode#控制upsert的更新)。
+如果希望拒绝发生冲突的根对象，请使用`INSERT_IF_ABSENT`。
 
 ## 配置两个分支
 

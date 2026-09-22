@@ -70,12 +70,16 @@ sqlClient.save(book) {
 branch. An explicitly empty array passed to the convenience `setUpsertMask(...)`
 overloads has the same meaning.
 
-This does not turn the operation into `INSERT_IF_ABSENT`. The dialect may still
-emit a self-assignment to fetch an id, return a row, or preserve other save
-semantics. Such SQL can fire database triggers. An effective `setUpdateWhere`
-still decides whether the matched branch is accepted. Use
-[save mode `INSERT_IF_ABSENT`](./save-mode.mdx) when the intended operation is to skip
-an existing row.
+This does not turn the operation into `INSERT_IF_ABSENT`: an existing object can
+still be accepted and its associations saved. If no SQL update is needed, the
+object can be accepted with zero affected rows for its own table. The dialect
+may still emit a self-assignment to fetch an id, return a row, or preserve other
+save semantics. Such SQL can fire database triggers. An effective `setUpdateWhere`
+still decides whether the matched branch is accepted.
+
+Neither acceptance nor an empty update mask guarantees a lock on the existing
+row. See [save modes](./save-mode#control-an-upsert-update) for the concurrency
+contract. Use `INSERT_IF_ABSENT` when a conflicting root object should be rejected.
 
 ## Configure Both Branches
 

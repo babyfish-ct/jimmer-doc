@@ -1526,5 +1526,14 @@ Jimmer会先对这些对象按照格式分组，再对每一组实施上述所�
 保存模式决定插入/更新行为。要限制冲突时修改的属性，使用[upsert mask](./upsert-mask)。
 要根据数据库值和输入值跳过更新，使用[setUpdateWhere](./update-where)。
 
-`forbidUpdate()`不选择实体属性更新赋值，但不等于`INSERT_IF_ABSENT`，因为保存语义仍可能
-要求自赋值。应检查[isAccepted](./returning#acceptance)，而不是从影响行数推断接受状态。
+`forbidUpdate()`不选择实体属性更新赋值。即使不需要执行SQL更新，`UPSERT`仍然可以接受已有
+对象并继续保存其关联。相比之下，`INSERT_IF_ABSENT`会拒绝发生冲突的根对象。应检查
+[isAccepted](./returning#acceptance)，而不是从影响行数推断接受状态。
+
+`UPSERT`不保证对未变化的根行执行SQL更新，也不保证持有该行的锁直到事务结束。例如，保存
+只包含id和authors集合的书籍时，可以只修改关联表，而不查询或更新书籍行。仅仅把对象图的保存
+放在事务中，并不能阻止另一个事务在关联保存之前删除这个未被操作的根行。
+
+为了获取id、返回已有字段或判断更新条件，仍然可能需要技术性的自赋值（fake update）。因此，
+请求结果字段可能改变SQL、影响行数、触发器执行以及锁行为。不要依赖这个实现细节来锁定根行；
+显式保存指令锁定的作用范围请参阅[悲观锁](./pessimistic-locking)。

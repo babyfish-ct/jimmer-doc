@@ -147,7 +147,7 @@ export const ShortAssociation: FC = memo(() => {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={onDialogClose}>关闭</Button>
+                    <Button onClick={onDialogClose}>{isZh ? "关闭" : "Close"}</Button>
                 </DialogActions>
             </Dialog>
         </Paper>

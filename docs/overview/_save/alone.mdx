@@ -36,7 +36,7 @@ public int saveBook(
 ```kotlin
 @PutMapping("/book")
 fun saveBook(
-    @RequestBody input: Book
+    @RequestBody input: BookInput
 ): Int =
     sqlClient
         .save(input)

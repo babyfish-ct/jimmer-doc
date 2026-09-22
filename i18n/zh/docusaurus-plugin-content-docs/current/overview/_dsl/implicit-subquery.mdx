@@ -78,7 +78,7 @@ class BookRepository(
                     gender `eq?` authorGender
                 }
             }
-            .select(table.fetch(table))
+            .select(table.fetch(fetcher))
             .execute()
 }
 ```

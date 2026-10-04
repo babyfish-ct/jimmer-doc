@@ -64,10 +64,31 @@ Apt/Ksp是行业内的标准技术，Java IDE会给予支持。
 -   大部分情况下，你的修改都会包含Java或Kotlin代码的变化，
     例如，实体类型变化，或Web Controller变化 *(Jimmer有自己的OpenAPI和TypeScript生成的实现)*。这时只需点击IDE的Run或Debug按钮运行一次，无需全量编译，就可以触发所有的预编译行为，自动生成的源代码和资源文件都会自动变化
 
--   少部分情况下，如果仅仅修改DTO文件，即，除了DTO文件外，同一个工程内没有任何Java或Kotlin源码变动，这时，你有三个选择
-    -   采用配套的DTO插件
-    -   全量编译，maven或gradle命令，或IDE的Rebuild按钮，都可以达到这个目的
-    -   删除受影响工程的编译输出目录后，再点击IDE的Run或Debug按钮
+对于使用 Gradle 构建的 Kotlin/JVM 项目，请在每个包含 DTO 文件的模块中，将 DTO 文件注册为 KSP 任务的输入：
+
+```kotlin
+tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+    val dtoDirectory = if (name == "kspTestKotlin") "src/test/dto" else "src/main/dto"
+    inputs.files(fileTree(dtoDirectory) { include("**/*.dto") })
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+}
+```
+
+上述配置以惰性方式配置 KSP2 任务；没有 KSP 任务的编译无需额外处理。
+
+如果配置了 `jimmer.dto.dirs` 或 `jimmer.dto.testDirs`，请使用实际配置的目录替换上述默认目录。
+文件树会跟踪文件修改、新增、重命名和删除，包括删除最后一个 DTO 文件；目录不存在也不会报错。
+输入未变化时，Gradle 仍然可以跳过代码生成。
+
+如果没有注册这些输入，仅修改 `.dto` 文件时，`kspKotlin` 可能仍显示 `UP-TO-DATE`，保留旧的生成类。
+例如，在 DTO 文件中新增继承属性后，生成类可能看起来没有变化，但重新生成时这些属性是受支持的。
+切换 JDK 或 KSP 版本也可能使旧输出失效，从而让字段重新出现；仅凭这一现象不能证明存在版本兼容问题。
+
+修改 DTO 后请运行 Gradle 构建。如果 IDE 使用自身的构建系统而不是 Gradle，上述任务输入配置不会生效。
+此时可以使用配套的 DTO 插件，或显式运行 Gradle。`gradle clean build` 可以帮助判断是否存在旧输出，
+但注册 DTO 输入后，无需每次都执行 clean 构建。
+
+对于其他构建方式，仅修改 DTO 文件时，可以使用配套的 DTO 插件或执行 clean 后重新构建。
 
 ## Java代码的两种风格
 

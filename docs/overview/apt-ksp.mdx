@@ -61,12 +61,32 @@ Since Jimmer is a compile-time framework, and considering that not all users are
 
 -   In most cases, your modifications will include changes to Java or Kotlin code, such as changes in entity types or Web Controller*(Jimmer has its own implementations for OpenAPI and TypeScript generation)*. In this case, you only need to click the IDE's `Run` or `Debug` button once, without requiring a full compilation, to trigger all pre-compilation behaviors, the automatically generated source code and resource files will update automatically.
 
--   In rare cases, if you only modify DTO files, meaning there are no Java or Kotlin source code changes within the same project except for the DTO files, you have three options:
+For Kotlin/JVM projects built with Gradle, register DTO files as inputs of the KSP tasks in each module that owns DTO files:
 
-    -   Use the companion DTO plugin
-    -   Perform a full compilation using maven or gradle commands, or the IDE's `Rebuild` button, which can achieve this purpose
-    -   Delete the affected project's compilation output directory, then click the IDE's `Run` or `Debug` button`
-    
+```kotlin
+tasks.withType<com.google.devtools.ksp.gradle.KspAATask>().configureEach {
+    val dtoDirectory = if (name == "kspTestKotlin") "src/test/dto" else "src/main/dto"
+    inputs.files(fileTree(dtoDirectory) { include("**/*.dto") })
+        .withPathSensitivity(PathSensitivity.RELATIVE)
+}
+```
+
+This configures KSP2 tasks lazily; compilations without a KSP task need no special handling.
+
+If you configure `jimmer.dto.dirs` or `jimmer.dto.testDirs`, use those directories instead of the defaults above.
+File trees track changes, additions, renames and deletions, including removal of the last DTO file.
+They also allow a DTO directory to be absent. Unchanged inputs still allow Gradle to skip generation.
+
+Without these inputs, editing only a `.dto` file can leave `kspKotlin` `UP-TO-DATE` and preserve an older generated class.
+For example, selecting inherited properties in the DTO file may appear to have no effect even though a fresh generation supports them.
+A JDK or KSP version change can invalidate the old output and make the fields appear; this alone does not prove a version compatibility problem.
+
+Run the Gradle build after editing DTO files. If the IDE uses its own build system instead of Gradle, these task inputs do not apply.
+Use the companion DTO plugin or run Gradle explicitly. A `gradle clean build` is useful for diagnosing stale output,
+but repeated clean builds are unnecessary once DTO inputs are registered.
+
+For other build setups, use the companion DTO plugin or perform a clean rebuild when only DTO files have changed.
+
 ## Two Styles of Java Code
 
 Unlike the Kotlin API, the Java API cannot avoid to directly use automatically generate types in user code. Let's compare the following:

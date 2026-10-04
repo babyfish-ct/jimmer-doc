@@ -53,10 +53,15 @@ import { VersionBadgeAdmonition } from '@site/src/components/VersionBadgeAdmonit
     </TabItem>
     <TabItem value="kotlin_gradle" label="Kotlin(Gradle.kts)">
 
+    对于 Kotlin/JVM 项目，请使用与项目 Kotlin 版本兼容的 KSP2 版本。
+    在定义实体或 DTO 文件的每个模块中添加以下配置：
+
     ```kotlin title="build.gradle.kts"
+    import com.google.devtools.ksp.gradle.KspAATask
+
     plugins {
         // 添加ksp插件
-        id("com.google.devtools.ksp") version "1.7.10-1.0.6"
+        id("com.google.devtools.ksp") version "<ksp-version>"
 
         ...省略其他插件...
     }
@@ -69,6 +74,13 @@ import { VersionBadgeAdmonition } from '@site/src/components/VersionBadgeAdmonit
         ...省略其他依赖...
     }
 
+    // 仅修改 .dto 文件时也重新生成 DTO。
+    tasks.withType<KspAATask>().configureEach {
+        val dtoDirectory = if (name == "kspKotlin") "src/main/dto" else "src/test/dto"
+        inputs.files(fileTree(dtoDirectory) { include("**/*.dto") })
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+    }
+
     // 将生成的代码添加到编译路径中。
     // 没有这个配置，gradle命令仍然可以正常执行，
     // 但是, Intellij无法找到生成的源码。
@@ -78,6 +90,10 @@ import { VersionBadgeAdmonition } from '@site/src/components/VersionBadgeAdmonit
         }
     }
     ```
+
+    如果配置了 `jimmer.dto.dirs` 或 `jimmer.dto.testDirs`，请使用实际配置的目录替换上述默认目录。
+    文件树会跟踪 DTO 文件的修改、新增和删除；输入未变化时，任务仍可保持 `UP-TO-DATE`。
+    修改 DTO 后请执行 Gradle 构建；不通过 Gradle 执行的 IDE 构建不使用上述配置。
 
     </TabItem>
     </Tabs>
@@ -113,7 +129,7 @@ import { VersionBadgeAdmonition } from '@site/src/components/VersionBadgeAdmonit
         id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
         // 也可以使用 '+' 字符代表从 '+' 字符开始匹配最新的版本号
         // 添加ksp插件
-        id("com.google.devtools.ksp") version "1.7.10+"
+        id("com.google.devtools.ksp") version "<ksp-version>"
 
         ... 省略其它插件 ...
     }

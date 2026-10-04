@@ -53,10 +53,15 @@ You can use either Jimmer's standard build method, or use plugins provided by th
     </TabItem>
     <TabItem value="kotlin_gradle" label="Kotlin (Gradle.kts)">
 
-    ```kotlin
+    For Kotlin/JVM projects, use a KSP2 version compatible with your Kotlin version.
+    Configure each module that defines entities or DTO files:
+
+    ```kotlin title="build.gradle.kts"
+    import com.google.devtools.ksp.gradle.KspAATask
+
     plugins {
         // Add KSP plugin  
-        id("com.google.devtools.ksp") version "1.7.10-1.0.6"
+        id("com.google.devtools.ksp") version "<ksp-version>"
 
         ...other plugins omitted...
     }
@@ -70,6 +75,13 @@ You can use either Jimmer's standard build method, or use plugins provided by th
         ...other dependencies omitted...
     }
 
+    // Regenerate DTOs when only .dto files change.
+    tasks.withType<KspAATask>().configureEach {
+        val dtoDirectory = if (name == "kspKotlin") "src/main/dto" else "src/test/dto"
+        inputs.files(fileTree(dtoDirectory) { include("**/*.dto") })
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+    }
+
     // Add generated code to compile path.
     // Gradle build works without this, but IntelliJ won't find generated code. 
     kotlin {
@@ -78,6 +90,10 @@ You can use either Jimmer's standard build method, or use plugins provided by th
         }
     }
     ```
+
+    If you configure `jimmer.dto.dirs` or `jimmer.dto.testDirs`, register those directories instead of the defaults above.
+    The file trees track DTO changes, additions and deletions while allowing unchanged tasks to remain `UP-TO-DATE`.
+    Run the Gradle build after editing DTO files; this configuration does not apply to an IDE build that does not use Gradle.
 
     </TabItem>
     </Tabs>
@@ -113,7 +129,7 @@ You can use either Jimmer's standard build method, or use plugins provided by th
         id("tech.argonariod.gradle-plugin-jimmer") version "latest.release"
         // You can also use the '+' character to indicate matching the latest version number starting from the '+' character.
         // Add KSP plugin
-        id("com.google.devtools.ksp") version "1.7.10+"
+        id("com.google.devtools.ksp") version "<ksp-version>"
 
         ...other plugins omitted...
     }

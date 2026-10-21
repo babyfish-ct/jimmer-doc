@@ -432,3 +432,43 @@ interface Book {
 
 被修饰的Id属性的类型必须和该范型参数一致，否则会导致异常。
 :::
+## 保留的属性名
+
+Jimmer会根据实体生成Draft、Table、Fetcher、DTO和Specification，因此一些名称已被生成的成员占用。实体属性使用这些名称时，KSP和APT会在编译时报错：
+
+```
+Illegal property "entityType" which is jimmer keyword
+```
+
+实体最可能遇到的保留名称：
+
+| 生成的类型 | 保留名称 |
+|---|---|
+| Object方法 | `hashCode`, `equals`, `toString` |
+| DTO、View、Input | `toImmutable`, `toEntity`, `toMergedEntity`, `unknownNonNullProperty`, `unknownNullableProperty` |
+| Specification | `applyTo`, `entityType`, `and`, `or`, `not` |
+| Table | `immutableType`, `eq`, `null`, `notNull`, `count`, `get`, `associatedId`, `join`, `joinReference`, `joinList`, `outerJoin`, `outerJoinReference`, `outerJoinList`, `inverseJoin`, `inverseJoinReference`, `inverseJoinList`, `inverseOuterJoin`, `inverseOuterJoinReference`, `inverseOuterJoinList`, `inverseGetAssociatedId`, `weakJoin`, `weakOuterJoin`, `exists`, `fetch`, `asTableEx`, `joinOperation`, `treatAsOperation` |
+| Fetcher | `allScalarFields`, `allTableFields`, `allReferenceFields`, `add`, `addRecursion`, `remove`, `createFetcher`, `javaClass`, `fieldMap` |
+
+以`__`开头的名称保留给Jimmer内部使用。
+
+如果列的自然名称是保留名称，保留列名并使用其他属性名：
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Column(name = "entity_type")
+String typeName();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Column(name = "entity_type")
+val typeName: String
+```
+
+</TabItem>
+</Tabs>

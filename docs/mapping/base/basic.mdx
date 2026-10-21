@@ -432,3 +432,44 @@ The user-implemented Id generation class `MyIdGenerator` itself does not have ge
 
 The type of the decorated Id property must be consistent with this generic parameter, otherwise an exception will be thrown.
 :::
+## Reserved property names
+
+Jimmer generates drafts, tables, fetchers, DTOs and specifications from an entity, so some names are taken by the
+generated members. An entity property with one of these names is refused at compile time by KSP and APT:
+
+```
+Illegal property "entityType" which is jimmer keyword
+```
+
+The names an entity is most likely to need:
+
+| Generated type | Reserved names |
+|---|---|
+| Object methods | `hashCode`, `equals`, `toString` |
+| DTO, view, input | `toImmutable`, `toEntity`, `toMergedEntity`, `unknownNonNullProperty`, `unknownNullableProperty` |
+| Specification | `applyTo`, `entityType`, `and`, `or`, `not` |
+| Table | `immutableType`, `eq`, `null`, `notNull`, `count`, `get`, `associatedId`, `join`, `joinReference`, `joinList`, `outerJoin`, `outerJoinReference`, `outerJoinList`, `inverseJoin`, `inverseJoinReference`, `inverseJoinList`, `inverseOuterJoin`, `inverseOuterJoinReference`, `inverseOuterJoinList`, `inverseGetAssociatedId`, `weakJoin`, `weakOuterJoin`, `exists`, `fetch`, `asTableEx`, `joinOperation`, `treatAsOperation` |
+| Fetcher | `allScalarFields`, `allTableFields`, `allReferenceFields`, `add`, `addRecursion`, `remove`, `createFetcher`, `javaClass`, `fieldMap` |
+
+Names starting with `__` are reserved for Jimmer's internals.
+
+A column whose natural name is reserved keeps its column name and takes another property name:
+
+<Tabs groupId="language">
+<TabItem value="java" label="Java">
+
+```java
+@Column(name = "entity_type")
+String typeName();
+```
+
+</TabItem>
+<TabItem value="kotlin" label="Kotlin">
+
+```kotlin
+@Column(name = "entity_type")
+val typeName: String
+```
+
+</TabItem>
+</Tabs>
